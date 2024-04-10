@@ -35,7 +35,7 @@ cd EVTUI
 
 # 2. Configure repository and branch
 git config user.email "you@example.com"
-git config user.name "Your Name
+git config user.name "Your Name"
 # NOTE: get rid of this line before merging PR
 git checkout psy/initial-project-structure
 
