@@ -1,0 +1,3812 @@
+From 511e903c05a609d96c188a70416fa667bc62edfc Mon Sep 17 00:00:00 2001
+From: DarkPsydeOfTheMoon <avalanchebreakdown@gmail.com>
+Date: Tue, 9 Apr 2024 01:24:00 -0700
+Subject: [PATCH 1/2] Basic changes to work as ACB/AWB/ADX extraction lib.
+
+---
+ Xv2CoreLib/ACB/ACB_File.cs                    | 1939 +----------------
+ Xv2CoreLib/ACB/FormatHelper.cs                |   65 +-
+ Xv2CoreLib/ACB/IAwbFile.cs                    |    2 +-
+ Xv2CoreLib/ACB/TrackMetadata.cs               |    3 +-
+ Xv2CoreLib/AFS2/AFS2_File.cs                  |   86 +-
+ Xv2CoreLib/AFS2/AWB_Wrapper.cs                |    3 +-
+ Xv2CoreLib/CPK/AWB_CPK.cs                     |    9 +-
+ Xv2CoreLib/CPK/CPK_Reader.cs                  |   10 +-
+ Xv2CoreLib/CPK/CriPakTools/CPK.cs             |    4 +-
+ Xv2CoreLib/CPK/CriPakTools/Endian.cs          |    4 +-
+ Xv2CoreLib/CPK/CriPakTools/Tools.cs           |    4 +-
+ Xv2CoreLib/HCA/HcaMetadata.cs                 |    3 +-
+ .../Resource/AsyncObservableCollection.cs     |   17 +-
+ Xv2CoreLib/Resource/BinaryConverter.cs        |    2 +-
+ Xv2CoreLib/Resource/Utils.cs                  |  166 +-
+ Xv2CoreLib/UTF/UTF_File.cs                    |   54 +-
+ 16 files changed, 149 insertions(+), 2222 deletions(-)
+
+diff --git a/Xv2CoreLib/ACB/ACB_File.cs b/Xv2CoreLib/ACB/ACB_File.cs
+index b4d3390..c046ea3 100644
+--- a/Xv2CoreLib/ACB/ACB_File.cs
++++ b/Xv2CoreLib/ACB/ACB_File.cs
+@@ -2,16 +2,15 @@ using System;
+ using System.Collections.Generic;
+ using System.Linq;
+ using Xv2CoreLib.UTF;
+-using YAXLib;
+ using Xv2CoreLib.AFS2;
+ using Xv2CoreLib.Resource;
+-using Xv2CoreLib.Resource.UndoRedo;
+ using System.IO;
+ using System.Security.Cryptography;
+ using System.ComponentModel;
+ using Xv2CoreLib.HCA;
+ using System.Windows;
+ using Xv2CoreLib.CPK;
++using System.Text.RegularExpressions;
+ 
+ namespace Xv2CoreLib.ACB
+ {
+@@ -42,19 +41,12 @@ namespace Xv2CoreLib.ACB
+         Japanese = 1
+     }
+ 
+-    [YAXSerializeAs("ACB")]
+-    [Serializable]
+     public class ACB_File
+     {
+         #region Constants
+         public const string AUDIO_PACKAGE_EXTENSION_OLD = ".musicpackage";
+         public const string AUDIO_PACKAGE_EXTENSION = ".audiopackage";
+ 
+-        //Clipboard Constants
+-        public const string CLIPBOARD_ACB_CUES = "ACB_CUES";
+-        public const string CLIPBOARD_ACB_TRACK = "ACB_TRACK";
+-        public const string CLIPBOARD_ACB_ACTION = "ACB_ACTION";
+-
+         //Global Aisacs
+         public const string GLOBAL_AISAC_3DVOL_DEF = "3Dvol_def";
+ 
+@@ -85,7 +77,6 @@ namespace Xv2CoreLib.ACB
+         public readonly static Version VolumeBusRequiredVersion = new Version("1.24.0.0");
+         #endregion
+ 
+-        [YAXDontSerialize]
+         public string VersionToolTip
+         {
+             get
+@@ -133,40 +124,26 @@ namespace Xv2CoreLib.ACB
+         }
+ 
+ 
+-        [YAXDontSerialize]
+         public bool TableValidationFailed { get; private set; }
+-        [YAXDontSerialize]
+         public bool ExternalAwbError { get; private set; }
+ 
+         #region SaveSettings
+-        [YAXDontSerialize]
+         public bool CleanTablesOnSave = true;
+-        [YAXDontSerialize]
+         public SaveFormat SaveFormat { get; set; } = SaveFormat.Default;
+-        [YAXDontSerialize]
+         public AudioPackageType AudioPackageType { get; set; } = AudioPackageType.None;
+-        [YAXDontSerialize]
+         public AudioPackageVersionEnum AudioPackageVersion = AudioPackageVersionEnum.Expanded;
+         /// <summary>
+         /// Save the ACB in a way that Eternity Audio Tool and associated tools can still load it, ommiting some features.
+         /// </summary>
+-        [YAXDontSerialize]
+         public bool EternityCompatibility = true;
+-        [YAXDontSerialize]
+         public bool SequenceTrackPadding = false;
+-        [YAXDontSerialize]
+         public bool HasCueLimitTable = true;
+         #endregion
+ 
+ 
+-        [YAXAttributeFor("Name")]
+-        [YAXSerializeAs("value")]
+         public string Name { get; set; }
+ 
+-        [YAXDontSerialize]
+         public Version Version = null; //If manually changed, then call SetCommandTableVersion().
+-        [YAXAttributeFor("Version")]
+-        [YAXSerializeAs("value")]
+         public string _versionStrProp
+         {
+             get
+@@ -179,50 +156,20 @@ namespace Xv2CoreLib.ACB
+             }
+         }
+ 
+-        [YAXAttributeFor("Volume")]
+-        [YAXSerializeAs("value")]
+         public float AcbVolume { get; set; } = 1.0f;
+-        [YAXAttributeFor("GUID")]
+-        [YAXSerializeAs("value")]
+         public Guid GUID { get; set; } = Guid.NewGuid();
+ 
+-        [YAXAttributeFor("FileIdentifier")]
+-        [YAXSerializeAs("value")]
+         public uint FileIdentifier { get; set; }
+-        [YAXAttributeFor("Size")]
+-        [YAXSerializeAs("value")]
+         public uint Size { get; set; }
+-        [YAXAttributeFor("Type")]
+-        [YAXSerializeAs("value")]
+         public byte Type { get; set; }
+-        [YAXAttributeFor("Target")]
+-        [YAXSerializeAs("value")]
+         public byte Target { get; set; }
+-        [YAXAttributeFor("AcfMd5Hash")]
+-        [YAXSerializeAs("values")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public byte[] AcfMd5Hash { get; set; }
+-        [YAXAttributeFor("CategoryExtension")]
+-        [YAXSerializeAs("value")]
+         public byte CategoryExtension { get; set; }
+-        [YAXAttributeFor("VersionString")]
+-        [YAXSerializeAs("value")]
+         public string VersionString { get; set; } //Maybe calculate this based on Version?
+-        [YAXAttributeFor("CharacterEncodingType")]
+-        [YAXSerializeAs("value")]
+         public byte CharacterEncodingType { get; set; }
+-        [YAXAttributeFor("CuePriorityType")]
+-        [YAXSerializeAs("value")]
+         public byte CuePriorityType { get; set; } = 255;
+-        [YAXAttributeFor("NumCueLimit")]
+-        [YAXSerializeAs("value")]
+         public ushort NumCueLimit { get; set; }
+-        [YAXAttributeFor("StreamAwbTocWork")]
+-        [YAXSerializeAs("values")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public byte[] StreamAwbTocWork { get; set; }
+-        [YAXAttributeFor("ProjectKey")]
+-        [YAXSerializeAs("value")]
+         public Guid ProjectKey { get; set; }
+ 
+         public List<ACB_Cue> Cues { get; set; } = new List<ACB_Cue>();
+@@ -245,13 +192,12 @@ namespace Xv2CoreLib.ACB
+         /// <summary>
+         /// Used to store the CPK Header when AWB is CPK format, for saving back to CPK. This is needed as currently CPKs cannot be created from scratch. 
+         /// </summary>
+-        [YAXDontSerializeIfNull]
+         public UTF_File CpkHeader { get; set; }
+         public bool IsAwbCpk { get; set; } = false;
+         /// <summary>
+         /// When true, the external AWB file is saved with "_streamfiles.awb" at the end. This is how older AWBs are named.
+         /// </summary>
+-        public bool IsUsingAltAwbPath { get; set; } = false;
++        public string AwbPath { get; set; } = "";
+         public AFS2_File AudioTracks { get; set; } = AFS2_File.CreateNewAwbFile();
+ 
+         public UTF_File OutsideLinkTable { get; set; } // No need to parse this
+@@ -268,52 +214,34 @@ namespace Xv2CoreLib.ACB
+         #endregion
+ 
+         #region LoadFunctions
+-        public static ACB_File Load(string path, Xv2FileIO fileIO, bool onlyLoadFromCpk)
+-        {
+-            byte[] awbBytes = fileIO.GetFileFromGame(string.Format("{0}/{1}.awb", Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path)), false, onlyLoadFromCpk);
+-            AFS2_File awbFile = awbBytes != null ? AFS2_File.LoadFromArray(awbBytes) : null;
+-
+-            return Load(fileIO.GetFileFromGame(path, true, onlyLoadFromCpk), awbFile);
+-        }
+-
+         public static ACB_File Load(string path, bool writeXml = false)
+         {
+             //Check for external awb file
+-            string awbPath = string.Format("{0}/{1}.awb", Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
+-            string altAwbPath = string.Format("{0}/{1}_streamfiles.awb", Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
+-            bool altPath = false;
+             bool isAudioPackage = Path.GetExtension(path).Equals(AUDIO_PACKAGE_EXTENSION, StringComparison.OrdinalIgnoreCase) || Path.GetExtension(path).Equals(AUDIO_PACKAGE_EXTENSION_OLD, StringComparison.OrdinalIgnoreCase);
+-            IAwbFile awbFile = null;
+-
+-            if (File.Exists(awbPath) && !isAudioPackage)
+-            {
+-                //awbFile = File.ReadAllBytes(awbPath);
+-                awbFile = LoadStreamAwb(awbPath);
+-            }
+-            else if (File.Exists(altAwbPath) && !isAudioPackage)
+-            {
+-                //awbFile = File.ReadAllBytes(altAwbPath);
+-                awbFile = LoadStreamAwb(altAwbPath);
+-                altPath = true;
++            string awbPath = "";
++
++            string baseDir = Path.GetDirectoryName(path);
++            string baseName = Path.GetFileNameWithoutExtension(path);
++            //string pattern = string.Format("^{0}(_streamfiles)?\\.[Aa][Ww][Bb]$", Path.Combine(baseDir, baseName));
++            string pattern = string.Format("^{0}(_streamfiles)?\\.[Aa][Ww][Bb]$", Path.Combine(baseDir, baseName).Replace("\\", "\\\\"));
++            foreach (var candidateFile in Directory.GetFiles(baseDir)) {
++                if (Regex.IsMatch(candidateFile, pattern)) {
++                    awbPath = candidateFile;
++                    break;
++                }
+             }
+ 
+-            var file = Load(File.ReadAllBytes(path), awbFile, writeXml, isAudioPackage, altPath);
+-
+-            if (writeXml)
+-            {
+-                YAXSerializer serializer = new YAXSerializer(typeof(ACB_File));
+-                serializer.SerializeToFile(file, path + ".xml");
+-            }
++            var file = Load(File.ReadAllBytes(path), awbPath, writeXml, isAudioPackage);
+ 
+             return file;
+         }
+ 
+-        public static ACB_File Load(byte[] acbBytes, IAwbFile awbFile, bool loadUnknownCommands = false, bool isAudioPackage = false, bool altAwbPath = false)
++        public static ACB_File Load(byte[] acbBytes, string awbPath, bool loadUnknownCommands = false, bool isAudioPackage = false)
+         {
+-            return Load(UTF_File.LoadUtfTable(acbBytes, acbBytes.Length), awbFile, loadUnknownCommands, isAudioPackage, true, altAwbPath);
++            return Load(UTF_File.LoadUtfTable(acbBytes, acbBytes.Length), awbPath, loadUnknownCommands, isAudioPackage, true);
+         }
+ 
+-        public static ACB_File Load(UTF_File utfFile, IAwbFile awbFile, bool loadUnknownCommands = false, bool isAudioPackage = false, bool eternityCompatibility = true, bool altAwbPath = false)
++        public static ACB_File Load(UTF_File utfFile, string awbPath, bool loadUnknownCommands = false, bool isAudioPackage = false, bool eternityCompatibility = true)
+         {
+             if (!AcbFormatHelper.Instance.AcbFormatHelperMain.ForceLoad && !isAudioPackage)
+             {
+@@ -325,7 +253,7 @@ namespace Xv2CoreLib.ACB
+ 
+             //Parse acb
+             ACB_File acbFile = new ACB_File();
+-            acbFile.IsUsingAltAwbPath = altAwbPath;
++            acbFile.AwbPath = awbPath;
+             acbFile.EternityCompatibility = eternityCompatibility;
+             acbFile.ValidateTables(utfFile);
+ 
+@@ -383,7 +311,7 @@ namespace Xv2CoreLib.ACB
+             AWB_CPK internalCpkAwb = utfFile.GetColumnCpkFile("AwbFile");
+             AFS2_File internalAfs2Awb = utfFile.GetColumnAfs2File("AwbFile");
+ 
+-            if(internalCpkAwb != null)
++            if (internalCpkAwb != null)
+             {
+                 acbFile.IsAwbCpk = true;
+                 acbFile.LoadAwbFile(internalCpkAwb, false);
+@@ -393,8 +321,9 @@ namespace Xv2CoreLib.ACB
+                 acbFile.LoadAwbFile(internalAfs2Awb, false);
+             }
+ 
+-            if(awbFile != null)
++            if (awbPath != "")
+             {
++                IAwbFile awbFile = LoadStreamAwb(awbPath);
+                 if(awbFile is AFS2_File afs2)
+                 {
+                     acbFile.LoadAwbFile(afs2, true);
+@@ -406,7 +335,7 @@ namespace Xv2CoreLib.ACB
+                 }
+             }
+ 
+-            if (awbFile == null && acbFile.Waveforms.Any(x => x.IsStreaming) && !isAudioPackage)
++            if (awbPath == "" && acbFile.Waveforms.Any(x => x.IsStreaming) && !isAudioPackage)
+                 acbFile.ExternalAwbError = true;
+ 
+             //AudioPackage values
+@@ -465,22 +394,6 @@ namespace Xv2CoreLib.ACB
+             return acbFile;
+         }
+         
+-        public static ACB_File LoadXml(string path, bool saveBinary = false)
+-        {
+-            YAXSerializer serializer = new YAXSerializer(typeof(ACB_File), YAXSerializationOptions.DontSerializeNullObjects);
+-            ACB_File acbFile = (ACB_File)serializer.DeserializeFromFile(path);
+-            acbFile.SetCommandTableVersion();
+-            acbFile.InitializeValues();
+-
+-            if (saveBinary)
+-            {
+-                string savePath = String.Format("{0}/{1}", Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(path)));
+-                acbFile.Save(savePath, false); //No full rebuild for XML - keep the indexes and tables completely unchanged
+-            }
+-
+-            return acbFile;
+-        }
+-
+         public static ACB_File NewXv2Acb()
+         {
+             ACB_File acbFile = new ACB_File();
+@@ -522,15 +435,6 @@ namespace Xv2CoreLib.ACB
+             return acbFile;
+         }
+ 
+-        public static ACB_File LoadFromClipboard()
+-        {
+-            if (!Clipboard.ContainsData(CLIPBOARD_ACB_CUES)) return null;
+-            ACB_File tempAcb = (ACB_File)Clipboard.GetData(CLIPBOARD_ACB_CUES);
+-            tempAcb.SetCommandTableVersion();
+-            //tempAcb.LinkTableGuids();
+-            return tempAcb;
+-        }
+-
+         private void InitializeValues()
+         {
+             //Call when loading from xml.
+@@ -662,15 +566,7 @@ namespace Xv2CoreLib.ACB
+         {
+             if(Path.GetExtension(path) == ".acb")
+             {
+-                path = string.Format("{0}/{1}", Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
+-            }
+-
+-            List<IUndoRedo> undos = null;
+-
+-            //Clean tables up
+-            if (fullRebuild && CleanTablesOnSave)
+-            {
+-                undos = CleanUpTables();
++                path = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
+             }
+ 
+             SortCues();
+@@ -684,18 +580,17 @@ namespace Xv2CoreLib.ACB
+             AFS2_File externalAwb = GenerateAwbFile(true);
+             byte[] awbHeader = null;
+             byte[] streamAwbHash = null;
+-            string awbPath = (IsUsingAltAwbPath) ? path + "_streamfiles.awb" : path + ".awb";
+ 
+             if (externalAwb != null)
+             {
+                 if (IsAwbCpk)
+                 {
+                     byte[] awbBytes = new AWB_CPK(externalAwb, CpkHeader).Write();
+-                    File.WriteAllBytes(awbPath, awbBytes);
++                    File.WriteAllBytes(AwbPath, awbBytes);
+                 }
+                 else
+                 {
+-                    externalAwb.SaveToStream(awbPath, out awbHeader, out streamAwbHash);
++                    externalAwb.SaveToStream(AwbPath, out awbHeader, out streamAwbHash);
+                 }
+             }
+ 
+@@ -705,19 +600,6 @@ namespace Xv2CoreLib.ACB
+                 utfFile.Save(path + ".acb");
+             else if (SaveFormat == SaveFormat.AudioPackage)
+                 utfFile.Save(path + AUDIO_PACKAGE_EXTENSION);
+-
+-            if(undos != null)
+-            {
+-                CompositeUndo undo = new CompositeUndo(undos, "");
+-                undo.Undo();
+-            }
+-        }
+-
+-        public void SaveToClipboard()
+-        {
+-            TrimSequenceTrackPercentages();
+-            LinkTableIndexes();
+-            Clipboard.SetData(CLIPBOARD_ACB_CUES, this);
+         }
+ 
+         public UTF_File WriteToTable(byte[] streamAwbHeader, byte[] streamAwbHash, string name)
+@@ -853,7 +735,7 @@ namespace Xv2CoreLib.ACB
+             {
+                 //UTF Table
+                 UTF_File streamAwbHashTable = CreateDefaultStreamAwbHashTable();
+-                streamAwbHashTable.AddValue("Name", TypeFlag.String, 0, (IsUsingAltAwbPath) ? $"{name}_streamfiles" : name, hashHelper, Version);
++                streamAwbHashTable.AddValue("Name", TypeFlag.String, 0, Path.GetFileNameWithoutExtension(AwbPath), hashHelper, Version);
+                 streamAwbHashTable.AddData("Hash", 0, streamAwbHash);
+                 utfFile.AddData("StreamAwbHash", 0, streamAwbHashTable.Write());
+             }
+@@ -884,1203 +766,111 @@ namespace Xv2CoreLib.ACB
+ 
+             utfFile.AddData("ProjectKey", 0, (ProjectKey != null) ? ProjectKey.ToByteArray() : null, tableHelper, Version);
+ 
+-            //External AWB header
+-            var headerHelper = AcbFormatHelper.Instance.GetTableHelper("StreamAwbAfs2Header");
+-
+-            if (headerHelper.DoesExist(Version) && streamAwbHeader != null && !IsAwbCpk)
+-            {
+-                //UTF Table
+-                UTF_File streamAwbHeaderTable = CreateDefaultStreamAwbHeaderTable();
+-                streamAwbHeaderTable.AddData("Header", 0, streamAwbHeader);
+-                utfFile.AddData("StreamAwbAfs2Header", 0, streamAwbHeaderTable.Write());
+-            }
+-            else if (tableHelper.ColumnExists("StreamAwbAfs2Header", TypeFlag.Data, Version))
+-            {
+-                //Just a byte array
+-                utfFile.AddData("StreamAwbAfs2Header", 0, streamAwbHeader);
+-            }
+-
+-            //AudioPackage values
+-            if(SaveFormat == SaveFormat.AudioPackage)
+-            {
+-                utfFile.AddValue("AudioPackageType", TypeFlag.Int32, 0, ((int)AudioPackageType).ToString());
+-            }
+-            if (SaveFormat == SaveFormat.AudioPackage && AudioPackageVersion >= AudioPackageVersionEnum.Expanded)
+-            {
+-                utfFile.AddValue("AudioPackageVersion", TypeFlag.Int32, 0, ((int)AudioPackageVersion).ToString());
+-            }
+-
+-            //Now set all of the "R_" columns
+-            foreach (var column in utfFile.Columns.Where(x => x.Rows.Count == 0))
+-            {
+-                if(column.Name[0] == 'R')
+-                {
+-                    column.AddValue("0", 0);
+-                }
+-                else
+-                {
+-                    throw new InvalidDataException($"ACB_File.WriteToTable: row count mismatch");
+-                }
+-            }
+-
+-            return utfFile;
+-        }
+-        
+-        public byte[] SaveAudioPackageToBytes()
+-        {
+-            TrimSequenceTrackPercentages();
+-            LinkTableIndexes();
+-            UTF_File utfFile = WriteToTable(null, null, Name);
+-            return utfFile.Write(true);
+-        }
+-        #endregion
+-
+-        #region AddFunctions
+-        /// <summary>
+-        /// Add a new cue with no tracks.
+-        /// </summary>
+-        /// <returns></returns>
+-        public List<IUndoRedo> AddCue(string name, ReferenceType type, out ACB_Cue newCue)
+-        {
+-            return AddCue(name, GetFreeCueId(), type, out newCue);
+-        }
+-
+-        private List<IUndoRedo> AddCue(string name, int id, ReferenceType type, out ACB_Cue newCue)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            newCue = new ACB_Cue();
+-            newCue.ID = (uint)id;
+-            newCue.Name = name;
+-            newCue.ReferenceType = type;
+-            newCue.ReferenceIndex = new AcbTableReference(ushort.MaxValue);
+-            newCue.HeaderVisibility = 1;
+-
+-            if (type == ReferenceType.Sequence)
+-            {
+-                var seq = new ACB_Sequence();
+-                Sequences.Add(seq);
+-                newCue.ReferenceIndex.TableGuid = seq.InstanceGuid;
+-                undos.Add(new UndoableListAdd<ACB_Sequence>(Sequences, seq, ""));
+-
+-                if (ReuseSequenceCommand)
+-                {
+-                    //Reuse an existing command
+-                    var existingSequence = Sequences.FirstOrDefault(x => !x.CommandIndex.IsNull);
+-
+-                    if(existingSequence != null)
+-                    {
+-                        seq.CommandIndex = new AcbTableReference(existingSequence.CommandIndex.TableGuid);
+-                    }
+-                }
+-                else
+-                {
+-                    //Add default volume bus command
+-                    undos.AddRange(AddVolumeBus(seq, CommandTableType.SequenceCommand));
+-                }
+-            }
+-            else if (type == ReferenceType.Synth)
+-            {
+-                var synth = new ACB_Synth();
+-                synth.ReferenceItems[0].ReferenceType = ReferenceType.Waveform;
+-                Synths.Add(synth);
+-                newCue.ReferenceIndex.TableGuid = synth.InstanceGuid;
+-                undos.Add(new UndoableListAdd<ACB_Synth>(Synths, synth, ""));
+-                undos.AddRange(AddVolumeBus(synth, CommandTableType.SynthCommand));
+-            }
+-            //Dont add Waveform entry until a track is added
+-
+-            //If cue with same ID already exists, delete it
+-            var existingCue = Cues.FirstOrDefault(x => x.ID == id);
+-
+-            if (existingCue != null)
+-            {
+-                undos.Add(new UndoableListRemove<ACB_Cue>(Cues, existingCue));
+-                Cues.Remove(existingCue);
+-            }
+-
+-            Cues.Add(newCue);
+-            undos.Add(new UndoableListAdd<ACB_Cue>(Cues, newCue, ""));
+-
+-            return undos;
+-        }
+-
+-        /// <summary>
+-        /// Add a new cue with 1 track.
+-        /// </summary>
+-        /// <returns></returns>
+-        public List<IUndoRedo> AddCue(string name, ReferenceType type, byte[] trackBytes, bool streaming, bool loop, EncodeType encodeType, out ACB_Cue newCue)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-            
+-            undos.AddRange(AddCue(name, type, out newCue));
+-            undos.AddRange(AddTrackToCue(newCue, trackBytes, streaming, loop, encodeType));
+-            
+-            return undos;
+-        }
+-
+-        public List<IUndoRedo> AddCue(string name, int id, ReferenceType type, byte[] trackBytes, bool streaming, bool loop, EncodeType encodeType, out ACB_Cue newCue)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            undos.AddRange(AddCue(name, id, type, out newCue));
+-            undos.AddRange(AddTrackToCue(newCue, trackBytes, streaming, loop, encodeType));
+-
+-            return undos;
+-        }
+-
+-        //Add Action
+-        /// <summary>
+-        /// Add a new empty action to the specified cue.
+-        /// </summary>
+-        /// <returns></returns>
+-        public List<IUndoRedo> AddActionToCue(ACB_Cue cue, CopiedAction copiedAction = null)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            switch (cue.ReferenceType)
+-            {
+-                case ReferenceType.Sequence:
+-                    undos.AddRange(AddAction_IActionTrack(GetSequence(cue.ReferenceIndex.TableGuid, false), copiedAction));
+-                    break;
+-                case ReferenceType.Synth:
+-                    undos.AddRange(AddAction_IActionTrack(GetSynth(cue.ReferenceIndex.TableGuid, false), copiedAction));
+-                    break;
+-                case ReferenceType.Waveform:
+-                    throw new InvalidOperationException($"ACB_File.AddActionToCue: ReferenceType {cue.ReferenceType} does not support actions.");
+-                default:
+-                    throw new InvalidOperationException($"ACB_File.AddActionToCue: ReferenceType {cue.ReferenceType} not supported.");
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> AddAction_IActionTrack(IActionTrack action, CopiedAction copiedAction = null)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            Guid newActionGuid;
+-            undos.AddRange(AddAction(out newActionGuid, copiedAction));
+-            AcbTableReference actionTableReference = new AcbTableReference();
+-            actionTableReference.TableGuid = newActionGuid;
+-            action.ActionTracks.Add(actionTableReference);
+-            undos.Add(new UndoableListAdd<AcbTableReference>(action.ActionTracks, actionTableReference));
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> AddAction(out Guid actionGuid, CopiedAction copiedAction = null)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            ACB_Track action = (copiedAction != null) ? copiedAction.Track : new ACB_Track();
+-            ACB_CommandGroup commandGroup = (copiedAction != null) ? copiedAction.Commands : new ACB_CommandGroup();
+-            
+-            if(copiedAction == null)
+-            {
+-                //Set default action values
+-                action.CommandIndex.TableGuid = commandGroup.InstanceGuid;
+-                action.TargetType = TargetType.SpecificAcb;
+-                action.TargetAcbName = Name;
+-                action.TargetSelf = true;
+-            }
+-
+-            //Finalize
+-            ActionTracks.Add(action);
+-            undos.Add(new UndoableListAdd<ACB_Track>(ActionTracks, action));
+-            undos.AddRange(CommandTables.AddCommand(commandGroup, CommandTableType.TrackEvent));
+-
+-            actionGuid = action.InstanceGuid;
+-            return undos;
+-        }
+-
+-        //Add Track
+-        public List<IUndoRedo> AddTrackToCue(ACB_Cue cue, byte[] trackBytes, bool streaming, bool loop, EncodeType encodeType)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-            undos.AddRange(AddTrack_IRefItems(cue, trackBytes, streaming, loop, encodeType));
+-            undos.AddRange(UpdateCueLength(cue));
+-            return undos;
+-        }
+-        
+-        private List<IUndoRedo> AddWaveform(byte[] trackBytes, bool streaming, bool loop, EncodeType encodeType, out Guid waveformGuid)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            var waveform = new ACB_Waveform();
+-            var trackMetadata = new TrackMetadata(trackBytes);
+-            undos.AddRange(AudioTracks.AddEntry(trackBytes, AllowSharedAwbEntries, out ushort awbId));
+-
+-            //Create waveform
+-            waveform.AwbId = awbId;
+-            waveform.IsStreaming = streaming;
+-            waveform.StreamAwbPortNo = (streaming) ? (ushort)0 : ushort.MaxValue;
+-            waveform.EncodeType = encodeType;
+-            waveform.LoopFlag = Convert.ToByte(loop);
+-            waveform.NumChannels = trackMetadata.Channels;
+-            waveform.SamplingRate = (ushort)trackMetadata.SampleRate;
+-            waveform.NumSamples = (uint)trackMetadata.NumSamples;
+-
+-            if(encodeType == EncodeType.HCA)
+-            {
+-                TrackMetadata hcaMetadata = new TrackMetadata(trackBytes);
+-                waveform.LoopStart = (loop) ? hcaMetadata.LoopStart : 0;
+-                waveform.LoopEnd = (loop) ? hcaMetadata.LoopEnd : 0;
+-            }
+-
+-            Waveforms.Add(waveform);
+-            undos.Add(new UndoableListAdd<ACB_Waveform>(Waveforms, waveform));
+-
+-            waveformGuid = waveform.InstanceGuid;
+-            return undos;
+-        }
+-        
+-        private List<IUndoRedo> AddTrackToSynth(ACB_Synth synth, byte[] hca, bool streaming, bool loop, EncodeType encodeType)
+-        {
+-            if (synth.ReferenceItems[0].ReferenceIndex.IsNull)
+-            {
+-                //Replace this one
+-                return AddTrack_IRefItems(synth.ReferenceItems[0], hca, streaming, loop, encodeType);
+-            }
+-            else
+-            {
+-                List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-                //Add new
+-                ACB_ReferenceItem refItem = new ACB_ReferenceItem();
+-                synth.ReferenceItems.Add(refItem);
+-                undos.Add(new UndoableListAdd<ACB_ReferenceItem>(synth.ReferenceItems, refItem));
+-
+-                undos.AddRange(AddTrack_IRefItems(refItem, hca, streaming, loop, encodeType));
+-                return undos;
+-            }
+-        }
+-
+-        private List<IUndoRedo> AddTrack_IRefItems(IReferenceType refItem, byte[] trackBytes, bool streaming, bool loop, EncodeType encodeType)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            switch (refItem.ReferenceType)
+-            {
+-                case ReferenceType.Waveform:
+-                    if (refItem.ReferenceIndex.IsNull)
+-                    {
+-                        undos.AddRange(AddWaveform(trackBytes, streaming, loop, encodeType, out refItem.ReferenceIndex._tableGuid));
+-                    }
+-                    else
+-                        throw new InvalidDataException($"ACB_File.AddTrackToCue: ReferenceType is {refItem.ReferenceType} - cannot add multiple tracks.");
+-                    break;
+-                case ReferenceType.Synth:
+-                    undos.AddRange(AddTrackToSynth(GetSynth(refItem.ReferenceIndex.TableGuid, false), trackBytes, streaming, loop, encodeType));
+-                    break;
+-                case ReferenceType.Sequence:
+-                    undos.AddRange(AddTrackToSequence(GetSequence(refItem.ReferenceIndex.TableGuid, false), trackBytes, streaming, loop, encodeType));
+-                    break;
+-            }
+-
+-            return undos;
+-        }
+-        
+-        private List<IUndoRedo> AddTrackToSequence(ACB_Sequence sequence, byte[] hca, bool streaming, bool loop, EncodeType encodeType)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            ACB_SequenceTrack newTrack = new ACB_SequenceTrack();
+-            ACB_Track track = new ACB_Track();
+-            newTrack.Index.TableGuid = track.InstanceGuid;
+-            newTrack.Percentage = (ushort)(100 / (sequence.Tracks.Count + 1));
+-
+-            if (ReuseTrackCommand)
+-            {
+-                //Set CommandIndex to that of another Track in the ACB
+-                var existingTrack = Tracks.FirstOrDefault(x => !x.CommandIndex.IsNull);
+-
+-                if(existingTrack != null)
+-                {
+-                    track.CommandIndex = new AcbTableReference(Tracks[0].CommandIndex.TableGuid);
+-                }
+-            }
+-
+-            //Create command
+-            ACB_Command command = new ACB_Command();
+-            command.CommandType = CommandType.ReferenceItem;
+-            command.Parameters = new byte[4].ToList();
+-            command.ReferenceType = ReferenceType.Synth;
+-            command.ReferenceIndex = new AcbTableReference();
+-
+-            //Create synth
+-            ACB_Synth synth = new ACB_Synth();
+-            synth.ReferenceItems[0].ReferenceType = ReferenceType.Waveform;
+-            command.ReferenceIndex.TableGuid = synth.InstanceGuid;
+-            Synths.Add(synth);
+-            undos.Add(new UndoableListAdd<ACB_Synth>(Synths, synth));
+-            undos.AddRange(AddTrackToSynth(synth, hca, streaming, loop, encodeType));
+-
+-            ACB_CommandGroup commandGroup = new ACB_CommandGroup();
+-            commandGroup.Commands.Add(command);
+-            commandGroup.Commands.Add(new ACB_Command()); //IMPROTANT! Game will crash without this!
+-
+-            undos.AddRange(CommandTables.AddCommand(commandGroup, CommandTableType.TrackEvent));
+-
+-            //Create track
+-            track.TargetId.TableIndex = uint.MaxValue;
+-            track.EventIndex.TableGuid = commandGroup.InstanceGuid;
+-
+-            Tracks.Add(track);
+-            undos.Add(new UndoableListAdd<ACB_Track>(Tracks, track));
+-
+-            //Add track to sequence
+-            sequence.Tracks.Add(newTrack);
+-            undos.Add(new UndoableListAdd<ACB_SequenceTrack>(sequence.Tracks, newTrack));
+-
+-            return undos;
+-        }
+-        
+-        //Replace Track
+-        /// <summary>
+-        /// Replaces track on cue. Expects just one waveform on cue. Will reuse existing tables.
+-        /// </summary>
+-        public void ReplaceTrackOnCue(ACB_Cue cue, byte[] trackBytes, bool streaming, EncodeType encodeType)
+-        {
+-            var waveforms = GetWaveformsFromCue(cue);
+-            if (waveforms.Count != 1) throw new InvalidDataException($"ACB_File.ReplaceTrackOnCue: Unexpected number of Waveforms ({waveforms.Count}).");
+-
+-            ReplaceTrackOnWaveform(waveforms[0], trackBytes, streaming, encodeType);
+-            UpdateCueLength(cue);
+-        }
+-
+-        public List<IUndoRedo> ReplaceTrackOnWaveform(ACB_Waveform waveform, byte[] trackBytes, bool streaming, EncodeType encodeType)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            undos.AddRange(AudioTracks.AddEntry(trackBytes, true, out ushort newAwbId));
+-
+-            var trackMetadata = new TrackMetadata(trackBytes);
+-
+-            ushort oldAwbId = waveform.AwbId;
+-            ushort newStreamAwbPortNo = (streaming) ? (ushort)0 : ushort.MaxValue;
+-
+-            bool hasLoop = false;
+-            uint loopStart = 0;
+-            uint loopEnd = 0;
+-
+-            if(encodeType == EncodeType.HCA || encodeType == EncodeType.HCA_ALT)
+-            {
+-                var hcaMeta = new TrackMetadata(trackBytes);
+-                hasLoop = hcaMeta.HasLoopData;
+-                loopStart = hcaMeta.LoopStartSamples;
+-                loopEnd = hcaMeta.LoopEndSamples;
+-
+-            }
+-
+-            undos.Add(new UndoableProperty<ACB_Waveform>("AwbId", waveform, waveform.AwbId, newAwbId));
+-            undos.Add(new UndoableProperty<ACB_Waveform>("Streaming", waveform, waveform.Streaming, streaming));
+-            undos.Add(new UndoableProperty<ACB_Waveform>("StreamAwbPortNo", waveform, waveform.StreamAwbPortNo, newStreamAwbPortNo));
+-            undos.Add(new UndoableProperty<ACB_Waveform>("EncodeType", waveform, waveform.EncodeType, encodeType));
+-            undos.Add(new UndoableProperty<ACB_Waveform>("LoopFlag", waveform, waveform.LoopFlag, hasLoop));
+-            undos.Add(new UndoableProperty<ACB_Waveform>("LoopStart", waveform, waveform.LoopStart, loopStart));
+-            undos.Add(new UndoableProperty<ACB_Waveform>("LoopEnd", waveform, waveform.AwbId, loopEnd));
+-            undos.Add(new UndoableProperty<ACB_Waveform>("NumChannels", waveform, waveform.NumChannels, trackMetadata.Channels));
+-            undos.Add(new UndoableProperty<ACB_Waveform>("SamplingRate", waveform, waveform.SamplingRate, (ushort)trackMetadata.SampleRate));
+-            undos.Add(new UndoableProperty<ACB_Waveform>("NumSamples", waveform, waveform.SamplingRate, (uint)trackMetadata.NumSamples));
+-
+-            waveform.AwbId = newAwbId;
+-            waveform.IsStreaming = streaming;
+-            waveform.StreamAwbPortNo = newStreamAwbPortNo;
+-            waveform.EncodeType = encodeType;
+-            waveform.LoopFlag = Convert.ToByte(hasLoop);
+-            waveform.LoopStart = loopStart;
+-            waveform.LoopEnd = loopEnd;
+-            waveform.NumChannels = trackMetadata.Channels;
+-            waveform.SamplingRate = (ushort)trackMetadata.SampleRate;
+-            waveform.NumSamples = (uint)trackMetadata.NumSamples;
+-
+-            //Remove previous AWB entry if nothing else uses it.
+-            if(Waveforms.All(x=> x.AwbId != oldAwbId))
+-            {
+-                var entry = AudioTracks.Entries.FirstOrDefault(x => x.ID == oldAwbId);
+-                if(entry != null)
+-                {
+-                    undos.Add(new UndoableListRemove<AFS2_Entry>(AudioTracks.Entries, entry, AudioTracks.Entries.IndexOf(entry)));
+-                    AudioTracks.Entries.Remove(entry);
+-                }
+-            }
+-            
+-            waveform.UpdateProperties();
+-            undos.Add(new UndoActionDelegate(waveform, "UpdateProperties", true));
+-
+-            return undos;
+-        }
+-        
+-        //Loop
+-        public List<IUndoRedo> EditLoopOnWaveform(ACB_Waveform waveform, bool loop, int startMs, int endMs)
+-        {
+-            if (waveform.EncodeType != EncodeType.HCA && waveform.EncodeType != EncodeType.HCA_ALT)
+-                throw new InvalidOperationException("Can only edit loop on HCA encoded tracks.");
+-
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            var awbEntry = GetAfs2Entry(waveform.AwbId);
+-            if (awbEntry == null) return undos;
+-
+-            //double startSeconds = startMs / 1000.0;
+-            //double endSeconds = endMs / 1000.0;
+-
+-            byte[] originalFile = awbEntry.bytes.DeepCopy();
+-            //awbEntry.bytes = HcaMetadata.SetLoop(awbEntry.bytes, loop, startSeconds, endSeconds);
+-            awbEntry.bytes = TrackMetadata.EncodeHcaLoop(awbEntry.bytes, loop, startMs, endMs);
+-
+-            VGAudio.Containers.Hca.HcaReader reader = new VGAudio.Containers.Hca.HcaReader();
+-            VGAudio.Containers.Hca.HcaStructure header = reader.ParseFile(awbEntry.bytes);
+-            
+-            undos.Add(new UndoableProperty<AFS2_Entry>(nameof(awbEntry.bytes), awbEntry, originalFile, awbEntry.bytes.DeepCopy()));
+-            undos.Add(new UndoableProperty<ACB_Waveform>(nameof(ACB_Waveform.LoopStart), waveform, waveform.LoopStart, (uint)header.Hca.LoopStartSample));
+-            undos.Add(new UndoableProperty<ACB_Waveform>(nameof(ACB_Waveform.LoopEnd), waveform, waveform.LoopEnd, (uint)header.Hca.LoopEndSample));
+-            undos.Add(new UndoableProperty<ACB_Waveform>(nameof(ACB_Waveform.LoopFlag), waveform, waveform.LoopFlag, Convert.ToByte(header.Hca.Looping)));
+-
+-            //Update waveform
+-            waveform.LoopStart = (uint)header.Hca.LoopStartSample;
+-            waveform.LoopEnd = (uint)header.Hca.LoopEndSample;
+-            waveform.LoopFlag = Convert.ToByte(header.Hca.Looping);
+-
+-            return undos;
+-        }
+-        
+-        //VolumeBus 
+-        public List<IUndoRedo> AddVolumeBus(ICommandIndex commandIndex, CommandTableType commandType)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            if (Version < VolumeBusRequiredVersion) return undos; //VolumeBus not required
+-
+-            ACB_CommandGroup command = null;
+-
+-            if (!commandIndex.CommandIndex.IsNull)
+-            {
+-                command = CommandTables.GetCommand(commandIndex.CommandIndex.TableGuid, commandType);
+-            }
+-
+-            if(command == null)
+-            {
+-                //No command on this Sequence/Synth. Need to create new one.
+-                command = new ACB_CommandGroup();
+-                undos.Add(new UndoableProperty<AcbTableReference>(nameof(AcbTableReference.TableGuid), commandIndex.CommandIndex, commandIndex.CommandIndex.TableGuid, command.InstanceGuid));
+-                commandIndex.CommandIndex.TableGuid = command.InstanceGuid;
+-                undos.AddRange(CommandTables.AddCommand(command, commandType));
+-            }
+-
+-            //Check if volume bus command already exists, and end here if it does.
+-            if (command.Commands.FirstOrDefault(x => x.CommandType == CommandType.VolumeBus) != null) return undos;
+-
+-            //Check if StringValueTable exists, and create if it needed.
+-            if (StringValues == null || StringValues?.Count == 0)
+-            {
+-                var newStringValues = ACB_StringValue.DefaultStringTable();
+-                undos.Add(new UndoableProperty<ACB_File>(nameof(StringValues), this, StringValues, newStringValues));
+-                StringValues = newStringValues;
+-            }
+-
+-            //Add the command
+-            ACB_Command volumeBusCommand = new ACB_Command(CommandType.VolumeBus) { ReferenceIndex = new AcbTableReference(StringValues[0].InstanceGuid), Param2 = 10000 };
+-
+-            undos.Add(new UndoableListAdd<ACB_Command>(command.Commands, volumeBusCommand));
+-            command.Commands.Add(volumeBusCommand);
+-
+-            return undos;
+-        }
+-        
+-        /// <summary>
+-        /// Adds a VolumeBus command to every valid cue (only if one doesn't already exist).
+-        /// </summary>
+-        public List<IUndoRedo> AddVolumeBusToCues()
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            foreach(var cue in Cues)
+-            {
+-                undos.AddRange(AddVolumeBusToCue(cue));
+-            }
+-
+-            return undos;
+-        }
+-
+-        public List<IUndoRedo> AddVolumeBusToCue(ACB_Cue cue)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            bool hasTracks = true;
+-            ICommandIndex commandIndex = null;
+-            CommandTableType commandType = CommandTableType.SequenceCommand;
+-
+-            switch (cue.ReferenceType)
+-            {
+-                case ReferenceType.Synth:
+-                    ACB_Synth synth = GetSynth(cue.ReferenceIndex.TableGuid);
+-                    commandIndex = synth;
+-                    hasTracks = synth.ReferenceItems.Count > 0;
+-                    commandType = CommandTableType.SynthCommand;
+-                    break;
+-                case ReferenceType.Sequence:
+-                    ACB_Sequence sequence = GetSequence(cue.ReferenceIndex.TableGuid);
+-                    commandIndex = sequence;
+-                    hasTracks = sequence.Tracks.Count > 0;
+-                    commandType = CommandTableType.SequenceCommand;
+-                    break;
+-            }
+-
+-            if (commandIndex != null && hasTracks)
+-            {
+-                undos.AddRange(AddVolumeBus(commandIndex, commandType));
+-            }
+-
+-            return undos;
+-        }
+-        #endregion
+-
+-        #region MiscFunctions
+-        public List<IUndoRedo> UpdateCueLength(ACB_Cue cue)
+-        {
+-            uint length = 0;
+-
+-            foreach(var waveform in GetWaveformsFromCue(cue))
+-            {
+-                var awbEntry = GetAfs2Entry(waveform.AwbId, true);
+-                TrackMetadata trackInfo = (awbEntry != null) ? awbEntry.HcaInfo : new TrackMetadata();
+-
+-                if (trackInfo.DurationSeconds * 1000 > length)
+-                    length = (uint)(trackInfo.DurationSeconds * 1000);
+-            }
+-
+-            uint originalLength = cue.Length;
+-            cue.Length = length;
+-
+-            return new List<IUndoRedo>() { new UndoableProperty<ACB_Cue>("Length", cue, originalLength, length) };
+-        }
+-        
+-        /// <summary>
+-        /// Checks if the specified cue can add any more tracks.
+-        /// </summary>
+-        public bool CanAddTrack(ACB_Cue cue)
+-        {
+-            if(cue.ReferenceType == ReferenceType.Sequence || cue.ReferenceType == ReferenceType.Synth)
+-            {
+-                return true;
+-            }
+-            else if(cue.ReferenceType == ReferenceType.Waveform)
+-            {
+-                return cue.ReferenceIndex.IsNull;
+-            }
+-            else
+-            {
+-                return false;
+-            }
+-        }
+-
+-        /// <summary>
+-        /// Checks if the specified cue can add any actions.
+-        /// </summary>
+-        public bool CanAddAction(ACB_Cue cue)
+-        {
+-            return cue.ReferenceType == ReferenceType.Sequence || cue.ReferenceType == ReferenceType.Synth;
+-        }
+-        
+-        public List<IUndoRedo> RandomizeCueIds()
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            int startCueId = Random.Range(5000, int.MaxValue / 2);
+-
+-            for (int i = 0; i < Cues.Count; i++)
+-            {
+-                uint newId = (uint)(startCueId + i);
+-                undos.Add(new UndoableProperty<ACB_Cue>(nameof(ACB_Cue.ID), Cues[i], Cues[i].ID, newId));
+-                Cues[i].ID = newId;
+-            }
+-
+-            return undos;
+-        }
+-        
+-        /// <summary>
+-        /// Search for an encryption key for any HCA tracks in this ACB, if any.
+-        /// </summary>
+-        public ulong TryGetEncrpytionKey()
+-        {
+-            return AudioTracks.TryGetEncrpytionKey();
+-        }
+-
+-        public bool IsStreamingAcb()
+-        {
+-            int stream = 0;
+-
+-            foreach(var waveform in Waveforms)
+-            {
+-                if (waveform.Streaming > 0)
+-                    stream++;
+-            }
+-
+-            return (Waveforms.Count - stream) < stream;
+-        }
+-
+-        public bool Is3DAcb()
+-        {
+-            int _3d = 0;
+-
+-            foreach(var cue in Cues)
+-            {
+-                if (DoesCueHave3dDef(cue))
+-                    _3d++;
+-            }
+-
+-            return (Cues.Count - _3d) < _3d;
+-        }
+-
+-        public bool IsCueNameUsed(string cueName)
+-        {
+-            return Cues.Any(x => x.Name == cueName);
+-        }
+-
+-        //3Dvol_def
+-        public List<IUndoRedo> Add3dDefToCue(ACB_Cue cue)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-            if (DoesCueHave3dDef(cue)) return undos;
+-
+-            IGlobalAisacRef globalAisacHolder;
+-
+-            switch (cue.ReferenceType)
+-            {
+-                case ReferenceType.Sequence:
+-                    globalAisacHolder = GetSequence(cue.ReferenceIndex.TableGuid);
+-                    break;
+-                case ReferenceType.Synth:
+-                    globalAisacHolder = GetSynth(cue.ReferenceIndex.TableGuid);
+-                    break;
+-                default:
+-                    return undos;
+-            }
+-
+-
+-            ACB_GlobalAisacReference globalAisacRef = new ACB_GlobalAisacReference() { Name = GLOBAL_AISAC_3DVOL_DEF, InstanceGuid = Guid.NewGuid() };
+-            GlobalAisacReferences.Add(globalAisacRef);
+-            undos.Add(new UndoableListAdd<ACB_GlobalAisacReference>(GlobalAisacReferences, globalAisacRef));
+-
+-            AcbTableReference _3dRef = new AcbTableReference() { TableGuid = globalAisacRef.InstanceGuid };
+-
+-            globalAisacHolder.GlobalAisacRefs.Add(_3dRef);
+-            undos.Add(new UndoableListAdd<AcbTableReference>(globalAisacHolder.GlobalAisacRefs, _3dRef));
+-
+-            return undos;
+-        }
+-
+-        public List<IUndoRedo> Remove3dDefFromCue(ACB_Cue cue)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-            
+-            IGlobalAisacRef globalAisacHolder;
+-
+-            switch (cue.ReferenceType)
+-            {
+-                case ReferenceType.Sequence:
+-                    globalAisacHolder = GetSequence(cue.ReferenceIndex.TableGuid);
+-                    break;
+-                case ReferenceType.Synth:
+-                    globalAisacHolder = GetSynth(cue.ReferenceIndex.TableGuid);
+-                    break;
+-                default:
+-                    return undos;
+-            }
+-            
+-            foreach (var aisac in globalAisacHolder.GlobalAisacRefs)
+-            {
+-                var aisacRef = GetGlobalAisacReference(aisac.TableGuid);
+-                if (aisacRef != null)
+-                {
+-                    if (aisacRef.Name == GLOBAL_AISAC_3DVOL_DEF)
+-                    {
+-                        undos.Add(new UndoableListRemove<AcbTableReference>(globalAisacHolder.GlobalAisacRefs, aisac));
+-                        globalAisacHolder.GlobalAisacRefs.Remove(aisac);
+-                        break;
+-                    }
+-                }
+-            }
+-
+-            return undos;
+-        }
+-
+-        public bool DoesCueHave3dDef(ACB_Cue cue)
+-        {
+-            IGlobalAisacRef globalAisacHolder;
+-
+-            switch (cue.ReferenceType)
+-            {
+-                case ReferenceType.Sequence:
+-                    globalAisacHolder = GetSequence(cue.ReferenceIndex.TableGuid);
+-                    break;
+-                case ReferenceType.Synth:
+-                    globalAisacHolder = GetSynth(cue.ReferenceIndex.TableGuid);
+-                    break;
+-                default:
+-                    return false;
+-            }
+-
+-            foreach(var aisac in globalAisacHolder.GlobalAisacRefs)
+-            {
+-                var aisacRef = GetGlobalAisacReference(aisac.TableGuid);
+-                if(aisacRef != null)
+-                {
+-                    if (aisacRef.Name == GLOBAL_AISAC_3DVOL_DEF) return true;
+-                }
+-            }
+-
+-            return false;
+-        }
+-        
+-        #endregion
+-
+-        #region CopyFunctions
+-        public List<IUndoRedo> CopyCue(int cueId, ACB_File copyAcb, bool copyActionReferences)
+-        {
+-            //For when you dont care about the new cue ID
+-            int id;
+-            return CopyCue(cueId, copyAcb, copyActionReferences, out id);
+-        }
+-
+-        public List<IUndoRedo> CopyCue(int cueId, ACB_File copyAcb, bool copyActionReferences, out int newCueId)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            //Get and copy the cue
+-            ACB_Cue cue = copyAcb.GetCue(cueId);
+-            if (cue == null)
+-            {
+-                newCueId = -1;
+-                return undos;
+-            }
+-
+-            //Add volumeBus command if required by version (bug-fix)
+-            copyAcb.AddVolumeBusToCue(cue);
+-
+-            cue = cue.Copy();
+-
+-            //Calculate new cueID if needed
+-            if (Cues.Any(x => x.ID == cue.ID))
+-                cue.ID = (uint)GetFreeCueId();
+-
+-            //Copy referenced tables (if needed)
+-            undos.AddRange(CopyReferenceItems(cue, copyAcb));
+-
+-            //Add to acb
+-            Cues.Add(cue);
+-            undos.Add(new UndoableListAdd<ACB_Cue>(Cues, cue));
+-
+-            newCueId = (int)cue.ID;
+-
+-            //Now copy any referenced cues on ActionTracks on this cue
+-            if (copyActionReferences)
+-            {
+-                //Note: Name would've beeen adjusted in CopyActionTrack method, so it should point to this ACB, rather than the original one
+-                foreach(var action in GetAllActionTracksOnCue(cue.InstanceGuid).Where(x => x.TargetAcbName == Name))
+-                {
+-                    if (!action.TargetId.IsNull && GetCueId(action.TargetId.TableGuid) == uint.MaxValue)
+-                    {
+-                        int newCueIdForAction;
+-                        undos.AddRange(CopyCue(action.TargetId.TableIndex_Int, copyAcb, false, out newCueIdForAction));
+-                        action.TargetId.TableIndex = (uint)newCueIdForAction;
+-                    }
+-                }
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyReferenceItems(IReferenceItems referenceItem, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-            
+-            foreach(var item in referenceItem.ReferenceItems)
+-            {
+-                undos.AddRange(CopyReferenceItems(item, copyAcb));
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyReferenceItems(IReferenceType referenceItem, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-            if (referenceItem.ReferenceIndex.IsNull) return undos;
+-
+-            switch (referenceItem.ReferenceType)
+-            {
+-                case ReferenceType.Waveform:
+-                    undos.AddRange(CopyWaveform(copyAcb.GetWaveform(referenceItem.ReferenceIndex.TableGuid, false), copyAcb));
+-                    break;
+-                case ReferenceType.Synth:
+-                    undos.AddRange(CopySynth(copyAcb.GetSynth(referenceItem.ReferenceIndex.TableGuid, false), copyAcb));
+-                    break;
+-                case ReferenceType.Sequence:
+-                    undos.AddRange(CopySequence(copyAcb.GetSequence(referenceItem.ReferenceIndex.TableGuid, false), copyAcb));
+-                    break;
+-                default:
+-                    throw new InvalidDataException($"ACB_File.CopyReferenceItems: Encountered a non-supported ReferenceType ({referenceItem.ReferenceType}). Copy failed.");
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyWaveform(ACB_Waveform waveform, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            if (GetWaveform(waveform.InstanceGuid) == null)
+-            {
+-                waveform = waveform.Copy();
+-                Waveforms.Add(waveform);
+-                undos.Add(new UndoableListAdd<ACB_Waveform>(Waveforms, waveform));
+-
+-                if(waveform.AwbId != ushort.MaxValue)
+-                {
+-                    ushort awbId;
+-                    undos.AddRange(CopyAwbEntry(copyAcb.GetAfs2Entry(waveform.AwbId, false), copyAcb, out awbId));
+-                    waveform.AwbId = awbId;
+-                }
+-                
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopySynth(ACB_Synth synth, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            if (GetSynth(synth.InstanceGuid) == null)
+-            {
+-                synth = synth.Copy();
+-
+-                //ReferenceItems
+-                undos.AddRange(CopyReferenceItems(synth, copyAcb));
+-
+-                //Commnad
+-                if (!synth.CommandIndex.IsNull)
+-                    undos.AddRange(CopyCommand(copyAcb.CommandTables.GetCommand(synth.CommandIndex.TableGuid, CommandTableType.SynthCommand, false), copyAcb, CommandTableType.SynthCommand));
+-
+-                undos.AddRange(CopyLocalAisacs(synth, copyAcb));
+-                undos.AddRange(CopyGlobalAisacs(synth, copyAcb));
+-                undos.AddRange(CopyActionTracks(synth, copyAcb));
+-
+-                Synths.Add(synth);
+-                undos.Add(new UndoableListAdd<ACB_Synth>(Synths, synth));
+-            }
+-
+-            return undos;
+-        }
+-        
+-        private List<IUndoRedo> CopySequence(ACB_Sequence sequence, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            if (GetSequence(sequence.InstanceGuid) == null)
+-            {
+-                sequence = sequence.Copy();
+-
+-                //Commnad
+-                if (!sequence.CommandIndex.IsNull)
+-                    undos.AddRange(CopyCommand(copyAcb.CommandTables.GetCommand(sequence.CommandIndex.TableGuid, CommandTableType.SequenceCommand, false), copyAcb, CommandTableType.SequenceCommand));
+-                
+-                undos.AddRange(CopyLocalAisacs(sequence, copyAcb));
+-                undos.AddRange(CopyGlobalAisacs(sequence, copyAcb));
+-                undos.AddRange(CopyActionTracks(sequence, copyAcb));
+-
+-                //Tracks
+-                foreach(var track in sequence.Tracks)
+-                {
+-                    if (!track.Index.IsNull)
+-                        undos.AddRange(CopyTrack(copyAcb.GetTrack(track.Index.TableGuid, false), copyAcb));
+-                }
+-
+-                Sequences.Add(sequence);
+-                undos.Add(new UndoableListAdd<ACB_Sequence>(Sequences, sequence));
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyAwbEntry(AFS2_Entry awbEntry, ACB_File copyAcb, out ushort newAwbId)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            ushort id = AudioTracks.GetExistingEntry(awbEntry);
+-            if (id == ushort.MaxValue)
+-            {
+-                //Awb entry doesn't exist, adding it..
+-                awbEntry = awbEntry.Copy();
+-                id = (ushort)AudioTracks.NextID();
+-                awbEntry.ID = id;
+-                AudioTracks.Entries.Add(awbEntry);
+-                undos.Add(new UndoableListAdd<AFS2_Entry>(AudioTracks.Entries, awbEntry));
+-            }
+-
+-            newAwbId = id;
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyCommand(ACB_CommandGroup command, ACB_File copyAcb, CommandTableType commandTableType)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            if(CommandTables.GetCommand(command.InstanceGuid, commandTableType) == null)
+-            {
+-                command = command.Copy();
+-
+-                //Copy referenced tables
+-                foreach(var cmd in command.Commands)
+-                {
+-                    switch (cmd.CommandType)
+-                    {
+-                        case CommandType.ReferenceItem:
+-                        case CommandType.ReferenceItem2:
+-                            undos.AddRange(CopyReferenceItems(cmd, copyAcb));
+-                            break;
+-                        case CommandType.GlobalAisacReference:
+-                            undos.AddRange(CopyGlobalAisac(copyAcb, cmd.ReferenceIndex));
+-                            break;
+-                        case CommandType.VolumeBus:
+-                        case CommandType.Bus:
+-                            undos.AddRange(CopyStringValue(cmd.ReferenceIndex, copyAcb));
+-                            break;
+-                    }
+-                }
+-
+-                undos.AddRange(CommandTables.AddCommand(command, commandTableType));
+-            }
+-
+-            return undos;
+-        }
+-        
+-        private List<IUndoRedo> CopyTrack(ACB_Track track, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            if(GetTrack(track.InstanceGuid) == null)
+-            {
+-                track = track.Copy();
+-
+-                undos.AddRange(CopyLocalAisacs(track, copyAcb));
+-                undos.AddRange(CopyGlobalAisacs(track, copyAcb));
+-
+-                if(!track.CommandIndex.IsNull)
+-                    undos.AddRange(CopyCommand(copyAcb.CommandTables.GetCommand(track.CommandIndex.TableGuid, CommandTableType.TrackCommand, false), copyAcb, CommandTableType.TrackCommand));
+-
+-                if (!track.EventIndex.IsNull)
+-                    undos.AddRange(CopyCommand(copyAcb.CommandTables.GetCommand(track.EventIndex.TableGuid, CommandTableType.TrackEvent, false), copyAcb, CommandTableType.TrackEvent));
+-
+-                Tracks.Add(track);
+-                undos.Add(new UndoableListAdd<ACB_Track>(Tracks, track));
+-
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyGraphs(IGraphIndexes graphs, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            foreach(var graph in graphs.GraphIndexes)
+-            {
+-                if(GetGraph(graph.TableGuid) == null && !graph.IsNull)
+-                {
+-                    var graphTable = copyAcb.GetGraph(graph.TableGuid, false).Copy();
+-                    Graphs.Add(graphTable);
+-                    undos.Add(new UndoableListAdd<ACB_Graph>(Graphs, graphTable));
+-                }
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyAutoModulation(IAutoModulationIndex autoMod, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-            if (autoMod.AutoModulationIndex.IsNull) return undos;
+-
+-            if (GetAutoModulation(autoMod.AutoModulationIndex.TableGuid) == null)
+-            {
+-                var newAutoMod = copyAcb.GetAutoModulation(autoMod.AutoModulationIndex.TableGuid).Copy();
+-                AutoModulations.Add(newAutoMod);
+-                undos.Add(new UndoableListAdd<ACB_AutoModulation>(AutoModulations, newAutoMod));
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyLocalAisacs(ILocalAisac localAisacs, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            foreach (var aisac in localAisacs.LocalAisac)
+-            {
+-                if (GetAisac(aisac.TableGuid) == null && !aisac.IsNull)
+-                {
+-                    var aisacTable = copyAcb.GetAisac(aisac.TableGuid, false).Copy();
+-
+-                    if (aisacTable.GraphIndexes.Count > 0)
+-                        undos.AddRange(CopyGraphs(aisacTable, copyAcb));
+-
+-                    if (!aisacTable.AutoModulationIndex.IsNull)
+-                        undos.AddRange(CopyAutoModulation(aisacTable, copyAcb));
+-
+-                    Aisacs.Add(aisacTable);
+-                    undos.Add(new UndoableListAdd<ACB_Aisac>(Aisacs, aisacTable));
+-                }
+-            }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyGlobalAisacs(IGlobalAisacRef globalAisacs, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
++            //External AWB header
++            var headerHelper = AcbFormatHelper.Instance.GetTableHelper("StreamAwbAfs2Header");
+ 
+-            foreach (var aisac in globalAisacs.GlobalAisacRefs)
++            if (headerHelper.DoesExist(Version) && streamAwbHeader != null && !IsAwbCpk)
+             {
+-                undos.AddRange(CopyGlobalAisac(copyAcb, aisac));
++                //UTF Table
++                UTF_File streamAwbHeaderTable = CreateDefaultStreamAwbHeaderTable();
++                streamAwbHeaderTable.AddData("Header", 0, streamAwbHeader);
++                utfFile.AddData("StreamAwbAfs2Header", 0, streamAwbHeaderTable.Write());
+             }
+-
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyGlobalAisac(ACB_File copyAcb, AcbTableReference aisac)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            if (GetGlobalAisacReference(aisac.TableGuid) == null && !aisac.IsNull)
++            else if (tableHelper.ColumnExists("StreamAwbAfs2Header", TypeFlag.Data, Version))
+             {
+-                var aisacTable = copyAcb.GetGlobalAisacReference(aisac.TableGuid, false).Copy();
+-                GlobalAisacReferences.Add(aisacTable);
+-                undos.Add(new UndoableListAdd<ACB_GlobalAisacReference>(GlobalAisacReferences, aisacTable));
++                //Just a byte array
++                utfFile.AddData("StreamAwbAfs2Header", 0, streamAwbHeader);
+             }
+ 
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CopyActionTracks(IActionTrack actionTracks, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            foreach (var action in actionTracks.ActionTracks)
++            //AudioPackage values
++            if(SaveFormat == SaveFormat.AudioPackage)
+             {
+-                if (GetActionTrack(action.TableGuid) == null && !action.IsNull)
+-                {
+-                    var actionTable = copyAcb.GetActionTrack(action.TableGuid, false).Copy();
+-
+-                    undos.AddRange(CopyLocalAisacs(actionTable, copyAcb));
+-                    undos.AddRange(CopyGlobalAisacs(actionTable, copyAcb));
+-
+-                    if (!actionTable.CommandIndex.IsNull)
+-                        undos.AddRange(CopyCommand(copyAcb.CommandTables.GetCommand(actionTable.CommandIndex.TableGuid, CommandTableType.TrackEvent, false), copyAcb, CommandTableType.TrackEvent));
+-
+-                    if (!actionTable.EventIndex.IsNull)
+-                        undos.AddRange(CopyCommand(copyAcb.CommandTables.GetCommand(actionTable.EventIndex.TableGuid, CommandTableType.TrackEvent, false), copyAcb, CommandTableType.TrackEvent));
+-
+-                    if(actionTable.TargetAcbName == copyAcb.Name)
+-                    {
+-                        //Is Target=Self
+-                        actionTable.TargetAcbName = Name;
+-                    }
+-
+-                    ActionTracks.Add(actionTable);
+-                    undos.Add(new UndoableListAdd<ACB_Track>(ActionTracks, actionTable));
+-                }
++                utfFile.AddValue("AudioPackageType", TypeFlag.Int32, 0, ((int)AudioPackageType).ToString());
+             }
+-
+-            return undos;
+-        }
+-
+-        /* 
+-         *OLD, crash prone copy method for StringValue. At least for Xenoverse 2, only copying a single string reference causes the game to randomly crash sometimes when the cue is called.
+-        private List<IUndoRedo> CopyStringValue(AcbTableReference tableRef, ACB_File copyAcb)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            var strValue = copyAcb.GetStringValue(tableRef.TableGuid);
+-
+-            if(strValue != null)
++            if (SaveFormat == SaveFormat.AudioPackage && AudioPackageVersion >= AudioPackageVersionEnum.Expanded)
+             {
+-                var strValueInThisAcb = GetStringValue(strValue.StringValue);
++                utfFile.AddValue("AudioPackageVersion", TypeFlag.Int32, 0, ((int)AudioPackageVersion).ToString());
++            }
+ 
+-                if(strValueInThisAcb != null)
++            //Now set all of the "R_" columns
++            foreach (var column in utfFile.Columns.Where(x => x.Rows.Count == 0))
++            {
++                if(column.Name[0] == 'R')
+                 {
+-                    //Set the GUID
+-                    tableRef.TableGuid = strValueInThisAcb.InstanceGuid;
++                    column.AddValue("0", 0);
+                 }
+                 else
+                 {
+-                    //Add StringValue
+-                    StringValues.Add(strValue);
+-                    undos.Add(new UndoableListAdd<ACB_StringValue>(StringValues, strValue));
++                    throw new InvalidDataException($"ACB_File.WriteToTable: row count mismatch");
+                 }
+             }
+ 
+-            return undos;
++            return utfFile;
+         }
+-        */
+-
+-        private List<IUndoRedo> CopyStringValue(AcbTableReference tableRef, ACB_File copyAcb)
++        
++        public byte[] SaveAudioPackageToBytes()
+         {
+-            //I've redone this method to copy ALL the string values when copying, instead of just the one referenced. Seems to fix a random crashing issue.
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            //Check if String Values are the same on both ACBs
+-            bool sameStringValues = StringValues.Count == copyAcb.StringValues.Count && StringValues.Count > 0;
++            TrimSequenceTrackPercentages();
++            LinkTableIndexes();
++            UTF_File utfFile = WriteToTable(null, null, Name);
++            return utfFile.Write(true);
++        }
++        #endregion
+ 
+-            if (sameStringValues)
++        #region MiscFunctions
++        
++        /// <summary>
++        /// Checks if the specified cue can add any more tracks.
++        /// </summary>
++        public bool CanAddTrack(ACB_Cue cue)
++        {
++            if(cue.ReferenceType == ReferenceType.Sequence || cue.ReferenceType == ReferenceType.Synth)
+             {
+-                for(int i = 0; i < StringValues.Count; i++)
+-                {
+-                    if (StringValues[i].StringValue != copyAcb.StringValues[i].StringValue)
+-                    {
+-                        sameStringValues = false;
+-                        break;
+-                    }
+-                }
++                return true;
+             }
+-
+-            //Copy over ALL StringValues if there is a mismatch
+-            if (!sameStringValues)
++            else if(cue.ReferenceType == ReferenceType.Waveform)
+             {
+-                for(int i = StringValues.Count; i < copyAcb.StringValues.Count; i++)
+-                {
+-                    StringValues.Add(copyAcb.StringValues[i]);
+-                    undos.Add(new UndoableListAdd<ACB_StringValue>(StringValues, copyAcb.StringValues[i]));
+-                }
++                return cue.ReferenceIndex.IsNull;
++            }
++            else
++            {
++                return false;
+             }
++        }
++
++        /// <summary>
++        /// Checks if the specified cue can add any actions.
++        /// </summary>
++        public bool CanAddAction(ACB_Cue cue)
++        {
++            return cue.ReferenceType == ReferenceType.Sequence || cue.ReferenceType == ReferenceType.Synth;
++        }
++        
++        /// <summary>
++        /// Search for an encryption key for any HCA tracks in this ACB, if any.
++        /// </summary>
++        public ulong TryGetEncrpytionKey()
++        {
++            return AudioTracks.TryGetEncrpytionKey();
++        }
+ 
+-            //Adjust the GUID reference
+-            ACB_StringValue strValue = copyAcb.GetStringValue(tableRef.TableGuid);
++        public bool IsStreamingAcb()
++        {
++            int stream = 0;
+ 
+-            if (strValue != null)
++            foreach(var waveform in Waveforms)
+             {
+-                ACB_StringValue strValueInThisAcb = GetStringValue(strValue.StringValue);
+-
+-                if (strValueInThisAcb != null)
+-                {
+-                    //Set the GUID
+-                    tableRef.TableGuid = strValueInThisAcb.InstanceGuid;
+-                }
+-                else
+-                {
+-                    //FALLBACK path. This will only be triggered if there is a mismatch between the StringValues in this and the copy ACB.
+-                    //In this case the StringValue was never copied over in the above code, so we have to add it now.
+-                    StringValues.Add(strValue);
+-                    undos.Add(new UndoableListAdd<ACB_StringValue>(StringValues, strValue));
+-                }
++                if (waveform.Streaming > 0)
++                    stream++;
+             }
+ 
+-            return undos;
++            return (Waveforms.Count - stream) < stream;
+         }
+ 
++        public bool IsCueNameUsed(string cueName)
++        {
++            return Cues.Any(x => x.Name == cueName);
++        }
+ 
+         #endregion
+ 
+@@ -2379,7 +1169,7 @@ namespace Xv2CoreLib.ACB
+         #endregion
+ 
+         #region MiscPrivateFunctions
+-        private AFS2_File GenerateAwbFile(bool streamingAwb)
++        public AFS2_File GenerateAwbFile(bool streamingAwb)
+         {
+             //Get list of tracks to include
+             List<int> tracks = new List<int>();
+@@ -2416,60 +1206,6 @@ namespace Xv2CoreLib.ACB
+             return awbFile;
+         }
+         
+-        /// <summary>
+-        /// Removes unused tables. (Except Cues and Awb Entries)
+-        /// </summary>
+-        /// <returns></returns>
+-        public List<IUndoRedo> CleanUpTables()
+-        {
+-            //Operation must be undoable to preserve any deletes in the undo history
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            //We must loop over them all multiple times to ensure every unused table is caught, as some unusued tables that get removed later on may reference an earlier one
+-            for (int i = 0; i < 11; i++)
+-            {
+-                bool deleted = false;
+-
+-                undos.AddRange(CleanUpTable(Sequences, ref deleted));
+-                undos.AddRange(CleanUpTable(Synths, ref deleted));
+-                undos.AddRange(CleanUpTable(Waveforms, ref deleted));
+-                undos.AddRange(CleanUpTable(Tracks, ref deleted));
+-                undos.AddRange(CleanUpTable(ActionTracks, ref deleted));
+-                undos.AddRange(CleanUpTable(Aisacs, ref deleted));
+-                undos.AddRange(CleanUpTable(GlobalAisacReferences, ref deleted));
+-                undos.AddRange(CleanUpTable(Graphs, ref deleted));
+-                undos.AddRange(CleanUpTable(AutoModulations, ref deleted));
+-                //StringValues dont get deleted (some commands require them and they are small and harmless by themselves)
+-
+-                foreach (var commandTable in CommandTables.CommandTables)
+-                    undos.AddRange(CleanUpTable(commandTable.CommandGroups, ref deleted));
+-
+-                //If no table was deleted in this loop, end here
+-                if (!deleted)
+-                    break;
+-            }
+-            
+-            return undos;
+-        }
+-
+-        private List<IUndoRedo> CleanUpTable<T>(IList<T> entries, ref bool deleted) where T : AcbTableBase
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            for (int i = entries.Count - 1; i >= 0; i--)
+-            {
+-                if(!IsTableUsed(entries[i].InstanceGuid))
+-                {
+-                    T original = entries[i];
+-                    entries.Remove(entries[i]);
+-                    undos.Add(new UndoableListRemove<T>(entries, original, i));
+-                    deleted = true;
+-                }
+-            }
+-
+-            return undos;
+-        }
+-        
+         /// <summary>
+         /// Ensure that all ACB_SequenceTrack Percentage values do not exceed 100.
+         /// </summary>
+@@ -3255,74 +1991,27 @@ namespace Xv2CoreLib.ACB
+     
+     }
+ 
+-    [YAXSerializeAs("Cue")]
+-    [Serializable]
+     public class ACB_Cue : AcbTableBase, IReferenceType
+     {
+ 
+-        #region Undoable
+-        [YAXDontSerialize]
+-        public string UndoableName
+-        {
+-            get
+-            {
+-                return Name;
+-            }
+-            set
+-            {
+-                if (Name != value)
+-                {
+-                    string oldValue = Name;
+-                    Name = value;
+-                    UndoManager.Instance.AddUndo(new UndoableProperty<ACB_Cue>("Name", this, oldValue, value, "Cue Name"));
+-                    NotifyPropertyChanged("UndoableName");
+-                }
+-            }
+-        }
+-
+-        #endregion
+-
+-        [YAXAttributeForClass]
+         public uint ID { get; set; } //CueID (uint)
+         private string _cueName = string.Empty;
+-        [YAXAttributeForClass]
+-        public string Name { get { return _cueName; } set { _cueName = value; NotifyPropertyChanged("UndoableName"); } }
+-        [YAXAttributeForClass]
++        public string Name { get { return _cueName; } set { _cueName = value; } }
+         public int CueNameIndex { get; set; } = -1;
+ 
+-        [YAXAttributeFor("UserData")]
+-        [YAXSerializeAs("value")]
+         public string UserData { get; set; } = string.Empty;
+-        [YAXAttributeFor("Worksize")]
+-        [YAXSerializeAs("value")]
+         public ushort Worksize { get; set; }
+-        [YAXAttributeFor("AisacControlMap")]
+-        [YAXSerializeAs("values")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public byte[] AisacControlMap { get; set; }
+-        [YAXAttributeFor("ReferenceType")]
+-        [YAXSerializeAs("value")]
+         public ReferenceType ReferenceType { get; set; }
+-        [YAXSerializeAs("ReferenceIndex")]
+         public AcbTableReference ReferenceIndex { get; set; } = new AcbTableReference(); //ushort
+-        [YAXAttributeFor("Length")]
+-        [YAXSerializeAs("value")]
+         public uint Length { get; set; }
+-        [YAXAttributeFor("NumAisacControlMaps")]
+-        [YAXSerializeAs("value")]
+         public uint NumAisacControlMaps { get; set; }
+-        [YAXAttributeFor("HeaderVisibility")]
+-        [YAXSerializeAs("value")]
+         public byte HeaderVisibility { get; set; }
+ 
+         //AudioPackage / Install:
+-        [YAXDontSerialize]
+         public string AliasBinding { get; set; }
+-        [YAXDontSerialize]
+         public VoiceLanguageEnum VoiceLanguage { get; set; } = VoiceLanguageEnum.English;
+-        [YAXDontSerialize]
+         public string InstallID => $"{AliasBinding}_{Name}";
+-        [YAXDontSerialize]
+         public string InstallID_Lang => $"{AliasBinding}_{Name}_{VoiceLanguage}";
+ 
+ 
+@@ -3448,48 +2137,28 @@ namespace Xv2CoreLib.ACB
+         }
+     }
+ 
+-    [YAXSerializeAs("Synth")]
+-    [Serializable]
+     public class ACB_Synth : AcbTableBase, IReferenceItems, ICommandIndex, ILocalAisac, IGlobalAisacRef, IActionTrack, IParameterPallet
+     {
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXAttributeFor("Type")]
+-        [YAXSerializeAs("value")]
+         public byte Type { get; set; }
+-        [YAXAttributeFor("VoiceLimitGroupName")]
+-        [YAXSerializeAs("value")]
+         public string VoiceLimitGroupName { get; set; } = string.Empty;
+-        [YAXAttributeFor("ParameterPallet")]
+-        [YAXSerializeAs("value")]
+         public AcbTableReference ParameterPallet { get; set; } = new AcbTableReference(); //ushort
+-        [YAXAttributeFor("TrackValues")]
+-        [YAXSerializeAs("values")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public byte[] TrackValues { get; set; }
+ 
+         //ReferenceItems
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "ReferenceItem")]
+         public List<ACB_ReferenceItem> ReferenceItems { get; set; } = new List<ACB_ReferenceItem>();
+ 
+         //CommandTable
+-        [YAXSerializeAs("CommandIndex")]
+         public AcbTableReference CommandIndex { get; set; } = new AcbTableReference(); //ushort
+ 
+         //LocalAisac
+-        [YAXSerializeAs("LocalAisac")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ", ")]
+         public List<AcbTableReference> LocalAisac { get; set; } = new List<AcbTableReference>(); //ushort
+ 
+         //GlobalAisac
+-        [YAXSerializeAs("GlobalAisacRefs")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public List<AcbTableReference> GlobalAisacRefs { get; set; } = new List<AcbTableReference>(); //ushort
+ 
+         //ActionTrack
+-        [YAXSerializeAs("ActionTracks")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public List<AcbTableReference> ActionTracks { get; set; } = new List<AcbTableReference>(); //ushort
+ 
+         public ACB_Synth()
+@@ -3615,78 +2284,34 @@ namespace Xv2CoreLib.ACB
+ 
+     }
+ 
+-    [YAXSerializeAs("Sequence")]
+-    [Serializable]
+     public class ACB_Sequence : AcbTableBase, ITrack, ICommandIndex, ILocalAisac, IGlobalAisacRef, IActionTrack, IParameterPallet
+     {
+ 
+-        #region Undoable
+-        [YAXDontSerialize]
+-        public SequenceType UndoableSequenceType
+-        {
+-            get
+-            {
+-                return Type;
+-            }
+-            set
+-            {
+-                if (Type != value)
+-                {
+-                    SequenceType oldValue = Type;
+-                    Type = value;
+-                    UndoManager.Instance.AddUndo(new UndoableProperty<ACB_Sequence>("Type", this, oldValue, value, "Sequence Type"));
+-                    NotifyPropertyChanged(nameof(UndoableSequenceType));
+-                }
+-            }
+-        }
+-
+-        #endregion
+-
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+         private SequenceType _sequenceType = SequenceType.Polyphonic;
+-        [YAXAttributeFor("Type")]
+-        [YAXSerializeAs("value")]
+-        public SequenceType Type { get { return _sequenceType; } set { _sequenceType = value; NotifyPropertyChanged(nameof(UndoableSequenceType)); } }
+-        [YAXAttributeFor("PlaybackRatio")]
+-        [YAXSerializeAs("value")]
++        public SequenceType Type { get { return _sequenceType; } set { _sequenceType = value; } }
+         public ushort PlaybackRatio { get; set; } = 100;
+-        [YAXAttributeFor("Tempo")]
+-        [YAXSerializeAs("value")]
+         public ushort Tempo { get; set; } //only in old versions
+-        [YAXAttributeFor("InstPluginTrackStartIndex")]
+-        [YAXSerializeAs("value")]
+         public ushort InstPluginTrackStartIndex { get; set; } = ushort.MaxValue;
+-        [YAXAttributeFor("NumInstPluginTracks")]
+-        [YAXSerializeAs("value")]
+         public ushort NumInstPluginTracks { get; set; } 
+ 
+         //Tracks
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "Track")]
+         public AsyncObservableCollection<ACB_SequenceTrack> Tracks { get; set; } = new AsyncObservableCollection<ACB_SequenceTrack>();
+ 
+         //ParameterPallet
+-        [YAXAttributeFor("ParameterPallet")]
+         public AcbTableReference ParameterPallet { get; set; } = new AcbTableReference(); //ushort
+ 
+         //CommandIndex
+-        [YAXSerializeAs("CommandIndex")]
+         public AcbTableReference CommandIndex { get; set; } = new AcbTableReference(); //ushort
+ 
+         //LocalAisac
+-        [YAXSerializeAs("LocalAisac")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ", ")]
+         public List<AcbTableReference> LocalAisac { get; set; } = new List<AcbTableReference>(); //ushort
+ 
+         //GlobalAisac
+-        [YAXSerializeAs("GlobalAisacRefs")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public List<AcbTableReference> GlobalAisacRefs { get; set; } = new List<AcbTableReference>(); //ushort
+ 
+         //ActionTrack
+-        [YAXSerializeAs("ActionTracks")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public List<AcbTableReference> ActionTracks { get; set; } = new List<AcbTableReference>(); //ushort
+         
+         public void Initialize()
+@@ -3909,8 +2534,6 @@ namespace Xv2CoreLib.ACB
+         }
+     }
+ 
+-    [YAXSerializeAs("Track")]
+-    [Serializable]
+     public class ACB_SequenceTrack : INotifyPropertyChanged
+     {
+         #region NotifyPropertyChanged
+@@ -3926,10 +2549,8 @@ namespace Xv2CoreLib.ACB
+         #endregion
+ 
+ 
+-        [YAXAttributeForClass]
+         public AcbTableReference Index { get; set; } = new AcbTableReference(); //TrackIndex, ushort
+         private ushort _percentage = 0;
+-        [YAXAttributeForClass]
+         public ushort Percentage
+         {
+             get
+@@ -3940,98 +2561,35 @@ namespace Xv2CoreLib.ACB
+             {
+                 _percentage = value;
+                 NotifyPropertyChanged("Percentage");
+-                NotifyPropertyChanged("UndoablePercentage");
+-            }
+-        }
+-
+-        #region Undoables
+-        [YAXDontSerialize]
+-        public ushort UndoablePercentage
+-        {
+-            get
+-            {
+-                return Percentage;
+-            }
+-            set
+-            {
+-                if(Percentage != value)
+-                {
+-                    ushort oldValue = Percentage;
+-                    Percentage = value;
+-                    UndoManager.Instance.AddUndo(new UndoableProperty<ACB_SequenceTrack>("Percentage", this, oldValue, value, "SeqTrack Percentage"));
+-                    NotifyPropertyChanged("UndoablePercentage");
+-                }
+             }
+         }
+ 
+-        #endregion
+-
+     }
+ 
+-    [Serializable]
+     public class ACB_SequenceBlock : AcbTableBase, ICommandIndex, ILocalAisac, ITrack, IGlobalAisacRef, IBlock
+     {
+         
+-        #region Undoable
+-        [YAXDontSerialize]
+-        public SequenceType UndoableSequenceType
+-        {
+-            get
+-            {
+-                return Type;
+-            }
+-            set
+-            {
+-                if (Type != value)
+-                {
+-                    SequenceType oldValue = Type;
+-                    Type = value;
+-                    UndoManager.Instance.AddUndo(new UndoableProperty<ACB_SequenceBlock>(nameof(Type), this, oldValue, value, "SequenceBlock Type"));
+-                    NotifyPropertyChanged(nameof(UndoableSequenceType));
+-                }
+-            }
+-        }
+-
+-        #endregion
+-
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+         private SequenceType _sequenceType = SequenceType.Polyphonic;
+-        [YAXAttributeFor("Type")]
+-        [YAXSerializeAs("value")]
+-        public SequenceType Type { get { return _sequenceType; } set { _sequenceType = value; NotifyPropertyChanged(nameof(UndoableSequenceType)); } }
+-        [YAXAttributeFor("PlaybackRatio")]
+-        [YAXSerializeAs("value")]
++        public SequenceType Type { get { return _sequenceType; } set { _sequenceType = value; } }
+         public ushort PlaybackRatio { get; set; } = 100;
+-        [YAXAttributeFor("ParameterPallet")]
+-        [YAXSerializeAs("value")]
+         public ushort ParameterPallet { get; set; } = ushort.MaxValue;
+-        [YAXAttributeFor("Tempo")]
+-        [YAXSerializeAs("value")]
+         public ushort Tempo { get; set; } //only in old versions
+ 
+         //CommandIndex
+-        [YAXSerializeAs("CommandIndex")]
+         public AcbTableReference CommandIndex { get; set; } = new AcbTableReference(); //ushort
+ 
+         //LocalAisac
+-        [YAXSerializeAs("LocalAisac")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ", ")]
+         public List<AcbTableReference> LocalAisac { get; set; } = new List<AcbTableReference>(); //ushort
+ 
+         //GlobalAisac
+-        [YAXSerializeAs("GlobalAisacRefs")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public List<AcbTableReference> GlobalAisacRefs { get; set; } = new List<AcbTableReference>(); //ushort
+ 
+         //Tracks
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "Track")]
+         public AsyncObservableCollection<ACB_SequenceTrack> Tracks { get; set; } = new AsyncObservableCollection<ACB_SequenceTrack>();
+ 
+         //Blocks
+-        [YAXSerializeAs("Blocks")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ", ")]
+         public List<AcbTableReference> Blocks { get; set; } = new List<AcbTableReference>();
+ 
+         public void Initialize()
+@@ -4263,93 +2821,26 @@ namespace Xv2CoreLib.ACB
+ 
+     }
+ 
+-    [Serializable]
+     public class ACB_Block : AcbTableBase, ITrack, ICommandIndex, IActionTrack, IBlock
+     {
+ 
+         //CommandIndex
+-        [YAXSerializeAs("CommandIndex")]
+         public AcbTableReference CommandIndex { get; set; } = new AcbTableReference(); //ushort
+ 
+         //ActionTrack
+-        [YAXSerializeAs("ActionTracks")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public List<AcbTableReference> ActionTracks { get; set; } = new List<AcbTableReference>(); //ushort
+ 
+         //Tracks
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "Track")]
+         public AsyncObservableCollection<ACB_SequenceTrack> Tracks { get; set; } = new AsyncObservableCollection<ACB_SequenceTrack>();
+ 
+         //Blocks
+-        [YAXSerializeAs("Blocks")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ", ")]
+         public List<AcbTableReference> Blocks { get; set; } = new List<AcbTableReference>();
+ 
+ 
+     }
+ 
+-    [YAXSerializeAs("Track")]
+-    [Serializable]
+     public class ACB_Track : AcbTableBase, IEventIndex, ICommandIndex, ILocalAisac, IGlobalAisacRef, ITargetId, IParameterPallet
+     {
+-        #region Undoable
+-        [YAXDontSerialize]
+-        public int UndoableTargetType
+-        {
+-            get
+-            {
+-                return (int)TargetType;
+-            }
+-            set
+-            {
+-                if ((int)TargetType != value)
+-                {
+-                    TargetType oldValue = TargetType;
+-                    TargetType = (TargetType)value;
+-                    UndoManager.Instance.AddUndo(new UndoableProperty<ACB_Track>("TargetType", this, oldValue, TargetType, "Target Type"));
+-                    NotifyPropertyChanged("UndoableTargetType");
+-                }
+-            }
+-        }
+-
+-        [YAXDontSerialize]
+-        public string UndoableTargetAcbName
+-        {
+-            get
+-            {
+-                return TargetAcbName;
+-            }
+-            set
+-            {
+-                if (TargetAcbName != value)
+-                {
+-                    string oldValue = TargetAcbName;
+-                    TargetAcbName = value;
+-                    UndoManager.Instance.AddUndo(new UndoableProperty<ACB_Track>("TargetAcbName", this, oldValue, value, "Target Acb Name"));
+-                    NotifyPropertyChanged("UndoableTargetAcbName");
+-                }
+-            }
+-        }
+-
+-        [YAXDontSerialize]
+-        public bool UndoableTargetSelf
+-        {
+-            get
+-            {
+-                return TargetSelf;
+-            }
+-            set
+-            {
+-                if (TargetSelf != value)
+-                {
+-                    bool oldValue = TargetSelf;
+-                    TargetSelf = value;
+-                    UndoManager.Instance.AddUndo(new UndoableProperty<ACB_Track>("TargetSelf", this, oldValue, value, "Target Self"));
+-                    NotifyPropertyChanged("UndoableTargetSelf");
+-                }
+-            }
+-        }
+-        #endregion
+ 
+         //Values
+         private TargetType _targetType = TargetType.AnyAcb;
+@@ -4357,46 +2848,25 @@ namespace Xv2CoreLib.ACB
+         private bool _targetSelf = false;
+ 
+         //Properties
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXAttributeFor("ParameterPallet")]
+         public AcbTableReference ParameterPallet { get; set; } = new AcbTableReference(); //ushort
+-        [YAXAttributeFor("TargetType")]
+-        [YAXSerializeAs("value")]
+-        public TargetType TargetType { get { return _targetType; } set { _targetType = value; NotifyPropertyChanged(nameof(UndoableTargetType)); } }
+-        [YAXAttributeFor("TargetName")]
+-        [YAXSerializeAs("value")]
++        public TargetType TargetType { get { return _targetType; } set { _targetType = value; } }
+         public string TargetName { get; set; } = string.Empty;
+-        [YAXSerializeAs("TargetId")]
+         public AcbTableReference TargetId { get; set; } = new AcbTableReference(uint.MaxValue); //uint
+-        [YAXAttributeFor("TargetAcbName")]
+-        [YAXSerializeAs("value")]
+-        public string TargetAcbName { get { return _targetAcbName; } set { _targetAcbName = value; NotifyPropertyChanged(nameof(UndoableTargetAcbName)); } }
+-        [YAXAttributeFor("TargetSelf")]
+-        [YAXSerializeAs("value")]
+-        public bool TargetSelf { get { return _targetSelf; } set { _targetSelf = value; NotifyPropertyChanged(nameof(UndoableTargetSelf)); } }//When true, set TargetAcbName to current Acb Name
+-        [YAXAttributeFor("Scope")]
+-        [YAXSerializeAs("value")]
++        public string TargetAcbName { get { return _targetAcbName; } set { _targetAcbName = value; } }
++        public bool TargetSelf { get { return _targetSelf; } set { _targetSelf = value; } }//When true, set TargetAcbName to current Acb Name
+         public byte Scope { get; set; }
+-        [YAXAttributeFor("TargetTrackNo")]
+-        [YAXSerializeAs("value")]
+         public ushort TargetTrackNo { get; set; } = 65535;
+ 
+         //Commands
+-        [YAXSerializeAs("EventIndex")]
+         public AcbTableReference EventIndex { get; set; } = new AcbTableReference();
+-        [YAXSerializeAs("CommandIndex")]
+         public AcbTableReference CommandIndex { get; set; } = new AcbTableReference();
+ 
+         //LocalAisac
+-        [YAXSerializeAs("LocalAisac")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ", ")]
+         public List<AcbTableReference> LocalAisac { get; set; } = new List<AcbTableReference>();
+ 
+         //GlobalAisac
+-        [YAXSerializeAs("GlobalAisacRefs")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public List<AcbTableReference> GlobalAisacRefs { get; set; } = new List<AcbTableReference>();
+ 
+         public void Initialize()
+@@ -4500,14 +2970,10 @@ namespace Xv2CoreLib.ACB
+ 
+     }
+ 
+-    [YAXSerializeAs("GlobalAisacReference")]
+-    [Serializable]
+     public class ACB_GlobalAisacReference : AcbTableBase
+     {
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXAttributeForClass]
+         public string Name { get; set; } = string.Empty;
+ 
+         public static List<ACB_GlobalAisacReference> Load(UTF_File table, Version ParseVersion)
+@@ -4547,49 +3013,17 @@ namespace Xv2CoreLib.ACB
+ 
+     }
+ 
+-    [YAXSerializeAs("Waveform")]
+-    [Serializable]
+     public class ACB_Waveform : AcbTableBase
+     {
+-        #region Undoable
+-        [YAXDontSerialize]
+-        public bool UndoableStreaming
+-        {
+-            get
+-            {
+-                return IsStreaming;
+-            }
+-            set
+-            {
+-                byte oldValue = Streaming;
+-                byte newValue = Convert.ToByte(value);
+-
+-                if(oldValue != newValue)
+-                {
+-                    Streaming = newValue;
+-
+-                    UndoManager.Instance.AddUndo(new UndoableProperty<ACB_Waveform>(nameof(Streaming), this, oldValue, value, nameof(Streaming)));
+-                    NotifyPropertyChanged(nameof(UndoableStreaming));
+-                }
+-            }
+-        }
+-
+-        #endregion
+ 
+         //Values
+         private byte _streaming = 0;
+-        [YAXDontSerialize]
+         public bool IsStreaming { get { return Streaming > 0; } set { Streaming = Convert.ToByte(value); } }
+ 
+         //Properties
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXAttributeFor("EncodeType")]
+-        [YAXSerializeAs("value")]
+         public EncodeType EncodeType { get; set; }
+-        [YAXAttributeFor("Streaming")]
+-        [YAXSerializeAs("value")]
+         public byte Streaming
+         { 
+             get
+@@ -4601,35 +3035,18 @@ namespace Xv2CoreLib.ACB
+                 if(value != _streaming)
+                 {
+                     _streaming = value;
+-                    NotifyPropertyChanged(nameof(UndoableStreaming));
+                 }
+             }
+         }
+-        [YAXAttributeFor("AwbId")]
+-        [YAXSerializeAs("value")]
+         public ushort AwbId { get; set; } //Tracks will be stored in a seperate section
+-        [YAXAttributeFor("NumChannels")]
+-        [YAXSerializeAs("value")]
+         public byte NumChannels { get; set; }
+-        [YAXAttributeFor("LoopFlag")]
+-        [YAXSerializeAs("value")]
+         public byte LoopFlag { get; set; }// 0, 1, 2
+-        [YAXAttributeFor("SamplingRate")]
+-        [YAXSerializeAs("value")]
+         public ushort SamplingRate { get; set; }
+-        [YAXAttributeFor("NumSamples")]
+-        [YAXSerializeAs("value")]
+         public uint NumSamples { get; set; }
+-        [YAXAttributeFor("StreamAwbPortNo")]
+-        [YAXSerializeAs("value")]
+         public ushort StreamAwbPortNo { get; set; }
+ 
+         //Extension Data (read from WaveformExtensionDataTable)
+-        [YAXAttributeFor("ExtensionData")]
+-        [YAXSerializeAs("LoopStart")]
+         public uint LoopStart { get; set; }
+-        [YAXAttributeFor("ExtensionData")]
+-        [YAXSerializeAs("LoopEnd")]
+         public uint LoopEnd { get; set; }
+ 
+         public static List<ACB_Waveform> Load(UTF_File table, UTF_File waveformTable, Version ParseVersion)
+@@ -4813,45 +3230,22 @@ namespace Xv2CoreLib.ACB
+         }
+     }
+ 
+-    [YAXSerializeAs("Aisac")]
+-    [Serializable]
+     public class ACB_Aisac : AcbTableBase, IAutoModulationIndex, IGraphIndexes
+     {
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXAttributeFor("Id")]
+-        [YAXSerializeAs("value")]
+         public short Id { get; set; }
+-        [YAXAttributeFor("Type")]
+-        [YAXSerializeAs("value")]
+         public byte Type { get; set; }
+-        [YAXAttributeFor("ControlId")]
+-        [YAXSerializeAs("value")]
+         public ushort ControlId { get; set; }
+-        [YAXAttributeFor("ControlName")]
+-        [YAXSerializeAs("value")]
+-        [YAXDontSerializeIfNull]
+         public string ControlName { get; set; } = string.Empty; //Optional
+-        [YAXAttributeFor("RandomRange")]
+-        [YAXSerializeAs("value")]
+         public float RandomRange { get; set; }
+-        [YAXAttributeFor("DefaultControlFlag")]
+-        [YAXSerializeAs("value")]
+         public byte DefaultControlFlag { get; set; }
+-        [YAXAttributeFor("DefaultControl")]
+-        [YAXSerializeAs("value")]
+         public float DefaultControl { get; set; }
+-        [YAXAttributeFor("GraphBitFlag")]
+-        [YAXSerializeAs("value")]
+         public byte GraphBitFlag { get; set; }
+ 
+         
+-        [YAXSerializeAs("AutoModulationIndex")]
+         public AcbTableReference AutoModulationIndex { get; set; } = new AcbTableReference(); //ushort
+         
+-        [YAXSerializeAs("GraphIndexes")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ", ")]
+         public List<AcbTableReference> GraphIndexes { get; set; } = new List<AcbTableReference>(); //ushort
+ 
+         public void Initialize()
+@@ -4963,33 +3357,15 @@ namespace Xv2CoreLib.ACB
+ 
+     }
+ 
+-    [YAXSerializeAs("Graph")]
+-    [Serializable]
+     public class ACB_Graph : AcbTableBase
+     {
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXAttributeFor("Type")]
+-        [YAXSerializeAs("value")]
+         public ushort Type { get; set; }
+-        [YAXAttributeFor("Controls")]
+-        [YAXSerializeAs("values")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public byte[] Controls { get; set; }
+-        [YAXAttributeFor("Destinations")]
+-        [YAXSerializeAs("values")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public byte[] Destinations { get; set; }
+-        [YAXAttributeFor("Curve")]
+-        [YAXSerializeAs("values")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public byte[] Curve { get; set; }
+-        [YAXAttributeFor("ControlWorkArea")]
+-        [YAXSerializeAs("value")]
+         public float ControlWorkArea { get; set; }
+-        [YAXAttributeFor("DestinationWorkArea")]
+-        [YAXSerializeAs("value")]
+         public float DestinationWorkArea { get; set; }
+ 
+         public static List<ACB_Graph> Load(UTF_File table, Version ParseVersion)
+@@ -5043,20 +3419,13 @@ namespace Xv2CoreLib.ACB
+ 
+     }
+ 
+-    [YAXSerializeAs("AutoModulation")]
+-    [Serializable]
+     public class ACB_AutoModulation : AcbTableBase
+     {
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXAttributeForClass]
+         public byte Type { get; set; }
+-        [YAXAttributeForClass]
+         public byte TriggerType { get; set; }
+-        [YAXAttributeForClass]
+         public uint Time { get; set; }
+-        [YAXAttributeForClass]
+         public uint Key { get; set; }
+ 
+         public static List<ACB_AutoModulation> Load(UTF_File table, Version ParseVersion)
+@@ -5105,13 +3474,10 @@ namespace Xv2CoreLib.ACB
+         }
+     }
+ 
+-    [Serializable]
+     public class ACB_StringValue : AcbTableBase
+     {
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXAttributeForClass]
+         public string StringValue { get; set; }
+ 
+         public ACB_StringValue() { }
+@@ -5178,14 +3544,9 @@ namespace Xv2CoreLib.ACB
+         }
+     }
+ 
+-    [Serializable]
+-    [YAXSerializeAs("ReferenceItem")]
+     public class ACB_ReferenceItem : IReferenceType
+     {
+-        [YAXAttributeFor("ReferenceType")]
+-        [YAXSerializeAs("value")]
+         public ReferenceType ReferenceType { get; set; } = ReferenceType.Waveform;
+-        [YAXSerializeAs("ReferenceIndex")]
+         public AcbTableReference ReferenceIndex { get; set; } = new AcbTableReference(); //ushort
+ 
+         public ACB_ReferenceItem() { }
+@@ -5224,33 +3585,16 @@ namespace Xv2CoreLib.ACB
+         }
+     }
+ 
+-    [YAXSerializeAs("BeatSyncInfo")]
+-    [Serializable]
+     public class ACB_BeatSyncInfo : AcbTableBase
+     {
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXAttributeFor("Bpm")]
+-        [YAXSerializeAs("value")]
+         public float Bpm { get; set; }
+-        [YAXAttributeFor("NumBeats")]
+-        [YAXSerializeAs("value")]
+         public int NumBeats { get; set; }
+-        [YAXAttributeFor("BeatDenominator")]
+-        [YAXSerializeAs("value")]
+         public int BeatDenominator { get; set; }
+-        [YAXAttributeFor("SyncBeatFlags")]
+-        [YAXSerializeAs("value")]
+         public uint SyncBeatFlags { get; set; }
+-        [YAXAttributeFor("BaseRate")]
+-        [YAXSerializeAs("value")]
+         public uint BaseRate { get; set; }
+-        [YAXAttributeFor("StartSample")]
+-        [YAXSerializeAs("value")]
+         public uint StartSample { get; set; }
+-        [YAXAttributeFor("EndSample")]
+-        [YAXSerializeAs("value")]
+         public uint EndSample { get; set; }
+ 
+         public static List<ACB_BeatSyncInfo> Load(UTF_File table, Version ParseVersion)
+@@ -5308,14 +3652,10 @@ namespace Xv2CoreLib.ACB
+     }
+ 
+     #region Commands
+-    [Serializable]
+     public class ACB_CommandTables
+     {
+-        [YAXDontSerialize]
+         public Version AcbVersion { get; set; }
+ 
+-        [YAXComment("Below ver 1.29.0.0: Always use SequenceCommand (just named CommandTable in the ACB file). Later versions separated the command tables.")]
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "CommandTable")]
+         public List<ACB_CommandTable> CommandTables { get; set; } = new List<ACB_CommandTable>();
+ 
+         public IEnumerable<ACB_CommandGroup> GetIterator()
+@@ -5327,18 +3667,6 @@ namespace Xv2CoreLib.ACB
+             }
+         }
+ 
+-        //todo: manager methods
+-        public List<IUndoRedo> AddCommand(ACB_CommandGroup command, CommandTableType type)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            var table = GetCommandTable(type);
+-            table.CommandGroups.Add(command);
+-            undos.Add(new UndoableListAdd<ACB_CommandGroup>(table.CommandGroups, command));
+-
+-            return undos;
+-        }
+-        
+         public void SetCommand(int index, CommandTableType type, ACB_CommandGroup command)
+         {
+             var table = GetCommandTable(type);
+@@ -5575,13 +3903,10 @@ namespace Xv2CoreLib.ACB
+     
+     }
+ 
+-    [Serializable]
+     public class ACB_CommandTable
+     {
+-        [YAXAttributeForClass]
+         public CommandTableType Type { get; set; }
+ 
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "CommandGroup")]
+         public List<ACB_CommandGroup> CommandGroups { get; set; } = new List<ACB_CommandGroup>();
+ 
+         public static ACB_CommandTable Load(UTF_File commandTable, CommandTableType type, bool loadUnknownCommands)
+@@ -5655,14 +3980,10 @@ namespace Xv2CoreLib.ACB
+         
+     }
+ 
+-    [YAXSerializeAs("CommandGroup")]
+-    [Serializable]
+     public class ACB_CommandGroup : AcbTableBase
+     {
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "Command")]
+         public AsyncObservableCollection<ACB_Command> Commands { get; set; } = new AsyncObservableCollection<ACB_Command>();
+ 
+         public static ACB_CommandGroup Load(UTF_File commandTable, int index, bool loadUnknownCommands)
+@@ -5758,8 +4079,6 @@ namespace Xv2CoreLib.ACB
+         }
+     }
+ 
+-    [YAXSerializeAs("Command")]
+-    [Serializable]
+     public class ACB_Command : INotifyPropertyChanged, IReferenceType
+     {
+         #region NotifyPropertyChanged
+@@ -5774,33 +4093,9 @@ namespace Xv2CoreLib.ACB
+         }
+         #endregion
+ 
+-        #region Undoable
+-        [YAXDontSerialize]
+-        public CommandType UndoableCommandType
+-        {
+-            get
+-            {
+-                return CommandType;
+-            }
+-            set
+-            {
+-                if (CommandType != value)
+-                {
+-                    CommandType oldValue = CommandType;
+-                    CommandType = value;
+-                    UndoManager.Instance.AddUndo(new UndoableProperty<ACB_Command>("CommandType", this, oldValue, value, "Command Type"));
+-                    NotifyPropertyChanged("UndoableCommandType");
+-                }
+-            }
+-        }
+-
+-        #endregion
+-
+         //Properties
+-        [YAXDontSerialize]
+         public string DisplayName { get { return $"Command: {CommandType}"; } }
+         
+-        [YAXAttributeForClass]
+         public CommandType CommandType
+         {
+             get
+@@ -5814,35 +4109,25 @@ namespace Xv2CoreLib.ACB
+                     this._commandType = value;
+                     NotifyPropertyChanged("DisplayName");
+                     NotifyPropertyChanged("CommandType");
+-                    NotifyPropertyChanged("UndoableCommandType");
+                 }
+             }
+         }
+         private CommandType _commandType = 0;
+ 
+-        [YAXDontSerialize]
+         public byte NumParameters { get { return (byte)Parameters.Count; } }
+ 
+         //Raw parameters. For some types some of these are handled by seperate props, when it is required (such as for linking to a table, since the index value wont be good enough for that)
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ", ")]
+-        [YAXAttributeForClass]
+         public List<byte> Parameters { get; set; } = new List<byte>();
+ 
+         //CommandType specific data:
+-        [YAXDontSerialize]
+         public ReferenceType ReferenceType { get { return (ReferenceType)Param1; } set { Param1 = (ushort)value; } } //Quick access for the ReferenceType Command.
+         //Used for any command types that require linking to other tables (via GUID). Linking is done on creation of the command or loading of the file (if required).
+-        [YAXDontSerialize]
+         public AcbTableReference ReferenceIndex { get; set; }
+ 
+         #region ParameterProperties
+-        [YAXDontSerialize]
+         public ushort Param1 { get { return GetParam(0); } set { SetParam(0, value); } }
+-        [YAXDontSerialize]
+         public ushort Param2 { get { return GetParam(1); } set { SetParam(1, value); } }
+-        [YAXDontSerialize]
+         public ushort Param3 { get { return GetParam(2); } set { SetParam(2, value); } }
+-        [YAXDontSerialize]
+         public ushort Param4 { get { return GetParam(3); } set { SetParam(3, value); } }
+ 
+ 
+@@ -6115,7 +4400,6 @@ namespace Xv2CoreLib.ACB
+     #endregion
+ 
+ 
+-    [Serializable]
+     public class AcbTableBase : INotifyPropertyChanged
+     {
+         #region NotifyPropertyChanged
+@@ -6136,26 +4420,17 @@ namespace Xv2CoreLib.ACB
+         public Guid InstanceGuid = Guid.NewGuid();
+     }
+ 
+-    [Serializable]
+     public class AcbTableReference
+     {
+-        [YAXDontSerialize]
+         private TypeFlag valueType = TypeFlag.UInt16;
+ 
+-        [YAXDontSerialize]
+         internal Guid _tableGuid = Guid.Empty;
+ 
+-        [YAXAttributeForClass]
+-        [YAXSerializeAs("value")]
+         public uint TableIndex { get; set; } //Set upon loading and will be written directly to UTF file when saving.
+-        [YAXDontSerialize]
+         public Guid TableGuid { get { return _tableGuid; } set { _tableGuid = value; } } //Set this after loading all tables. Used as a better way to identify tables, even accross multiple instances.
+ 
+-        [YAXDontSerialize]
+         public bool IsNull { get { return TableGuid == Guid.Empty; } }
+-        [YAXDontSerialize]
+         public int TableIndex_Int { get { return (int)TableIndex; } }
+-        [YAXDontSerialize]
+         public ushort TableIndex_Ushort { get { return (ushort)TableIndex; } }
+ 
+ 
+diff --git a/Xv2CoreLib/ACB/FormatHelper.cs b/Xv2CoreLib/ACB/FormatHelper.cs
+index 3e6e601..e755e22 100644
+--- a/Xv2CoreLib/ACB/FormatHelper.cs
++++ b/Xv2CoreLib/ACB/FormatHelper.cs
+@@ -1,11 +1,10 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.IO;
+ using System.Linq;
+ using System.Reflection;
+ using Xv2CoreLib.Resource;
+ using Xv2CoreLib.UTF;
+-using YAXLib;
+ 
+ namespace Xv2CoreLib.ACB
+ {
+@@ -25,7 +24,8 @@ namespace Xv2CoreLib.ACB
+ 
+         public void ParseFile(UTF_File utfFile, bool suppressErrors = false)
+         {
+-            AcbFormatHelperMain.ParseFile(utfFile, true, suppressErrors);
++            //AcbFormatHelperMain.ParseFile(utfFile, true, suppressErrors);
++            AcbFormatHelperMain.ParseFile(utfFile, false, suppressErrors);
+         }
+ 
+         public UTF_File CreateTable(string columnName, string tableName, Version version)
+@@ -57,11 +57,20 @@ namespace Xv2CoreLib.ACB
+             return sequence.ColumnExists("Type", TypeFlag.UInt8, version) && sequence.ColumnExists("TrackValues", TypeFlag.Data, version);
+         }
+ 
++        public bool DebugLoadXml()
++        {
++            string path = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "AcbFormatHelper.xml");
++
++			AcbFormatHelperMain = new AcbFormatHelperMain();
++			return false;
++        }
++
+         #endregion
+ 
+         #region DebugFunctions
+         //These functions are primarily for use when creating a AcbFormatHelper.xml (done with external tool)
+ 
++
+         private void LoadXml()
+         {
+             //Attempt to load from file if in debug mode
+@@ -69,13 +78,6 @@ namespace Xv2CoreLib.ACB
+ #if DEBUG
+             loadedXml = DebugLoadXml();
+ #endif
+-            //Load it from embedded resources. For normal use.
+-            if (!loadedXml)
+-            {
+-                YAXSerializer serializer = new YAXSerializer(typeof(AcbFormatHelperMain), YAXSerializationOptions.DontSerializeNullObjects);
+-
+-                AcbFormatHelperMain = (AcbFormatHelperMain)serializer.Deserialize(Properties.Resources.AcbFormatHelper);
+-            }
+         }
+ 
+         public void CreateNewHelper()
+@@ -108,29 +110,6 @@ namespace Xv2CoreLib.ACB
+             }
+         }
+ 
+-        public void DebugSaveXml()
+-        {
+-            YAXSerializer serializer = new YAXSerializer(typeof(AcbFormatHelperMain));
+-            serializer.SerializeToFile(AcbFormatHelperMain, $"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}/AcbFormatHelper.xml");
+-        }
+-
+-        public bool DebugLoadXml()
+-        {
+-            string path = $"{Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)}/AcbFormatHelper.xml";
+-
+-            if (File.Exists(path))
+-            {
+-                YAXSerializer serializer = new YAXSerializer(typeof(AcbFormatHelperMain), YAXSerializationOptions.DontSerializeNullObjects);
+-                AcbFormatHelperMain = (AcbFormatHelperMain)serializer.DeserializeFromFile(path);
+-                return true;
+-            }
+-            else
+-            {
+-                AcbFormatHelperMain = new AcbFormatHelperMain();
+-                return false;
+-            }
+-        }
+-
+ #endregion
+     }
+ 
+@@ -146,7 +125,6 @@ namespace Xv2CoreLib.ACB
+ 
+         public List<string> Versions { get; set; } = new List<string>();
+         public AcbFormatHelperTable Header { get; private set; } = new AcbFormatHelperTable("Header");
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "Column")]
+         public List<AcbFormatHelperTable> Tables { get; set; } = new List<AcbFormatHelperTable>();
+ 
+         /// <summary>
+@@ -262,12 +240,9 @@ namespace Xv2CoreLib.ACB
+         }
+     }
+ 
+-    [YAXSerializeAs("Table")]
+     public class AcbFormatHelperTable : AcbFormatVersions
+     {
+-        [YAXAttributeForClass]
+         public override string Name { get; set; } //parent column, not table name (except for Header).
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "Column")]
+         public List<AcbFormatHelperColumn> Columns { get; set; } = new List<AcbFormatHelperColumn>();
+ 
+ 
+@@ -351,14 +326,10 @@ namespace Xv2CoreLib.ACB
+         }
+     }
+ 
+-    [YAXSerializeAs("Column")]
+     public class AcbFormatHelperColumn : AcbFormatVersions
+     {
+-        [YAXAttributeForClass]
+         public override string Name { get; set; }
+-        [YAXAttributeForClass]
+         public TypeFlag ValueType { get; private set; }
+-        [YAXAttributeForClass]
+         public int Index { get; set; }
+ 
+         public AcbFormatHelperColumn() { }
+@@ -377,29 +348,17 @@ namespace Xv2CoreLib.ACB
+         public virtual string Name { get;  set; }
+ 
+         //Where column/table absolutely exists 
+-        [YAXDontSerialize]
+         public Version PrimaryLowestVersion { get; set; }
+-        [YAXDontSerialize]
+         public Version PrimaryHighestVersion { get; set; }
+ 
+         //Earliest lowest and highest versions where column/table does NOT exist
+-        [YAXDontSerialize]
+         public Version SecondaryLowestVersion { get; set; }
+-        [YAXDontSerialize]
+         public Version SecondaryHighestVersion { get; set; }
+ 
+         //Serialized versions
+-        [YAXAttributeForClass]
+-        [YAXSerializeAs("PrimaryLowestVersion")]
+         public string PrimaryLowestVersion_Serialized { get { return SerializeVersion(PrimaryLowestVersion); } set { PrimaryLowestVersion = (!string.IsNullOrWhiteSpace(value)) ? new Version(value) : null; } }
+-        [YAXAttributeForClass]
+-        [YAXSerializeAs("PrimaryHighestVersion")]
+         public string PrimaryHighestVersion_Serialized { get { return SerializeVersion(PrimaryHighestVersion); } set { PrimaryHighestVersion = (!string.IsNullOrWhiteSpace(value)) ? new Version(value) : null; } }
+-        [YAXAttributeForClass]
+-        [YAXSerializeAs("SecondaryLowestVersion")]
+         public string SecondaryLowestVersion_Serialized { get { return SerializeVersion(SecondaryLowestVersion); } set { SecondaryLowestVersion = (!string.IsNullOrWhiteSpace(value)) ? new Version(value) : null; } }
+-        [YAXAttributeForClass]
+-        [YAXSerializeAs("SecondaryHighestVersion")]
+         public string SecondaryHighestVersion_Serialized { get { return SerializeVersion(SecondaryHighestVersion); } set { SecondaryHighestVersion = (!string.IsNullOrWhiteSpace(value)) ? new Version(value) : null; } }
+ 
+         /// <summary>
+diff --git a/Xv2CoreLib/ACB/IAwbFile.cs b/Xv2CoreLib/ACB/IAwbFile.cs
+index 9d33b3b..53dfc3e 100644
+--- a/Xv2CoreLib/ACB/IAwbFile.cs
++++ b/Xv2CoreLib/ACB/IAwbFile.cs
+@@ -1,4 +1,4 @@
+-﻿using System.Collections.Generic;
++using System.Collections.Generic;
+ using Xv2CoreLib.Resource;
+ 
+ namespace Xv2CoreLib.ACB
+diff --git a/Xv2CoreLib/ACB/TrackMetadata.cs b/Xv2CoreLib/ACB/TrackMetadata.cs
+index 1a419f3..799b2cd 100644
+--- a/Xv2CoreLib/ACB/TrackMetadata.cs
++++ b/Xv2CoreLib/ACB/TrackMetadata.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.IO;
+ using VGAudio;
+ using VGAudio.Cli;
+@@ -6,7 +6,6 @@ using Xv2CoreLib.Resource;
+ 
+ namespace Xv2CoreLib.ACB
+ {
+-    [Serializable]
+     public class TrackMetadata
+     {
+         private const ushort ADX_SIGNATURE = 0x80;
+diff --git a/Xv2CoreLib/AFS2/AFS2_File.cs b/Xv2CoreLib/AFS2/AFS2_File.cs
+index f4ab865..96374ce 100644
+--- a/Xv2CoreLib/AFS2/AFS2_File.cs
++++ b/Xv2CoreLib/AFS2/AFS2_File.cs
+@@ -1,10 +1,8 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.IO;
+ using System.Linq;
+ using Xv2CoreLib.CPK;
+-using YAXLib;
+-using Xv2CoreLib.Resource.UndoRedo;
+ using Xv2CoreLib.ACB;
+ using System.Security.Cryptography;
+ using Xv2CoreLib.Resource;
+@@ -18,23 +16,16 @@ namespace Xv2CoreLib.AFS2
+         UInt64 = 8
+     }
+ 
+-    [Serializable]
+     public class AFS2_File : IAwbFile
+     {
+         public const int AFS2_SIGNATURE = 844318273;
+ 
+-        [YAXAttributeForClass]
+         public byte I_04 { get; set; } = 1;
+-        [YAXAttributeForClass]
+         public PointerSize Pointer_Size { get; set; } = PointerSize.UInt32;
+-        [YAXAttributeForClass]
+         public byte I_06 { get; set; } = 2; //ID size?
+-        [YAXAttributeForClass]
+         public byte I_07 { get; set; }
+ 
+-        [YAXAttributeForClass]
+         public int ByteAlignment { get; set; } 
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "AudioFile")]
+         public AsyncObservableCollection<AFS2_Entry> Entries { get; set; } = new AsyncObservableCollection<AFS2_Entry>();
+ 
+ 
+@@ -72,8 +63,6 @@ namespace Xv2CoreLib.AFS2
+         {
+             byte[] rawBytes = File.ReadAllBytes(filePath);
+             var asf2File = LoadFromArray(rawBytes, 0, rawBytes.Count());
+-            YAXSerializer serializer = new YAXSerializer(typeof(AFS2_File));
+-            serializer.SerializeToFile(asf2File, filePath + ".xml");
+         }
+ 
+         public static AFS2_File LoadFromArray(byte[] rawBytes, int offset = 0, int size = -1)
+@@ -242,20 +231,6 @@ namespace Xv2CoreLib.AFS2
+             return afs2File;
+         }
+ 
+-        public static void SaveAfs2File(string filePath)
+-        {
+-            if (!Directory.Exists(Path.GetDirectoryName(filePath)))
+-            {
+-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+-            }
+-            string saveLocation = String.Format("{0}/{1}", Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
+-            YAXSerializer serializer = new YAXSerializer(typeof(AFS2_File), YAXSerializationOptions.DontSerializeNullObjects);
+-            AFS2_File utfFile = (AFS2_File)serializer.DeserializeFromFile(filePath);
+-            byte[] header;
+-            byte[] bytes = WriteAfs2File(utfFile, out header);
+-            File.WriteAllBytes(saveLocation, bytes);
+-        }
+-
+         public byte[] WriteAfs2File()
+         {
+             byte[] header;
+@@ -473,7 +448,9 @@ namespace Xv2CoreLib.AFS2
+                     //Calculate hash
+                     fs.Seek(0, SeekOrigin.Begin);
+ 
+-                    using (MD5Cng md5 = new MD5Cng())
++                    //using (SHA256Cng md5 = new SHA256Cng())
++                    //using (MD5Cng md5 = new MD5Cng())
++                    using (MD5 md5 = MD5.Create())
+                     {
+                         md5hash = md5.ComputeHash(fs);
+                     }
+@@ -694,34 +671,6 @@ namespace Xv2CoreLib.AFS2
+             return ushort.MaxValue;
+         }
+ 
+-        //Undoable
+-        public List<IUndoRedo> AddEntry(byte[] bytes, bool reuseExistingEntries, out ushort newAwbId)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            ushort existingEntry = GetExistingEntry(bytes);
+-
+-            if (existingEntry != ushort.MaxValue)
+-            {
+-                newAwbId = existingEntry;
+-            }
+-            else
+-            {
+-                ushort newId = (ushort)NextID();
+-                var newEntry = new AFS2_Entry()
+-                {
+-                    ID = newId,
+-                    bytes = bytes
+-                };
+-                Entries.Add(newEntry);
+-                undos.Add(new UndoableListAdd<AFS2_Entry>(Entries, newEntry));
+-
+-                newAwbId = newId;
+-            }
+-
+-            return undos;
+-        }
+-
+         #endregion
+ 
+         public static AFS2_File CreateNewAwbFile()
+@@ -737,17 +686,12 @@ namespace Xv2CoreLib.AFS2
+         
+     }
+ 
+-    [YAXSerializeAs("AudioFile")]
+-    [Serializable]
+     public class AFS2_Entry
+     {
+-        [YAXAttributeForClass]
+         public ushort ID { get; set; }
+ 
+         //Bytes:
+         private byte[] _bytes = null;
+-        [YAXAttributeFor("Data")]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public byte[] bytes
+         {
+             get { return _bytes; }
+@@ -763,7 +707,6 @@ namespace Xv2CoreLib.AFS2
+         }
+ 
+         //HCA:
+-        [YAXDontSerialize]
+         public TrackMetadata HcaInfo { get; set; }
+ 
+         //WAV:
+@@ -789,26 +732,5 @@ namespace Xv2CoreLib.AFS2
+             return bytes.Length == 0;
+         }
+ 
+-        public List<IUndoRedo> SetLoop(bool loop, int startMs, int endMs)
+-        {
+-            if (HcaInfo == null)
+-                throw new ArgumentException("SetLoop: HcaInfo isn't loaded.");
+-
+-            if (HcaInfo.EncodeType != EncodeType.HCA)
+-                throw new InvalidOperationException("SetLoop: Can only edit loop on HCA encoded tracks.");
+-
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            byte[] originalFile = bytes.DeepCopy();
+-            //awbEntry.bytes = HcaMetadata.SetLoop(awbEntry.bytes, loop, startSeconds, endSeconds);
+-            bytes = TrackMetadata.EncodeHcaLoop(bytes, loop, startMs, endMs);
+-
+-            VGAudio.Containers.Hca.HcaReader reader = new VGAudio.Containers.Hca.HcaReader();
+-            VGAudio.Containers.Hca.HcaStructure header = reader.ParseFile(bytes);
+-
+-            undos.Add(new UndoableProperty<AFS2_Entry>(nameof(bytes), this, originalFile, bytes.DeepCopy()));
+-
+-            return undos;
+-        }
+     }
+ }
+diff --git a/Xv2CoreLib/AFS2/AWB_Wrapper.cs b/Xv2CoreLib/AFS2/AWB_Wrapper.cs
+index 1a15dbc..6d4e42d 100644
+--- a/Xv2CoreLib/AFS2/AWB_Wrapper.cs
++++ b/Xv2CoreLib/AFS2/AWB_Wrapper.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.IO;
+ using Xv2CoreLib.ACB;
+ using Xv2CoreLib.CPK;
+@@ -14,7 +14,6 @@ namespace Xv2CoreLib.AFS2
+         None
+     }
+ 
+-    [Serializable]
+     public class AWB_Wrapper
+     {
+         public AFS2_File AwbFile { get; set; }
+diff --git a/Xv2CoreLib/CPK/AWB_CPK.cs b/Xv2CoreLib/CPK/AWB_CPK.cs
+index b1af2c8..b204b5e 100644
+--- a/Xv2CoreLib/CPK/AWB_CPK.cs
++++ b/Xv2CoreLib/CPK/AWB_CPK.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.IO;
+ using System.Linq;
+@@ -6,7 +6,6 @@ using System.Text;
+ using UsefulThings;
+ using Xv2CoreLib.UTF;
+ using Xv2CoreLib.AFS2;
+-using YAXLib;
+ using _cpk = CriPakTools.CPK;
+ using Xv2CoreLib.ACB;
+ using Xv2CoreLib.Resource;
+@@ -16,7 +15,6 @@ namespace Xv2CoreLib.CPK
+     //CPK Parser solely for cpk-based AWB files.
+     //These only use ITOC table, so TOC + ETOC can be ignored.
+ 
+-    [Serializable]
+     public class AWB_CPK : IAwbFile
+     {
+         public const int CPK_SIGNATURE = 0x204B5043;
+@@ -27,12 +25,10 @@ namespace Xv2CoreLib.CPK
+ 
+         //Header
+         public UTF_File CPK_Header { get; set; }
+-        [YAXAttributeForClass]
+         public int CPK_Unk1 { get; set; } = 255;
+ 
+         //ITOC (regenerate this on save)
+         public UTF_File ITOC { get; set; }
+-        [YAXAttributeForClass]
+         public int ITOC_Unk1 { get; set; } = 255;
+ 
+         //Files
+@@ -368,12 +364,9 @@ namespace Xv2CoreLib.CPK
+ 
+     }
+ 
+-    [Serializable]
+     public class CPK_Entry
+     {
+-        [YAXAttributeForClass]
+         public ushort ID { get; set; }
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+         public byte[] Data { get; set; }
+ 
+         public CPK_Entry(int id, byte[] data)
+diff --git a/Xv2CoreLib/CPK/CPK_Reader.cs b/Xv2CoreLib/CPK/CPK_Reader.cs
+index 15bccd5..753f194 100644
+--- a/Xv2CoreLib/CPK/CPK_Reader.cs
++++ b/Xv2CoreLib/CPK/CPK_Reader.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.ComponentModel;
+ using System.IO;
+@@ -24,7 +24,7 @@ namespace Xv2CoreLib.CPK
+                 //Returns true if atleast one of the CPKs specified in CPK_LOAD_ORDER exists
+                 foreach(string s in CPK_LOAD_ORDER)
+                 {
+-                    if (File.Exists(String.Format("{0}/{1}", CpkDirectory, s))) return true;
++                    if (File.Exists(Path.Combine(CpkDirectory, s))) return true;
+                 }
+                 return false;
+             }
+@@ -88,7 +88,7 @@ namespace Xv2CoreLib.CPK
+ 
+         private string GetFullCpkPath(string cpk)
+         {
+-            return String.Format("{0}/{1}", CpkDirectory, cpk);
++            return Path.Combine(CpkDirectory, cpk);
+         }
+ 
+         /// <summary>
+@@ -262,7 +262,7 @@ namespace Xv2CoreLib.CPK
+ 
+             foreach (var e in results)
+             {
+-                files.Add(string.Format("{0}/{1}", e.DirName, e.FileName));
++                files.Add(Path.Combine(e.DirName.ToString(), e.FileName.ToString()));
+             }
+ 
+             return files.ToArray();
+@@ -479,7 +479,7 @@ namespace Xv2CoreLib.CPK
+                         chunk = _cpk.DecompressCRILAYLA(chunk, size);
+                     }
+ 
+-                    string savePath = $"{outputDir}/{e.DirName}/{e.FileName}";
++                    string savePath = Path.Combine(outputDir, e.DirName.ToString(), e.FileName.ToString());
+                     string dir = Path.GetDirectoryName(savePath);
+ 
+                     if (!Directory.Exists(dir))
+diff --git a/Xv2CoreLib/CPK/CriPakTools/CPK.cs b/Xv2CoreLib/CPK/CriPakTools/CPK.cs
+index 192d784..b5e363a 100644
+--- a/Xv2CoreLib/CPK/CriPakTools/CPK.cs
++++ b/Xv2CoreLib/CPK/CriPakTools/CPK.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.Linq;
+ using System.Text;
+@@ -1239,4 +1239,4 @@ namespace CriPakTools
+ 
+         public string FileType { get; set; }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/Xv2CoreLib/CPK/CriPakTools/Endian.cs b/Xv2CoreLib/CPK/CriPakTools/Endian.cs
+index 6e4e339..7c3e443 100644
+--- a/Xv2CoreLib/CPK/CriPakTools/Endian.cs
++++ b/Xv2CoreLib/CPK/CriPakTools/Endian.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.Linq;
+ using System.Text;
+@@ -185,4 +185,4 @@ namespace CriPakTools
+             }
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/Xv2CoreLib/CPK/CriPakTools/Tools.cs b/Xv2CoreLib/CPK/CriPakTools/Tools.cs
+index 05670e8..d1d9446 100644
+--- a/Xv2CoreLib/CPK/CriPakTools/Tools.cs
++++ b/Xv2CoreLib/CPK/CriPakTools/Tools.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.Linq;
+ using System.Text;
+@@ -96,4 +96,4 @@ namespace CriPakTools
+         }
+ 
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/Xv2CoreLib/HCA/HcaMetadata.cs b/Xv2CoreLib/HCA/HcaMetadata.cs
+index 4bfa593..f7a66fc 100644
+--- a/Xv2CoreLib/HCA/HcaMetadata.cs
++++ b/Xv2CoreLib/HCA/HcaMetadata.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.IO;
+ using VGAudio;
+ using VGAudio.Cli;
+@@ -6,7 +6,6 @@ using Xv2CoreLib.Resource;
+ 
+ namespace Xv2CoreLib.HCA
+ {
+-    [Serializable]
+     public class HcaMetadata
+     {
+         private const ushort ADX_SIGNATURE = 0x80;
+diff --git a/Xv2CoreLib/Resource/AsyncObservableCollection.cs b/Xv2CoreLib/Resource/AsyncObservableCollection.cs
+index caf8ec7..a3b7960 100644
+--- a/Xv2CoreLib/Resource/AsyncObservableCollection.cs
++++ b/Xv2CoreLib/Resource/AsyncObservableCollection.cs
+@@ -5,15 +5,12 @@ using System.Collections.ObjectModel;
+ using System.Collections.Specialized;
+ using System.ComponentModel;
+ using System.Threading;
+-using Xv2CoreLib.Resource.UndoRedo;
+-using YAXLib;
+ 
+ namespace Xv2CoreLib.Resource
+ {
+     /// <summary>
+     /// A composite, read-only version of <see cref="AsyncObservableCollection{T}"/>, that automatically updates to reflect changes to the underlying collections. For displaying mixed-type lists in UI elements.
+     /// </summary>
+-    [Serializable]
+     public class CompositeReadOnlyAsyncObservableCollection : AsyncObservableCollection<object>
+     {
+         private List<IEnumerable> lists = new List<IEnumerable>();
+@@ -81,7 +78,6 @@ namespace Xv2CoreLib.Resource
+         }
+     }
+ 
+-    [Serializable]
+     public class AsyncObservableCollection<T> : IList<T>
+     {
+ 
+@@ -92,12 +88,10 @@ namespace Xv2CoreLib.Resource
+         private readonly List<T> list;
+ 
+         //The observable collection. This is only created when the property requests it (via a binding). This ensures that is will always be created in the UI thread.
+-        [field: NonSerialized]
+         private ROACollection<T> _observableList = null;
+         /// <summary>
+         /// The underlying ObservableCollection. Bind this in XAML, or access it somewhere in code that will run on the UI thread.
+         /// </summary>
+-        [YAXDontSerialize]
+         public ROACollection<T> Binding
+         {
+             get
+@@ -114,12 +108,9 @@ namespace Xv2CoreLib.Resource
+             }
+         }
+ 
+-        [YAXDontSerialize]
+         public int Count => list.Count;
+-        [YAXDontSerialize]
+-        public bool IsReadOnly => false;
++		public bool IsReadOnly => false;
+ 
+-        [field: NonSerialized]
+         public event NotifyCollectionChangedEventHandler CollectionChanged;
+ 
+         public AsyncObservableCollection()
+@@ -402,7 +393,6 @@ namespace Xv2CoreLib.Resource
+         private void _observableList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+         {
+             if (IsListBeingModified) return;
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+ 
+             switch (e.Action)
+             {
+@@ -413,7 +403,6 @@ namespace Xv2CoreLib.Resource
+                         if (e.NewItems[0] is T value)
+                         {
+                             list.Insert(e.NewStartingIndex, value);
+-                            undos.Add(new UndoableListInsert<T>(this, e.NewStartingIndex, value));
+                         }
+                     }
+                     else
+@@ -423,7 +412,6 @@ namespace Xv2CoreLib.Resource
+                             if(item is T value)
+                             {
+                                 list.Add(value);
+-                                undos.Add(new UndoableListAdd<T>(this, value));
+                             }
+                         }
+                     }
+@@ -433,19 +421,16 @@ namespace Xv2CoreLib.Resource
+                     {
+                         if(item is T value)
+                         {
+-                            undos.Add(new UndoableListRemove<T>(this, value));
+                             list.Remove(value);
+                         }
+                     }
+                     break;
+                 case NotifyCollectionChangedAction.Move:
+-                    undos.Add(new UndoableListMove<T>(this, e.OldStartingIndex, e.NewStartingIndex));
+                     Move(e.OldStartingIndex, e.NewStartingIndex, true);
+                     break;
+ 
+             }
+ 
+-            UndoManager.Instance.AddUndo(new CompositeUndo(undos, "Item Move", allowCompositeMerging: true));
+         }
+ 
+         #endregion
+diff --git a/Xv2CoreLib/Resource/BinaryConverter.cs b/Xv2CoreLib/Resource/BinaryConverter.cs
+index ba18e03..e6520db 100644
+--- a/Xv2CoreLib/Resource/BinaryConverter.cs
++++ b/Xv2CoreLib/Resource/BinaryConverter.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.Linq;
+ using System.Text;
+diff --git a/Xv2CoreLib/Resource/Utils.cs b/Xv2CoreLib/Resource/Utils.cs
+index a40733c..8797ee6 100644
+--- a/Xv2CoreLib/Resource/Utils.cs
++++ b/Xv2CoreLib/Resource/Utils.cs
+@@ -1,13 +1,11 @@
+-﻿using System;
++using System;
+ using System.IO;
+ using System.Collections.Generic;
+ using System.Linq;
+ using System.Text;
+ using System.Collections;
+ using System.Globalization;
+-using YAXLib;
+ using System.Security.Cryptography;
+-using Xv2CoreLib.Resource.UndoRedo;
+ using System.Reflection;
+ using System.ComponentModel;
+ 
+@@ -439,30 +437,6 @@ namespace Xv2CoreLib
+             return false;
+         }
+ 
+-        /// <summary>
+-        /// Copies primitive values (including strings) from one object to another, and creates an undoable stack.
+-        /// </summary>
+-        public static List<IUndoRedo> CopyValues<T>(T instance, T copyFrom, params string[] exclusions)
+-        {
+-            List<IUndoRedo> undos = new List<IUndoRedo>();
+-
+-            PropertyInfo[] properties = instance.GetType().GetProperties();
+-
+-            foreach (var prop in properties)
+-            {
+-                if ((prop.PropertyType == typeof(string) || prop.PropertyType.IsPrimitive || prop.PropertyType.IsValueType)
+-                    && (prop.SetMethod != null && prop.GetMethod != null) && !exclusions.Contains(prop.Name))
+-                {
+-                    object oldValue = prop.GetValue(instance);
+-                    object newValue = prop.GetValue(copyFrom);
+-                    undos.Add(new UndoableProperty<T>(prop.Name, instance, oldValue, newValue));
+-                    prop.SetValue(instance, newValue);
+-                }
+-            }
+-
+-            return undos;
+-        }
+-
+         public static bool IsListNullOrEmpty(IList list)
+         {
+             if (list == null) return true;
+@@ -471,7 +445,7 @@ namespace Xv2CoreLib
+ 
+         public static string GetPathWithoutExtension(string path)
+         {
+-            return string.Format("{0}/{1}", Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
++            return Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(path));
+         }
+ 
+         public static string ResolveRelativePath(string path)
+@@ -507,24 +481,6 @@ namespace Xv2CoreLib
+                 Replace(string.Format("{0}{0}", Path.AltDirectorySeparatorChar), "/");
+         }
+ 
+-        public static string PathRemoveRoot(string path)
+-        {
+-            path = SanitizePath(path);
+-            if (path.StartsWith("/")) path = path.Remove(0);
+-            return path.Substring(path.IndexOf("/") + 1);
+-        }
+-
+-        /// <summary>
+-        /// Returns a relative path starting from "data". 
+-        /// </summary>
+-        public static string GetRelativePath(string path)
+-        {
+-            path = path.Replace(@"//", @"/").Replace(@"\\", @"/").Replace(@"\", @"/");
+-            int index = path.IndexOf("data/");
+-            if (index == -1) return path;
+-            return path.Remove(0, index + 5);
+-        }
+-
+         public static T[] GetRange<T>(this T[] data, int index, int length)
+         {
+             T[] result = new T[length];
+@@ -809,111 +765,6 @@ namespace Xv2CoreLib
+             return iCount;
+         }
+ 
+-        /// <summary>
+-        /// Searches all common directories for a Xenoverse 2 installation.
+-        /// </summary>
+-        /// <returns></returns>
+-        public static string FindGameDirectory()
+-        {
+-            List<string> alphabet = new List<string>() { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "O", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
+-
+-            bool found = false;
+-            try
+-            {
+-                string GameDirectoryPath = String.Empty;
+-
+-                if (File.Exists("DB Xenoverse 2/bin/DBXV2.exe"))
+-                {
+-                    //At same level as DB Xenoverse 2 folder
+-                    GameDirectoryPath = System.IO.Path.GetFullPath("DB Xenoverse 2");
+-                    found = true;
+-                }
+-                else if (File.Exists("../bin/DBXV2.exe") && found == false)
+-                {
+-                    //In data folder
+-                    GameDirectoryPath = System.IO.Path.GetFullPath("..");
+-                    found = true;
+-                }
+-                else if (File.Exists("bin/DBXV2.exe") && found == false)
+-                {
+-                    //In DB Xenoverse 2 root directory
+-                    GameDirectoryPath = Directory.GetCurrentDirectory();
+-                    found = true;
+-                }
+-                else if (found == false)
+-                {
+-                    foreach (string letter in alphabet)
+-                    {
+-                        string _path = String.Format(@"{0}:{1}Program Files (x86){1}Steam{1}steamapps{1}common{1}DB Xenoverse 2", letter, System.IO.Path.DirectorySeparatorChar);
+-                        if (File.Exists(String.Format("{0}{1}bin{1}DBXV2.exe", _path, System.IO.Path.DirectorySeparatorChar)) && found == false)
+-                        {
+-                            GameDirectoryPath = _path;
+-                            found = true;
+-                        }
+-                    }
+-
+-                    if (found == false)
+-                    {
+-                        foreach (string letter in alphabet)
+-                        {
+-                            string _path = String.Format(@"{0}:{1}Program Files{1}Steam{1}steamapps{1}common{1}DB Xenoverse 2", letter, System.IO.Path.DirectorySeparatorChar);
+-                            if (File.Exists(String.Format("{0}{1}bin{1}DBXV2.exe", _path, System.IO.Path.DirectorySeparatorChar)) && found == false)
+-                            {
+-                                GameDirectoryPath = _path;
+-                                found = true;
+-                            }
+-                        }
+-                    }
+-
+-                    if (found == false)
+-                    {
+-                        foreach (string letter in alphabet)
+-                        {
+-                            string _path = String.Format(@"{0}:{1}Games{1}Steam{1}steamapps{1}common{1}DB Xenoverse 2", letter, System.IO.Path.DirectorySeparatorChar);
+-                            if (File.Exists(String.Format("{0}{1}bin{1}DBXV2.exe", _path, System.IO.Path.DirectorySeparatorChar)) && found == false)
+-                            {
+-                                GameDirectoryPath = _path;
+-                                found = true;
+-                            }
+-                        }
+-                    }
+-
+-
+-                    if (found == false)
+-                    {
+-                        foreach (string letter in alphabet)
+-                        {
+-                            string _path = String.Format(@"{0}:{1}DB Xenoverse 2", letter, System.IO.Path.DirectorySeparatorChar);
+-                            if (File.Exists(String.Format("{0}{1}bin{1}DBXV2.exe", _path, System.IO.Path.DirectorySeparatorChar)) && found == false)
+-                            {
+-                                GameDirectoryPath = _path;
+-                                found = true;
+-                            }
+-                        }
+-                    }
+-
+-                    if (found == false)
+-                    {
+-                        foreach (string letter in alphabet)
+-                        {
+-                            string _path = String.Format(@"{0}:{1}Steam{1}steamapps{1}common{1}DB Xenoverse 2", letter, System.IO.Path.DirectorySeparatorChar);
+-                            if (File.Exists(String.Format("{0}{1}bin{1}DBXV2.exe", _path, System.IO.Path.DirectorySeparatorChar)) && found == false)
+-                            {
+-                                GameDirectoryPath = _path;
+-                                found = true;
+-                            }
+-                        }
+-                    }
+-                }
+-                return GameDirectoryPath;
+-            }
+-            catch
+-            {
+-                return null;
+-            }
+-
+-        }
+-
+         public static List<byte> GetStringBytes(string str, int minSize = -1, int maxSize = -1)
+         {
+             if (str == null)
+@@ -962,10 +813,10 @@ namespace Xv2CoreLib
+             return _list;
+         }
+ 
+-        public static string CleanPath(string path)
++        /*public static string CleanPath(string path)
+         {
+             return path.Replace(@"//", @"/").Replace(@"\\", @"/").Replace(@"\", @"/");
+-        }
++        }*/
+ 
+         public static void WaitForInputThenQuit()
+         {
+@@ -1281,11 +1132,6 @@ namespace Xv2CoreLib
+ 
+     public static class File_Ex
+     {
+-        public static object LoadXml(string path, Type type)
+-        {
+-            YAXSerializer serializer = new YAXSerializer(type, YAXSerializationOptions.DontSerializeNullObjects);
+-            return serializer.DeserializeFromFile(path);
+-        }
+ 
+         public static void CopyAll(string sourceDir, string destDir, bool allowOverwrite)
+         {
+@@ -1294,7 +1140,8 @@ namespace Xv2CoreLib
+             for (int i = 0; i < fileNames.Count(); i++)
+             {
+                 string copyPath = (string)fileNames[i].Clone();
+-                string destPath = String.Format("{0}/{1}", destDir, Utils.CleanPath(fileNames[i].Remove(0, sourceDir.Count())));
++                //string destPath = Path.Combine(destDir, Utils.CleanPath(fileNames[i].Remove(0, sourceDir.Count())));
++                string destPath = Path.Combine(destDir, fileNames[i].Remove(0, sourceDir.Count()));
+ 
+                 if (!File.Exists(destPath) || allowOverwrite == true)
+                 {
+@@ -1308,7 +1155,6 @@ namespace Xv2CoreLib
+ 
+     /// <summary>
+     /// Provides static methods for converting to and from hexadecimal strings (prefixed with 0x).\n\n
+-    /// Note: Consider using the YAXHexValue attribute instead!
+     /// </summary>
+     public static class HexConverter
+     {
+diff --git a/Xv2CoreLib/UTF/UTF_File.cs b/Xv2CoreLib/UTF/UTF_File.cs
+index 9f18146..3fd911a 100644
+--- a/Xv2CoreLib/UTF/UTF_File.cs
++++ b/Xv2CoreLib/UTF/UTF_File.cs
+@@ -1,10 +1,9 @@
+-﻿using System;
++using System;
+ using System.Collections.Generic;
+ using System.IO;
+ using System.Linq;
+ using System.Text;
+ using System.Threading.Tasks;
+-using YAXLib;
+ using Xv2CoreLib.Resource;
+ using Xv2CoreLib.AFS2;
+ using Xv2CoreLib.CPK;
+@@ -15,7 +14,6 @@ namespace Xv2CoreLib.UTF
+     /// <summary>
+     /// Represents CRIWARE's UTF format.
+     /// </summary>
+-    [Serializable]
+     public class UTF_File
+     {
+         public static bool CompressValueRows = true;
+@@ -36,18 +34,12 @@ namespace Xv2CoreLib.UTF
+         public const uint UTF_SIGNATURE = 1079333958; //Big Endian (@UTF)
+         public const uint AFS2_SIGNATURE = 1095127858;
+ 
+-        [YAXAttributeForClass]
+         public string TableName { get; set; }
+-        [YAXAttributeForClass]
+         public byte I_00 { get; set; }
+-        [YAXAttributeForClass]
+         public _EncodingType EncodingType { get; set; }
+-        [YAXAttributeForClass]
+         public int DefaultRowCount { get; set; } //This is used for when there are no actual rows but a count is set regardless... Instead of writing 0 we write the original value
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "Column")]
+         public List<UTF_Column> Columns { get; set; } = new List<UTF_Column>();
+ #if !DEBUG
+-        [YAXDontSerialize]
+ #endif
+         public List<DataInfo> DataInfos { get; set; }
+         
+@@ -56,17 +48,11 @@ namespace Xv2CoreLib.UTF
+         {
+             byte[] rawBytes = File.ReadAllBytes(filePath);
+             var utfFile = LoadUtfTable(rawBytes, rawBytes.Length);
+-            YAXSerializer serializer = new YAXSerializer(typeof(UTF_File));
+-            serializer.SerializeToFile(utfFile, filePath + ".xml");
+         }
+ 
+         public static void SaveUtfFile(string filePath)
+         {
+-            string saveLocation = String.Format("{0}/{1}", Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
+-            YAXSerializer serializer = new YAXSerializer(typeof(UTF_File), YAXSerializationOptions.DontSerializeNullObjects);
+-            UTF_File utfFile = (UTF_File)serializer.DeserializeFromFile(filePath);
+-            byte[] bytes = WriteUtfTable(utfFile, true);
+-            File.WriteAllBytes(saveLocation, bytes);
++            string saveLocation = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
+         }
+ 
+         public static UTF_File LoadUtfTable(byte[] rawBytes, int tableSize, int offset = 0)
+@@ -1735,8 +1721,6 @@ namespace Xv2CoreLib.UTF
+ 
+     }
+ 
+-    [YAXSerializeAs("Column")]
+-    [Serializable]
+     public class UTF_Column
+     {
+         public UTF_Column() { }
+@@ -1750,33 +1734,18 @@ namespace Xv2CoreLib.UTF
+             Constant = defaultConstantValue;
+         }
+ 
+-        [YAXAttributeForClass]
+         public string Name { get; set; }
+-        [YAXAttributeForClass]
+         public StorageFlag StorageFlag { get; set; }
+-        [YAXAttributeForClass]
+         public TypeFlag TypeFlag { get; set; }
+ 
+         //Contained Values/Data
+-        [YAXDontSerializeIfNull]
+-        [YAXAttributeFor("Constant")]
+-        [YAXSerializeAs("Value")]
+         public string Constant { get; set; }
+-        [YAXDontSerializeIfNull]
+         public UTF_File UtfTable { get; set; }
+-        [YAXDontSerializeIfNull]
+         public AFS2_File Afs2File { get; set; }
+-        [YAXDontSerializeIfNull]
+         public AWB_CPK CpkFile { get; set; }
+-        [YAXDontSerializeIfNull]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+-        [YAXAttributeFor("Constant")]
+         public byte[] Bytes { get; set; }
+-        [YAXDontSerializeIfNull]
+-        [YAXCollection(YAXCollectionSerializationTypes.RecursiveWithNoContainingElement, EachElementName = "Row")]
+         public List<UTF_Row> Rows { get; set; }
+ 
+-        [YAXDontSerialize]
+         public int NumOfRows
+         {
+             get
+@@ -1786,7 +1755,6 @@ namespace Xv2CoreLib.UTF
+             }
+         }
+ 
+-        [YAXDontSerialize]
+         public int LastRowIndex
+         {
+             get
+@@ -1978,24 +1946,13 @@ namespace Xv2CoreLib.UTF
+ 
+     }
+ 
+-    [YAXSerializeAs("Row")]
+-    [Serializable]
+     public class UTF_Row
+     {
+-        [YAXAttributeForClass]
+         public int RowIndex { get; set; }
+-        [YAXDontSerializeIfNull]
+-        [YAXAttributeForClass]
+         public string Value { get; set; }
+-        [YAXDontSerializeIfNull]
+         public UTF_File UtfTable { get; set; }
+-        [YAXDontSerializeIfNull]
+         public AFS2_File Afs2File { get; set; }
+-        [YAXDontSerializeIfNull]
+         public AWB_CPK CpkFile { get; set; }
+-        [YAXDontSerializeIfNull]
+-        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
+-        [YAXAttributeFor("Data")]
+         public byte[] Bytes { get; set; }
+     }
+ 
+@@ -2035,7 +1992,6 @@ namespace Xv2CoreLib.UTF
+     }
+ 
+     //
+-    [Serializable]
+     public class DataInfo
+     {
+         public bool dataIsNull { get
+@@ -2053,15 +2009,11 @@ namespace Xv2CoreLib.UTF
+         public int relativeOffset { get; set; }
+         public int ColumnIndex { get; set; }
+         public int RowIndex { get; set; }
+-        [YAXAttributeForClass]
+         public int Offset { get; set; }
+-        [YAXAttributeForClass]
+         public int Length { get; set; }
+-        [YAXAttributeForClass]
+         public string Name { get; set; }
+         public StorageFlag dataType { get; set; }
+         public int originalLength { get; set; }
+-        [YAXAttributeForClass]
+         public int RowOffset { get; set; }
+         
+         
+@@ -2102,7 +2054,6 @@ namespace Xv2CoreLib.UTF
+ 
+     }
+ 
+-    [Serializable]
+     public class DataWriteObject
+     {
+         public byte[] bytes { get; set; }
+@@ -2111,7 +2062,6 @@ namespace Xv2CoreLib.UTF
+         public int rowIndex { get; set; }
+     }
+ 
+-    [Serializable]
+     public class StringWriteObject
+     {
+         public string Str { get; set; }
+-- 
+2.25.1
+
+
+From 3b637d47371bf6515f2cd2995f69419d4a39f2ab Mon Sep 17 00:00:00 2001
+From: DarkPsydeOfTheMoon <avalanchebreakdown@gmail.com>
+Date: Tue, 9 Apr 2024 01:47:14 -0700
+Subject: [PATCH 2/2] VGAudio fixes for ambiguous "Parallel" reference.
+
+---
+ LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs            | 1 +
+ .../Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs      | 3 ++-
+ LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs | 3 ++-
+ LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs         | 1 +
+ LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs       | 1 +
+ 5 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs b/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs
+index 25daed1..3cecf2a 100644
+--- a/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs
++++ b/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs
+@@ -7,6 +7,7 @@ using VGAudio.Formats.GcAdpcm;
+ using VGAudio.Utilities;
+ using static VGAudio.Codecs.GcAdpcm.GcAdpcmMath;
+ using static VGAudio.Utilities.Helpers;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Containers.Hps
+ {
+diff --git a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs
+index ecbd312..2f6e9ea 100644
+--- a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs
++++ b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs
+@@ -10,6 +10,7 @@ using VGAudio.Formats.Pcm8;
+ using VGAudio.Utilities;
+ using static VGAudio.Containers.NintendoWare.Common;
+ using static VGAudio.Utilities.Helpers;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Containers.NintendoWare
+ {
+@@ -369,4 +370,4 @@ namespace VGAudio.Containers.NintendoWare
+         private static Endianness GetTypeEndianness(NwTarget type) =>
+             type == NwTarget.Ctr ? Endianness.LittleEndian : Endianness.BigEndian;
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs
+index e7cb108..36eef01 100644
+--- a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs
++++ b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs
+@@ -11,6 +11,7 @@ using VGAudio.Utilities;
+ using static VGAudio.Containers.NintendoWare.Common;
+ using static VGAudio.Codecs.GcAdpcm.GcAdpcmMath;
+ using static VGAudio.Utilities.Helpers;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Containers.NintendoWare
+ {
+@@ -294,4 +295,4 @@ namespace VGAudio.Containers.NintendoWare
+             channels.Interleave(writer.BaseStream, InterleaveSize, AudioDataSize);
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs b/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs
+index 882c10c..798dd9f 100644
+--- a/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs
++++ b/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs
+@@ -5,6 +5,7 @@ using VGAudio.Codecs.CriAdx;
+ using VGAudio.Formats.Pcm16;
+ using VGAudio.Utilities;
+ using static VGAudio.Formats.CriAdx.CriAdxHelpers;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Formats.CriAdx
+ {
+diff --git a/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs b/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs
+index 7cffb97..c6a15b3 100644
+--- a/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs
++++ b/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs
+@@ -4,6 +4,7 @@ using System.Linq;
+ using VGAudio.Codecs.GcAdpcm;
+ using VGAudio.Formats.Pcm16;
+ using VGAudio.Utilities;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Formats.GcAdpcm
+ {
+-- 
+2.25.1
+

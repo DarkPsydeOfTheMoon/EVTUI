@@ -1,0 +1,66 @@
+From cd3026fe2838051eca4652b21bb2ccd7bbf53f2e Mon Sep 17 00:00:00 2001
+From: DarkPsydeOfTheMoon <avalanchebreakdown@gmail.com>
+Date: Tue, 9 Apr 2024 01:14:01 -0700
+Subject: [PATCH] Inelegant changes to make paths Linux-compatible.
+
+---
+ .../AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs  | 8 +++++++-
+ .../Libraries/Serialization/ExternalJsonPathConverter.cs  | 5 ++++-
+ 2 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs b/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs
+index b2b941a..d579470 100644
+--- a/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs
++++ b/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs
+@@ -2,6 +2,7 @@
+ using System.Collections.Generic;
+ using System.IO;
+ using System.Linq;
++using System.Runtime.InteropServices;
+ using Newtonsoft.Json;
+ 
+ namespace AtlusScriptLibrary.Common.Libraries
+@@ -57,7 +58,12 @@ namespace AtlusScriptLibrary.Common.Libraries
+         {
+             EnsureInitialized();
+             string jsonText = File.ReadAllText( path );
+-            return JsonConvert.DeserializeObject< Library >( jsonText );
++            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
++                return JsonConvert.DeserializeObject<Library>(jsonText);
++            else {
++                var _path = Path.Combine(jsonText.Split(new Char[] { '/', '\\' }));
++                return JsonConvert.DeserializeObject< Library >( _path );
++            }
+         }
+     }
+ }
+diff --git a/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs b/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs
+index 1b4b67b..5fded2c 100644
+--- a/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs
++++ b/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs
+@@ -1,5 +1,6 @@
+ using System;
+ using System.IO;
++using System.Runtime.InteropServices;
+ using Newtonsoft.Json;
+ 
+ namespace AtlusScriptLibrary.Common.Libraries.Serialization
+@@ -18,6 +19,8 @@ namespace AtlusScriptLibrary.Common.Libraries.Serialization
+ 
+             var fullPath = Path.Combine( LibraryLookup.LibraryBaseDirectoryPath, path );
+             var jsonString = File.ReadAllText( fullPath );
++            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
++                jsonString = Path.Combine(jsonString.Split("\\"));
+             var obj = JsonConvert.DeserializeObject( jsonString, objectType );
+ 
+             return obj;
+@@ -28,4 +31,4 @@ namespace AtlusScriptLibrary.Common.Libraries.Serialization
+             throw new NotImplementedException();
+         }
+     }
+-}
+\ No newline at end of file
++}
+-- 
+2.25.1
+
