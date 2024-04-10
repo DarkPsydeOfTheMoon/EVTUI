@@ -1,6 +1,8 @@
 [submodule "submodules/Atlus-Script-Tools"]
 	path = submodules/Atlus-Script-Tools
 	url = https://github.com/tge-was-taken/Atlus-Script-Tools.git
+	ignore = all
 [submodule "submodules/XV2-Tools"]
 	path = submodules/XV2-Tools
 	url = https://github.com/LazyBone152/XV2-Tools.git
+	ignore = all
