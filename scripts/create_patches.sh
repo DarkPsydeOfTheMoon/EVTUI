@@ -19,10 +19,15 @@ for REPO in $(ls); do
 	echo "Making patch for ${REPO}..."
 	# go into repo
 	cd ${REPO}
+	# get rid of uncommitted changes, you animal
+	git stash
+	# pull from HEAD, assuming HEAD is master
+	# (a safe assumption for now, but an assumption indeed)
+	git checkout master
+	git pull
 	# check out branch with changes
 	git checkout ${USER}/${SOURCEBRANCH}
-	# create patch, assuming HEAD is master
-	# (a safe assumption for now, but an assumption indeed)
+	# create patch, again assuming HEAD is master
 	git format-patch master --stdout > ../../patches/${REPO}.patch
 	# go back into general submodules directory
 	cd ..
