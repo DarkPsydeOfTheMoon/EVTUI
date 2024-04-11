@@ -16,16 +16,17 @@ for REPO in $(ls); do
 	echo "Applying patch to ${REPO}..."
 	# go into repo
 	cd ${REPO}
+	# get rid of prior patch
+	# if you've made other changes, too bad, why are you running this script
+	git reset --hard HEAD
 	# update master branch, assuming it's called "master"
 	# (a safe assumption for now, but an assumption indeed)
 	git checkout master
 	git pull
 	# make new branch (off of master) to be patched
 	git checkout -B ${USER}/${TARGETBRANCH}
-	# abandon any prior patching attempts
-	git am --abort
 	# update new branch based on patch
-	git am ../../patches/${REPO}.patch
+	git apply ../../patches/${REPO}.patch
 	# go back into general submodules directory
 	cd ..
 	echo "...Applied patch to ${REPO}!"
