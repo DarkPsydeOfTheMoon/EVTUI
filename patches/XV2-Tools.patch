@@ -1,10 +1,18 @@
-From 511e903c05a609d96c188a70416fa667bc62edfc Mon Sep 17 00:00:00 2001
+From 8ef95990a8fbab697aebb1be5631ef4d67bed1ee Mon Sep 17 00:00:00 2001
 From: DarkPsydeOfTheMoon <avalanchebreakdown@gmail.com>
 Date: Tue, 9 Apr 2024 01:24:00 -0700
-Subject: [PATCH 1/3] Basic changes to work as ACB/AWB/ADX extraction lib.
+Subject: [PATCH] Basic changes to work as ACB/AWB/ADX extraction lib.
 
+VGAudio fixes for ambiguous "Parallel" reference.
+
+Removed trailing whitespace from ACB_File.cs
 ---
- Xv2CoreLib/ACB/ACB_File.cs                    | 1939 +----------------
+ .../Audio/VGAudio/Containers/Hps/HpsWriter.cs |    1 +
+ .../Containers/NintendoWare/BCFstmWriter.cs   |    3 +-
+ .../Containers/NintendoWare/BrstmWriter.cs    |    3 +-
+ .../VGAudio/Formats/CriAdx/CriAdxFormat.cs    |    1 +
+ .../VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs  |    1 +
+ Xv2CoreLib/ACB/ACB_File.cs                    | 2011 ++---------------
  Xv2CoreLib/ACB/FormatHelper.cs                |   65 +-
  Xv2CoreLib/ACB/IAwbFile.cs                    |    2 +-
  Xv2CoreLib/ACB/TrackMetadata.cs               |    3 +-
@@ -20,10 +28,84 @@ Subject: [PATCH 1/3] Basic changes to work as ACB/AWB/ADX extraction lib.
  Xv2CoreLib/Resource/BinaryConverter.cs        |    2 +-
  Xv2CoreLib/Resource/Utils.cs                  |  166 +-
  Xv2CoreLib/UTF/UTF_File.cs                    |   54 +-
- 16 files changed, 149 insertions(+), 2222 deletions(-)
+ 21 files changed, 192 insertions(+), 2260 deletions(-)
 
+diff --git a/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs b/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs
+index 25daed1..3cecf2a 100644
+--- a/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs
++++ b/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs
+@@ -7,6 +7,7 @@ using VGAudio.Formats.GcAdpcm;
+ using VGAudio.Utilities;
+ using static VGAudio.Codecs.GcAdpcm.GcAdpcmMath;
+ using static VGAudio.Utilities.Helpers;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Containers.Hps
+ {
+diff --git a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs
+index ecbd312..2f6e9ea 100644
+--- a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs
++++ b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs
+@@ -10,6 +10,7 @@ using VGAudio.Formats.Pcm8;
+ using VGAudio.Utilities;
+ using static VGAudio.Containers.NintendoWare.Common;
+ using static VGAudio.Utilities.Helpers;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Containers.NintendoWare
+ {
+@@ -369,4 +370,4 @@ namespace VGAudio.Containers.NintendoWare
+         private static Endianness GetTypeEndianness(NwTarget type) =>
+             type == NwTarget.Ctr ? Endianness.LittleEndian : Endianness.BigEndian;
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs
+index e7cb108..36eef01 100644
+--- a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs
++++ b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs
+@@ -11,6 +11,7 @@ using VGAudio.Utilities;
+ using static VGAudio.Containers.NintendoWare.Common;
+ using static VGAudio.Codecs.GcAdpcm.GcAdpcmMath;
+ using static VGAudio.Utilities.Helpers;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Containers.NintendoWare
+ {
+@@ -294,4 +295,4 @@ namespace VGAudio.Containers.NintendoWare
+             channels.Interleave(writer.BaseStream, InterleaveSize, AudioDataSize);
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs b/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs
+index 882c10c..798dd9f 100644
+--- a/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs
++++ b/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs
+@@ -5,6 +5,7 @@ using VGAudio.Codecs.CriAdx;
+ using VGAudio.Formats.Pcm16;
+ using VGAudio.Utilities;
+ using static VGAudio.Formats.CriAdx.CriAdxHelpers;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Formats.CriAdx
+ {
+diff --git a/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs b/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs
+index 7cffb97..c6a15b3 100644
+--- a/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs
++++ b/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs
+@@ -4,6 +4,7 @@ using System.Linq;
+ using VGAudio.Codecs.GcAdpcm;
+ using VGAudio.Formats.Pcm16;
+ using VGAudio.Utilities;
++using Parallel = VGAudio.Utilities.Parallel;
+ 
+ namespace VGAudio.Formats.GcAdpcm
+ {
 diff --git a/Xv2CoreLib/ACB/ACB_File.cs b/Xv2CoreLib/ACB/ACB_File.cs
-index b4d3390..c046ea3 100644
+index b4d3390..efb8b7d 100644
 --- a/Xv2CoreLib/ACB/ACB_File.cs
 +++ b/Xv2CoreLib/ACB/ACB_File.cs
 @@ -2,16 +2,15 @@ using System;
@@ -285,10 +367,11 @@ index b4d3390..c046ea3 100644
                  acbFile.ExternalAwbError = true;
  
              //AudioPackage values
-@@ -465,22 +394,6 @@ namespace Xv2CoreLib.ACB
+@@ -464,22 +393,6 @@ namespace Xv2CoreLib.ACB
+ 
              return acbFile;
          }
-         
+-        
 -        public static ACB_File LoadXml(string path, bool saveBinary = false)
 -        {
 -            YAXSerializer serializer = new YAXSerializer(typeof(ACB_File), YAXSerializationOptions.DontSerializeNullObjects);
@@ -304,10 +387,18 @@ index b4d3390..c046ea3 100644
 -
 -            return acbFile;
 -        }
--
+ 
          public static ACB_File NewXv2Acb()
          {
+@@ -501,7 +414,7 @@ namespace Xv2CoreLib.ACB
              ACB_File acbFile = new ACB_File();
+             acbFile.Version = version;
+             acbFile.CommandTables = new ACB_CommandTables();
+-            
++
+             if(AcbFormatHelper.Instance.AcbFormatHelperMain.Header.ColumnExists("CommandTable", TypeFlag.Data, version))
+             {
+                 acbFile.CommandTables.CommandTables = new List<ACB_CommandTable>() { new ACB_CommandTable() { Type = CommandTableType.SequenceCommand } };
 @@ -522,15 +435,6 @@ namespace Xv2CoreLib.ACB
              return acbFile;
          }
@@ -324,6 +415,15 @@ index b4d3390..c046ea3 100644
          private void InitializeValues()
          {
              //Call when loading from xml.
+@@ -578,7 +482,7 @@ namespace Xv2CoreLib.ACB
+             }
+ 
+         }
+-        
++
+         private void ValidateTables(UTF_File utfFile)
+         {
+             if (utfFile.ColumnTableExists("BlockSequenceTable", true) || utfFile.ColumnTableExists("BlockTable", true) || utfFile.ColumnTableExists("EventTable", true) 
 @@ -662,15 +566,7 @@ namespace Xv2CoreLib.ACB
          {
              if(Path.GetExtension(path) == ".acb")
@@ -382,6 +482,15 @@ index b4d3390..c046ea3 100644
          }
  
          public UTF_File WriteToTable(byte[] streamAwbHeader, byte[] streamAwbHash, string name)
+@@ -826,7 +708,7 @@ namespace Xv2CoreLib.ACB
+                 utfFile.AddData("AwbFile", 0, (internalAwb != null) ? internalAwb.WriteAfs2File() : null);
+             }
+ 
+-            
++
+             if(HasCueLimitTable || CommandTables.HasCommand(CommandType.CueLimit))
+             {
+                 //CueLimitWorkTable is populated by null bytes (?) according to the 2 following values. The logic behind them is unknown, but idealy they should be equal to the amount of cues. The Command for "CueLimit" requires this to function correctly.
 @@ -853,7 +735,7 @@ namespace Xv2CoreLib.ACB
              {
                  //UTF Table
@@ -391,22 +500,19 @@ index b4d3390..c046ea3 100644
                  streamAwbHashTable.AddData("Hash", 0, streamAwbHash);
                  utfFile.AddData("StreamAwbHash", 0, streamAwbHashTable.Write());
              }
-@@ -884,1203 +766,111 @@ namespace Xv2CoreLib.ACB
+@@ -862,7 +744,7 @@ namespace Xv2CoreLib.ACB
+                 //Just a byte array
+                 utfFile.AddData("StreamAwbHash", 0, (streamAwbHash != null) ? streamAwbHash : new byte[16]);
+             }
+-            
++
  
-             utfFile.AddData("ProjectKey", 0, (ProjectKey != null) ? ProjectKey.ToByteArray() : null, tableHelper, Version);
- 
--            //External AWB header
--            var headerHelper = AcbFormatHelper.Instance.GetTableHelper("StreamAwbAfs2Header");
--
--            if (headerHelper.DoesExist(Version) && streamAwbHeader != null && !IsAwbCpk)
--            {
--                //UTF Table
--                UTF_File streamAwbHeaderTable = CreateDefaultStreamAwbHeaderTable();
--                streamAwbHeaderTable.AddData("Header", 0, streamAwbHeader);
--                utfFile.AddData("StreamAwbAfs2Header", 0, streamAwbHeaderTable.Write());
--            }
--            else if (tableHelper.ColumnExists("StreamAwbAfs2Header", TypeFlag.Data, Version))
--            {
+             utfFile.AddValue("Name", TypeFlag.String, 0, name, tableHelper, Version);
+             utfFile.AddValue("CharacterEncodingType", TypeFlag.UInt8, 0, CharacterEncodingType.ToString(), tableHelper, Version);
+@@ -896,1191 +778,99 @@ namespace Xv2CoreLib.ACB
+             }
+             else if (tableHelper.ColumnExists("StreamAwbAfs2Header", TypeFlag.Data, Version))
+             {
 -                //Just a byte array
 -                utfFile.AddData("StreamAwbAfs2Header", 0, streamAwbHeader);
 -            }
@@ -1453,18 +1559,11 @@ index b4d3390..c046ea3 100644
 -        private List<IUndoRedo> CopyGlobalAisacs(IGlobalAisacRef globalAisacs, ACB_File copyAcb)
 -        {
 -            List<IUndoRedo> undos = new List<IUndoRedo>();
-+            //External AWB header
-+            var headerHelper = AcbFormatHelper.Instance.GetTableHelper("StreamAwbAfs2Header");
- 
+-
 -            foreach (var aisac in globalAisacs.GlobalAisacRefs)
-+            if (headerHelper.DoesExist(Version) && streamAwbHeader != null && !IsAwbCpk)
-             {
+-            {
 -                undos.AddRange(CopyGlobalAisac(copyAcb, aisac));
-+                //UTF Table
-+                UTF_File streamAwbHeaderTable = CreateDefaultStreamAwbHeaderTable();
-+                streamAwbHeaderTable.AddData("Header", 0, streamAwbHeader);
-+                utfFile.AddData("StreamAwbAfs2Header", 0, streamAwbHeaderTable.Write());
-             }
+-            }
 -
 -            return undos;
 -        }
@@ -1474,15 +1573,12 @@ index b4d3390..c046ea3 100644
 -            List<IUndoRedo> undos = new List<IUndoRedo>();
 -
 -            if (GetGlobalAisacReference(aisac.TableGuid) == null && !aisac.IsNull)
-+            else if (tableHelper.ColumnExists("StreamAwbAfs2Header", TypeFlag.Data, Version))
-             {
+-            {
 -                var aisacTable = copyAcb.GetGlobalAisacReference(aisac.TableGuid, false).Copy();
 -                GlobalAisacReferences.Add(aisacTable);
 -                undos.Add(new UndoableListAdd<ACB_GlobalAisacReference>(GlobalAisacReferences, aisacTable));
-+                //Just a byte array
-+                utfFile.AddData("StreamAwbAfs2Header", 0, streamAwbHeader);
-             }
- 
+-            }
+-
 -            return undos;
 -        }
 -
@@ -1491,9 +1587,7 @@ index b4d3390..c046ea3 100644
 -            List<IUndoRedo> undos = new List<IUndoRedo>();
 -
 -            foreach (var action in actionTracks.ActionTracks)
-+            //AudioPackage values
-+            if(SaveFormat == SaveFormat.AudioPackage)
-             {
+-            {
 -                if (GetActionTrack(action.TableGuid) == null && !action.IsNull)
 -                {
 -                    var actionTable = copyAcb.GetActionTrack(action.TableGuid, false).Copy();
@@ -1516,8 +1610,7 @@ index b4d3390..c046ea3 100644
 -                    ActionTracks.Add(actionTable);
 -                    undos.Add(new UndoableListAdd<ACB_Track>(ActionTracks, actionTable));
 -                }
-+                utfFile.AddValue("AudioPackageType", TypeFlag.Int32, 0, ((int)AudioPackageType).ToString());
-             }
+-            }
 -
 -            return undos;
 -        }
@@ -1529,8 +1622,16 @@ index b4d3390..c046ea3 100644
 -            List<IUndoRedo> undos = new List<IUndoRedo>();
 -
 -            var strValue = copyAcb.GetStringValue(tableRef.TableGuid);
--
++                //Just a byte array
++                utfFile.AddData("StreamAwbAfs2Header", 0, streamAwbHeader);
++            }
+ 
 -            if(strValue != null)
++            //AudioPackage values
++            if(SaveFormat == SaveFormat.AudioPackage)
++            {
++                utfFile.AddValue("AudioPackageType", TypeFlag.Int32, 0, ((int)AudioPackageType).ToString());
++            }
 +            if (SaveFormat == SaveFormat.AudioPackage && AudioPackageVersion >= AudioPackageVersionEnum.Expanded)
              {
 -                var strValueInThisAcb = GetStringValue(strValue.StringValue);
@@ -1560,16 +1661,12 @@ index b4d3390..c046ea3 100644
 +            return utfFile;
          }
 -        */
--
+ 
 -        private List<IUndoRedo> CopyStringValue(AcbTableReference tableRef, ACB_File copyAcb)
-+        
 +        public byte[] SaveAudioPackageToBytes()
          {
 -            //I've redone this method to copy ALL the string values when copying, instead of just the one referenced. Seems to fix a random crashing issue.
 -            List<IUndoRedo> undos = new List<IUndoRedo>();
--
--            //Check if String Values are the same on both ACBs
--            bool sameStringValues = StringValues.Count == copyAcb.StringValues.Count && StringValues.Count > 0;
 +            TrimSequenceTrackPercentages();
 +            LinkTableIndexes();
 +            UTF_File utfFile = WriteToTable(null, null, Name);
@@ -1577,9 +1674,11 @@ index b4d3390..c046ea3 100644
 +        }
 +        #endregion
  
--            if (sameStringValues)
+-            //Check if String Values are the same on both ACBs
+-            bool sameStringValues = StringValues.Count == copyAcb.StringValues.Count && StringValues.Count > 0;
 +        #region MiscFunctions
-+        
+ 
+-            if (sameStringValues)
 +        /// <summary>
 +        /// Checks if the specified cue can add any more tracks.
 +        /// </summary>
@@ -1614,7 +1713,9 @@ index b4d3390..c046ea3 100644
 +                return false;
              }
 +        }
-+
+ 
+-            //Adjust the GUID reference
+-            ACB_StringValue strValue = copyAcb.GetStringValue(tableRef.TableGuid);
 +        /// <summary>
 +        /// Checks if the specified cue can add any actions.
 +        /// </summary>
@@ -1622,7 +1723,10 @@ index b4d3390..c046ea3 100644
 +        {
 +            return cue.ReferenceType == ReferenceType.Sequence || cue.ReferenceType == ReferenceType.Synth;
 +        }
-+        
+ 
+-            if (strValue != null)
+-            {
+-                ACB_StringValue strValueInThisAcb = GetStringValue(strValue.StringValue);
 +        /// <summary>
 +        /// Search for an encryption key for any HCA tracks in this ACB, if any.
 +        /// </summary>
@@ -1631,17 +1735,6 @@ index b4d3390..c046ea3 100644
 +            return AudioTracks.TryGetEncrpytionKey();
 +        }
  
--            //Adjust the GUID reference
--            ACB_StringValue strValue = copyAcb.GetStringValue(tableRef.TableGuid);
-+        public bool IsStreamingAcb()
-+        {
-+            int stream = 0;
- 
--            if (strValue != null)
-+            foreach(var waveform in Waveforms)
-             {
--                ACB_StringValue strValueInThisAcb = GetStringValue(strValue.StringValue);
--
 -                if (strValueInThisAcb != null)
 -                {
 -                    //Set the GUID
@@ -1654,6 +1747,12 @@ index b4d3390..c046ea3 100644
 -                    StringValues.Add(strValue);
 -                    undos.Add(new UndoableListAdd<ACB_StringValue>(StringValues, strValue));
 -                }
++        public bool IsStreamingAcb()
++        {
++            int stream = 0;
++
++            foreach(var waveform in Waveforms)
++            {
 +                if (waveform.Streaming > 0)
 +                    stream++;
              }
@@ -1669,7 +1768,41 @@ index b4d3390..c046ea3 100644
  
          #endregion
  
-@@ -2379,7 +1169,7 @@ namespace Xv2CoreLib.ACB
+@@ -2154,7 +944,7 @@ namespace Xv2CoreLib.ACB
+             }
+ 
+         }
+-        
++
+         private void SortGlobalAisacRefs()
+         {
+             List<ACB_GlobalAisacReference> newAisacRefs = new List<ACB_GlobalAisacReference>();
+@@ -2255,7 +1045,7 @@ namespace Xv2CoreLib.ACB
+                 }
+             }
+         }
+-        
++
+         private ushort CheckTableSequence<T>(List<AcbTableReference> idx, List<T> newList, List<T> mainList) where T : AcbTableBase
+         {
+             if (idx.Count == 0) return ushort.MaxValue;
+@@ -2331,7 +1121,7 @@ namespace Xv2CoreLib.ACB
+             foreach (var commandTable in CommandTables.CommandTables)
+                 foreach (var commandGroup in commandTable.CommandGroups)
+                     InstanceGuidRefactor_Reflection(commandGroup.Commands, oldGuid, newGuid);
+-            
++
+         }
+ 
+         private void InstanceGuidRefactor_Reflection<T>(IList<T> entries, Guid oldGuid, Guid newGuid) where T : class
+@@ -2373,13 +1163,13 @@ namespace Xv2CoreLib.ACB
+                     InstanceGuidRefactor_Reflection(prop.GetValue(entry) as List<ACB_ReferenceItem>, oldGuid, newGuid);
+                 }
+             }
+-            
++
+         }
+ 
          #endregion
  
          #region MiscPrivateFunctions
@@ -1678,10 +1811,11 @@ index b4d3390..c046ea3 100644
          {
              //Get list of tracks to include
              List<int> tracks = new List<int>();
-@@ -2416,60 +1206,6 @@ namespace Xv2CoreLib.ACB
+@@ -2415,61 +1205,7 @@ namespace Xv2CoreLib.ACB
+             awbFile.PadWithNullEntries();
              return awbFile;
          }
-         
+-        
 -        /// <summary>
 -        /// Removes unused tables. (Except Cues and Awb Entries)
 -        /// </summary>
@@ -1732,15 +1866,119 @@ index b4d3390..c046ea3 100644
 -                    deleted = true;
 -                }
 -            }
--
+ 
 -            return undos;
 -        }
 -        
          /// <summary>
          /// Ensure that all ACB_SequenceTrack Percentage values do not exceed 100.
          /// </summary>
-@@ -3255,74 +1991,27 @@ namespace Xv2CoreLib.ACB
-     
+@@ -2485,7 +1221,7 @@ namespace Xv2CoreLib.ACB
+                 sequence.AdjustTrackPercentage();
+             }
+         }
+-        
++
+         private void SortCues()
+         {
+             Cues.Sort((x, y) => (int)x.ID - (int)y.ID);
+@@ -2853,7 +1589,7 @@ namespace Xv2CoreLib.ACB
+             return (entry != null) ? (ushort)table.IndexOf(entry) : ushort.MaxValue;
+             //if (entry == null) throw new ArgumentOutOfRangeException($"ACB_File.GetTableIndex: Cannot find entry with guid {guid}.");
+         }
+-        
++
+         #endregion
+ 
+         #region DefaultTableFunctions
+@@ -2877,10 +1613,10 @@ namespace Xv2CoreLib.ACB
+ 
+             if(SaveFormat == SaveFormat.AudioPackage && AudioPackageVersion >= AudioPackageVersionEnum.Expanded && !utfFile.ColumnExists("LB_AliasBinding"))
+                 utfFile.Columns.Add(new UTF_Column("LB_AliasBinding", TypeFlag.String));
+-            
++
+             if (SaveFormat == SaveFormat.AudioPackage && AudioPackageVersion >= AudioPackageVersionEnum.Expanded && !utfFile.ColumnExists("LB_VoiceLanguage"))
+                 utfFile.Columns.Add(new UTF_Column("LB_VoiceLanguage", TypeFlag.Int32));
+-            
++
+             return utfFile;
+         }
+ 
+@@ -2918,7 +1654,7 @@ namespace Xv2CoreLib.ACB
+         {
+             return AcbFormatHelper.Instance.CreateTable("SynthTable", "Synth", Version);
+         }
+-        
++
+         internal UTF_File CreateDefaultSequenceTable()
+         {
+             return AcbFormatHelper.Instance.CreateTable("SequenceTable", "Sequence", Version);
+@@ -2943,7 +1679,7 @@ namespace Xv2CoreLib.ACB
+         {
+             return AcbFormatHelper.Instance.CreateTable("WaveformExtensionDataTable", "WaveformExtensionData", Version);
+         }
+-        
++
+         internal UTF_File CreateDefaultStreamAwbHashTable()
+         {
+             return AcbFormatHelper.Instance.CreateTable("StreamAwbHash", "StreamAwb", Version);
+@@ -2982,7 +1718,7 @@ namespace Xv2CoreLib.ACB
+         public ACB_StringValue GetStringValue(Guid guid, bool allowNull = true) { return GetTable(guid, StringValues, allowNull); }
+         public ACB_StringValue GetStringValue(string stringValue) { return StringValues.FirstOrDefault(x => x.StringValue == stringValue); }
+         public ACB_GlobalAisacReference GetGlobalAisacReference(string globalAisacValue) { return GlobalAisacReferences.FirstOrDefault(x => x.Name == globalAisacValue); }
+-        
++
+         private ACB_Sequence GetSequence(ACB_Cue cue)
+         {
+             if (cue.ReferenceType == ReferenceType.Sequence)
+@@ -3004,7 +1740,7 @@ namespace Xv2CoreLib.ACB
+ 
+             return entry;
+         }
+-        
++
+         public List<ACB_Track> GetAllActionTracksOnCue(Guid cueGuid)
+         {
+             ACB_Cue cue = GetCue(cueGuid);
+@@ -3062,7 +1798,7 @@ namespace Xv2CoreLib.ACB
+ 
+             return false;
+         }
+-        
++
+         private bool IsTableUsed_Reflection<T>(IList<T> entries, Guid tableGuid) where T : class
+         {
+             foreach(var entry in entries)
+@@ -3072,12 +1808,12 @@ namespace Xv2CoreLib.ACB
+             }
+             return false;
+         }
+-        
++
+         private bool IsTableUsed_ReflectionRecursive<T>(T entry, Guid tableGuid)
+         {
+             if (entry == null) return false;
+             var props = entry.GetType().GetProperties();
+-            
++
+             foreach(var prop in props.Where(x => x.Name != "InstanceGuid"))
+             {
+                 if(prop.PropertyType == typeof(Guid))
+@@ -3224,7 +1960,7 @@ namespace Xv2CoreLib.ACB
+                 if (volumeCommand == null) return 1f;
+                 return (volumeCommand.CommandType == CommandType.VolumeRandomization2) ? volumeCommand.Param1 / 100f : 0f;
+             }
+-                
++
+             return 1f;
+         }
+ 
+@@ -3252,77 +1988,30 @@ namespace Xv2CoreLib.ACB
+                 id++;
+             return id;
+         }
+-    
++
      }
  
 -    [YAXSerializeAs("Cue")]
@@ -1815,6 +2053,24 @@ index b4d3390..c046ea3 100644
          public string InstallID_Lang => $"{AliasBinding}_{Name}_{VoiceLanguage}";
  
  
+@@ -3423,7 +2112,7 @@ namespace Xv2CoreLib.ACB
+             utfTable.AddValue("Length", TypeFlag.UInt32, index, Length.ToString(), tableHelper, ParseVersion);
+             utfTable.AddValue("NumAisacControlMaps", TypeFlag.UInt8, index, NumAisacControlMaps.ToString(), tableHelper, ParseVersion);
+             utfTable.AddValue("HeaderVisibility", TypeFlag.UInt8, index, HeaderVisibility.ToString(), tableHelper, ParseVersion);
+-            
++
+             //ReferenceItem
+             utfTable.AddValue("ReferenceType", TypeFlag.UInt8, index, ((byte)ReferenceType).ToString());
+             utfTable.AddValue("ReferenceIndex", TypeFlag.UInt16, index, ReferenceIndex.ToString());
+@@ -3431,7 +2120,7 @@ namespace Xv2CoreLib.ACB
+             //Name
+             if (string.IsNullOrWhiteSpace(Name))
+                 Name = "cue_" + index;
+-            
++
+             //NumWaveforms
+             if(tableHelper.ColumnExists("NumRelatedWaveforms", TypeFlag.UInt16, ParseVersion))
+             {
 @@ -3448,48 +2137,28 @@ namespace Xv2CoreLib.ACB
          }
      }
@@ -1864,7 +2120,16 @@ index b4d3390..c046ea3 100644
          public List<AcbTableReference> ActionTracks { get; set; } = new List<AcbTableReference>(); //ushort
  
          public ACB_Synth()
-@@ -3615,78 +2284,34 @@ namespace Xv2CoreLib.ACB
+@@ -3601,7 +2270,7 @@ namespace Xv2CoreLib.ACB
+ 
+             byte[] referenceItems = ACB_ReferenceItem.Write(ReferenceItems);
+             utfTable.AddData("ReferenceItems", index, (referenceItems.Length > 0) ? referenceItems : null, tableHelper, ParseVersion);
+-            
++
+             if(LocalAisac != null)
+             {
+                 utfTable.AddData("LocalAisacs", index, BigEndianConverter.GetBytes(AcbTableReference.ToArray(LocalAisac)), tableHelper, ParseVersion);
+@@ -3615,80 +2284,36 @@ namespace Xv2CoreLib.ACB
  
      }
  
@@ -1942,8 +2207,20 @@ index b4d3390..c046ea3 100644
 -        [YAXSerializeAs("ActionTracks")]
 -        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ",")]
          public List<AcbTableReference> ActionTracks { get; set; } = new List<AcbTableReference>(); //ushort
-         
+-        
++
          public void Initialize()
+         {
+             if (Tracks == null) Tracks = AsyncObservableCollection<ACB_SequenceTrack>.Create();
+@@ -3763,7 +2388,7 @@ namespace Xv2CoreLib.ACB
+             var tracks = BigEndianConverter.ToUInt16Array(sequenceTable.GetData("TrackIndex", index)).ToList();
+             List<ushort> trackValues = new ushort[tracks.Count].ToList();
+             sequence.Tracks = new AsyncObservableCollection<ACB_SequenceTrack>();
+-            
++
+             if(tableHelper.ColumnExists("TrackValues", TypeFlag.Data, ParseVersion))
+             {
+                 trackValues = BigEndianConverter.ToUInt16Array(sequenceTable.GetData("TrackValues", index)).ToList();
 @@ -3909,8 +2534,6 @@ namespace Xv2CoreLib.ACB
          }
      }
@@ -1999,7 +2276,7 @@ index b4d3390..c046ea3 100644
 -    [Serializable]
      public class ACB_SequenceBlock : AcbTableBase, ICommandIndex, ILocalAisac, ITrack, IGlobalAisacRef, IBlock
      {
-         
+-        
 -        #region Undoable
 -        [YAXDontSerialize]
 -        public SequenceType UndoableSequenceType
@@ -2019,7 +2296,7 @@ index b4d3390..c046ea3 100644
 -                }
 -            }
 -        }
--
+ 
 -        #endregion
 -
 -        [YAXAttributeForClass]
@@ -2208,6 +2485,15 @@ index b4d3390..c046ea3 100644
          public List<AcbTableReference> GlobalAisacRefs { get; set; } = new List<AcbTableReference>();
  
          public void Initialize()
+@@ -4487,7 +2957,7 @@ namespace Xv2CoreLib.ACB
+             utfTable.AddValue("EventIndex", TypeFlag.UInt16, index, EventIndex.ToString());
+             utfTable.AddValue("GlobalAisacStartIndex", TypeFlag.UInt16, index, globalAisacRefIndex.ToString(), tableHelper, ParseVersion);
+             utfTable.AddValue("GlobalAisacNumRefs", TypeFlag.UInt16, index, GlobalAisacRefs.Count.ToString(), tableHelper, ParseVersion);
+-            
++
+             if (LocalAisac != null)
+             {
+                 utfTable.AddData("LocalAisacs", index, BigEndianConverter.GetBytes(AcbTableReference.ToArray(LocalAisac)), tableHelper, ParseVersion);
 @@ -4500,14 +2970,10 @@ namespace Xv2CoreLib.ACB
  
      }
@@ -2309,6 +2595,15 @@ index b4d3390..c046ea3 100644
          public uint LoopEnd { get; set; }
  
          public static List<ACB_Waveform> Load(UTF_File table, UTF_File waveformTable, Version ParseVersion)
+@@ -4684,7 +3101,7 @@ namespace Xv2CoreLib.ACB
+                         waveform.LoopStart = waveformExtensionTable.GetValue<uint>("LoopStart", TypeFlag.UInt32, extensionIndex);
+                         waveform.LoopEnd = waveformExtensionTable.GetValue<uint>("LoopEnd", TypeFlag.UInt32, extensionIndex);
+                     }
+-                    
++
+                 }
+                 else
+                 {
 @@ -4813,45 +3230,22 @@ namespace Xv2CoreLib.ACB
          }
      }
@@ -2346,12 +2641,14 @@ index b4d3390..c046ea3 100644
 -        [YAXSerializeAs("value")]
          public byte GraphBitFlag { get; set; }
  
-         
+-        
 -        [YAXSerializeAs("AutoModulationIndex")]
++
          public AcbTableReference AutoModulationIndex { get; set; } = new AcbTableReference(); //ushort
-         
+-        
 -        [YAXSerializeAs("GraphIndexes")]
 -        [YAXCollection(YAXCollectionSerializationTypes.Serially, SeparateBy = ", ")]
++
          public List<AcbTableReference> GraphIndexes { get; set; } = new List<AcbTableReference>(); //ushort
  
          public void Initialize()
@@ -2424,6 +2721,24 @@ index b4d3390..c046ea3 100644
          public string StringValue { get; set; }
  
          public ACB_StringValue() { }
+@@ -5145,7 +3511,7 @@ namespace Xv2CoreLib.ACB
+ 
+             return stringValue;
+         }
+-        
++
+         public static void WriteToTable(IList<ACB_StringValue> entries, Version ParseVersion, UTF_File utfTable)
+         {
+             for (int i = 0; i < entries.Count; i++)
+@@ -5160,7 +3526,7 @@ namespace Xv2CoreLib.ACB
+ 
+             utfTable.AddValue("StringValue", TypeFlag.String, index, StringValue, tableHelper, ParseVersion);
+         }
+-        
++
+         public static List<ACB_StringValue> DefaultStringTable()
+         {
+             List<ACB_StringValue> values = new List<ACB_StringValue>();
 @@ -5178,14 +3544,9 @@ namespace Xv2CoreLib.ACB
          }
      }
@@ -2507,8 +2822,21 @@ index b4d3390..c046ea3 100644
          public void SetCommand(int index, CommandTableType type, ACB_CommandGroup command)
          {
              var table = GetCommandTable(type);
-@@ -5575,13 +3903,10 @@ namespace Xv2CoreLib.ACB
-     
+@@ -5377,7 +3705,7 @@ namespace Xv2CoreLib.ACB
+             else
+                 return null;
+         }
+-        
++
+         public ACB_CommandTable GetCommandTable(CommandTableType type)
+         {
+             //If on old ACB version, always return SequenceCommandTable
+@@ -5572,16 +3900,13 @@ namespace Xv2CoreLib.ACB
+                 }
+             }
+         }
+-    
++
      }
  
 -    [Serializable]
@@ -2521,8 +2849,12 @@ index b4d3390..c046ea3 100644
          public List<ACB_CommandGroup> CommandGroups { get; set; } = new List<ACB_CommandGroup>();
  
          public static ACB_CommandTable Load(UTF_File commandTable, CommandTableType type, bool loadUnknownCommands)
-@@ -5655,14 +3980,10 @@ namespace Xv2CoreLib.ACB
-         
+@@ -5652,17 +3977,13 @@ namespace Xv2CoreLib.ACB
+ 
+             return utfTable;
+         }
+-        
++
      }
  
 -    [YAXSerializeAs("CommandGroup")]
@@ -2536,6 +2868,21 @@ index b4d3390..c046ea3 100644
          public AsyncObservableCollection<ACB_Command> Commands { get; set; } = new AsyncObservableCollection<ACB_Command>();
  
          public static ACB_CommandGroup Load(UTF_File commandTable, int index, bool loadUnknownCommands)
+@@ -5730,12 +4051,12 @@ namespace Xv2CoreLib.ACB
+ 
+             return bytes.ToArray();
+         }
+-        
++
+         public byte[] GetBytes()
+         {
+             return GetBytes(this);
+         }
+-    
++
+         //Get
+         /// <summary>
+         /// Returns the first ActionType among the Commands.
 @@ -5758,8 +4079,6 @@ namespace Xv2CoreLib.ACB
          }
      }
@@ -2574,8 +2921,9 @@ index b4d3390..c046ea3 100644
          //Properties
 -        [YAXDontSerialize]
          public string DisplayName { get { return $"Command: {CommandType}"; } }
-         
+-        
 -        [YAXAttributeForClass]
++
          public CommandType CommandType
          {
              get
@@ -2615,6 +2963,33 @@ index b4d3390..c046ea3 100644
          public ushort Param4 { get { return GetParam(3); } set { SetParam(3, value); } }
  
  
+@@ -6008,7 +4293,7 @@ namespace Xv2CoreLib.ACB
+         List<AcbTableReference> Blocks { get; set; }
+     }
+     #endregion
+-    
++
+     #region Enums
+     //Enums
+     public enum ReferenceType : byte
+@@ -6032,7 +4317,7 @@ namespace Xv2CoreLib.ACB
+         DSP = 13,
+         None = 255
+     }
+-    
++
+     public enum CommandType : ushort
+     {
+         //Reminder! All values are in big endian!
+@@ -6093,7 +4378,7 @@ namespace Xv2CoreLib.ACB
+         Switch = 5,
+         ComboSequential = 6
+     }
+-    
++
+     public enum CommandTableType
+     {
+         SequenceCommand, //In older ACB versions this is the only command table and was used for everything (was just called "CommandTable")
 @@ -6115,7 +4400,6 @@ namespace Xv2CoreLib.ACB
      #endregion
  
@@ -2650,6 +3025,22 @@ index b4d3390..c046ea3 100644
          public ushort TableIndex_Ushort { get { return (ushort)TableIndex; } }
  
  
+@@ -6163,7 +4438,7 @@ namespace Xv2CoreLib.ACB
+         {
+             TableIndex = ushort.MaxValue;
+         }
+-        
++
+         public AcbTableReference(Guid guid)
+         {
+             TableGuid = guid;
+@@ -6237,5 +4512,5 @@ namespace Xv2CoreLib.ACB
+             return array.ToArray();
+         }
+     }
+-    
++
+ }
 diff --git a/Xv2CoreLib/ACB/FormatHelper.cs b/Xv2CoreLib/ACB/FormatHelper.cs
 index 3e6e601..e755e22 100644
 --- a/Xv2CoreLib/ACB/FormatHelper.cs
@@ -3716,536 +4107,6 @@ index 9f18146..3fd911a 100644
      public class StringWriteObject
      {
          public string Str { get; set; }
--- 
-2.25.1
-
-
-From 3b637d47371bf6515f2cd2995f69419d4a39f2ab Mon Sep 17 00:00:00 2001
-From: DarkPsydeOfTheMoon <avalanchebreakdown@gmail.com>
-Date: Tue, 9 Apr 2024 01:47:14 -0700
-Subject: [PATCH 2/3] VGAudio fixes for ambiguous "Parallel" reference.
-
----
- LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs            | 1 +
- .../Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs      | 3 ++-
- LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs | 3 ++-
- LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs         | 1 +
- LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs       | 1 +
- 5 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs b/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs
-index 25daed1..3cecf2a 100644
---- a/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs
-+++ b/LB_Common/Audio/VGAudio/Containers/Hps/HpsWriter.cs
-@@ -7,6 +7,7 @@ using VGAudio.Formats.GcAdpcm;
- using VGAudio.Utilities;
- using static VGAudio.Codecs.GcAdpcm.GcAdpcmMath;
- using static VGAudio.Utilities.Helpers;
-+using Parallel = VGAudio.Utilities.Parallel;
- 
- namespace VGAudio.Containers.Hps
- {
-diff --git a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs
-index ecbd312..2f6e9ea 100644
---- a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs
-+++ b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BCFstmWriter.cs
-@@ -10,6 +10,7 @@ using VGAudio.Formats.Pcm8;
- using VGAudio.Utilities;
- using static VGAudio.Containers.NintendoWare.Common;
- using static VGAudio.Utilities.Helpers;
-+using Parallel = VGAudio.Utilities.Parallel;
- 
- namespace VGAudio.Containers.NintendoWare
- {
-@@ -369,4 +370,4 @@ namespace VGAudio.Containers.NintendoWare
-         private static Endianness GetTypeEndianness(NwTarget type) =>
-             type == NwTarget.Ctr ? Endianness.LittleEndian : Endianness.BigEndian;
-     }
--}
-\ No newline at end of file
-+}
-diff --git a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs
-index e7cb108..36eef01 100644
---- a/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs
-+++ b/LB_Common/Audio/VGAudio/Containers/NintendoWare/BrstmWriter.cs
-@@ -11,6 +11,7 @@ using VGAudio.Utilities;
- using static VGAudio.Containers.NintendoWare.Common;
- using static VGAudio.Codecs.GcAdpcm.GcAdpcmMath;
- using static VGAudio.Utilities.Helpers;
-+using Parallel = VGAudio.Utilities.Parallel;
- 
- namespace VGAudio.Containers.NintendoWare
- {
-@@ -294,4 +295,4 @@ namespace VGAudio.Containers.NintendoWare
-             channels.Interleave(writer.BaseStream, InterleaveSize, AudioDataSize);
-         }
-     }
--}
-\ No newline at end of file
-+}
-diff --git a/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs b/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs
-index 882c10c..798dd9f 100644
---- a/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs
-+++ b/LB_Common/Audio/VGAudio/Formats/CriAdx/CriAdxFormat.cs
-@@ -5,6 +5,7 @@ using VGAudio.Codecs.CriAdx;
- using VGAudio.Formats.Pcm16;
- using VGAudio.Utilities;
- using static VGAudio.Formats.CriAdx.CriAdxHelpers;
-+using Parallel = VGAudio.Utilities.Parallel;
- 
- namespace VGAudio.Formats.CriAdx
- {
-diff --git a/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs b/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs
-index 7cffb97..c6a15b3 100644
---- a/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs
-+++ b/LB_Common/Audio/VGAudio/Formats/GcAdpcm/GcAdpcmFormat.cs
-@@ -4,6 +4,7 @@ using System.Linq;
- using VGAudio.Codecs.GcAdpcm;
- using VGAudio.Formats.Pcm16;
- using VGAudio.Utilities;
-+using Parallel = VGAudio.Utilities.Parallel;
- 
- namespace VGAudio.Formats.GcAdpcm
- {
--- 
-2.25.1
-
-
-From f92baabe4a7c7e32226754fbcd68ba55aaf7008a Mon Sep 17 00:00:00 2001
-From: DarkPsydeOfTheMoon <avalanchebreakdown@gmail.com>
-Date: Wed, 10 Apr 2024 20:57:22 -0700
-Subject: [PATCH 3/3] Removed trailing whitespace from ACB_File.cs
-
----
- Xv2CoreLib/ACB/ACB_File.cs | 98 +++++++++++++++++++-------------------
- 1 file changed, 49 insertions(+), 49 deletions(-)
-
-diff --git a/Xv2CoreLib/ACB/ACB_File.cs b/Xv2CoreLib/ACB/ACB_File.cs
-index c046ea3..efb8b7d 100644
---- a/Xv2CoreLib/ACB/ACB_File.cs
-+++ b/Xv2CoreLib/ACB/ACB_File.cs
-@@ -393,7 +393,7 @@ namespace Xv2CoreLib.ACB
- 
-             return acbFile;
-         }
--        
-+
-         public static ACB_File NewXv2Acb()
-         {
-             ACB_File acbFile = new ACB_File();
-@@ -414,7 +414,7 @@ namespace Xv2CoreLib.ACB
-             ACB_File acbFile = new ACB_File();
-             acbFile.Version = version;
-             acbFile.CommandTables = new ACB_CommandTables();
--            
-+
-             if(AcbFormatHelper.Instance.AcbFormatHelperMain.Header.ColumnExists("CommandTable", TypeFlag.Data, version))
-             {
-                 acbFile.CommandTables.CommandTables = new List<ACB_CommandTable>() { new ACB_CommandTable() { Type = CommandTableType.SequenceCommand } };
-@@ -482,7 +482,7 @@ namespace Xv2CoreLib.ACB
-             }
- 
-         }
--        
-+
-         private void ValidateTables(UTF_File utfFile)
-         {
-             if (utfFile.ColumnTableExists("BlockSequenceTable", true) || utfFile.ColumnTableExists("BlockTable", true) || utfFile.ColumnTableExists("EventTable", true) 
-@@ -708,7 +708,7 @@ namespace Xv2CoreLib.ACB
-                 utfFile.AddData("AwbFile", 0, (internalAwb != null) ? internalAwb.WriteAfs2File() : null);
-             }
- 
--            
-+
-             if(HasCueLimitTable || CommandTables.HasCommand(CommandType.CueLimit))
-             {
-                 //CueLimitWorkTable is populated by null bytes (?) according to the 2 following values. The logic behind them is unknown, but idealy they should be equal to the amount of cues. The Command for "CueLimit" requires this to function correctly.
-@@ -744,7 +744,7 @@ namespace Xv2CoreLib.ACB
-                 //Just a byte array
-                 utfFile.AddData("StreamAwbHash", 0, (streamAwbHash != null) ? streamAwbHash : new byte[16]);
-             }
--            
-+
- 
-             utfFile.AddValue("Name", TypeFlag.String, 0, name, tableHelper, Version);
-             utfFile.AddValue("CharacterEncodingType", TypeFlag.UInt8, 0, CharacterEncodingType.ToString(), tableHelper, Version);
-@@ -807,7 +807,7 @@ namespace Xv2CoreLib.ACB
- 
-             return utfFile;
-         }
--        
-+
-         public byte[] SaveAudioPackageToBytes()
-         {
-             TrimSequenceTrackPercentages();
-@@ -818,7 +818,7 @@ namespace Xv2CoreLib.ACB
-         #endregion
- 
-         #region MiscFunctions
--        
-+
-         /// <summary>
-         /// Checks if the specified cue can add any more tracks.
-         /// </summary>
-@@ -845,7 +845,7 @@ namespace Xv2CoreLib.ACB
-         {
-             return cue.ReferenceType == ReferenceType.Sequence || cue.ReferenceType == ReferenceType.Synth;
-         }
--        
-+
-         /// <summary>
-         /// Search for an encryption key for any HCA tracks in this ACB, if any.
-         /// </summary>
-@@ -944,7 +944,7 @@ namespace Xv2CoreLib.ACB
-             }
- 
-         }
--        
-+
-         private void SortGlobalAisacRefs()
-         {
-             List<ACB_GlobalAisacReference> newAisacRefs = new List<ACB_GlobalAisacReference>();
-@@ -1045,7 +1045,7 @@ namespace Xv2CoreLib.ACB
-                 }
-             }
-         }
--        
-+
-         private ushort CheckTableSequence<T>(List<AcbTableReference> idx, List<T> newList, List<T> mainList) where T : AcbTableBase
-         {
-             if (idx.Count == 0) return ushort.MaxValue;
-@@ -1121,7 +1121,7 @@ namespace Xv2CoreLib.ACB
-             foreach (var commandTable in CommandTables.CommandTables)
-                 foreach (var commandGroup in commandTable.CommandGroups)
-                     InstanceGuidRefactor_Reflection(commandGroup.Commands, oldGuid, newGuid);
--            
-+
-         }
- 
-         private void InstanceGuidRefactor_Reflection<T>(IList<T> entries, Guid oldGuid, Guid newGuid) where T : class
-@@ -1163,7 +1163,7 @@ namespace Xv2CoreLib.ACB
-                     InstanceGuidRefactor_Reflection(prop.GetValue(entry) as List<ACB_ReferenceItem>, oldGuid, newGuid);
-                 }
-             }
--            
-+
-         }
- 
-         #endregion
-@@ -1205,7 +1205,7 @@ namespace Xv2CoreLib.ACB
-             awbFile.PadWithNullEntries();
-             return awbFile;
-         }
--        
-+
-         /// <summary>
-         /// Ensure that all ACB_SequenceTrack Percentage values do not exceed 100.
-         /// </summary>
-@@ -1221,7 +1221,7 @@ namespace Xv2CoreLib.ACB
-                 sequence.AdjustTrackPercentage();
-             }
-         }
--        
-+
-         private void SortCues()
-         {
-             Cues.Sort((x, y) => (int)x.ID - (int)y.ID);
-@@ -1589,7 +1589,7 @@ namespace Xv2CoreLib.ACB
-             return (entry != null) ? (ushort)table.IndexOf(entry) : ushort.MaxValue;
-             //if (entry == null) throw new ArgumentOutOfRangeException($"ACB_File.GetTableIndex: Cannot find entry with guid {guid}.");
-         }
--        
-+
-         #endregion
- 
-         #region DefaultTableFunctions
-@@ -1613,10 +1613,10 @@ namespace Xv2CoreLib.ACB
- 
-             if(SaveFormat == SaveFormat.AudioPackage && AudioPackageVersion >= AudioPackageVersionEnum.Expanded && !utfFile.ColumnExists("LB_AliasBinding"))
-                 utfFile.Columns.Add(new UTF_Column("LB_AliasBinding", TypeFlag.String));
--            
-+
-             if (SaveFormat == SaveFormat.AudioPackage && AudioPackageVersion >= AudioPackageVersionEnum.Expanded && !utfFile.ColumnExists("LB_VoiceLanguage"))
-                 utfFile.Columns.Add(new UTF_Column("LB_VoiceLanguage", TypeFlag.Int32));
--            
-+
-             return utfFile;
-         }
- 
-@@ -1654,7 +1654,7 @@ namespace Xv2CoreLib.ACB
-         {
-             return AcbFormatHelper.Instance.CreateTable("SynthTable", "Synth", Version);
-         }
--        
-+
-         internal UTF_File CreateDefaultSequenceTable()
-         {
-             return AcbFormatHelper.Instance.CreateTable("SequenceTable", "Sequence", Version);
-@@ -1679,7 +1679,7 @@ namespace Xv2CoreLib.ACB
-         {
-             return AcbFormatHelper.Instance.CreateTable("WaveformExtensionDataTable", "WaveformExtensionData", Version);
-         }
--        
-+
-         internal UTF_File CreateDefaultStreamAwbHashTable()
-         {
-             return AcbFormatHelper.Instance.CreateTable("StreamAwbHash", "StreamAwb", Version);
-@@ -1718,7 +1718,7 @@ namespace Xv2CoreLib.ACB
-         public ACB_StringValue GetStringValue(Guid guid, bool allowNull = true) { return GetTable(guid, StringValues, allowNull); }
-         public ACB_StringValue GetStringValue(string stringValue) { return StringValues.FirstOrDefault(x => x.StringValue == stringValue); }
-         public ACB_GlobalAisacReference GetGlobalAisacReference(string globalAisacValue) { return GlobalAisacReferences.FirstOrDefault(x => x.Name == globalAisacValue); }
--        
-+
-         private ACB_Sequence GetSequence(ACB_Cue cue)
-         {
-             if (cue.ReferenceType == ReferenceType.Sequence)
-@@ -1740,7 +1740,7 @@ namespace Xv2CoreLib.ACB
- 
-             return entry;
-         }
--        
-+
-         public List<ACB_Track> GetAllActionTracksOnCue(Guid cueGuid)
-         {
-             ACB_Cue cue = GetCue(cueGuid);
-@@ -1798,7 +1798,7 @@ namespace Xv2CoreLib.ACB
- 
-             return false;
-         }
--        
-+
-         private bool IsTableUsed_Reflection<T>(IList<T> entries, Guid tableGuid) where T : class
-         {
-             foreach(var entry in entries)
-@@ -1808,12 +1808,12 @@ namespace Xv2CoreLib.ACB
-             }
-             return false;
-         }
--        
-+
-         private bool IsTableUsed_ReflectionRecursive<T>(T entry, Guid tableGuid)
-         {
-             if (entry == null) return false;
-             var props = entry.GetType().GetProperties();
--            
-+
-             foreach(var prop in props.Where(x => x.Name != "InstanceGuid"))
-             {
-                 if(prop.PropertyType == typeof(Guid))
-@@ -1960,7 +1960,7 @@ namespace Xv2CoreLib.ACB
-                 if (volumeCommand == null) return 1f;
-                 return (volumeCommand.CommandType == CommandType.VolumeRandomization2) ? volumeCommand.Param1 / 100f : 0f;
-             }
--                
-+
-             return 1f;
-         }
- 
-@@ -1988,7 +1988,7 @@ namespace Xv2CoreLib.ACB
-                 id++;
-             return id;
-         }
--    
-+
-     }
- 
-     public class ACB_Cue : AcbTableBase, IReferenceType
-@@ -2112,7 +2112,7 @@ namespace Xv2CoreLib.ACB
-             utfTable.AddValue("Length", TypeFlag.UInt32, index, Length.ToString(), tableHelper, ParseVersion);
-             utfTable.AddValue("NumAisacControlMaps", TypeFlag.UInt8, index, NumAisacControlMaps.ToString(), tableHelper, ParseVersion);
-             utfTable.AddValue("HeaderVisibility", TypeFlag.UInt8, index, HeaderVisibility.ToString(), tableHelper, ParseVersion);
--            
-+
-             //ReferenceItem
-             utfTable.AddValue("ReferenceType", TypeFlag.UInt8, index, ((byte)ReferenceType).ToString());
-             utfTable.AddValue("ReferenceIndex", TypeFlag.UInt16, index, ReferenceIndex.ToString());
-@@ -2120,7 +2120,7 @@ namespace Xv2CoreLib.ACB
-             //Name
-             if (string.IsNullOrWhiteSpace(Name))
-                 Name = "cue_" + index;
--            
-+
-             //NumWaveforms
-             if(tableHelper.ColumnExists("NumRelatedWaveforms", TypeFlag.UInt16, ParseVersion))
-             {
-@@ -2270,7 +2270,7 @@ namespace Xv2CoreLib.ACB
- 
-             byte[] referenceItems = ACB_ReferenceItem.Write(ReferenceItems);
-             utfTable.AddData("ReferenceItems", index, (referenceItems.Length > 0) ? referenceItems : null, tableHelper, ParseVersion);
--            
-+
-             if(LocalAisac != null)
-             {
-                 utfTable.AddData("LocalAisacs", index, BigEndianConverter.GetBytes(AcbTableReference.ToArray(LocalAisac)), tableHelper, ParseVersion);
-@@ -2313,7 +2313,7 @@ namespace Xv2CoreLib.ACB
- 
-         //ActionTrack
-         public List<AcbTableReference> ActionTracks { get; set; } = new List<AcbTableReference>(); //ushort
--        
-+
-         public void Initialize()
-         {
-             if (Tracks == null) Tracks = AsyncObservableCollection<ACB_SequenceTrack>.Create();
-@@ -2388,7 +2388,7 @@ namespace Xv2CoreLib.ACB
-             var tracks = BigEndianConverter.ToUInt16Array(sequenceTable.GetData("TrackIndex", index)).ToList();
-             List<ushort> trackValues = new ushort[tracks.Count].ToList();
-             sequence.Tracks = new AsyncObservableCollection<ACB_SequenceTrack>();
--            
-+
-             if(tableHelper.ColumnExists("TrackValues", TypeFlag.Data, ParseVersion))
-             {
-                 trackValues = BigEndianConverter.ToUInt16Array(sequenceTable.GetData("TrackValues", index)).ToList();
-@@ -2568,7 +2568,7 @@ namespace Xv2CoreLib.ACB
- 
-     public class ACB_SequenceBlock : AcbTableBase, ICommandIndex, ILocalAisac, ITrack, IGlobalAisacRef, IBlock
-     {
--        
-+
-         public int Index { get; set; }
- 
-         private SequenceType _sequenceType = SequenceType.Polyphonic;
-@@ -2957,7 +2957,7 @@ namespace Xv2CoreLib.ACB
-             utfTable.AddValue("EventIndex", TypeFlag.UInt16, index, EventIndex.ToString());
-             utfTable.AddValue("GlobalAisacStartIndex", TypeFlag.UInt16, index, globalAisacRefIndex.ToString(), tableHelper, ParseVersion);
-             utfTable.AddValue("GlobalAisacNumRefs", TypeFlag.UInt16, index, GlobalAisacRefs.Count.ToString(), tableHelper, ParseVersion);
--            
-+
-             if (LocalAisac != null)
-             {
-                 utfTable.AddData("LocalAisacs", index, BigEndianConverter.GetBytes(AcbTableReference.ToArray(LocalAisac)), tableHelper, ParseVersion);
-@@ -3101,7 +3101,7 @@ namespace Xv2CoreLib.ACB
-                         waveform.LoopStart = waveformExtensionTable.GetValue<uint>("LoopStart", TypeFlag.UInt32, extensionIndex);
-                         waveform.LoopEnd = waveformExtensionTable.GetValue<uint>("LoopEnd", TypeFlag.UInt32, extensionIndex);
-                     }
--                    
-+
-                 }
-                 else
-                 {
-@@ -3243,9 +3243,9 @@ namespace Xv2CoreLib.ACB
-         public float DefaultControl { get; set; }
-         public byte GraphBitFlag { get; set; }
- 
--        
-+
-         public AcbTableReference AutoModulationIndex { get; set; } = new AcbTableReference(); //ushort
--        
-+
-         public List<AcbTableReference> GraphIndexes { get; set; } = new List<AcbTableReference>(); //ushort
- 
-         public void Initialize()
-@@ -3511,7 +3511,7 @@ namespace Xv2CoreLib.ACB
- 
-             return stringValue;
-         }
--        
-+
-         public static void WriteToTable(IList<ACB_StringValue> entries, Version ParseVersion, UTF_File utfTable)
-         {
-             for (int i = 0; i < entries.Count; i++)
-@@ -3526,7 +3526,7 @@ namespace Xv2CoreLib.ACB
- 
-             utfTable.AddValue("StringValue", TypeFlag.String, index, StringValue, tableHelper, ParseVersion);
-         }
--        
-+
-         public static List<ACB_StringValue> DefaultStringTable()
-         {
-             List<ACB_StringValue> values = new List<ACB_StringValue>();
-@@ -3705,7 +3705,7 @@ namespace Xv2CoreLib.ACB
-             else
-                 return null;
-         }
--        
-+
-         public ACB_CommandTable GetCommandTable(CommandTableType type)
-         {
-             //If on old ACB version, always return SequenceCommandTable
-@@ -3900,7 +3900,7 @@ namespace Xv2CoreLib.ACB
-                 }
-             }
-         }
--    
-+
-     }
- 
-     public class ACB_CommandTable
-@@ -3977,7 +3977,7 @@ namespace Xv2CoreLib.ACB
- 
-             return utfTable;
-         }
--        
-+
-     }
- 
-     public class ACB_CommandGroup : AcbTableBase
-@@ -4051,12 +4051,12 @@ namespace Xv2CoreLib.ACB
- 
-             return bytes.ToArray();
-         }
--        
-+
-         public byte[] GetBytes()
-         {
-             return GetBytes(this);
-         }
--    
-+
-         //Get
-         /// <summary>
-         /// Returns the first ActionType among the Commands.
-@@ -4095,7 +4095,7 @@ namespace Xv2CoreLib.ACB
- 
-         //Properties
-         public string DisplayName { get { return $"Command: {CommandType}"; } }
--        
-+
-         public CommandType CommandType
-         {
-             get
-@@ -4293,7 +4293,7 @@ namespace Xv2CoreLib.ACB
-         List<AcbTableReference> Blocks { get; set; }
-     }
-     #endregion
--    
-+
-     #region Enums
-     //Enums
-     public enum ReferenceType : byte
-@@ -4317,7 +4317,7 @@ namespace Xv2CoreLib.ACB
-         DSP = 13,
-         None = 255
-     }
--    
-+
-     public enum CommandType : ushort
-     {
-         //Reminder! All values are in big endian!
-@@ -4378,7 +4378,7 @@ namespace Xv2CoreLib.ACB
-         Switch = 5,
-         ComboSequential = 6
-     }
--    
-+
-     public enum CommandTableType
-     {
-         SequenceCommand, //In older ACB versions this is the only command table and was used for everything (was just called "CommandTable")
-@@ -4438,7 +4438,7 @@ namespace Xv2CoreLib.ACB
-         {
-             TableIndex = ushort.MaxValue;
-         }
--        
-+
-         public AcbTableReference(Guid guid)
-         {
-             TableGuid = guid;
-@@ -4512,5 +4512,5 @@ namespace Xv2CoreLib.ACB
-             return array.ToArray();
-         }
-     }
--    
-+
- }
 -- 
 2.25.1
 
