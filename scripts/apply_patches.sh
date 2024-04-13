@@ -22,6 +22,7 @@ for REPO in $(echo "Atlus-Script-Tools" "XV2-Tools"); do
 	# update master branch, assuming it's called "master"
 	# (a safe assumption for now, but an assumption indeed)
 	git submodule update --init
+	git submodule sync
 	#git checkout master
 	#git pull
 	# make new branch (off of master) to be patched
