@@ -2,6 +2,10 @@
 
 ## Setup
 
+### Windows
+
+TBD.
+
 ### Debian Linux
 
 Setup assumes you're initializing from a command line with `bash` or a similar shell.
@@ -11,14 +15,11 @@ Setup assumes you're initializing from a command line with `bash` or a similar s
 git clone https://github.com/DarkPsydeOfTheMoon/EVTUI.git
 cd EVTUI
 
-# NOTE: remove this before merging PR
-git checkout psy/initial-project-structure
-
 # 2. Set up dependencies
 ./scripts/bootstrap_debian.sh
 ```
 
-### Windows
+### Other Linux
 
 TBD.
 
@@ -31,3 +32,5 @@ TBD.
 - [LazyBone152](https://github.com/LazyBone152)'s [XV2-Tools](https://github.com/LazyBone152/XV2-Tools) (License: MIT)
 
 Although [TGE](https://github.com/tge-was-taken)'s [EvtTool](https://github.com/tge-was-taken/EvtTool) (especially the contributions by [Secre-C](https://github.com/Secre-C)) is not explicitly used in this project, it was *heavily* referenced for the EVT-parsing functionality.
+
+The `Serialization` library is a port of the forthcoming `exbip` Python library — both original and port by [Pherakki](https://github.com/Pherakki).

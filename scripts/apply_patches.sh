@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # these probably won't change
-USER="psy"
+#USER="psy"
 # these will probably change over time for versioning
 #TARGETBRANCH="evt-patched-v1.1"
-TARGETBRANCH="my-local-branch"
+#TARGETBRANCH="my-local-branch"
 
 # this all assumes patches/${REPO}.patch exists
 # ...for every submodule repo
@@ -12,7 +12,7 @@ TARGETBRANCH="my-local-branch"
 # assumes we're running from top-level of EVT repo
 # go into external directory
 cd external
-for REPO in $(ls); do
+for REPO in $(echo "Atlus-Script-Tools" "XV2-Tools"); do
 	echo "Applying patch to ${REPO}..."
 	# go into repo
 	cd ${REPO}
@@ -21,10 +21,11 @@ for REPO in $(ls); do
 	git reset --hard HEAD
 	# update master branch, assuming it's called "master"
 	# (a safe assumption for now, but an assumption indeed)
-	git checkout master
-	git pull
+	git submodule update --init
+	#git checkout master
+	#git pull
 	# make new branch (off of master) to be patched
-	git checkout -B ${USER}/${TARGETBRANCH}
+	#git checkout -B ${USER}/${TARGETBRANCH}
 	# update new branch based on patch
 	git apply ../../patches/${REPO}.patch
 	# go back into general external directory
