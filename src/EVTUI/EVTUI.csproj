@@ -29,15 +29,15 @@
 
   <!-- AtlusScriptLibrary files -->
   <ItemGroup>
-    <Compile Include="..\..\submodules\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.cs">
+    <Compile Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.cs">
       <Link>AtlusScriptLibrary\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Content Include="..\..\submodules\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.json">
+    <Content Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.json">
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\submodules\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.tsv">
+    <Content Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.tsv">
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -52,58 +52,58 @@
   <!-- XV2CoreLib files -->
   <ItemGroup>
     <!-- select ACB dir files -->
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\ACB\ACB_File.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\ACB\ACB_File.cs">
       <Link>XV2CoreLib\ACB\ACB_File.cs</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\ACB\FormatHelper.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\ACB\FormatHelper.cs">
       <Link>XV2CoreLib\ACB\FormatHelper.cs</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\ACB\IAwbFile.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\ACB\IAwbFile.cs">
       <Link>XV2CoreLib\ACB\IAwbFile.cs</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\ACB\TrackMetadata.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\ACB\TrackMetadata.cs">
       <Link>XV2CoreLib\ACB\TrackMetadata.cs</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
     <!-- select Resource dir files -->
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\Resource\AsyncObservableCollection.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\Resource\AsyncObservableCollection.cs">
       <Link>XV2CoreLib\Resource\AsyncObservableCollection.cs</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\Resource\BinaryConverter.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\Resource\BinaryConverter.cs">
       <Link>XV2CoreLib\Resource\BinaryConverter.cs</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\Resource\Utils.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\Resource\Utils.cs">
       <Link>XV2CoreLib\Resource\Utils.cs</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
     <!-- full/recursive directories -->
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\AFS2\**\*.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\AFS2\**\*.cs">
       <Link>XV2CoreLib\AFS2\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\CPK\**\*.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\CPK\**\*.cs">
       <Link>XV2CoreLib\CPK\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\HCA\**\*.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\HCA\**\*.cs">
       <Link>XV2CoreLib\HCA\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="..\..\submodules\XV2-Tools\Xv2CoreLib\UTF\**\*.cs">
+    <Compile Include="..\..\external\XV2-Tools\Xv2CoreLib\UTF\**\*.cs">
       <Link>XV2CoreLib\UTF\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
     <!-- VGAudio libraries -->
-    <Compile Include="..\..\submodules\XV2-Tools\LB_Common\Audio\VGAudio\**\*.cs">
+    <Compile Include="..\..\external\XV2-Tools\LB_Common\Audio\VGAudio\**\*.cs">
       <Link>VGAudio\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
-    <Compile Include="..\..\submodules\XV2-Tools\LB_Common\Audio\VGAudio.Cli\**\*.cs">
+    <Compile Include="..\..\external\XV2-Tools\LB_Common\Audio\VGAudio.Cli\**\*.cs">
       <Link>VGAudio.Cli\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
@@ -116,7 +116,7 @@
 
   <!-- GFDLibrary files -->
   <!--ItemGroup>
-    <Compile Include="..\..\submodules\GFDLibrary\**\*.cs">
+    <Compile Include="..\..\external\GFDLibrary\**\*.cs">
       <Link>GFDLibrary\%(RecursiveDir)%(Filename)%(Extension)</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
