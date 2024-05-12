@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
 using System;
+using System.Collections.ObjectModel;
 
 namespace EVTUI;
 
@@ -18,6 +19,9 @@ sealed class Program
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
+#if (OS_WINDOWS)
+            .With(new Win32PlatformOptions { RenderingMode = new Collection<Win32RenderingMode> { Win32RenderingMode.Wgl } })
+#endif
             .LogToTrace()
             .UseReactiveUI();
 }
