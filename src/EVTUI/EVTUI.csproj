@@ -11,6 +11,10 @@
     <NoWarn>NU1605;8500;8600;8601;8602;8603;8604;8612;8618;8619;8622;8625;8629;8714;8765;8767</NoWarn>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+	<DefineConstants>OS_WINDOWS</DefineConstants>
+  </PropertyGroup>
+	
   <!-- Avalonia files -->
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
@@ -18,6 +22,7 @@
 
   <!-- Avalonia packages -->
   <ItemGroup>
+    <PackageReference Include="OpenTK.Graphics" Version="4.1"/>
     <PackageReference Include="Avalonia" Version="11.0.10" />
     <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10" />
@@ -115,12 +120,9 @@
   </ItemGroup>
 
   <!-- GFDLibrary files -->
-  <!--ItemGroup>
-    <Compile Include="..\..\external\GFDLibrary\**\*.cs">
-      <Link>GFDLibrary\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Compile>
-  </ItemGroup-->
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\GFD-Studio\GFDLibrary.Rendering.OpenGL\GFDLibrary.Rendering.OpenGL.csproj"/>
+  </ItemGroup>
 
   <!-- Other packages -->
   <ItemGroup>
