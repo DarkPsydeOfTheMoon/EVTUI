@@ -119,6 +119,12 @@ public class SceneManager
     /////////////////////////////////////
     // *** Model Memory Management *** //
     /////////////////////////////////////
+    ////////////////////////////
+    // TODO: Implement external texture loading.
+    //       In the function below is a code snippet that should work (it's been nicked from
+    //       GFD Studio), but the texture-bin management systems need to be worked into the
+    //       SceneManager before it can be integrated.
+    ////////////////////////////
     public void LoadModel(string filepath)
     {
         if (!File.Exists(filepath))
@@ -138,8 +144,12 @@ public class SceneManager
             }
         } );
 
-        // // This should work with field models too...
-        // // But need to find a value for mIsFieldModel and mFieldTextures first.
+        ////////////////////////////
+        // TODO:
+        ////////////////////////////
+        // The below has been nicked from GFD Studio, which should correctly handle external texture bins.
+        // In order to implement this, we need to integrate the `mIsFieldModel` and `mFieldTextures`
+        // variables somehow into the scene management workflow.
         // var glmodel = new GLModel(model, ( material, textureName ) =>
         // {
         //     if ( mIsFieldModel && mFieldTextures.TryOpenFile( textureName, out var textureStream ) )
@@ -161,6 +171,7 @@ public class SceneManager
 
         //     return null;
         // } );
+        ////////////////////////////
 
         sceneModels.Add(new SceneModel(glmodel, model.AnimationPack));
     }
