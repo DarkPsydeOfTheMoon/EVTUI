@@ -27,8 +27,6 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         this.b = b;
     }
 
-
-
     ///////////////////////////////
     // *** Drawing Functions *** //
     ///////////////////////////////
