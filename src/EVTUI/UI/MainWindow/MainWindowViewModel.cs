@@ -2,7 +2,20 @@
 
 public class MainWindowViewModel : ViewModelBase
 {
-#pragma warning disable CA1822 // Mark members as static
-    public string Greeting => "Welcome to Avalonia!";
-#pragma warning restore CA1822 // Mark members as static
+
+    ////////////////////////////
+    // *** PUBLIC MEMBERS *** //
+    ////////////////////////////
+    public DataManager Config;
+    public LandingPageViewModel LandingPageVM { get; }
+ 
+    ////////////////////////////
+    // *** PUBLIC METHODS *** //
+    ////////////////////////////
+    public MainWindowViewModel(DataManager dataManager)
+    {
+        this.Config        = dataManager;
+        this.LandingPageVM = new LandingPageViewModel(this.Config);
+    }
+
 }

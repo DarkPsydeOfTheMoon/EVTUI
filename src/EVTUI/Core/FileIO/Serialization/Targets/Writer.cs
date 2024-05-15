@@ -32,7 +32,7 @@ namespace Serialization
         public void RwBytestring(ref byte[] value, int length)
         {
             if (!this.IsLittleEndian)
-			    value = value.Reverse().ToArray();
+                value = value.Reverse().ToArray();
             this.bytestream.Write(value);
         }
 
@@ -40,14 +40,14 @@ namespace Serialization
         {
             var buf = encoding.GetBytes(value);
             if (!this.IsLittleEndian)
-			    buf = buf.Reverse().ToArray();
+                buf = buf.Reverse().ToArray();
             this.bytestream.Write(buf);
         }
 
         public void RwCBytestring(ref byte[] value)
         {
             if (!this.IsLittleEndian)
-			    value = value.Reverse().ToArray();
+                value = value.Reverse().ToArray();
             this.bytestream.Write(value);
             this.bytestream.Write(0x00);
         }
@@ -71,12 +71,10 @@ namespace Serialization
         public void RwFloat64(ref double value) { this.endian_writer(ref value); }
 
         private unsafe void endian_writer<T>(ref T value) {
-            //byte[] bytes = BitConverter.GetBytes(value);
             var bytes = new byte[Unsafe.SizeOf<T>()];
             Unsafe.As<byte, T>(ref bytes[0]) = value;
-            //byte[] bytes = (byte[]) (object) value;
             if (!this.IsLittleEndian)
-			    bytes = bytes.Reverse().ToArray();
+                bytes = bytes.Reverse().ToArray();
             this.bytestream.Write(bytes);
         }
 

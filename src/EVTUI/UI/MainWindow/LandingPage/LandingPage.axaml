@@ -1,0 +1,47 @@
+<rxui:ReactiveUserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:rxui="http://reactiveui.net"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="using:EVTUI.ViewModels"
+             x:DataType="vm:LandingPageViewModel"
+             x:Class="EVTUI.Views.LandingPage"
+             x:TypeArguments="vm:LandingPageViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Panel.config">
+      <Setter Property="Margin" Value="25,20"></Setter>
+    </Style>
+    <Style Selector="PathIcon">
+      <Setter Property="Foreground" Value="White"></Setter>
+      <Setter Property="Padding" Value="10"></Setter>
+      <Setter Property="Width" Value="50"></Setter>
+      <Setter Property="Height" Value="50"></Setter>
+    </Style>
+    <Style Selector="PathIcon:pointerover">
+      <Setter Property="Foreground" Value="Red"></Setter>
+    </Style>
+  </UserControl.Styles>
+
+  <StackPanel Background="Black">
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+      <Panel Classes="config" PointerReleased="NewProjectClicked">
+        <PathIcon Data="{StaticResource folder_add_regular}" ToolTip.Tip="Create New Project"/>
+      </Panel>
+      <Panel Classes="config" PointerReleased="OpenProjectClicked">
+        <PathIcon Data="{StaticResource folder_open_regular}" ToolTip.Tip="Load Existing Project"/>
+      </Panel>
+      <Panel Classes="config" PointerReleased="ReadOnlyClicked">
+        <PathIcon Data="{StaticResource eye_show_regular}" ToolTip.Tip="Read-Only Mode"/>
+      </Panel>
+      <Panel Classes="config" PointerReleased="ExitClicked">
+        <PathIcon Data="{StaticResource dismiss_regular}" ToolTip.Tip="Exit"/>
+      </Panel>
+    </StackPanel>
+    <Image Margin="0" Height="400" Width="400" Source="/Assets/thumbnail.png"/>
+    <TextBlock Text="E V T U I" HorizontalAlignment="Center" Foreground="White"
+               FontSize="90" FontWeight="Light" />
+  </StackPanel>
+
+</rxui:ReactiveUserControl>

@@ -1,0 +1,309 @@
+<rxui:ReactiveUserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:rxui="http://reactiveui.net"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="using:EVTUI.ViewModels"
+             xmlns:views="using:EVTUI.Views"
+             x:DataType="vm:ConfigurationPanelViewModel"
+             x:Class="EVTUI.Views.ConfigurationPanel"
+             x:TypeArguments="vm:ConfigurationPanelViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Button">
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="5"/>
+      <Setter Property="Width" Value="300"/>
+    </Style>
+    <Style Selector="Button > StackPanel">
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+    <Style Selector="Button > StackPanel > PathIcon">
+      <Setter Property="Margin" Value="5"/>
+    </Style>
+    <Style Selector="Button > StackPanel > TextBlock">
+      <Setter Property="Margin" Value="5"/>
+    </Style>
+    <Style Selector="Separator">
+      <Setter Property="Margin" Value="30"/>
+      <Setter Property="MaxWidth" Value="300"/>
+    </Style>
+    <Style Selector="TextBlock.paneltitle">
+      <Setter Property="FontSize" Value="28"/>
+      <Setter Property="FontWeight" Value="Light"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="20"/>
+    </Style>
+    <Style Selector="TextBlock.sectiontitle">
+      <Setter Property="FontSize" Value="24"/>
+      <Setter Property="FontWeight" Value="Light"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="10"/>
+    </Style>
+    <Style Selector="TextBlock.tabletitle">
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="Light"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBlock.tableplaceholder">
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontStyle" Value="Italic"/>
+      <Setter Property="FontWeight" Value="Light"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="10"/>
+    </Style>
+    <Style Selector="Carousel#pages > StackPanel">
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Orientation" Value="Vertical"/>
+      <Setter Property="VerticalAlignment" Value="Top"/>
+    </Style>
+    <Style Selector="TabControl">
+      <Setter Property="Margin" Value="5"/>
+    </Style>
+    <Style Selector="TabItem > StackPanel">
+      <Setter Property="Margin" Value="20"/>
+      <Setter Property="Orientation" Value="Vertical"/>
+      <Setter Property="VerticalAlignment" Value="Top"/>
+    </Style>
+    <Style Selector="DataGrid">
+      <Setter Property="AutoGenerateColumns" Value="False"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="Gray"/>
+      <Setter Property="CanUserReorderColumns" Value="True"/>
+      <Setter Property="CanUserResizeColumns" Value="True"/>
+      <Setter Property="GridLinesVisibility" Value="All"/>
+      <Setter Property="Height" Value="NaN"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="IsReadOnly" Value="True"/>
+      <Setter Property="Margin" Value="20"/>
+      <Setter Property="VerticalAlignment" Value="Top"/>
+      <Setter Property="Width" Value="NaN"/>
+    </Style>
+    <Style Selector="StackPanel.formentry">
+      <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+    <Style Selector="StackPanel.formentry > TextBlock:nth-child(1)">
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="FontWeight" Value="Bold"/>
+      <Setter Property="Margin" Value="5"/>
+    </Style>
+    <Style Selector="StackPanel.formentry > TextBox.readonly">
+      <Setter Property="IsReadOnly" Value="True"/>
+      <Setter Property="Margin" Value="5"/>
+      <Setter Property="MaxWidth" Value="300"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="StackPanel.formentry > TextBox.editable">
+      <Setter Property="Margin" Value="5"/>
+      <Setter Property="Width" Value="300"/>
+    </Style>
+    <Style Selector="StackPanel.formentry > StackPanel.checkboxes">
+      <Setter Property="Margin" Value="5"/>
+      <Setter Property="Orientation" Value="Vertical"/>
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer><StackPanel Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Center">
+
+    <Carousel Name="pages"><Carousel.Items>
+
+      <!-- 0: ERROR STATE -->
+      <StackPanel>
+        <TextBlock Text="ERROR: Loaded with unknown config state."/>
+      </StackPanel>
+
+      <!-- 1: NEW PROJECT CONFIG -->
+      <StackPanel>
+
+        <TextBlock Classes="paneltitle" Text="Create New Project"/>
+        <Separator/>
+
+        <TabControl>
+
+          <!-- METADATA CONFIG -->
+          <TabItem Header="Set Project Info"><StackPanel>
+            <StackPanel Classes="formentry" HorizontalAlignment="Left">
+              <TextBlock Text="Project/Mod Name:"/>
+              <TextBox Classes="editable" Text="{Binding ModName}"/>
+            </StackPanel>
+            <!-- (commented out because the booleans are unused for now, but it works fine) -->
+            <!--StackPanel Classes="formentry" HorizontalAlignment="Left">
+              <TextBlock Text="Frameworks:"/>
+              <StackPanel Classes="checkboxes">
+                <CheckBox IsChecked="{Binding UseAwbEmu}">AWBEmulator</CheckBox>
+                <CheckBox IsChecked="{Binding UseBfEmu}">BFEmulator</CheckBox>
+                <CheckBox IsChecked="{Binding UseBgmEmu}">BGME</CheckBox>
+              </StackPanel>
+            </StackPanel-->
+          </StackPanel></TabItem>
+
+          <!-- MOD DIR CONFIG -->
+          <TabItem Header="Select Mod Folder"><StackPanel>
+            <Button Command="{Binding SetModDir}"><StackPanel>
+              <PathIcon Data="{StaticResource folder_add_regular}"/>
+              <TextBlock Text="Pick New Folder"/>
+            </StackPanel></Button>
+          </StackPanel></TabItem>
+
+          <!-- CPK DIR CONFIG -->
+          <TabItem Header="Select Game (CPK) Folder"><StackPanel>
+            <StackPanel IsVisible="{Binding AnyRecentCpkDirs}">
+              <TextBlock Classes="tabletitle" Text="Recent Folders"/>
+              <DataGrid ItemsSource="{Binding CpkDirList}" SelectedItem="{Binding CpkDirSelection}">
+                <DataGrid.Columns>
+                  <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding Directory}"/>
+                </DataGrid.Columns>
+              </DataGrid>
+              <Button Command="{Binding UseSelectedCpkDir}"><StackPanel>
+                <PathIcon Data="{StaticResource folder_open_regular}"/>
+                <TextBlock Text="Use Selected Folder"/>
+              </StackPanel></Button>
+            </StackPanel>
+            <TextBlock Classes="tableplaceholder" Text="No recent folders." IsVisible="{Binding NoRecentCpkDirs}"/>
+            <Button Command="{Binding SetCPKs}"><StackPanel>
+              <PathIcon Data="{StaticResource folder_add_regular}"/>
+              <TextBlock Text="Pick New Folder"/>
+            </StackPanel></Button>
+          </StackPanel></TabItem>
+
+        </TabControl>
+
+        <Separator/>
+        <StackPanel Classes="formentry" HorizontalAlignment="Right">
+          <TextBlock Text="Path to mod directory:"/>
+          <TextBox Classes="readonly" Text="{Binding DisplayModPath}"/>
+        </StackPanel>
+        <StackPanel Classes="formentry" HorizontalAlignment="Right">
+          <TextBlock Text="Path to CPK directory:"/>
+          <TextBox Classes="readonly" Text="{Binding DisplayCPKPath}"/>
+        </StackPanel>
+        <Button Command="{Binding CreateProject}" HorizontalAlignment="Right"><StackPanel>
+          <PathIcon Data="{StaticResource arrow_next_regular}"/>
+          <TextBlock Text="Create &amp; Continue"/>
+        </StackPanel></Button>
+        <Separator/>
+
+      </StackPanel>
+
+      <!-- 2: OPEN PROJECT CONFIG -->
+      <StackPanel>
+
+        <TextBlock Classes="paneltitle" Text="Load Existing Project"/>
+        <Separator/>
+
+        <StackPanel IsVisible="{Binding AnyRecentProjects}">
+          <TextBlock Classes="tabletitle" Text="Recent Projects"/>
+          <DataGrid ItemsSource="{Binding ProjectList}" SelectedItem="{Binding ProjectSelection}">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Project Name" Binding="{Binding Name}"/>
+              <DataGridTextColumn Header="Mod Folder" Binding="{Binding ModPath}" />
+              <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding GamePath}" />
+            </DataGrid.Columns>
+          </DataGrid>
+          <Button Command="{Binding SetProject}" ToolTip.Tip="Select Project"><StackPanel>
+              <PathIcon Data="{StaticResource arrow_next_regular}"/>
+              <TextBlock Text="Load Selected Project &amp; Continue"/>
+          </StackPanel></Button>
+        </StackPanel>
+        <TextBlock Classes="tableplaceholder" Text="No recent projects." IsVisible="{Binding NoRecentProjects}"/>
+        <Separator/>
+
+      </StackPanel>
+
+      <!-- 3: READ-ONLY CONFIG -->
+      <StackPanel>
+
+        <TextBlock Classes="paneltitle" Text="Read-Only Mode"/>
+        <Separator/>
+
+        <!-- CPK DIR CONFIG -->
+        <StackPanel>
+          <TextBlock Classes="sectiontitle" Text="Select Game (CPK) Folder"/>
+          <StackPanel IsVisible="{Binding AnyRecentCpkDirs}">
+            <TextBlock Classes="tabletitle" Text="Recent Folders"/>
+            <DataGrid ItemsSource="{Binding CpkDirList}" SelectedItem="{Binding CpkDirSelection}">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding Directory}"/>
+              </DataGrid.Columns>
+            </DataGrid>
+            <Button Command="{Binding UseSelectedCpkDir}"><StackPanel>
+              <PathIcon Data="{StaticResource folder_open_regular}"/>
+              <TextBlock Text="Use Selected Folder"/>
+            </StackPanel></Button>
+          </StackPanel>
+          <TextBlock Classes="tableplaceholder" Text="No recent folders." IsVisible="{Binding NoRecentCpkDirs}"/>
+          <Button Command="{Binding SetCPKs}"><StackPanel>
+            <PathIcon Data="{StaticResource folder_add_regular}"/>
+            <TextBlock Text="Pick New Folder"/>
+          </StackPanel></Button>
+        </StackPanel>
+
+        <Separator/>
+        <StackPanel Classes="formentry" HorizontalAlignment="Right">
+          <TextBlock Text="Path to CPK directory:"/>
+          <TextBox Classes="readonly" Text="{Binding DisplayCPKPath}"/>
+        </StackPanel>
+        <Button Command="{Binding InitReadOnly}" HorizontalAlignment="Right"><StackPanel>
+          <PathIcon Data="{StaticResource arrow_next_regular}"/>
+          <TextBlock Text="Open &amp; Continue"/>
+        </StackPanel></Button>
+        <Separator/>
+
+      </StackPanel>
+
+      <!-- 4: EVENT CONFIG -->
+      <StackPanel>
+
+        <TextBlock Classes="paneltitle" Text="Select Event"/>
+        <Separator/>
+
+        <StackPanel IsVisible="{Binding AnyRecentEvents}">
+          <TextBlock Classes="tabletitle" Text="Recent Events"/>
+          <DataGrid ItemsSource="{Binding EventList}" SelectedItem="{Binding EventSelection}">
+            <DataGrid.Columns>
+              <DataGridTextColumn Header="Major ID" Binding="{Binding MajorId}"/>
+              <DataGridTextColumn Header="Minor ID" Binding="{Binding MinorId}" />
+            </DataGrid.Columns>
+          </DataGrid>
+          <Button Command="{Binding UseSelectedEvent}"><StackPanel>
+            <PathIcon Data="{StaticResource document_regular}"/>
+            <TextBlock Text="Load Selected Event"/>
+          </StackPanel></Button>
+        </StackPanel>
+        <TextBlock Classes="tableplaceholder" Text="No recent events." IsVisible="{Binding NoRecentEvents}"/>
+        <Separator/>
+        <WrapPanel HorizontalAlignment="Center">
+          <StackPanel Margin="20" MinWidth="150">
+            <TextBlock Margin="0 5">Event Major ID:</TextBlock>
+            <NumericUpDown Value="{Binding EventMajorId}" Increment="1" FormatString="000" Minimum="0" Maximum="999"/>
+          </StackPanel>
+          <StackPanel Margin="20" DockPanel.Dock="Right" MinWidth="150">
+            <TextBlock Margin="0 5">Event Minor ID:</TextBlock>
+            <NumericUpDown Value="{Binding EventMinorId}" Increment="1" FormatString="000" Minimum="0" Maximum="999"/>
+          </StackPanel>
+        </WrapPanel>
+        <Button Command="{Binding SetEVT}"><StackPanel>
+          <PathIcon Data="{StaticResource document_add_regular}"/>
+          <TextBlock Text="Pick Entered Event"/>
+        </StackPanel></Button>
+
+        <Separator/>
+        <StackPanel Classes="formentry" HorizontalAlignment="Right">
+          <TextBlock Text="Loaded event:"/>
+          <TextBox Classes="readonly" Text="{Binding DisplayLoadedEvent}"/>
+        </StackPanel>
+        <Button Command="{Binding FinishConfigStartEdit}" HorizontalAlignment="Right"><StackPanel>
+          <PathIcon Data="{StaticResource arrow_next_regular}"/>
+          <TextBlock Text="Finish Config &amp; View Event"/>
+        </StackPanel></Button>
+        <Separator/>
+
+      </StackPanel>
+
+    </Carousel.Items></Carousel>
+
+  </StackPanel></ScrollViewer>
+
+</rxui:ReactiveUserControl>
