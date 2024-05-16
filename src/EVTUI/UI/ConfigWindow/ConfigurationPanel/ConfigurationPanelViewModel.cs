@@ -312,7 +312,6 @@ public class ConfigurationPanelViewModel : ViewModelBase
             return;
         }
         this.Config.LoadProject(0);
-        SetCPKsHelper(true);
         OnPropertyChanged(nameof(this.EventList));
         OnPropertyChanged(nameof(this.AnyRecentEvents));
         OnPropertyChanged(nameof(this.NoRecentEvents));
