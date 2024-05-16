@@ -28,7 +28,7 @@ public static class CPKExtract
     public static CpkEVTContents? ExtractEVTFiles(List<string> CpkList, string eventId, string OutputFolder)
     {
         var retval = new CpkEVTContents();
-        string eventPattern = $"/{eventId}([/\\.]|_SE)";
+        string eventPattern = $"[\\\\/]{eventId}([\\\\/\\.]|_SE)";
         bool evtFound = false;
 
         foreach (var CpkPath in CpkList) 
