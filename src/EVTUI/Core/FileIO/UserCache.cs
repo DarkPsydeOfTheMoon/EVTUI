@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using YamlDotNet.Serialization;
@@ -25,7 +26,7 @@ ReadOnly:
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public static string LocalDir      = "Local";
+    public static string LocalDir      = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EVTUI");
     public static string UserCacheFile = Path.Combine(LocalDir, "UserCache.yaml");
 
     ////////////////////////////

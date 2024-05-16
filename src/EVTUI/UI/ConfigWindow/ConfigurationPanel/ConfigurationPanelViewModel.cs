@@ -183,9 +183,14 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 projectList.Add(new DisplayableProject(this.Config.ProjectManager.UserData.Projects[i], i));
             this.ProjectList = new ObservableCollection<DisplayableProject>(projectList);
         }
-        else if (this.ConfigType == "new-proj")
+        else
         {
-            this.Config.ReadOnly = false;
+            if (this.ConfigType == "new-proj")
+                this.Config.ReadOnly = false;
+            else if (this.ConfigType == "read-only")
+                this.Config.ReadOnly = true;
+            // I was originally splitting the project vs. read-only CPK histories, but eh
+            // ...it's just more convenient to always show both in any recent files tables
             List<DisplayableDirectory> cpkList = new List<DisplayableDirectory>();
             this.CpkDirSet = new HashSet<string>();
             foreach (Project project in this.Config.ProjectManager.UserData.Projects)
@@ -196,14 +201,14 @@ public class ConfigurationPanelViewModel : ViewModelBase
                     this.CpkDirSet.Add(project.Immutable.Game.Path);
                 }
             }
-            this.CpkDirList = new ObservableCollection<DisplayableDirectory>(cpkList);
-        }
-        else if (this.ConfigType == "read-only")
-        {
-            this.Config.ReadOnly = true;
-            List<DisplayableDirectory> cpkList = new List<DisplayableDirectory>();
             foreach (string cpkDir in this.Config.ProjectManager.UserData.ReadOnly.History.CPKs)
-                cpkList.Add(new DisplayableDirectory(cpkDir));
+            {
+                if (!(this.CpkDirSet.Contains(cpkDir)))
+                {
+                    cpkList.Add(new DisplayableDirectory(cpkDir));
+                    this.CpkDirSet.Add(cpkDir);
+                }
+            }
             this.CpkDirList = new ObservableCollection<DisplayableDirectory>(cpkList);
         }
     }
