@@ -16,7 +16,8 @@ Projects: []
 ReadOnly:
   History:
     CPKs: []
-    Events: []";
+    Events: []
+Preferences: {}";
     private static ISerializer Serializer = new SerializerBuilder()
                                .WithIndentedSequences()
                                .EnsureRoundtrip()
@@ -65,8 +66,9 @@ ReadOnly:
 
 public class User
 {
-    public List<Project>    Projects   { get; set; }
-    public ReadOnlySettings ReadOnly { get; set; }
+    public List<Project>    Projects              { get; set; }
+    public ReadOnlySettings ReadOnly              { get; set; }
+    public Dictionary<string, object> Preferences { get; set; }
 }
 
 public class Project

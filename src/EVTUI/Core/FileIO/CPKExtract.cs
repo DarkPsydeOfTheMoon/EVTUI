@@ -56,8 +56,14 @@ public static class CPKExtract
                         retval.evtPath = outputPath;
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
+                    else if (Regex.IsMatch(inCpkPath, "\\.ECS$"))
+                    {
+                        retval.ecsPath = outputPath;
+                        extractor.QueueItem(new ItemModel(outputPath, files[x]));
+                    }
                     else if (Regex.IsMatch(inCpkPath, "\\.ACB$"))
                     {
+                        retval.acbPath = outputPath;
                         retval.sounds.Add(outputPath);
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
@@ -67,11 +73,13 @@ public static class CPKExtract
                     }
                     else if (Regex.IsMatch(inCpkPath, "\\.BMD$"))
                     {
+                        retval.bmdPath = outputPath;
                         retval.messages.Add(outputPath);
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
                     else if (Regex.IsMatch(inCpkPath, "\\.BF$"))
                     {
+                        retval.bfPath = outputPath;
                         retval.scripts.Add(outputPath);
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
