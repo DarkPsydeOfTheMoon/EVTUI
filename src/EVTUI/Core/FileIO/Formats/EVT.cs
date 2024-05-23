@@ -97,11 +97,17 @@ namespace EVTUI
             rw.RwInt32(ref this.ObjectCount);
             rw.RwInt32(ref this.ObjectOffset);
             rw.RwInt32(ref this.ObjectSize);
+            if (this.ObjectSize != this.ENTRY_SIZE)
+                throw new Exception($"ObjectSize ({this.ObjectSize}) does not match expected entry size ({this.ENTRY_SIZE})");
+
             rw.RwInt32(ref this.DUMMY_INT32[0]);
 
             rw.RwInt32(ref this.CommandCount);
             rw.RwInt32(ref this.CommandOffset);
             rw.RwInt32(ref this.CommandSize);
+            if (this.CommandSize != this.ENTRY_SIZE)
+                throw new Exception($"CommandSize ({this.CommandSize}) does not match expected entry size ({this.ENTRY_SIZE})");
+
             rw.RwInt32(ref this.DUMMY_INT32[1]);
 
             rw.RwInt32(ref this.PointerToEventBmdPath);
