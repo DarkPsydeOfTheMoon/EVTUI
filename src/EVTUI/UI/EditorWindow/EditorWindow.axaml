@@ -12,26 +12,29 @@
         Title="EVTUI">
 
   <TabControl Margin="5">
-    <TabItem Header="Previews">
-      <TabControl Margin="5">
-        <TabItem Header="Audio">
-          <TextBlock Text="This is the Audio Preview tab." />
-        </TabItem>
-        <TabItem Header="Assets">
-          <TextBlock Text="This is the Assets Preview tab." />
-        </TabItem>
-      </TabControl>
-    </TabItem>
     <TabItem Header="Editors">
       <TabControl Margin="5">
+        <TabItem Header="Timeline">
+          <TextBlock Text="This is the Timeline Editor tab." />
+        </TabItem>
         <TabItem Header="Dialogue">
           <TextBlock Text="This is the Dialogue Editor tab." />
         </TabItem>
         <TabItem Header="Scripts">
           <TextBlock Text="This is the Script Editor tab." />
         </TabItem>
-        <TabItem Header="Timeline">
-          <TextBlock Text="This is the Timeline Editor tab." />
+      </TabControl>
+    </TabItem>
+    <TabItem Header="Previews">
+      <TabControl Margin="5">
+        <TabItem Header="Audio">
+          <TextBlock Text="This is the Audio Preview tab." />
+        </TabItem>
+        <TabItem Header="Images">
+          <TextBlock Text="This is the Image Preview tab." />
+        </TabItem>
+        <TabItem Header="Models">
+          <TextBlock Text="This is the Model Preview tab." />
         </TabItem>
       </TabControl>
     </TabItem>
