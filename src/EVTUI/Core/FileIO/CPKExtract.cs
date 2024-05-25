@@ -63,24 +63,23 @@ public static class CPKExtract
                     }
                     else if (Regex.IsMatch(inCpkPath, "\\.ACB$"))
                     {
-                        retval.acbPath = outputPath;
-                        retval.sounds.Add(outputPath);
+                        retval.acbPaths.Add(outputPath);
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
                     else if (Regex.IsMatch(inCpkPath, "\\.AWB$"))
                     {
+                        // gets referenced implicitly by XV2-Tools so just needs extracting
+                        // ...for now. eventually we should move this stuff to being in-memory
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
                     else if (Regex.IsMatch(inCpkPath, "\\.BMD$"))
                     {
-                        retval.bmdPath = outputPath;
-                        retval.messages.Add(outputPath);
+                        retval.bmdPaths.Add(outputPath);
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
                     else if (Regex.IsMatch(inCpkPath, "\\.BF$"))
                     {
-                        retval.bfPath = outputPath;
-                        retval.scripts.Add(outputPath);
+                        retval.bfPaths.Add(outputPath);
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
                 }

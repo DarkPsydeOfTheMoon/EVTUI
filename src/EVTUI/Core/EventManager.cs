@@ -11,12 +11,9 @@ public struct CpkEVTContents
 {
     public string? evtPath;
     public string? ecsPath;
-    public string? acbPath;
-    public string? bmdPath;
-    public string? bfPath;
-    public List<string> messages = new List<string>();
-    public List<string> scripts  = new List<string>();
-    public List<string> sounds   = new List<string>();
+    public List<string> acbPaths   = new List<string>();
+    public List<string> bfPaths  = new List<string>();
+    public List<string> bmdPaths = new List<string>();
 
     public CpkEVTContents() {}
 }
