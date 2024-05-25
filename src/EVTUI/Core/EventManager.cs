@@ -10,6 +10,10 @@ namespace EVTUI;
 public struct CpkEVTContents
 {
     public string? evtPath;
+    public string? ecsPath;
+    public string? acbPath;
+    public string? bmdPath;
+    public string? bfPath;
     public List<string> messages = new List<string>();
     public List<string> scripts  = new List<string>();
     public List<string> sounds   = new List<string>();
@@ -38,11 +42,11 @@ public class EventManager
         this.SerialEvent = new EVT();
         this.SerialEvent.Read(cpkEVTContents.Value.evtPath);
         // TODO: put below into separate unit test package!
-        /*serialEvent.Write(cpkEVTContents.evtPath + ".COPY");
+        /*this.SerialEvent.Write(cpkEVTContents.Value.evtPath + ".COPY");
         var serialEventCopy = new EVT();
-        serialEventCopy.Read(cpkEVTContents.evtPath + ".COPY");
+        serialEventCopy.Read(cpkEVTContents.Value.evtPath + ".COPY");
         Console.WriteLine("##########");
-        Console.WriteLine(File.ReadAllBytes(cpkEVTContents.evtPath).SequenceEqual(File.ReadAllBytes(cpkEVTContents.evtPath + ".COPY")));
+        Console.WriteLine(File.ReadAllBytes(cpkEVTContents.Value.evtPath).SequenceEqual(File.ReadAllBytes(cpkEVTContents.Value.evtPath + ".COPY")));
         Console.WriteLine("##########");*/
         return true;
     }
