@@ -374,9 +374,13 @@ public class ConfigurationPanelViewModel : ViewModelBase
 
         try
         {
-            // I think this should only throw if some really wacky OS stuff happens.
-            this.Config.LoadEvent((int)this.EventMajorId, (int)this.EventMinorId);
-            if (!this.Config.EventLoaded)
+            bool validLoadAttempt = this.Config.LoadEvent((int)this.EventMajorId, (int)this.EventMinorId);
+			if (!validLoadAttempt)
+            {
+                await this.DisplayMessage.Handle("Must have a loaded project or be in read-only mode to load an event.");
+                return;
+            }
+            else if (!this.Config.EventLoaded)
             {
                 await this.DisplayMessage.Handle($"Event E{this.EventMajorId:000}_{this.EventMinorId:000} does not exist and could not be loaded.");
                 OnPropertyChanged(nameof(this.DisplayLoadedEvent));
@@ -385,6 +389,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+            // I think this should only throw if some really wacky OS stuff happens.
             await this.DisplayMessage.Handle("Failed to extract EVT due to unhandled exception: '" + ex.ToString() + "'");
             return;
         }
