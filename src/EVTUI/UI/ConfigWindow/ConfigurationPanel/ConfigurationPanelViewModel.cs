@@ -117,7 +117,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
         get
         {
             if (this.ConfigType == "read-only")
-                return new ObservableCollection<Event>(this.Config.ProjectManager.UserData.ReadOnly.History.Events);
+                return new ObservableCollection<Event>(this.Config.AllReadOnlyEvents);
             else if (!(this.Config.ActiveProject is null))
                 return new ObservableCollection<Event>(this.Config.ActiveProject.History.Events);
             else
@@ -132,7 +132,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
             if (this.ConfigType == "read-only")
                 return false;
             else
-                return (this.Config.ProjectManager.UserData.Projects.Count > 0);
+                return (this.Config.AllProjects.Count > 0);
         }
     }
     public bool NoRecentProjects { get { return !this.AnyRecentProjects; } }
@@ -154,7 +154,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
         get
         {
             if (this.ConfigType == "read-only")
-                return (this.Config.ProjectManager.UserData.ReadOnly.History.Events.Count > 0);
+                return (this.Config.AllReadOnlyEvents.Count > 0);
             else if (!(this.Config.ActiveProject is null))
                 return (this.Config.ActiveProject.History.Events.Count > 0);
             else
@@ -172,15 +172,15 @@ public class ConfigurationPanelViewModel : ViewModelBase
         this.ConfigType = configtype;
 
         this.ModDirSet = new HashSet<string>();
-        foreach (Project project in this.Config.ProjectManager.UserData.Projects)
+        foreach (Project project in this.Config.AllProjects)
             this.ModDirSet.Add(project.Immutable.Mod.Path);
 
         if (this.ConfigType == "open-proj")
         {
             this.Config.ReadOnly = false;
             List<DisplayableProject> projectList = new List<DisplayableProject>();
-            for (int i=0; i<this.Config.ProjectManager.UserData.Projects.Count; i++)
-                projectList.Add(new DisplayableProject(this.Config.ProjectManager.UserData.Projects[i], i));
+            for (int i=0; i<this.Config.AllProjects.Count; i++)
+                projectList.Add(new DisplayableProject(this.Config.AllProjects[i], i));
             this.ProjectList = new ObservableCollection<DisplayableProject>(projectList);
         }
         else
@@ -193,7 +193,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
             // ...it's just more convenient to always show both in any recent files tables
             List<DisplayableDirectory> cpkList = new List<DisplayableDirectory>();
             this.CpkDirSet = new HashSet<string>();
-            foreach (Project project in this.Config.ProjectManager.UserData.Projects)
+            foreach (Project project in this.Config.AllProjects)
             {
                 if (!(this.CpkDirSet.Contains(project.Immutable.Game.Path)))
                 {
@@ -201,7 +201,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
                     this.CpkDirSet.Add(project.Immutable.Game.Path);
                 }
             }
-            foreach (string cpkDir in this.Config.ProjectManager.UserData.ReadOnly.History.CPKs)
+            foreach (string cpkDir in this.Config.AllReadOnlyCPKs)
             {
                 if (!(this.CpkDirSet.Contains(cpkDir)))
                 {

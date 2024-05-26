@@ -12,6 +12,76 @@ public class ProjectManager
     ////////////////////////////
     public User UserData;
 
+    // the below wrappers keep the "latest project/cpk/event is always index zero"
+    // thing contained to this class, so if that's confusing and/or changes in the future
+    // it doesn't need to affect a bunch of other classes.
+
+    public Project? LatestProject
+    {
+        get
+        {
+            if (this.UserData.Projects.Count > 0)
+                return this.UserData.Projects[0];
+            else
+                return null;
+        }
+    }
+
+    public string? LatestProjectGamePath
+    {
+        get
+        {
+            if (this.UserData.Projects.Count > 0)
+                return this.UserData.Projects[0].Immutable.Game.Path;
+            else
+                return null;
+        }
+    }
+
+    public string? LatestProjectModPath
+    {
+        get
+        {
+            if (this.UserData.Projects.Count > 0)
+                return this.UserData.Projects[0].Immutable.Mod.Path;
+            else
+                return null;
+        }
+    }
+
+    public Event? LatestProjectEvent
+    {
+        get
+        {
+            if (this.UserData.Projects.Count > 0 && this.UserData.Projects[0].History.Events.Count > 0)
+                return this.UserData.Projects[0].History.Events[0];
+            else
+                return null;
+        }
+    }
+
+    public string? LatestReadOnlyGamePath
+    {
+        get
+        {
+            if (this.UserData.ReadOnly.History.CPKs.Count > 0)
+                return this.UserData.ReadOnly.History.CPKs[0];
+            else
+                return null;
+        }
+    }
+
+    public Event? LatestReadOnlyEvent
+    {
+        get
+        {
+            if (this.UserData.ReadOnly.History.Events.Count > 0)
+                return this.UserData.ReadOnly.History.Events[0];
+            else
+                return null;
+        }
+    }
+
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////

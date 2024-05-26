@@ -25,9 +25,9 @@ public class DataManager
         get
         {
             if (!this.ReadOnly && this.ProjectLoaded)
-                return this.ProjectManager.UserData.Projects[0].Immutable.Game.Path;
+                return this.ProjectManager.LatestProjectGamePath;
             else if (this.ReadOnly)
-                return this.ProjectManager.UserData.ReadOnly.History.CPKs[0];
+                return this.ProjectManager.LatestReadOnlyGamePath;
             else
                 return null;
         }
@@ -38,7 +38,7 @@ public class DataManager
         get
         {
             if (!this.ReadOnly && this.ProjectLoaded)
-                return this.ProjectManager.UserData.Projects[0].Immutable.Mod.Path;
+                return this.ProjectManager.LatestProjectModPath;
             else if (this.ReadOnly)
                 return Path.Combine(UserCache.LocalDir, "Extracted");
             else
@@ -51,7 +51,7 @@ public class DataManager
         get
         {
             if (!this.ReadOnly && this.ProjectLoaded)
-                return this.ProjectManager.UserData.Projects[0];
+                return this.ProjectManager.LatestProject;
             else
                 return null;
         }
@@ -64,9 +64,9 @@ public class DataManager
             if (this.EventLoaded)
             {
                 if (this.ReadOnly)
-                    return this.ProjectManager.UserData.ReadOnly.History.Events[0];
+                    return this.ProjectManager.LatestReadOnlyEvent;
                 else
-                    return this.ProjectManager.UserData.Projects[0].History.Events[0];
+                    return this.ProjectManager.LatestProjectEvent;
             }
             else
                 return null;
@@ -83,6 +83,10 @@ public class DataManager
                 return $"E{this.ActiveEvent.MajorId:000}_{this.ActiveEvent.MinorId:000}";
         }
     }
+
+    public List<Project> AllProjects { get { return this.ProjectManager.UserData.Projects; } }
+    public List<Event> AllReadOnlyEvents { get { return this.ProjectManager.UserData.ReadOnly.History.Events; } }
+    public List<string> AllReadOnlyCPKs { get { return this.ProjectManager.UserData.ReadOnly.History.CPKs; } }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
