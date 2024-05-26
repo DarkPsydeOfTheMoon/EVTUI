@@ -13,7 +13,7 @@ public class EditorWindowViewModel : ViewModelBase
     ////////////////////////////
     public EditorWindowViewModel(DataManager dataManager)
     {
-        this.Config          = dataManager;
+        this.Config = dataManager;
     }
 
 }

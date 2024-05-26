@@ -322,6 +322,24 @@ namespace EVTUI
             public void Read (string filepath) { TraitMethods.Read (this, filepath); }
         }
 
+        public class MRgs : ISerializable
+        {
+            public Int32 ActionType;
+
+            public Int32[] UNUSED_INT32 = new Int32[3];
+
+            public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+            {
+                rw.RwInt32(ref this.UNUSED_INT32[0]); // observed values: 0
+                rw.RwInt32(ref this.ActionType);      // observed values: 0, 1, 2; 1 spawns model, 2 despawns... 0 presumably also despawns?
+                rw.RwInt32(ref this.UNUSED_INT32[1]); // observed values: 0
+                rw.RwInt32(ref this.UNUSED_INT32[2]); // observed values: 0
+            }
+
+            public void Write(string filepath) { TraitMethods.Write(this, filepath); }
+            public void Read (string filepath) { TraitMethods.Read (this, filepath); }
+        }
+
         public class MSD_ : ISerializable
         {
             public float[] Position = new float[3];
@@ -332,7 +350,7 @@ namespace EVTUI
             public Int32 FirstFrameInd;
             public Int32 LastFrameInd;
 
-            public Int32[] UNK_INT32 = new Int32[1];
+            public Int32 UNK_INT32;
 
             public Int32[] UNUSED_INT32 = new Int32[4];
 
@@ -341,7 +359,7 @@ namespace EVTUI
                 rw.RwFloat32s(ref this.Position, 3);
                 rw.RwFloat32s(ref this.Rotation, 3);      // in degrees, according to the 010 template
                 rw.RwInt32(ref this.AnimationIndex);      // from BE_... / BaseMotionNo ... I think?
-                rw.RwInt32(ref this.UNK_INT32[0]);        // is a float in EvtTool but that makes no sense tbqh, also inconsistent with MAB_
+                rw.RwInt32(ref this.UNK_INT32);           // is a float in EvtTool but that makes no sense tbqh, also inconsistent with MAB_
                 rw.RwInt32(ref this.LoopBool);            // it's only ever 0, 1, or -1020883212 (??), so it may be a bool... LoopBool?
                 rw.RwFloat32(ref this.AnimationSpeed);    // most common is 1.0
                 rw.RwInt32(ref this.FirstFrameInd);       // (an educated guess)
@@ -388,7 +406,7 @@ namespace EVTUI
                 rw.RwUInt8(ref this.SelectMinorId);
                 rw.RwUInt8(ref this.SelectSubId);
                 rw.RwInt32(ref this.EvtLocalDataIdSelStorage);
-                rw.RwInt32(ref this.UNK_INT32[0]);   // observed values: 0, 1, 2, 3, 4, 5 ... number of choices to display...? but why can it be zero...
+                rw.RwInt32(ref this.UNK_INT32[0]);   // observed values: 0, 1, 2, 3, 4, 5 ... number of choices to display...?
                 rw.RwFloat32(ref this.UNK_FLOAT[0]); // a very limited set
                 rw.RwFloat32(ref this.UNK_FLOAT[1]); // also a very limited set
                 rw.RwFloat32(ref this.UNK_FLOAT[2]); // huge range
@@ -400,7 +418,7 @@ namespace EVTUI
                 this.NumOfEntries = 14;
                 if (Globals.LAST_DATA_SIZE == 0xB0)
                     this.NumOfEntries = 16;
-                for (var i=0; i<this.NumOfEntries; i++) { // no idea what these are. some kind of 
+                for (var i=0; i<this.NumOfEntries; i++) { // no idea what these are. some kind of positioning thing?
                     rw.RwInt16(ref this.Entries[i].UNK_INT16_1);
                     rw.RwInt16(ref this.Entries[i].UNK_INT16_2);
                     rw.RwFloat32(ref this.Entries[i].UNK_FLOAT);

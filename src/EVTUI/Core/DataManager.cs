@@ -19,7 +19,8 @@ public class DataManager
     public bool EventLoaded;
 
     public List<string> CpkList { get; set; }
-    public string?      CpkPath
+
+    public string? CpkPath
     {
         get
         {
@@ -32,7 +33,7 @@ public class DataManager
         }
     }
 
-    public string?      ModPath
+    public string? ModPath
     {
         get
         {
@@ -110,11 +111,11 @@ public class DataManager
         this.ProjectLoaded = true;
     }
 
-    public void LoadEvent(int majorId, int minorId)
+    public bool LoadEvent(int majorId, int minorId)
     {
         // this shouldn't happen
         if (!this.ReadOnly && !this.ProjectLoaded)
-            return;
+            return false;
 
         bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.ModPath);
         if (success)
@@ -125,6 +126,7 @@ public class DataManager
                 this.ProjectManager.UpdateProjectEvents(0, majorId, minorId);
         }
         this.EventLoaded = success;
+		return true;
     }
 
     public List<string> GetCPKsFromPath(string? directoryPath)
