@@ -2,19 +2,26 @@
 
 ## Setup
 
-### Windows
-
-TBD.
-
-### Debian Linux
-
-Setup assumes you're initializing from a command line with `bash` or a similar shell.
+For basically any command-line interface, cloning and entering the repository directory should work the same way:
 
 ```
 # 1. Clone and enter repository
 git clone https://github.com/DarkPsydeOfTheMoon/EVTUI.git
 cd EVTUI
+```
 
+Then, assuming you've cloned and are within the repository's local directory...
+
+### Windows
+
+```
+# 2. Set up dependencies
+.\scripts\bootstrap_win.bat
+```
+
+### Debian Linux
+
+```
 # 2. Set up dependencies
 ./scripts/bootstrap_debian.sh
 ```

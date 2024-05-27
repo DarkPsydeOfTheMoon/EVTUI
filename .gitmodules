@@ -10,3 +10,4 @@
 	path = external/GFD-Studio
 	url = https://github.com/tge-was-taken/GFD-Studio.git
 	branch = master
+	ignore = all
