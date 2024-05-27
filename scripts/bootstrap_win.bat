@@ -5,7 +5,7 @@ cd /D "%~dp0"
 cd ..
 
 :: Grab dependencies
-git submodule update --init
+git submodule update --init --recursive
 
 :: Apply XV2-Tools patch
 echo Applying patch to XV2-Tools...

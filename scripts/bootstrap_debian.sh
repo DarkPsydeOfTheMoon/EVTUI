@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # make sure submodules are set up
-git submodule update --init
+git submodule update --init --recursive
 
 # apply batches to submodules
 ./scripts/apply_patches.sh;
