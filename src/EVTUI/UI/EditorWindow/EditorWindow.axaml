@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:EVTUI.ViewModels"
+        xmlns:views="using:EVTUI.Views"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="EVTUI.Views.EditorWindow"
+        x:DataType="vm:EditorWindowViewModel"
+        Icon="/Assets/thumbnail.png"
+        Width="1200" Height="800" WindowStartupLocation="CenterScreen"
+        Title="EVTUI">
+
+  <TabControl Margin="5">
+    <TabItem Header="Editors">
+      <TabControl Margin="5">
+        <TabItem Header="Timeline">
+          <TextBlock Text="This is the Timeline Editor tab." />
+        </TabItem>
+        <TabItem Header="Dialogue">
+          <TextBlock Text="This is the Dialogue Editor tab." />
+        </TabItem>
+        <TabItem Header="Scripts">
+          <TextBlock Text="This is the Script Editor tab." />
+        </TabItem>
+      </TabControl>
+    </TabItem>
+    <TabItem Header="Previews">
+      <TabControl Margin="5">
+        <TabItem Header="Audio">
+          <TextBlock Text="This is the Audio Preview tab." />
+        </TabItem>
+        <TabItem Header="Images">
+          <TextBlock Text="This is the Image Preview tab." />
+        </TabItem>
+        <TabItem Header="Models">
+          <TextBlock Text="This is the Model Preview tab." />
+        </TabItem>
+      </TabControl>
+    </TabItem>
+    <TabItem Header="Render" Margin="5">
+      <TextBlock Text="This is the Render tab." />
+    </TabItem>
+  </TabControl>
+
+</Window>

@@ -3,9 +3,9 @@ using Avalonia.Controls;
 
 namespace EVTUI.Views;
 
-public partial class MainWindow : Window
+public partial class EditorWindow : Window
 {
-    public MainWindow()
+    public EditorWindow()
     {
         InitializeComponent();
     }

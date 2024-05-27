@@ -1,21 +1,19 @@
 ﻿namespace EVTUI.ViewModels;
 
-public class MainWindowViewModel : ViewModelBase
+public class EditorWindowViewModel : ViewModelBase
 {
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
     public DataManager Config;
-    public LandingPageViewModel LandingPageVM { get; }
- 
+
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public MainWindowViewModel(DataManager dataManager)
+    public EditorWindowViewModel(DataManager dataManager)
     {
-        this.Config        = dataManager;
-        this.LandingPageVM = new LandingPageViewModel(this.Config);
+        this.Config = dataManager;
     }
 
 }

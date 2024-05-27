@@ -35,13 +35,13 @@ namespace Serialization
         {
             value = this.bytestream.ReadBytes(length);
             if (!this.IsLittleEndian)
-			    value = value.Reverse().ToArray();
+                value = value.Reverse().ToArray();
         }
         public void RwString(ref string value, int length, System.Text.Encoding encoding)
         {
             byte[] buf = this.bytestream.ReadBytes(length);
             if (!this.IsLittleEndian)
-			    buf = buf.Reverse().ToArray();
+                buf = buf.Reverse().ToArray();
             value = encoding.GetString(buf);
         }
         public void RwCBytestring(ref byte[] value)
@@ -56,7 +56,7 @@ namespace Serialization
             }
             value = buf.ToArray();
             if (!this.IsLittleEndian)
-			    value = value.Reverse().ToArray();
+                value = value.Reverse().ToArray();
         }
         public void RwCString(ref string value, System.Text.Encoding encoding)
         {
@@ -81,7 +81,7 @@ namespace Serialization
             byte[] bytes = new byte[sizeof(T)];
             this.bytestream.Read(bytes, 0, sizeof(T));
             if (!this.IsLittleEndian)
-			    bytes = bytes.Reverse().ToArray();
+                bytes = bytes.Reverse().ToArray();
             value = ConvData(bytes);
         }
 

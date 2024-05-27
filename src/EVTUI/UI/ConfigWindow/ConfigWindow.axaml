@@ -4,15 +4,15 @@
         xmlns:views="using:EVTUI.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="240"
-        x:Class="EVTUI.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="800"
+        x:Class="EVTUI.Views.ConfigWindow"
+        x:DataType="vm:ConfigWindowViewModel"
         Icon="/Assets/thumbnail.png"
-        SizeToContent="WidthAndHeight" SystemDecorations="None" WindowStartupLocation="CenterScreen"
+        Width="800" Height="800" WindowStartupLocation="CenterScreen"
         Title="EVTUI">
 
   <Panel>
-    <views:LandingPage DataContext="{Binding LandingPageVM}"/>
+    <views:ConfigurationPanel DataContext="{Binding ConfigPanelVM}" Padding="10"/>
   </Panel>
 
 </Window>
