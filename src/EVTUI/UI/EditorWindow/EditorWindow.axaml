@@ -15,7 +15,8 @@
     <TabItem Header="Editors">
       <TabControl Margin="5">
         <TabItem Header="Timeline">
-          <TextBlock Text="This is the Timeline Editor tab." />
+          <!--TextBlock Text="This is the Timeline Editor tab." /-->
+          <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
         </TabItem>
         <TabItem Header="Dialogue">
           <TextBlock Text="This is the Dialogue Editor tab." />
