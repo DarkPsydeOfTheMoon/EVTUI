@@ -1,0 +1,123 @@
+<rxui:ReactiveUserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:rxui="http://reactiveui.net"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="using:EVTUI.ViewModels"
+             xmlns:views="using:EVTUI.Views"
+             x:DataType="vm:TimelinePanelViewModel"
+             x:Class="EVTUI.Views.TimelinePanel"
+             x:TypeArguments="vm:TimelinePanelViewModel">
+
+  <UserControl.Styles>
+    <Style Selector="Separator">
+      <Setter Property="Margin" Value="30"/>
+      <Setter Property="MaxWidth" Value="300"/>
+    </Style>
+    <Style Selector="FlyoutPresenter">
+      <Setter Property="MaxWidth" Value="500"/>
+    </Style>
+    <Style Selector="StackPanel#timeline">
+      <Setter Property="Orientation" Value="Vertical"/>
+      <Setter Property="Spacing" Value="5"/>
+    </Style>
+    <Style Selector="StackPanel#headerrow">
+      <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow">
+      <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+    <Style Selector="ItemsControl.column">
+      <Setter Property="Width" Value="100"/>
+      <!--Setter Property="Orientation" Value="Vertical"/-->
+    </Style>
+    <Style Selector="ItemsControl.column:nth-child(odd)">
+      <Setter Property="Background" Value="{DynamicResource SystemChromeLowColor}"/>
+    </Style>
+    <Style Selector="StackPanel#headerrow > ItemsControl.column > TextBlock">
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="Foreground" Value="{DynamicResource SystemChromeGrayColor}"></Setter>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="5"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow > ItemsControl.column > Button.space">
+      <Setter Property="Height" Value="20"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Opacity" Value="0"/>
+      <Setter Property="ToolTip.Tip" Value="Add new node"/>
+      <Setter Property="Width" Value="60"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow > ItemsControl.column > Button.space:pointerover">
+      <Setter Property="Height" Value="60"/>
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow > ItemsControl.column > Button.space:nth-last-child(1)">
+      <Setter Property="Height" Value="60"/>
+      <Setter Property="Margin" Value="0 20"/>
+      <Setter Property="Opacity" Value="0.33"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow > ItemsControl.column > Button.space:nth-last-child(1):pointerover">
+      <Setter Property="Opacity" Value="1"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow > ItemsControl.column > Button.space > PathIcon">
+      <Setter Property="Data" Value="{StaticResource add_square_regular}"/>
+      <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"></Setter>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="IsVisible" Value="False"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow > ItemsControl.column > Button.space:pointerover > PathIcon">
+      <Setter Property="IsVisible" Value="True"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow > ItemsControl.column > Button.space:nth-last-child(1) > PathIcon">
+      <Setter Property="IsVisible" Value="True"/>
+    </Style>
+    <Style Selector="Button.drop">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow > ItemsControl.column > Button.command">
+      <!--Setter Property="Gestures.IsHoldingEnabled" Value="True"/>
+      <Setter Property="Gestures.IsHoldWithMouseEnabled" Value="True"/-->
+      <Setter Property="Height" Value="60"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Width" Value="60"/>
+    </Style>
+    <Style Selector="StackPanel#contentrow > ItemsControl.column > Button.command > TextBlock">
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBlock.placeholder">
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="StackPanel.form">
+      <Setter Property="Orientation" Value="Vertical"/>
+      <Setter Property="Margin" Value="5"/>
+      <Setter Property="Spacing" Value="5"/>
+    </Style>
+    <Style Selector="TextBlock.formtitle">
+      <Setter Property="FontSize" Value="24"/>
+      <Setter Property="Gestures.IsHoldingEnabled" Value="True"/>
+      <Setter Property="Gestures.IsHoldWithMouseEnabled" Value="True"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="StackPanel.field">
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+      <Setter Property="Orientation" Value="Horizontal"/>
+      <Setter Property="Spacing" Value="20"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBlock.fieldtitle">
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="ComboBox">
+      <Setter Property="MaxDropDownHeight" Value="300"/>
+    </Style>
+  </UserControl.Styles>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Visible">
+    <StackPanel Name="timeline"/>
+  </ScrollViewer>
+
+</rxui:ReactiveUserControl>

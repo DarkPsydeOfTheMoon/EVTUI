@@ -202,7 +202,7 @@
               <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding GamePath}" />
             </DataGrid.Columns>
           </DataGrid>
-          <Button Command="{Binding SetProject}" ToolTip.Tip="Select Project"><StackPanel>
+          <Button Command="{Binding SetProject}"><StackPanel>
               <PathIcon Data="{StaticResource arrow_next_regular}"/>
               <TextBlock Text="Load Selected Project &amp; Continue"/>
           </StackPanel></Button>
@@ -284,10 +284,23 @@
             <NumericUpDown Value="{Binding EventMinorId}" Increment="1" FormatString="000" Minimum="0" Maximum="999"/>
           </StackPanel>
         </WrapPanel>
-        <Button Command="{Binding SetEVT}"><StackPanel>
-          <PathIcon Data="{StaticResource document_add_regular}"/>
-          <TextBlock Text="Pick Entered Event"/>
-        </StackPanel></Button>
+        <Button Command="{Binding SetEVT}">
+          <!-- I want this to happen eventually re: new events, but it's not ready for the big time yet. -->
+          <!--SplitButton.Flyout>
+            <MenuFlyout Placement="RightEdgeAlignedTop">
+              <MenuItem Header="Copy Entered Event to New ID"
+                        Command="{Binding DisplayMessage}"
+                        CommandParameter="Not yet implemented" />
+              <MenuItem Header="Create New Event with Entered ID"
+                        Command="{Binding DisplayMessage}"
+                        CommandParameter="Not yet implemented" />
+              </MenuFlyout>
+          </SplitButton.Flyout-->
+          <StackPanel>
+            <PathIcon Data="{StaticResource document_add_regular}"/>
+            <TextBlock Text="Pick Entered Event"/>
+          </StackPanel>
+        </Button>
 
         <Separator/>
         <StackPanel Classes="formentry" HorizontalAlignment="Right">

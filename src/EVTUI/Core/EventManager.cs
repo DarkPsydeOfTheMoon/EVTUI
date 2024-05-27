@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 
@@ -96,6 +97,39 @@ public class EventManager
     public void Clear()
     {
         this.SerialEvent = null;
+    }
+
+    public int EventDuration
+    {
+        get
+        {
+            return this.SerialEvent.TotalFrame;
+        }
+    }
+
+    public SerialCommand[] EventCommands
+    {
+        get
+        {
+            return this.SerialEvent.Commands;
+        }
+    }
+
+    public ArrayList EventCommandData
+    {
+        get
+        {
+            return this.SerialEvent.CommandData;
+        }
+    }
+
+    public List<int> ObjectIndices(string? type)
+    {
+        List<int> ret = new List<int>();
+        foreach (SerialObject obj in this.SerialEvent.Objects)
+            if (type is null || (type == "model" && (obj.Type == 0x00000301 || obj.Type == 0x00000401 || obj.Type == 0x00000601 || obj.Type == 0x00020101 || obj.Type == 0x01000101 || obj.Type == 0x02000101 || obj.Type == 0x02000701 || obj.Type == 0x04000201)))
+                ret.Add(obj.Id);
+        return ret;
     }
 
 }
