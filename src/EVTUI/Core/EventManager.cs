@@ -11,7 +11,7 @@ public struct CpkEVTContents
 {
     public string? evtPath;
     public string? ecsPath;
-    public List<string> acbPaths   = new List<string>();
+    public List<string> acbPaths = new List<string>();
     public List<string> bfPaths  = new List<string>();
     public List<string> bmdPaths = new List<string>();
 
@@ -25,6 +25,13 @@ public class EventManager
     // *** PRIVATE MEMBERS *** //
     ///////////////./////////////
     private EVT? SerialEvent = null;
+
+    ////////////////////////////
+    // *** PUBLIC MEMBERS *** //
+    ///////////////.////////////
+    public List<string> AcbPaths;
+    public List<string> BfPaths;
+    public List<string> BmdPaths;
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -45,6 +52,12 @@ public class EventManager
         Console.WriteLine("##########");
         Console.WriteLine(File.ReadAllBytes(cpkEVTContents.Value.evtPath).SequenceEqual(File.ReadAllBytes(cpkEVTContents.Value.evtPath + ".COPY")));
         Console.WriteLine("##########");*/
+
+        // the DataManager will pass these to the AudioManager
+        this.AcbPaths = cpkEVTContents.Value.acbPaths;
+        this.BfPaths  = cpkEVTContents.Value.bfPaths;
+        this.BmdPaths = cpkEVTContents.Value.bmdPaths;
+
         return true;
     }
 

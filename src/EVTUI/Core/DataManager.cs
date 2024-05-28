@@ -12,7 +12,8 @@ public class DataManager
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
     public ProjectManager ProjectManager;
-    public EventManager EventManager;
+    public EventManager   EventManager;
+    public AudioManager   AudioManager;
 
     public bool ReadOnly;
     public bool ProjectLoaded;
@@ -95,6 +96,7 @@ public class DataManager
     {
         this.ProjectManager = new ProjectManager();
         this.EventManager   = new EventManager();
+        this.AudioManager   = new AudioManager();
         this.CpkList        = new List<string>();
         this.Reset();
     }
@@ -130,7 +132,11 @@ public class DataManager
                 this.ProjectManager.UpdateProjectEvents(0, majorId, minorId);
         }
         this.EventLoaded = success;
-		return true;
+
+        // TODO: load common files! system sounds, common voice lines, models, bustups, cutins
+        this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcbPaths);
+
+        return true;
     }
 
     public List<string> GetCPKsFromPath(string? directoryPath)
