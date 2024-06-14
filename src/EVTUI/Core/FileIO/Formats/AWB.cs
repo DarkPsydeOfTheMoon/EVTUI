@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 
 using Xv2CoreLib.ACB;
 using Xv2CoreLib.AFS2;
@@ -63,12 +64,13 @@ public class TrackEntry
         AwbId = awbId;
     }
 
-    public string CueRange { get; set; }
-    public uint CueId      { get; set; }
-    public string CueName  { get; set; }
-    public int TrackIndex  { get; set; }
-    public string AwbMode  { get; set; }
-    public int AwbId       { get; set; }
+    public string  CueRange   { get; set; }
+    public uint    CueId      { get; set; }
+    public string  CueName    { get; set; }
+    public int     TrackIndex { get; set; }
+    public string  AwbMode    { get; set; }
+    public int     AwbId      { get; set; }
+    public string? Usage      { get; set; }
 }
 
 public class ACWBData
@@ -77,17 +79,48 @@ public class ACWBData
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public string AcbPath { get; }
-    public Dictionary<uint, CueData> Cues { get; }
-    public ObservableCollection<TrackEntry> TrackList { get; }
+    public string                           AcbPath        { get; }
+    public Dictionary<uint, CueData?>       Cues           { get; }
+    public ObservableCollection<TrackEntry> TrackList      { get; }
+
+    public string                           ExtractionMode { get; set; } = "default";
+    public Dictionary<uint, MessageCue>?    MessageCues    { get; set; }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public ACWBData(string filename)
+    //public ACWBData(string filename) : this(filename, null) {}
+    public ACWBData(string filename, AudioCues eventCues)
     {
+        Console.WriteLine(filename);
+
         AcbPath = filename;
         ACB_File acb = ACB_File.Load(AcbPath);
+
+        LocaleCues locale;
+        if (this.AcbPath.Contains("_J"))
+            locale = eventCues.JpCues;
+        else
+            locale = eventCues.EnCues;
+
+        if (Regex.IsMatch(this.AcbPath, "VOICE_SINGLEWORD\\.ACB$"))
+        {
+            this.ExtractionMode = "grouped";
+            this.MessageCues    = locale.Common;
+        }
+        else if (Regex.IsMatch(this.AcbPath, "F[0-9]{3}_[0-9]{3}\\.ACB$"))
+            this.MessageCues    = locale.Field;
+        else if (Regex.IsMatch(this.AcbPath, "E[0-9]{3}_[0-9]{3}\\.ACB$"))
+            this.MessageCues    = locale.EventVoice;
+        else if (Regex.IsMatch(this.AcbPath, "E[0-9]{3}_[0-9]{3}_SE\\.ACB$"))
+            this.MessageCues    = locale.EventSFX;
+        else if (Regex.IsMatch(this.AcbPath, "SYSTEM\\.ACB$"))
+            this.ExtractionMode = "used";
+
+        // UpdateAudioCueFiles in the AudioManager should then just skip this file
+        // (i.e., it won't be displayed)
+        if (this.ExtractionMode != "default" && (this.MessageCues is null || this.MessageCues.Count == 0))
+            return;
 
         string fullAcbPath = Path.GetFullPath(AcbPath);
         string baseOutputDir = Path.Combine(Path.GetDirectoryName(fullAcbPath), Path.GetFileNameWithoutExtension(fullAcbPath));
@@ -110,7 +143,35 @@ public class ACWBData
 
         Cues = new Dictionary<uint, CueData>();
         List<TrackEntry> trackList = new List<TrackEntry>();
+        foreach (var cue in acb.Cues)
+            Cues.Add(cue.ID, null);
+
+        HashSet<uint> inRange = new HashSet<uint>();
+        if (this.ExtractionMode != "default" && !(this.MessageCues is null))
+            foreach (uint cueId in this.MessageCues.Keys)
+                if (this.ExtractionMode == "grouped")
+                {
+                    this.MessageCues[cueId].CueRange = this.GetCueRange(cueId);
+                    for (uint i=this.MessageCues[cueId].CueRange.Lower; i<=this.MessageCues[cueId].CueRange.Upper; i++)
+                        inRange.Add(i);
+                }
+                else if (this.ExtractionMode == "used")
+                    inRange.Add(cueId);
+
         foreach (var cue in acb.Cues) {
+
+            // TODO: will need to update this when ECS is integrated
+            if (this.ExtractionMode != "default" && !inRange.Contains(cue.ID))
+            {
+                Cues.Remove(cue.ID);
+                continue;
+            }
+            /*else if (this.ExtractionMode == "grouped" && inRange.Contains(cue.ID) && (cue.ID < this.MessageCues[cue.ID].CueRange.Lower || cue.ID > this.MessageCues[cue.ID].CueRange.Upper))
+            {
+                Cues.Remove(cue.ID);
+                continue;
+            }*/
+
             var newCue = new CueData(cue.ID, cue.Name);
             List<ACB_Waveform> waveforms = acb.GetWaveformsFromCue(cue);
             for (int i = 0; i < waveforms.Count; i++) {
@@ -127,48 +188,60 @@ public class ACWBData
                     decryptedBytes[19] = 0x00;
                     File.WriteAllBytes(outputPath, decryptedBytes);
                     newCue.AddTrack(i, waveforms[i].IsStreaming, waveforms[i].AwbId, outputPath);
-                    trackList.Add(new TrackEntry(cue.ID, cue.Name, i, waveforms[i].IsStreaming, waveforms[i].AwbId));
+                    trackList.Add(new TrackEntry(cue.ID, cue.Name, i+1, waveforms[i].IsStreaming, waveforms[i].AwbId));
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
                 }
             }
-            Cues.Add(cue.ID, newCue);
+            //Cues.Add(cue.ID, newCue);
+            Cues[cue.ID] = newCue;
         }
 
         foreach (var track in trackList)
         {
-            uint[] cueRange = this.GetCueRange(track.CueId);
-            track.CueRange = $"{cueRange[0]}-{cueRange[1]}";
+            (uint Lower, uint Upper) cueRange = this.GetCueRange(track.CueId);
+            track.CueRange                    = $"{cueRange.Lower}-{cueRange.Upper}";
         }
 
         TrackList = new ObservableCollection<TrackEntry>(trackList);
 
+        // SYSTEM and _SE should be skipped
+        if (!(this.MessageCues is null))
+            foreach (TrackEntry track in this.TrackList)
+                if (this.MessageCues.ContainsKey((ushort)track.CueId))
+                {
+                    if (track.Usage is null)
+                        track.Usage = this.MessageCues[(ushort)track.CueId].Stringification;
+                    else
+                        track.Usage += ", " + this.MessageCues[(ushort)track.CueId].Stringification;
+                }
+
     }
 
-    public uint[] GetCueRange(uint cueId)
+    public (uint Lower, uint Upper) GetCueRange(uint cueId)
     {
-        uint[] ret = [cueId, cueId];
+        (uint Lower, uint Upper) cueRange = (cueId, cueId);
         while (true)
         {
-            if (!Cues.ContainsKey(ret[0]))
+            if (!this.Cues.ContainsKey(cueRange.Lower))
             {
-                ret[0] += 1;
+                cueRange.Lower += 1;
                 break;
             } else
-                ret[0] -= 1;
+                cueRange.Lower -= 1;
         }
         while (true)
         {
-            if (!Cues.ContainsKey(ret[1]))
+            if (!this.Cues.ContainsKey(cueRange.Upper))
             {
-                ret[1] -= 1;
+                cueRange.Upper -= 1;
                 break;
             } else
-                ret[1] += 1;
+                cueRange.Upper += 1;
         }
-        return ret;
+        return cueRange;
     }
 
 }

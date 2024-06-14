@@ -34,14 +34,10 @@ namespace Serialization
         public void RwBytestring(ref byte[] value, int length) 
         {
             value = this.bytestream.ReadBytes(length);
-            if (!this.IsLittleEndian)
-                value = value.Reverse().ToArray();
         }
         public void RwString(ref string value, int length, System.Text.Encoding encoding)
         {
             byte[] buf = this.bytestream.ReadBytes(length);
-            if (!this.IsLittleEndian)
-                buf = buf.Reverse().ToArray();
             value = encoding.GetString(buf);
         }
         public void RwCBytestring(ref byte[] value)
@@ -55,8 +51,6 @@ namespace Serialization
                 v = this.bytestream.ReadByte();
             }
             value = buf.ToArray();
-            if (!this.IsLittleEndian)
-                value = value.Reverse().ToArray();
         }
         public void RwCString(ref string value, System.Text.Encoding encoding)
         {
@@ -107,11 +101,17 @@ namespace Serialization
 
         // Struct read/write
         public void RwObj<T>(T obj)                    where T : ISerializable { obj.ExbipHook(this); }
-        public void RwObj<T>(ref T obj)                where T : struct, ISerializable { obj.ExbipHook(this); }
+        public void RwObj<T>(ref T obj)                where T : ISerializable
+        {
+            if (obj is null)
+                obj = (T) typeof(T).GetConstructors().First().Invoke([]);
+            obj.ExbipHook(this);
+        }
         public void RwObjs<T>(ref T[] objs, int count) where T : ISerializable 
         {
              objs = new T[count];
-             for (int i=0; i < count; ++i) {
+             for (int i=0; i < count; ++i)
+             {
                 objs[i] = (T) typeof(T).GetConstructors().First().Invoke([]);
                 this.RwObj(objs[i]);
              }
@@ -123,9 +123,27 @@ namespace Serialization
             return this.bytestream.BaseStream.Position;
         }
 
+        private long RelativeOffset = 0;
+        public long GetRelativeOffset()
+        {
+            return this.RelativeOffset;
+        }
+        public void SetRelativeOffset(long val)
+        {
+            this.RelativeOffset = val;
+        }
+        public long RelativeTell()
+        {
+            return this.Tell() - this.RelativeOffset;
+        }
+
         public void Seek(long position, SeekOrigin origin)
         {
             this.bytestream.BaseStream.Seek(position, origin);
+        }
+        public void RelativeSeek(long position, SeekOrigin origin)
+        {
+            this.bytestream.BaseStream.Seek(position + this.RelativeOffset, origin);
         }
 
         public void Align(long position, long alignment)

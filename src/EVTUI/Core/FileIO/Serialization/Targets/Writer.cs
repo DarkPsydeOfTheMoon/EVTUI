@@ -31,23 +31,17 @@ namespace Serialization
         // Basic types
         public void RwBytestring(ref byte[] value, int length)
         {
-            if (!this.IsLittleEndian)
-                value = value.Reverse().ToArray();
             this.bytestream.Write(value);
         }
 
         public void RwString(ref string value, int length, System.Text.Encoding encoding)
         {
             var buf = encoding.GetBytes(value);
-            if (!this.IsLittleEndian)
-                buf = buf.Reverse().ToArray();
             this.bytestream.Write(buf);
         }
 
         public void RwCBytestring(ref byte[] value)
         {
-            if (!this.IsLittleEndian)
-                value = value.Reverse().ToArray();
             this.bytestream.Write(value);
             this.bytestream.Write(0x00);
         }
@@ -99,7 +93,7 @@ namespace Serialization
 
         // Struct read/write
         public void RwObj<T>(T obj) where T : ISerializable { obj.ExbipHook(this); }
-        public void RwObj<T>(ref T obj) where T : struct, ISerializable { obj.ExbipHook(this); }
+        public void RwObj<T>(ref T obj) where T : ISerializable { obj.ExbipHook(this); }
         public void RwObjs<T>(ref T[] objs, int count) where T : ISerializable 
         {
             foreach (var obj in objs)
@@ -117,9 +111,27 @@ namespace Serialization
             return this.bytestream.BaseStream.Position;
         }
 
+        private long RelativeOffset = 0;
+        public long GetRelativeOffset()
+        {
+            return this.RelativeOffset;
+        }
+        public void SetRelativeOffset(long val)
+        {
+            this.RelativeOffset = val;
+        }
+        public long RelativeTell()
+        {
+            return this.Tell() - this.RelativeOffset;
+        }
+
         public void Seek(long position, SeekOrigin origin)
         {
             this.bytestream.BaseStream.Seek(position, origin);
+        }
+        public void RelativeSeek(long position, SeekOrigin origin)
+        {
+            this.bytestream.BaseStream.Seek(position + this.RelativeOffset, origin);
         }
 
         public void Align(long position, long alignment)

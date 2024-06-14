@@ -6,7 +6,7 @@ using Serialization;
 
 namespace EVTUI
 {
-    public static class Globals
+    public static partial class Globals
     {
        public static Int32 LAST_DATA_SIZE {get;set;}
     }

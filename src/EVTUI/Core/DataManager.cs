@@ -13,6 +13,7 @@ public class DataManager
     ////////////////////////////
     public ProjectManager ProjectManager;
     public EventManager   EventManager;
+    public ScriptManager  ScriptManager;
     public AudioManager   AudioManager;
 
     public bool ReadOnly;
@@ -96,6 +97,7 @@ public class DataManager
     {
         this.ProjectManager = new ProjectManager();
         this.EventManager   = new EventManager();
+        this.ScriptManager  = new ScriptManager();
         this.AudioManager   = new AudioManager();
         this.CpkList        = new List<string>();
         this.Reset();
@@ -133,8 +135,10 @@ public class DataManager
         }
         this.EventLoaded = success;
 
+        this.ScriptManager.UpdateMessages(this.EventManager.BmdPaths, this.ModPath);
+
         // TODO: load common files! system sounds, common voice lines, models, bustups, cutins
-        this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcbPaths);
+        this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcbPaths, this.ModPath, this.ScriptManager.EventCues);
 
         return true;
     }

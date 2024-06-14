@@ -32,14 +32,19 @@ public class AudioManager
         mediaPlayer   = new MediaPlayer(libVLC);
     }
 
-    public void UpdateAudioCueFiles(List<string> acbPaths)
+    //public void UpdateAudioCueFiles(List<string> acbPaths, string modPath, Dictionary<(ushort, bool), (string, string)> eventCues)
+    public void UpdateAudioCueFiles(List<string> acbPaths, string modPath, AudioCues eventCues)
     {
         this.AudioCueFiles.Clear();
         this.AcbList.Clear();
         foreach (var acbPath in acbPaths)
         {
-            var soundFile = new ACWBData(acbPath);
-            string key = acbPath.Substring(10, acbPath.Length-10);
+            var soundFile = new ACWBData(acbPath, eventCues);
+            if (soundFile.Cues is null)
+                continue;
+            //if (!acbPath.Contains("_SE"))
+            //soundFile.UpdateUsage(eventCues);
+            string key = acbPath.Substring((modPath.Length+1), acbPath.Length-(modPath.Length+1));
             this.AudioCueFiles[key] = soundFile;
             this.AcbList.Add(key);
         }
@@ -51,7 +56,7 @@ public class AudioManager
 
     public void PlayCueTrack(uint cueId, int trackIndex)
     {
-        string adxPath = this.AudioCueFiles[this.ActiveACB].Cues[cueId].Tracks[trackIndex].AdxPath;
+        string adxPath = this.AudioCueFiles[this.ActiveACB].Cues[cueId].Tracks[trackIndex-1].AdxPath;
         if (this.CurrentTrack != adxPath || this.mediaPlayer.State.ToString() == "Ended")
         {
             this.mediaPlayer.Media = new Media(libVLC, new Uri(adxPath));
