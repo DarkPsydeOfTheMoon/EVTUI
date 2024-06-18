@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using LibVLCSharp.Shared;
 
 namespace EVTUI;
@@ -10,45 +11,45 @@ public class AudioManager
     /////////////////////////////
     // *** PRIVATE MEMBERS *** //
     /////////////////////////////
-    private LibVLC      libVLC;
-    private MediaPlayer mediaPlayer;
-    private string      CurrentTrack;
+    private LibVLC                       libVLC;
+    private MediaPlayer                  mediaPlayer;
+    private MemoryStream                 Stream;
+    private (uint CueId, int TrackIndex) CurrentTrack;
+    private static ulong                 KeyCode = 9923540143823782;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public string?                      ActiveACB = null; //{ get; set; }
-    public Dictionary<string, ACWBData> AudioCueFiles { get; }
-    public List<string>                 AcbList       { get; }
+    public string?                 ActiveACB = null;
+    public Dictionary<string, ACB> AudioCueFiles { get; }
+    public List<string>            AcbList       { get; }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
     public AudioManager()
     {
-        AudioCueFiles = new Dictionary<string, ACWBData>();
+        AudioCueFiles = new Dictionary<string, ACB>();
         AcbList       = new List<string>();
         libVLC        = new LibVLC();
         mediaPlayer   = new MediaPlayer(libVLC);
     }
 
-    //public void UpdateAudioCueFiles(List<string> acbPaths, string modPath, Dictionary<(ushort, bool), (string, string)> eventCues)
-    public void UpdateAudioCueFiles(List<string> acbPaths, string modPath, AudioCues eventCues)
+    public void UpdateAudioCueFiles(List<(string ACB, string? AWB)> acwbPaths, string modPath, AudioCues eventCues)
     {
         this.AudioCueFiles.Clear();
         this.AcbList.Clear();
-        foreach (var acbPath in acbPaths)
+        foreach (var acwbPath in acwbPaths)
         {
-            var soundFile = new ACWBData(acbPath, eventCues);
+            ACB soundFile = new ACB(acwbPath.ACB, eventCues, acwbPath.AWB);
             if (soundFile.Cues is null)
                 continue;
-            //if (!acbPath.Contains("_SE"))
-            //soundFile.UpdateUsage(eventCues);
-            string key = acbPath.Substring((modPath.Length+1), acbPath.Length-(modPath.Length+1));
+            Console.WriteLine(acwbPath.ACB);
+            string key = acwbPath.ACB.Substring((modPath.Length+1), acwbPath.ACB.Length-(modPath.Length+1));
             this.AudioCueFiles[key] = soundFile;
             this.AcbList.Add(key);
         }
-        if (acbPaths.Count > 0)
+        if (acwbPaths.Count > 0)
             this.ActiveACB = this.AcbList[0];
         else
             this.ActiveACB = null;
@@ -56,11 +57,13 @@ public class AudioManager
 
     public void PlayCueTrack(uint cueId, int trackIndex)
     {
-        string adxPath = this.AudioCueFiles[this.ActiveACB].Cues[cueId].Tracks[trackIndex-1].AdxPath;
-        if (this.CurrentTrack != adxPath || this.mediaPlayer.State.ToString() == "Ended")
+        if (this.CurrentTrack != (cueId, trackIndex) || this.mediaPlayer.State.ToString() == "Ended")
         {
-            this.mediaPlayer.Media = new Media(libVLC, new Uri(adxPath));
-            this.CurrentTrack = adxPath;
+            if (!(this.Stream is null))
+                this.Stream.Dispose();
+            this.Stream = new MemoryStream(this.AudioCueFiles[this.ActiveACB].Cues[cueId].Tracks[trackIndex-1].GetBytes(AudioManager.KeyCode));
+            this.mediaPlayer.Media = new Media(libVLC, new StreamMediaInput(this.Stream));
+            this.CurrentTrack = (cueId, trackIndex);
         }
         if (this.mediaPlayer.IsPlaying)
             this.mediaPlayer.Pause();

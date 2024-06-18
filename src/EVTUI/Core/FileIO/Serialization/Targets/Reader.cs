@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 
@@ -10,14 +10,20 @@ namespace Serialization
 {
     struct Reader : IBaseBinaryTarget
     {
-        private bool IsLittleEndian = BitConverter.IsLittleEndian;
-        public void SetEndianness(string endianness) {
+        private Stack<bool> IsLittleEndian = new Stack<bool>(new bool[] {BitConverter.IsLittleEndian});
+        public void SetEndianness(string endianness)
+        {
             if (endianness == "little")
-                this.IsLittleEndian = true;
+                this.IsLittleEndian.Push(true);
             else if (endianness == "big")
-                this.IsLittleEndian = false;
+                this.IsLittleEndian.Push(false);
             else
                 throw new Exception("Endianness must be little or big");
+        }
+        public void ResetEndianness()
+        {
+            if (this.IsLittleEndian.Count > 1)
+                this.IsLittleEndian.Pop();
         }
 
         public bool IsConstructlike() { return true; }
@@ -66,7 +72,7 @@ namespace Serialization
         public void RwInt32  (ref Int32  value) { this.endian_reader(ref value, (x => BitConverter.ToInt32(x))); }
         public void RwUInt32 (ref UInt32 value) { this.endian_reader(ref value, (x => BitConverter.ToUInt32(x))); }
         public void RwInt64  (ref Int64  value) { this.endian_reader(ref value, (x => BitConverter.ToInt64(x))); }
-        public void RwUint64 (ref UInt64 value) { this.endian_reader(ref value, (x => BitConverter.ToUInt64(x))); }
+        public void RwUInt64 (ref UInt64 value) { this.endian_reader(ref value, (x => BitConverter.ToUInt64(x))); }
         public void RwFloat16(ref Half   value) { this.endian_reader(ref value, (x => BitConverter.ToHalf(x))); }
         public void RwFloat32(ref float  value) { this.endian_reader(ref value, (x => BitConverter.ToSingle(x))); }
         public void RwFloat64(ref double value) { this.endian_reader(ref value, (x => BitConverter.ToDouble(x))); }
@@ -74,7 +80,7 @@ namespace Serialization
         private unsafe void endian_reader<T>(ref T value, Func<byte[], T> ConvData) {
             byte[] bytes = new byte[sizeof(T)];
             this.bytestream.Read(bytes, 0, sizeof(T));
-            if (!this.IsLittleEndian)
+            if (!this.IsLittleEndian.Peek())
                 bytes = bytes.Reverse().ToArray();
             value = ConvData(bytes);
         }
@@ -100,20 +106,20 @@ namespace Serialization
         public void RwFloat64s(ref Double[] value, int count) { rw_typeds(ref value, count, (x => BitConverter.ToDouble(x))); }
 
         // Struct read/write
-        public void RwObj<T>(T obj)                    where T : ISerializable { obj.ExbipHook(this); }
-        public void RwObj<T>(ref T obj)                where T : ISerializable
+        public void RwObj<T>(T obj, Dictionary<string, object> args = null)     where T : ISerializable { obj.ExbipHook(this, args); }
+        public void RwObj<T>(ref T obj, Dictionary<string, object> args = null) where T : ISerializable
         {
             if (obj is null)
                 obj = (T) typeof(T).GetConstructors().First().Invoke([]);
-            obj.ExbipHook(this);
+            obj.ExbipHook(this, args);
         }
-        public void RwObjs<T>(ref T[] objs, int count) where T : ISerializable 
+        public void RwObjs<T>(ref T[] objs, int count, Dictionary<string, object> args = null) where T : ISerializable 
         {
              objs = new T[count];
              for (int i=0; i < count; ++i)
              {
                 objs[i] = (T) typeof(T).GetConstructors().First().Invoke([]);
-                this.RwObj(objs[i]);
+                this.RwObj(objs[i], args);
              }
         }
 
@@ -123,18 +129,23 @@ namespace Serialization
             return this.bytestream.BaseStream.Position;
         }
 
-        private long RelativeOffset = 0;
+        private Stack<long> RelativeOffset = new Stack<long>(new long[] {0});
         public long GetRelativeOffset()
         {
-            return this.RelativeOffset;
+            return this.RelativeOffset.Peek();
         }
         public void SetRelativeOffset(long val)
         {
-            this.RelativeOffset = val;
+            this.RelativeOffset.Push(val);
+        }
+        public void ResetRelativeOffset()
+        {
+            if (this.RelativeOffset.Count > 1)
+                this.RelativeOffset.Pop();
         }
         public long RelativeTell()
         {
-            return this.Tell() - this.RelativeOffset;
+            return this.Tell() - this.RelativeOffset.Peek();
         }
 
         public void Seek(long position, SeekOrigin origin)
@@ -143,7 +154,7 @@ namespace Serialization
         }
         public void RelativeSeek(long position, SeekOrigin origin)
         {
-            this.bytestream.BaseStream.Seek(position + this.RelativeOffset, origin);
+            this.bytestream.BaseStream.Seek(position + this.RelativeOffset.Peek(), origin);
         }
 
         public void Align(long position, long alignment)
@@ -161,8 +172,14 @@ namespace Serialization
                     throw new Exception("Expected alignment buffer to be 0x00");
         }
 
-        public void AssertEOF() {
-            if (this.bytestream.PeekChar() >= 0)
+        public bool IsEOF()
+        {
+            return (this.bytestream.PeekChar() < 0);
+        }
+
+        public void AssertEOF()
+        {
+            if (!this.IsEOF())
                 throw new Exception("Finished reading the stream before EOF was reached");
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 
 using Serialization;
@@ -62,7 +63,7 @@ namespace EVTUI
         public Int16[] DUMMY_INT16 = new Int16[2];
         public Int32[] DUMMY_INT32 = new Int32[2];
 
-        public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+        public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.SetEndianness("little");
             rw.RwString(ref this.Magic, 3, Encoding.ASCII);
@@ -188,7 +189,7 @@ namespace EVTUI
         public Int32 Reserve28;
         public Int32 Reserve2C;
 
-        public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+        public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.RwInt32(ref this.Id);
             rw.RwInt32(ref this.Type);
@@ -204,9 +205,6 @@ namespace EVTUI
             rw.RwInt32(ref this.Reserve28);
             rw.RwInt32(ref this.Reserve2C);
         }
-
-        public void Write(string filepath) { TraitMethods.Write(this, filepath); }
-        public void Read (string filepath) { TraitMethods.Read (this, filepath); }
     }
 
     public class SerialCommand : ISerializable
@@ -225,7 +223,7 @@ namespace EVTUI
         public Int32 ConditionalValue;
         public Int32 ConditionalComparisonType;
 
-        public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+        public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.RwString(ref this.CommandCode, 4, Encoding.ASCII);
             rw.RwInt16(ref this.CommandVersion);
@@ -241,22 +239,16 @@ namespace EVTUI
             rw.RwInt32(ref this.ConditionalValue);
             rw.RwInt32(ref this.ConditionalComparisonType);
         }
-
-        public void Write(string filepath) { TraitMethods.Write(this, filepath); }
-        public void Read (string filepath) { TraitMethods.Read (this, filepath); }
     }
 
     public class SerialCommandData : ISerializable
     {
         public byte[] UNK;
 
-        public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+        public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.RwBytestring(ref this.UNK, Globals.LAST_DATA_SIZE);
         }
-
-        public void Write(string filepath) { TraitMethods.Write(this, filepath); }
-        public void Read (string filepath) { TraitMethods.Read (this, filepath); }
     }
 
 }

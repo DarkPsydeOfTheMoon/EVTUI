@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using Serialization;
 
@@ -30,7 +31,7 @@ public partial class CommandTypes
         public Int16[] UNK_INT16 = new Int16[2];
         public Int32[] UNK_INT32 = new Int32[3];
 
-        public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+        public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.RwInt32(ref this.MessageMode);    // a bit field! that'll be handled by the manager, not here
             rw.RwInt16(ref this.MessageMajorId);
@@ -58,8 +59,5 @@ public partial class CommandTypes
                 rw.RwFloat32(ref this.Entries[i].UNK_FLOAT);
             }
         }
-
-        public void Write(string filepath) { TraitMethods.Write(this, filepath); }
-        public void Read (string filepath) { TraitMethods.Read (this, filepath); }
     }
 }

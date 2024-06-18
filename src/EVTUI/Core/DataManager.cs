@@ -138,7 +138,8 @@ public class DataManager
         this.ScriptManager.UpdateMessages(this.EventManager.BmdPaths, this.ModPath);
 
         // TODO: load common files! system sounds, common voice lines, models, bustups, cutins
-        this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcbPaths, this.ModPath, this.ScriptManager.EventCues);
+        // so far, VOICE_SINGLEWORD gets loaded, but the rest will have to wait for full EVT/ECS parsing
+        this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcwbPaths, this.ModPath, this.ScriptManager.EventCues);
 
         return true;
     }

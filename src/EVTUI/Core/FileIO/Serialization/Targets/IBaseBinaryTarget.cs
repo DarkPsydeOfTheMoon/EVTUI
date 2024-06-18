@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Serialization
@@ -6,6 +7,7 @@ namespace Serialization
     public interface IBaseBinaryTarget
     {
         public void SetEndianness(string endianness);
+        public void ResetEndianness();
         public bool IsConstructlike();
         public bool IsParselike();
 
@@ -21,7 +23,7 @@ namespace Serialization
         public void RwInt32   (ref Int32    value);
         public void RwUInt32  (ref UInt32   value);
         public void RwInt64   (ref Int64    value);
-        public void RwUint64  (ref UInt64   value);
+        public void RwUInt64  (ref UInt64   value);
         public void RwFloat16 (ref Half     value);
         public void RwFloat32 (ref Single   value);
         public void RwFloat64 (ref Double   value);
@@ -38,9 +40,9 @@ namespace Serialization
         public void RwFloat64s(ref Double[] value, int count);
 
         // Struct read/writes
-        public void RwObj<T>(T obj) where T : ISerializable;
-        public void RwObj<T>(ref T obj) where T : ISerializable;
-        public void RwObjs<T>(ref T[] objs, int count) where T : ISerializable;
+        public void RwObj<T>(T obj, Dictionary<string, object> args = null) where T : ISerializable;
+        public void RwObj<T>(ref T obj, Dictionary<string, object> args = null) where T : ISerializable;
+        public void RwObjs<T>(ref T[] objs, int count, Dictionary<string, object> args = null) where T : ISerializable;
 
         // Stream manipulation methods
         public static long GetAlignment(long position, long alignment)
@@ -54,12 +56,13 @@ namespace Serialization
         public long Tell();
         public long GetRelativeOffset();
         public void SetRelativeOffset(long val);
+        public void ResetRelativeOffset();
         public long RelativeTell();
         public void Seek(long offset, SeekOrigin origin);
         public void RelativeSeek(long offset, SeekOrigin origin);
         //public long ActOnOffset(long offset);
 
+        public bool IsEOF();
         public void AssertEOF();
-
     }
 }

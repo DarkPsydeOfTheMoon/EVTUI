@@ -12,6 +12,7 @@ public struct CpkEVTContents
     public string? evtPath;
     public string? ecsPath;
     public List<string> acbPaths = new List<string>();
+    public List<string> awbPaths = new List<string>();
     public List<string> bfPaths  = new List<string>();
     public List<string> bmdPaths = new List<string>();
 
@@ -29,7 +30,8 @@ public class EventManager
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ///////////////.////////////
-    public List<string> AcbPaths;
+    //public List<string> AcbPaths;
+    public List<(string ACB, string? AWB)> AcwbPaths;
     public List<string> BfPaths;
     public List<string> BmdPaths;
 
@@ -54,7 +56,16 @@ public class EventManager
             throw new Exception($"Reflexivity of read/write fails for {cpkEVTContents.Value.evtPath}");*/
 
         // the DataManager will pass these to the AudioManager
-        this.AcbPaths = cpkEVTContents.Value.acbPaths;
+        //this.AcbPaths = cpkEVTContents.Value.acbPaths;
+        this.AcwbPaths = new List<(string ACB, string? AWB)>();
+        foreach (string acbPath in cpkEVTContents.Value.acbPaths)
+        {
+            string awbPath = acbPath.Substring(0, acbPath.Length-4) + ".AWB";
+            if (cpkEVTContents.Value.awbPaths.Contains(awbPath))
+                this.AcwbPaths.Add((acbPath, awbPath));
+            else
+                this.AcwbPaths.Add((acbPath, null));
+        }
         this.BfPaths  = cpkEVTContents.Value.bfPaths;
         this.BmdPaths = cpkEVTContents.Value.bmdPaths;
 

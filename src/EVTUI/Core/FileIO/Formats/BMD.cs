@@ -51,7 +51,7 @@ public class BMD : ISerializable
     private byte[] TmpBytes;
     private string TmpFile = Path.GetTempFileName();
 
-    public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+    public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
         rw.RwUInt8(ref this.FileType);
         rw.RwUInt8(ref this.Format);
@@ -118,10 +118,7 @@ public class BMD : ISerializable
                 this.SpeakerNameAddresses[i] = (UInt32)rw.RelativeTell();
             rw.RelativeSeek(this.SpeakerNameAddresses[i], 0);
             // error CS0206: A non ref-returning property or indexer may not be used as an out or ref value
-            ////rw.RwCBytestring(ref (this.Speakers[i]));
-            //byte[] tmpBytes = this.Speakers[i];
-            //rw.RwCBytestring(ref tmpBytes);
-            //this.Speakers[i] = tmpBytes;
+            //rw.RwCBytestring(ref this.Speakers[i]);
             if (rw.IsParselike())
                 this.TmpBytes = this.Speakers[i];
             rw.RwCBytestring(ref this.TmpBytes);
@@ -150,7 +147,6 @@ public class BMD : ISerializable
         rw.AssertEOF();
     }
 
-    //public void Write(string filepath) { TraitMethods.Write(this, filepath); }
     public void Write(string filepath)
     {
         // a cheap way to update all the offsets before actually writing to the file
@@ -173,14 +169,12 @@ public class Turn : ISerializable
     public UInt16 ElemCount;
     public UInt32[] ElemStartAddresses;
     public UInt32 TextBufferSize;
-    //public byte[] TextBuffer;
 
-    //public List<byte[]> Elems;
     public List<byte[]> Elems = new List<byte[]>();
 
     private byte[] TmpBytes;
 
-    public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+    public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
         rw.RwBytestring(ref this.Name, 24);
         if (Globals.LAST_TURN_KIND == 0)
@@ -236,6 +230,4 @@ public class Turn : ISerializable
             this.TextBufferSize = 0;
     }
 
-    //public void Write(string filepath) { TraitMethods.Write(this, filepath); }
-    //public void Read (string filepath) { TraitMethods.Read (this, filepath); }
 }

@@ -17,7 +17,7 @@ public class AudioPanelViewModel : ViewModelBase
     // *** PRIVATE MEMBERS *** //
     /////////////////////////////
     private DataManager Config;
-    private Dictionary<string, ACWBData> AudioCueFiles { get { return this.Config.AudioManager.AudioCueFiles; } }
+    private Dictionary<string, ACB> AudioCueFiles { get { return this.Config.AudioManager.AudioCueFiles; } }
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
@@ -30,7 +30,6 @@ public class AudioPanelViewModel : ViewModelBase
 
     public ObservableCollection<TrackEntry> TrackList
     {
-        //get { return this.Config.AudioManager.AudioCueFiles[this.Config.AudioManager.ActiveACB].TrackList; }
         get { return AudioCueFiles[ActiveACB].TrackList; }
     }
 
