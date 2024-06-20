@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 
 // these are used in the commented-out block
-using System.IO;
-using System.Linq;
+//using System.IO;
+//using System.Linq;
 
 namespace EVTUI;
 
@@ -49,10 +49,10 @@ public class EventManager
         this.SerialEvent.Read(cpkEVTContents.Value.evtPath);
 
         // TODO: put below into separate unit test package!
-        this.SerialEvent.Write(cpkEVTContents.Value.evtPath + ".COPY");
+        /*this.SerialEvent.Write(cpkEVTContents.Value.evtPath + ".COPY");
         var serialEventCopy = new EVT();
         serialEventCopy.Read(cpkEVTContents.Value.evtPath + ".COPY");
-        Trace.Assert(File.ReadAllBytes(cpkEVTContents.Value.evtPath).SequenceEqual(File.ReadAllBytes(cpkEVTContents.Value.evtPath + ".COPY")), $"Reflexivity of read/write fails for {cpkEVTContents.Value.evtPath}");
+        Trace.Assert(File.ReadAllBytes(cpkEVTContents.Value.evtPath).SequenceEqual(File.ReadAllBytes(cpkEVTContents.Value.evtPath + ".COPY")), $"Reflexivity of read/write fails for {cpkEVTContents.Value.evtPath}");*/
 
         // the DataManager will pass these to the AudioManager
         this.AcwbPaths = new List<(string ACB, string? AWB)>();
@@ -68,7 +68,7 @@ public class EventManager
         this.BmdPaths = cpkEVTContents.Value.bmdPaths;
 
         // TODO: put below into separate unit test package!
-        foreach (string bmdPath in this.BmdPaths)
+        /*foreach (string bmdPath in this.BmdPaths)
         {
             var dialogue = new BMD();
             dialogue.Read(bmdPath);
@@ -88,7 +88,7 @@ public class EventManager
                 string speakerOut = System.Text.Encoding.Default.GetString(dialogueCopyCopy.Speakers[i]);
                 Trace.Assert(speakerIn == speakerOut, $"Original speaker ({speakerIn}) doesn't match rewritten speaker ({speakerOut})");
             }
-        }
+        }*/
 
         return true;
     }
