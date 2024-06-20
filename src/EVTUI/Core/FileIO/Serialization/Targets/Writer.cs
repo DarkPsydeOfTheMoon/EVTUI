@@ -10,14 +10,9 @@ namespace Serialization
     struct Writer : IBaseBinaryTarget
     {
         private Stack<bool> IsLittleEndian = new Stack<bool>(new bool[] {BitConverter.IsLittleEndian});
-        public void SetEndianness(string endianness)
+        public void SetLittleEndian(bool isLittleEndian)
         {
-            if (endianness == "little")
-                this.IsLittleEndian.Push(true);
-            else if (endianness == "big")
-                this.IsLittleEndian.Push(false);
-            else
-                throw new Exception("Endianness must be little or big");
+            this.IsLittleEndian.Push(isLittleEndian);
         }
         public void ResetEndianness()
         {

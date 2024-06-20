@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,14 +12,9 @@ namespace Serialization
     struct Reader : IBaseBinaryTarget
     {
         private Stack<bool> IsLittleEndian = new Stack<bool>(new bool[] {BitConverter.IsLittleEndian});
-        public void SetEndianness(string endianness)
+        public void SetLittleEndian(bool isLittleEndian)
         {
-            if (endianness == "little")
-                this.IsLittleEndian.Push(true);
-            else if (endianness == "big")
-                this.IsLittleEndian.Push(false);
-            else
-                throw new Exception("Endianness must be little or big");
+            this.IsLittleEndian.Push(isLittleEndian);
         }
         public void ResetEndianness()
         {
@@ -168,8 +164,7 @@ namespace Serialization
             int skiplength = (int)IBaseBinaryTarget.GetAlignment(position, alignment);
             var buf = this.bytestream.ReadBytes(skiplength);
             foreach (var v in buf)
-                if (v != 0x00)
-                    throw new Exception("Expected alignment buffer to be 0x00");
+                Trace.Assert(v == 0x00, "Expected alignment buffer to be 0x00");
         }
 
         public bool IsEOF()
@@ -179,8 +174,7 @@ namespace Serialization
 
         public void AssertEOF()
         {
-            if (!this.IsEOF())
-                throw new Exception("Finished reading the stream before EOF was reached");
+            Trace.Assert(this.IsEOF(), "Finished reading the stream before EOF was reached");
         }
     }
 }

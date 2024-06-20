@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 using Serialization;
@@ -9,9 +10,8 @@ namespace EVTUI;
 
 public class EVT : ISerializable
 {
-    private string MAGIC = "EVT";
-    private int ROYAL_VERSION = 0x00029B9C;
-    private Int32 ENTRY_SIZE = 0x30;
+    private static string MAGIC         = "EVT";
+    private static Int32  ENTRY_SIZE    = 48;
 
     public string Magic;
     public byte Endianness;
@@ -60,13 +60,12 @@ public class EVT : ISerializable
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
-        rw.SetEndianness("little");
+        rw.SetLittleEndian(true);
         rw.RwString(ref this.Magic, 3, Encoding.ASCII);
-        if (this.Magic != this.MAGIC)
-            throw new Exception($"Magic string ({this.Magic}) doesn't match expected string ({this.MAGIC})");
+        Trace.Assert(this.Magic == EVT.MAGIC, $"Magic string ({this.Magic}) doesn't match expected string ({EVT.MAGIC})");
         rw.RwUInt8(ref this.Endianness);
         if (this.Endianness == 1)
-            rw.SetEndianness("big");
+            rw.SetLittleEndian(false);
 
         rw.RwUInt32(ref this.Version);
         rw.RwInt16(ref this.MajorId);
@@ -93,16 +92,14 @@ public class EVT : ISerializable
         rw.RwInt32(ref this.ObjectCount);
         rw.RwInt32(ref this.ObjectOffset);
         rw.RwInt32(ref this.ObjectSize);
-        if (this.ObjectSize != this.ENTRY_SIZE)
-            throw new Exception($"ObjectSize ({this.ObjectSize}) does not match expected entry size ({this.ENTRY_SIZE})");
+        Trace.Assert(this.ObjectSize == EVT.ENTRY_SIZE, $"ObjectSize ({this.ObjectSize}) does not match expected entry size ({EVT.ENTRY_SIZE})");
 
         rw.RwInt32(ref this.DUMMY_INT32[0]);
 
         rw.RwInt32(ref this.CommandCount);
         rw.RwInt32(ref this.CommandOffset);
         rw.RwInt32(ref this.CommandSize);
-        if (this.CommandSize != this.ENTRY_SIZE)
-            throw new Exception($"CommandSize ({this.CommandSize}) does not match expected entry size ({this.ENTRY_SIZE})");
+        Trace.Assert(this.CommandSize == EVT.ENTRY_SIZE, $"CommandSize ({this.CommandSize}) does not match expected entry size ({EVT.ENTRY_SIZE})");
 
         rw.RwInt32(ref this.DUMMY_INT32[1]);
 
@@ -116,27 +113,24 @@ public class EVT : ISerializable
         rw.RwInt32(ref this.EmbedBfFileOfs);
         rw.RwInt32(ref this.EmbedBfFileSize);
 
-        if (rw.IsConstructlike()) {
-            this.MarkerFrameCount = 8;
-            if (this.Version == this.ROYAL_VERSION)
-                this.MarkerFrameCount = 48;
+        Console.WriteLine($"{rw.RelativeTell()}, {this.FileHeaderSize}, {this.FileSize}");
+        this.MarkerFrameCount = (this.FileHeaderSize - (int)rw.RelativeTell()) / 4;
+        if (rw.IsConstructlike())
             this.MarkerFrame = new Int32[this.MarkerFrameCount];
-        }
         rw.RwInt32s(ref this.MarkerFrame, this.MarkerFrameCount);
 
         rw.Seek(this.ObjectOffset, 0);
         rw.RwObjs(ref this.Objects, this.ObjectCount);
-        if (this.Objects.Length != this.ObjectCount)
-            throw new Exception($"Number of objects ({this.Objects.Length}) doesn't match expected ObjectCount ({this.ObjectCount})");
+        Trace.Assert(this.Objects.Length == this.ObjectCount, $"Number of objects ({this.Objects.Length}) doesn't match expected ObjectCount ({this.ObjectCount})");
 
         rw.Seek(this.CommandOffset, 0);
         rw.RwObjs(ref this.Commands, this.CommandCount);
-        if (this.Commands.Length != this.CommandCount)
-            throw new Exception($"Number of commands ({this.Commands.Length}) doesn't match expected CommandCount ({this.CommandCount})");
+        Trace.Assert(this.Commands.Length == this.CommandCount, $"Number of commands ({this.Commands.Length}) doesn't match expected CommandCount ({this.CommandCount})");
 
         if (rw.IsConstructlike())
            this.CommandData = new ArrayList();
-        for (var i=0; i<this.CommandCount; i++) {
+        for (var i=0; i<this.CommandCount; i++)
+        {
             if (rw.IsConstructlike())
             {
                 Type commandType = typeof(CommandTypes).GetNestedType(this.Commands[i].CommandCode);

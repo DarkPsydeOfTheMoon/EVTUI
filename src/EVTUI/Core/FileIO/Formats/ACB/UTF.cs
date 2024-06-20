@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 using Serialization;
@@ -29,11 +30,10 @@ public class UtfTable : ISerializable
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
-        rw.SetEndianness("big");
+        rw.SetLittleEndian(false);
 
         rw.RwString(ref this.Magic, 4, Encoding.ASCII);
-        if (this.Magic != UtfTable.MAGIC)
-            throw new Exception($"Magic string ({this.Magic}) doesn't match expected string ({UtfTable.MAGIC})");
+        Trace.Assert(this.Magic == UtfTable.MAGIC, $"Magic string ({this.Magic}) doesn't match expected string ({UtfTable.MAGIC})");
 
         rw.RwUInt32(ref this.TableSize);
         rw.RwUInt8(ref this.ReservedByte);

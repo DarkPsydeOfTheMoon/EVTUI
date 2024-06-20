@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -50,11 +51,10 @@ public class Adx : ISerializable
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
-        rw.SetEndianness("big");
+        rw.SetLittleEndian(false);
 
         rw.RwUInt16(ref this.HeaderMagic);
-        if (this.HeaderMagic != Adx.HEADER_MAGIC)
-            throw new Exception($"Magic string ({this.HeaderMagic}) doesn't match expected string ({Adx.HEADER_MAGIC})");
+        Trace.Assert(this.HeaderMagic == Adx.HEADER_MAGIC, $"Magic string ({this.HeaderMagic}) doesn't match expected string ({Adx.HEADER_MAGIC})");
 
         rw.RwUInt16(ref this.HeaderSize);
         rw.RwUInt8(ref this.EncodingType);
@@ -98,31 +98,26 @@ public class Adx : ISerializable
         rw.RwBytestring(ref this.AudioMagic, this.HeaderSize+4-(int)rw.RelativeTell());
         byte[] checkMagic = Enumerable.Repeat((byte)0, this.AudioMagic.Length).ToArray();
         Array.Copy(Adx.AUDIO_MAGIC, 0, checkMagic, checkMagic.Length-6, 6);
-        if (!Enumerable.SequenceEqual(this.AudioMagic, checkMagic))
-            throw new Exception($"Magic audio string doesn't match expected zero-padded '(c)CRI'");
+        Trace.Assert(Enumerable.SequenceEqual(this.AudioMagic, checkMagic), $"Magic audio string doesn't match expected zero-padded '(c)CRI'");
 
-        if (rw.RelativeTell() != this.HeaderSize+4)
-            throw new Exception($"Header size ({rw.RelativeTell}) does not match expected size ({this.HeaderSize+4})");
+        Trace.Assert(rw.RelativeTell() == this.HeaderSize+4, $"Header size ({rw.RelativeTell}) does not match expected size ({this.HeaderSize+4})");
 
         this.SamplesPerFrame = (this.FrameSize - 2) * 2;
-        if (this.SamplesPerFrame != 32)
-            throw new Exception($"Samples per frame ({this.SamplesPerFrame}) does not match expected count (32)");
+        Trace.Assert(this.SamplesPerFrame == 32, $"Samples per frame ({this.SamplesPerFrame}) does not match expected count (32)");
 
         this.FrameCount = (int)Math.Ceiling((double)this.SampleCount / this.SamplesPerFrame);
         this.AudioSize = (int)this.FrameSize * (int)this.FrameCount * (int)this.ChannelCount;
         rw.RwBytestring(ref this.AudioDataBytes, this.AudioSize);
 
         rw.RwUInt16(ref this.FooterMagic);
-        if (this.FooterMagic != Adx.FOOTER_MAGIC)
-            throw new Exception($"Magic string ({this.FooterMagic}) doesn't match expected string ({Adx.FOOTER_MAGIC})");
+        Trace.Assert(this.FooterMagic == Adx.FOOTER_MAGIC, $"Magic string ({this.FooterMagic}) doesn't match expected string ({Adx.FOOTER_MAGIC})");
         rw.RwUInt16(ref this.FooterSignature);
 
         int paddingSize = this.FrameSize - 4;
         if (this.LoopCount > 0 && (rw.RelativeTell() + this.FrameSize) % 2048 > 0)
             paddingSize = this.FrameSize + 2048 - ((int)rw.RelativeTell() + this.FrameSize) % 2048;
         rw.RwBytestring(ref this.Padding, paddingSize);
-        if (!Enumerable.SequenceEqual(Enumerable.Repeat((byte)0, paddingSize), this.Padding))
-            throw new Exception("Ending padding should be all zero bytes, but it contains other content");
+        Trace.Assert(Enumerable.SequenceEqual(Enumerable.Repeat((byte)0, paddingSize), this.Padding), "Ending padding should be all zero bytes, but it contains other content");
 
         rw.ResetEndianness();
     }
@@ -140,8 +135,7 @@ public class Adx : ISerializable
 
     public void Encrypt(ulong keyCode, byte? codingType)
     {
-        if (codingType is null && this.CodingType == 0)
-            throw new Exception("Must specify coding type for encryption");
+        Trace.Assert(!(codingType is null) || this.CodingType != 0, "Must specify coding type for encryption");
         if (!(codingType is null))
             this.Revision = (byte)codingType;
         else

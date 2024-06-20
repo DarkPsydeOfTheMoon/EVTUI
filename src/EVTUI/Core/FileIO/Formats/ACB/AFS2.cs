@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 using Serialization;
@@ -10,27 +11,26 @@ public class Afs2 : ISerializable
 {
     public const string MAGIC = "AFS2";
 
-    public string       Magic;
-    public byte         Type;
-    public byte         PositionFieldLength;
-    public byte         IdFieldLength;
-    public byte         Padding;
-    public Int32        EntryCount;
-    public UInt32       Align;
-    public AfsValue[]   EntryIds;
-    public AfsValue[]   EntryPositions;
-    public AfsValue     EndPosition;
-    public byte[]       HeaderPadding;
-    public List<byte[]> EntryPads;
-    public List<byte[]> EntryData;
+    public string     Magic;
+    public byte       Type;
+    public byte       PositionFieldLength;
+    public byte       IdFieldLength;
+    public byte       Padding;
+    public Int32      EntryCount;
+    public UInt32     Align;
+    public AfsValue[] EntryIds;
+    public AfsValue[] EntryPositions;
+    public AfsValue   EndPosition;
+    public byte[]     HeaderPadding;
+    public byte[][]   EntryPads;
+    public byte[][]   EntryData;
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
-        rw.SetEndianness("little");
+        rw.SetLittleEndian(true);
 
         rw.RwString(ref this.Magic, 4, Encoding.ASCII);
-        if (this.Magic != Afs2.MAGIC)
-            throw new Exception($"Magic string ({this.Magic}) doesn't match expected string ({Afs2.MAGIC})");
+        Trace.Assert(this.Magic == Afs2.MAGIC, $"Magic string ({this.Magic}) doesn't match expected string ({Afs2.MAGIC})");
 
         rw.RwUInt8(ref this.Type);
         rw.RwUInt8(ref this.PositionFieldLength);
@@ -61,8 +61,8 @@ public class Afs2 : ISerializable
     {
         if (rw.IsConstructlike())
         {
-            this.EntryPads = new List<byte[]>();
-            this.EntryData = new List<byte[]>();
+            this.EntryPads = new byte[this.EntryCount][];
+            this.EntryData = new byte[this.EntryCount][];
         }
 
         for (int i=0; i<this.EntryCount; i++)
@@ -75,32 +75,16 @@ public class Afs2 : ISerializable
             int padSize = (int)(this.Align - (entryPosition % this.Align));
             int dataSize = (int)(nextEntryPosition-entryPosition);
 
-            byte[] tmpPad = new byte[padSize];
-            byte[] tmpData = new byte[dataSize];
-
-            if (rw.IsParselike())
-            {
-                tmpPad = this.EntryPads[i];
-                tmpData = this.EntryData[i];
-            }
-
             long checkpoint = rw.RelativeTell();
             rw.RelativeSeek(entryPosition, 0);
 
             if (entryPosition % this.Align != 0)
             {
-                rw.RwBytestring(ref tmpPad, padSize);
+                rw.RwBytestring(ref this.EntryPads[i], padSize);
                 entryPosition += padSize;
             }
 
-            rw.RwBytestring(ref tmpData, dataSize);
-
-            if (rw.IsConstructlike())
-            {
-                this.EntryPads.Add(tmpPad);
-                this.EntryData.Add(tmpData);
-            }
-
+            rw.RwBytestring(ref this.EntryData[i], dataSize);
             rw.RelativeSeek(checkpoint, 0);
         }
     }

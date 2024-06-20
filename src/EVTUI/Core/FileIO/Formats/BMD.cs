@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -10,7 +11,7 @@ namespace EVTUI;
 
 public class BMD : ISerializable
 {
-    private string MAGIC = "GSM";
+    private static string MAGIC = "GSM";
 
     public byte FileType;
     public byte Format;
@@ -50,14 +51,13 @@ public class BMD : ISerializable
         rw.RwUInt16(ref this.UserId);
         rw.RwUInt32(ref this.FileSize);
 
-        rw.SetEndianness("big");
+        rw.SetLittleEndian(false);
         rw.RwString(ref this.Endianness, 1, Encoding.ASCII);
         if (this.Endianness == "0")
-            rw.SetEndianness("little");
+            rw.SetLittleEndian(true);
 
         rw.RwString(ref this.Magic, 3, Encoding.ASCII);
-        if (this.Magic != this.MAGIC)
-            throw new Exception($"Magic string ({this.Magic}) doesn't match expected string ({this.MAGIC})");
+        Trace.Assert(this.Magic == BMD.MAGIC, $"Magic string ({this.Magic}) doesn't match expected string ({BMD.MAGIC})");
 
         rw.RwUInt32(ref this.ExtSize);
         rw.RwUInt32(ref this.RelocationTableOffset);

@@ -6,7 +6,7 @@ namespace Serialization
 {
     public interface IBaseBinaryTarget
     {
-        public void SetEndianness(string endianness);
+        public void SetLittleEndian(bool isLittleEndian);
         public void ResetEndianness();
         public bool IsConstructlike();
         public bool IsParselike();
