@@ -9,6 +9,8 @@ public partial class CommandTypes
 {
     public class Msg_ : ISerializable
     {
+        public static int ROYAL_DATA_SIZE = 176;
+
         public Int32 MessageMode;
         public Int16 MessageMajorId;
         public byte MessageMinorId;
