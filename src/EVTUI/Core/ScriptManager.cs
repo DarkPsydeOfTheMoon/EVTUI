@@ -64,7 +64,7 @@ public class ScriptManager
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public string?                 ActiveBMD = null; //{ get; set; }
+    public string?                 ActiveBMD = null;
     public Dictionary<string, BMD> MessageFiles { get; }
     public List<string>            BmdList      { get; }
 
@@ -137,23 +137,11 @@ public class ScriptManager
         this.BmdList.Clear();
         foreach (var bmdPath in bmdPaths)
         {
-            //bool isJP = bmdPath.Contains("BASE.CPK");
-            //if (isJP) continue;
             var messageFile = new BMD();
             messageFile.Read(bmdPath);
             string key = bmdPath.Substring((modPath.Length+1), bmdPath.Length-(modPath.Length+1));
             this.MessageFiles[key] = messageFile;
             this.BmdList.Add(key);
-            /*foreach (var speaker in messageFile.Speakers)
-                foreach (Node node in this.Parse(speaker, isJP))
-                    if (!(node.Text is null))
-                        Console.WriteLine(node.Text);
-                //this.Parse(speaker, false);
-            foreach (Turn turn in messageFile.Turns)
-                foreach (var elem in turn.Elems)
-                    foreach (Node node in this.Parse(elem, isJP))
-                        if (!(node.Text is null))
-                            Console.WriteLine(node.Text);*/
         }
         if (bmdPaths.Count > 0)
             this.ActiveBMD = this.BmdList[0];
@@ -192,8 +180,6 @@ public class ScriptManager
     {
         List<Node> nodes = new List<Node>();
         Queue<byte> buffer = new Queue<byte>(unencoded);
-        //Console.WriteLine(System.Text.Encoding.Default.GetString(unencoded));
-        //Console.WriteLine($"{System.Text.Encoding.Default.GetString(unencoded)}, {unencoded.Length}");
         while (buffer.Count > 0)
         {
             byte b1 = buffer.Dequeue();
@@ -223,14 +209,12 @@ public class ScriptManager
 
     private struct Node
     {
-        //public Node(byte b1, byte b2)
         public Node(byte b1, Queue<byte> buffer)
         {
             FunctionId            = ((b1 << 8) | buffer.Dequeue());
             FunctionTableIndex    = ((FunctionId & 0xE0) >> 5);
             FunctionIndex         = (FunctionId & 0x1F);
             FunctionArgumentCount = ((((FunctionId >> 8) & 0xF) - 1) * 2);
-            //FunctionArgumentCount = ((FunctionId >> 8) & 0xF);
             FunctionArguments     = new List<ushort>();
             for (int i=0; i<FunctionArgumentCount/2; i++)
                 FunctionArguments.Add((ushort)((((buffer.Dequeue() - 1) & ~0xFF00) | (((buffer.Dequeue() - 1) << 8) & 0xFF00)) & 0xFFFF));
