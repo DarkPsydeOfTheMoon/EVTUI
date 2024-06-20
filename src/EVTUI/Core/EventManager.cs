@@ -27,7 +27,8 @@ public class EventManager
     /////////////////////////////
     // *** PRIVATE MEMBERS *** //
     ///////////////./////////////
-    private EVT? SerialEvent = null;
+    private EVT? SerialEvent       = null;
+    private ECS? SerialEventSounds = null;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
@@ -48,6 +49,9 @@ public class EventManager
 
         this.SerialEvent = new EVT();
         this.SerialEvent.Read(cpkEVTContents.Value.evtPath);
+
+        this.SerialEventSounds = new ECS();
+        this.SerialEventSounds.Read(cpkEVTContents.Value.ecsPath);
 
         // TODO: put below into separate unit test package!
         /*this.SerialEvent.Write(cpkEVTContents.Value.evtPath + ".COPY");
@@ -96,7 +100,8 @@ public class EventManager
 
     public void Clear()
     {
-        this.SerialEvent = null;
+        this.SerialEvent       = null;
+        this.SerialEventSounds = null;
     }
 
     public int EventDuration
@@ -120,6 +125,22 @@ public class EventManager
         get
         {
             return this.SerialEvent.CommandData;
+        }
+    }
+
+    public SerialCommand[] EventSoundCommands
+    {
+        get
+        {
+            return this.SerialEventSounds.Commands;
+        }
+    }
+
+    public ArrayList EventSoundCommandData
+    {
+        get
+        {
+            return this.SerialEventSounds.CommandData;
         }
     }
 
