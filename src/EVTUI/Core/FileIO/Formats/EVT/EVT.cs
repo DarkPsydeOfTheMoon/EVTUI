@@ -71,9 +71,6 @@ public class EVT : ISerializable
         rw.RwInt16(ref this.MajorId);
         rw.RwInt16(ref this.MinorId);
 
-        // leaving this in temporarily just to show that parsing is happening
-        Console.WriteLine($"{this.MajorId} {this.MinorId}");
-
         rw.RwUInt8(ref this.Rank);
         rw.RwUInt8(ref this.Level);
         rw.RwInt16(ref this.DUMMY_INT16[0]);
@@ -113,7 +110,6 @@ public class EVT : ISerializable
         rw.RwInt32(ref this.EmbedBfFileOfs);
         rw.RwInt32(ref this.EmbedBfFileSize);
 
-        Console.WriteLine($"{rw.RelativeTell()}, {this.FileHeaderSize}, {this.FileSize}");
         this.MarkerFrameCount = (this.FileHeaderSize - (int)rw.RelativeTell()) / 4;
         if (rw.IsConstructlike())
             this.MarkerFrame = new Int32[this.MarkerFrameCount];
@@ -141,8 +137,8 @@ public class EVT : ISerializable
             }
             rw.RwObj((ISerializable)this.CommandData[i], new Dictionary<string, object>()
                 { ["dataSize"] = this.Commands[i].DataSize });
-            // leaving this in temporarily just to show that parsing is happening
-            Console.WriteLine(this.CommandData[i].GetType().ToString());
+            // for debugging, TBD eventually
+            //Console.WriteLine(this.CommandData[i].GetType().ToString());
         }
 
         if (this.PointerToEventBmdPath != 0) {
