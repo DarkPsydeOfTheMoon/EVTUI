@@ -146,7 +146,7 @@ public class EVT : ISerializable
                     this.CommandData.Add(Activator.CreateInstance(commandType));
             }
             rw.RwObj((ISerializable)this.CommandData[i], new Dictionary<string, object>()
-                { ["dataSize"] = Commands[i].DataSize });
+                { ["dataSize"] = this.Commands[i].DataSize });
             // leaving this in temporarily just to show that parsing is happening
             Console.WriteLine(this.CommandData[i].GetType().ToString());
         }
