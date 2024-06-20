@@ -41,17 +41,11 @@ public class Afs2 : ISerializable
         rw.RwUInt32(ref this.Align);
 
         rw.RwObjs(ref EntryIds, this.EntryCount, new Dictionary<string, object>()
-        {
-            ["fieldLength"] = this.IdFieldLength
-        });
+            { ["fieldLength"] = this.IdFieldLength });
         rw.RwObjs(ref EntryPositions, this.EntryCount, new Dictionary<string, object>()
-        {
-            ["fieldLength"] = this.PositionFieldLength
-        });
+            { ["fieldLength"] = this.PositionFieldLength });
         rw.RwObj(ref EndPosition, new Dictionary<string, object>()
-        {
-            ["fieldLength"] = this.PositionFieldLength
-        });
+            { ["fieldLength"] = this.PositionFieldLength });
 
         if (this.EntryCount > 1)
             rw.RwBytestring(ref this.HeaderPadding, (int)(this.Align - (rw.RelativeTell() % this.Align)));

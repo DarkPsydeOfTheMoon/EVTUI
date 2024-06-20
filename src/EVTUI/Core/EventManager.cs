@@ -56,7 +56,6 @@ public class EventManager
             throw new Exception($"Reflexivity of read/write fails for {cpkEVTContents.Value.evtPath}");*/
 
         // the DataManager will pass these to the AudioManager
-        //this.AcbPaths = cpkEVTContents.Value.acbPaths;
         this.AcwbPaths = new List<(string ACB, string? AWB)>();
         foreach (string acbPath in cpkEVTContents.Value.acbPaths)
         {
@@ -69,11 +68,11 @@ public class EventManager
         this.BfPaths  = cpkEVTContents.Value.bfPaths;
         this.BmdPaths = cpkEVTContents.Value.bmdPaths;
 
+        // TODO: put below into separate unit test package!
         /*foreach (string bmdPath in this.BmdPaths)
         {
             var dialogue = new BMD();
             dialogue.Read(bmdPath);
-            // TODO: put below into separate unit test package!
             // this won't actually be equal to the original, mostly, because of padding
             // will need to test later whether that actually matters for the game's reader
             dialogue.Write(bmdPath + ".COPY");
@@ -84,9 +83,9 @@ public class EventManager
             dialogueCopyCopy.Read(bmdPath + ".COPY.COPY");
             if (!File.ReadAllBytes(bmdPath + ".COPY").SequenceEqual(File.ReadAllBytes(bmdPath + ".COPY.COPY")))
                 throw new Exception($"Reflexivity of read/write fails for {bmdPath}");
-            if (dialogue.Speakers.Count == dialogueCopyCopy.Speakers.Count)
+            if (dialogue.Speakers.Length == dialogueCopyCopy.Speakers.Length)
             {
-                for (int i=0; i<dialogue.Speakers.Count; i++)
+                for (int i=0; i<dialogue.Speakers.Length; i++)
                 {
                     string speakerIn = System.Text.Encoding.Default.GetString(dialogue.Speakers[i]);
                     string speakerOut = System.Text.Encoding.Default.GetString(dialogueCopyCopy.Speakers[i]);
@@ -95,7 +94,7 @@ public class EventManager
                 }
             }
             else
-                throw new Exception($"Original speakers ({dialogue.Speakers.Count}) don't match rewritten speakers ({dialogueCopyCopy.Speakers.Count})");
+                throw new Exception($"Original speakers ({dialogue.Speakers.Length}) don't match rewritten speakers ({dialogueCopyCopy.Speakers.Length})");
         }*/
 
         return true;

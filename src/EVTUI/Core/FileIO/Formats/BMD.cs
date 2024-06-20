@@ -8,11 +8,6 @@ using Serialization;
 
 namespace EVTUI;
 
-public static partial class Globals
-{
-    public static UInt32 LAST_TURN_KIND {get;set;}
-}
-
 public class BMD : ISerializable
 {
     private string MAGIC = "GSM";
@@ -43,13 +38,10 @@ public class BMD : ISerializable
     public UInt32 ReservedUInt32;
 
     public UInt32[] SpeakerNameAddresses;
-    public List<byte[]> Speakers;
+    public byte[][] Speakers;
 
     public byte[] RelocationTable;
     public byte[] ExtData;
-
-    private byte[] TmpBytes;
-    private string TmpFile = Path.GetTempFileName();
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
@@ -100,8 +92,8 @@ public class BMD : ISerializable
             if (rw.IsParselike())
                 this.TurnOffsets[i] = (UInt32)rw.RelativeTell();
             rw.RelativeSeek(this.TurnOffsets[i], 0);
-            Globals.LAST_TURN_KIND = this.TurnKinds[i];
-            rw.RwObj(ref this.Turns[i]);
+            rw.RwObj(ref this.Turns[i], new Dictionary<string, object>()
+                { ["turnKind"] = this.TurnKinds[i] });
         }
 
         if (rw.IsParselike())
@@ -110,20 +102,14 @@ public class BMD : ISerializable
         rw.RwUInt32s(ref this.SpeakerNameAddresses, (int)this.SpeakerCount);
 
         if (rw.IsConstructlike())
-            this.Speakers = new List<byte[]>((Int32)this.SpeakerCount);
+            this.Speakers = new byte[this.SpeakerCount][];
 
         for (int i=0; i<this.SpeakerCount; i++)
         {
             if (rw.IsParselike())
                 this.SpeakerNameAddresses[i] = (UInt32)rw.RelativeTell();
             rw.RelativeSeek(this.SpeakerNameAddresses[i], 0);
-            // error CS0206: A non ref-returning property or indexer may not be used as an out or ref value
-            //rw.RwCBytestring(ref this.Speakers[i]);
-            if (rw.IsParselike())
-                this.TmpBytes = this.Speakers[i];
-            rw.RwCBytestring(ref this.TmpBytes);
-            if (rw.IsConstructlike())
-                this.Speakers.Add(this.TmpBytes);
+            rw.RwCBytestring(ref this.Speakers[i]);
         }
 
         rw.SetRelativeOffset(0);
@@ -150,7 +136,7 @@ public class BMD : ISerializable
     public void Write(string filepath)
     {
         // a cheap way to update all the offsets before actually writing to the file
-        TraitMethods.Write(this, this.TmpFile);
+        TraitMethods.ToBytes(this);
         TraitMethods.Write(this, filepath);
     }
     public void Read (string filepath) { TraitMethods.Read (this, filepath); }
@@ -170,14 +156,12 @@ public class Turn : ISerializable
     public UInt32[] ElemStartAddresses;
     public UInt32 TextBufferSize;
 
-    public List<byte[]> Elems = new List<byte[]>();
-
-    private byte[] TmpBytes;
+    public byte[][] Elems;
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
         rw.RwBytestring(ref this.Name, 24);
-        if (Globals.LAST_TURN_KIND == 0)
+        if ((uint)args["turnKind"] == 0)
         {
             rw.RwUInt16(ref this.ElemCount);
             rw.RwUInt16(ref this.SpeakerId);
@@ -193,7 +177,11 @@ public class Turn : ISerializable
 
         if (this.ElemCount > 0)
         {
-            if (rw.IsParselike())
+            if (rw.IsConstructlike())
+            {
+                this.Elems = new byte[this.ElemCount][];
+            }
+            else if (rw.IsParselike())
             {
                 this.TextBufferSize = 0;
                 foreach (byte[] elem in this.Elems)
@@ -211,18 +199,12 @@ public class Turn : ISerializable
                     else
                         elemSize = remainingSize;
                 }
-                if (rw.IsParselike())
+                else if (rw.IsParselike())
                 {
                     this.ElemStartAddresses[i] = (UInt32)rw.RelativeTell();
                     elemSize = this.Elems[i].Length;
                 }
-                // error CS0206: A non ref-returning property or indexer may not be used as an out or ref value
-                //rw.RwBytestring(ref this.Elems[i], elemSize);
-                if (rw.IsParselike())
-                    this.TmpBytes = this.Elems[i];
-                rw.RwBytestring(ref this.TmpBytes, elemSize);
-                if (rw.IsConstructlike())
-                    this.Elems.Add(this.TmpBytes);
+                rw.RwBytestring(ref this.Elems[i], elemSize);
                 remainingSize -= elemSize;
             }
         }

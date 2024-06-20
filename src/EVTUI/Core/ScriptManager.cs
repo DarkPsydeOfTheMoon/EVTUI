@@ -82,7 +82,7 @@ public class ScriptManager
                 else
                     locale = eventCues.EnCues;
                 foreach (Turn turn in this.MessageFiles[key].Turns)
-                    for (int indWithinTurn=0; indWithinTurn<turn.Elems.Count; indWithinTurn++)
+                    for (int indWithinTurn=0; indWithinTurn<turn.Elems.Length; indWithinTurn++)
                         foreach (Node node in this.Parse(turn.Elems[indWithinTurn], isJP))
                         {
                             try
