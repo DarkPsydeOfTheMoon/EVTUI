@@ -6,8 +6,11 @@ using System.IO;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using ReactiveUI;
+
+using Avalonia.Threading;
 
 namespace EVTUI.ViewModels;
 
@@ -215,12 +218,12 @@ public class ConfigurationPanelViewModel : ViewModelBase
     
     public ICommand UseSelectedCpkDir { get { return ReactiveCommand.CreateFromTask(async () => 
     {
-        SetCPKsHelper(true);
+        await Task.Run(() => SetCPKsHelper(true));
     });}}
 
     public ICommand SetCPKs { get { return ReactiveCommand.CreateFromTask(async () => 
     {
-        SetCPKsHelper(false);
+        await Task.Run(() => SetCPKsHelper(false));
     });}}
 
     public async void SetCPKsHelper(bool fromSelection)
@@ -236,7 +239,8 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 {
                     if (this.ProjectSelection is null)
                     {
-                        await DisplayMessage.Handle("No project selected.");
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                            { await DisplayMessage.Handle("No project selected."); });
                         return;
                     }
                     else
@@ -244,7 +248,8 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 }
                 else if (this.CpkDirSelection is null)
                 {
-                    await DisplayMessage.Handle("No folder selected.");
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                        { await DisplayMessage.Handle("No folder selected."); });
                     return;
                 }
                 else
@@ -257,7 +262,8 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 cpks = this.Config.GetCPKsFromPath(cpkdir);
                 if (cpks.Count <= 0)
                 {
-                    bool tryagain = await DisplayMessage.Handle("No CPKs in selected folder.");
+                    bool tryagain = await Dispatcher.UIThread.InvokeAsync(async () =>
+                        { return await DisplayMessage.Handle("No CPKs in selected folder."); });
                     if (tryagain)
                         continue;
                     else
@@ -267,8 +273,10 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 this.Config.CpkList = cpks;
             }
             catch (NullReferenceException)     { break; }
-            catch (DirectoryNotFoundException) { await DisplayMessage.Handle("'" + cpkdir + "' is not a directory."); }
+            catch (DirectoryNotFoundException) { await Dispatcher.UIThread.InvokeAsync(async () =>
+                { await DisplayMessage.Handle("'" + cpkdir + "' is not a directory."); } ); }
         }
+        return;
     }
 
     public ICommand SetModDir { get { return ReactiveCommand.CreateFromTask(async () => 
@@ -349,12 +357,12 @@ public class ConfigurationPanelViewModel : ViewModelBase
 
     public ICommand UseSelectedEvent { get { return ReactiveCommand.CreateFromTask(async () => 
     {
-        SetEVTHelper(true);
+        await Task.Run(() => SetEVTHelper(true));
     });}}
 
     public ICommand SetEVT { get { return ReactiveCommand.CreateFromTask(async () => 
     {
-        SetEVTHelper(false);
+        await Task.Run(() => SetEVTHelper(false));
     });}}
 
     public async void SetEVTHelper(bool fromSelection)
@@ -363,7 +371,8 @@ public class ConfigurationPanelViewModel : ViewModelBase
         {
             if (this.EventSelection is null)
             {
-                await DisplayMessage.Handle("No event selected.");
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                    { await DisplayMessage.Handle("No event selected."); });
                 return;
             }
             this.EventMajorId = this.EventSelection.MajorId;
@@ -377,12 +386,14 @@ public class ConfigurationPanelViewModel : ViewModelBase
             bool validLoadAttempt = this.Config.LoadEvent((int)this.EventMajorId, (int)this.EventMinorId);
 			if (!validLoadAttempt)
             {
-                await this.DisplayMessage.Handle("Must have a loaded project or be in read-only mode to load an event.");
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                    { await this.DisplayMessage.Handle("Must have a loaded project or be in read-only mode to load an event."); });
                 return;
             }
             else if (!this.Config.EventLoaded)
             {
-                await this.DisplayMessage.Handle($"Event E{this.EventMajorId:000}_{this.EventMinorId:000} does not exist and could not be loaded.");
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                    { await this.DisplayMessage.Handle($"Event E{this.EventMajorId:000}_{this.EventMinorId:000} does not exist and could not be loaded."); });
                 OnPropertyChanged(nameof(this.DisplayLoadedEvent));
                 return;
             }
@@ -390,14 +401,14 @@ public class ConfigurationPanelViewModel : ViewModelBase
         catch (Exception ex)
         {
             // I think this should only throw if some really wacky OS stuff happens.
-            await this.DisplayMessage.Handle("Failed to extract EVT due to unhandled exception: '" + ex.ToString() + "'");
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+                { await this.DisplayMessage.Handle("Failed to extract EVT due to unhandled exception: '" + ex.ToString() + "'"); });
             return;
         }
 
         OnPropertyChanged(nameof(this.DisplayLoadedEvent));
-        await this.DisplayMessage.Handle($"Loaded event {this.Config.ActiveEventId}!");
-        return;
-
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+            { await this.DisplayMessage.Handle($"Loaded event {this.Config.ActiveEventId}!"); });
     }
 
     public ICommand FinishConfigStartEdit { get { return ReactiveCommand.CreateFromTask(async () =>

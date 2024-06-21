@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace EVTUI;
 
@@ -31,7 +32,7 @@ public static class CPKExtract
         string eventPattern = $"[\\\\/]{eventId}([\\\\/\\.]|_SE)";
         bool evtFound = false;
 
-        foreach (var CpkPath in CpkList) 
+        Parallel.ForEach(CpkList, CpkPath =>
         {
             Console.WriteLine(CpkPath);
             CpkFile[] files;
@@ -43,7 +44,8 @@ public static class CPKExtract
 
             using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, CriFsLib.Instance.GetKnownDecryptionFunction(KnownDecryptionFunction.P5R));
 
-            for (int x = 0; x < files.Length; x++)
+            //for (int x = 0; x < files.Length; x++)
+            Parallel.For(0, files.Length, x =>
             {
                 var inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
                 var outputPath = Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath);
@@ -68,8 +70,7 @@ public static class CPKExtract
                     }
                     else if (Regex.IsMatch(inCpkPath, "\\.AWB$"))
                     {
-                        // gets referenced implicitly by XV2-Tools so just needs extracting
-                        // ...for now. eventually we should move this stuff to being in-memory
+                        retval.awbPaths.Add(outputPath);
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
                     else if (Regex.IsMatch(inCpkPath, "\\.BMD$"))
@@ -83,10 +84,20 @@ public static class CPKExtract
                         extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
                 }
-            }
+                else if (Regex.IsMatch(inCpkPath, "VOICE_SINGLEWORD\\.ACB$"))
+                {
+                    retval.acbPaths.Add(outputPath);
+                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
+                }
+                else if (Regex.IsMatch(inCpkPath, "VOICE_SINGLEWORD\\.AWB$"))
+                {
+                    retval.awbPaths.Add(outputPath);
+                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
+                }
+            });
             extractor.WaitForCompletion();
             ArrayRental.Reset();
-        }
+        });
         
         if (!evtFound)
             return null;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using Serialization;
 
@@ -16,7 +17,7 @@ public partial class CommandTypes
         public float[] UNK_FLOAT = new float[3];
         public Int32[] UNK_INT32 = new Int32[1];
 
-        public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+        public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.RwInt32(ref this.MessageMode);              // same bit field as Msg_
             rw.RwInt32(ref this.MessageIndex);             // should be shown as 0 through the BMD file's number of messages
@@ -27,8 +28,5 @@ public partial class CommandTypes
             rw.RwFloat32(ref this.UNK_FLOAT[1]);           // same as Msg_
             rw.RwFloat32(ref this.UNK_FLOAT[2]);           // same as Msg_
         }
-
-        public void Write(string filepath) { TraitMethods.Write(this, filepath); }
-        public void Read (string filepath) { TraitMethods.Read (this, filepath); }
     }
 }

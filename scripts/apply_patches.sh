@@ -12,7 +12,7 @@
 # assumes we're running from top-level of EVT repo
 # go into external directory
 cd external
-for REPO in $(echo "Atlus-Script-Tools" "XV2-Tools" "GFD-Studio"); do
+for REPO in $(echo "Atlus-Script-Tools" "GFD-Studio"); do
 	echo "Applying patch to ${REPO}..."
 	# go into repo
 	cd ${REPO}

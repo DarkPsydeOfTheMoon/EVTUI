@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 using Serialization;
 
@@ -20,7 +21,7 @@ public partial class CommandTypes
 
         public Int32[] UNUSED_INT32 = new Int32[4];
 
-        public void ExbipHook<T>(T rw) where T : struct, IBaseBinaryTarget
+        public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.RwFloat32s(ref this.Position, 3);
             rw.RwFloat32s(ref this.Rotation, 3);      // in degrees, according to the 010 template
@@ -33,8 +34,5 @@ public partial class CommandTypes
             for (var i=0; i<4; i++)
                 rw.RwInt32(ref this.UNUSED_INT32[i]); // observed values: 0
         }
-
-        public void Write(string filepath) { TraitMethods.Write(this, filepath); }
-        public void Read (string filepath) { TraitMethods.Read (this, filepath); }
     }
 }
