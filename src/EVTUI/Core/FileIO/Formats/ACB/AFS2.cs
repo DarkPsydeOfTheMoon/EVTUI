@@ -74,8 +74,6 @@ public class Afs2 : ISerializable
                 nextEntryPosition = (int)this.EntryPositions[i+1].GetValue();
 
             int padSize = (int)(this.Align - (entryPosition % this.Align));
-            int dataSize = (int)(nextEntryPosition-entryPosition);
-
             long checkpoint = rw.RelativeTell();
             rw.RelativeSeek(entryPosition, 0);
 
@@ -85,6 +83,7 @@ public class Afs2 : ISerializable
                 entryPosition += padSize;
             }
 
+            int dataSize = (int)(nextEntryPosition-entryPosition);
             rw.RwBytestring(ref this.EntryData[i], dataSize);
             rw.RelativeSeek(checkpoint, 0);
         }
@@ -108,12 +107,11 @@ public class Afs2 : ISerializable
                             nextEntryPosition = (int)this.EntryPositions[i+1].GetValue();
 
                         int padSize = (int)(this.Align - (entryPosition % this.Align));
-                        int dataSize = (int)(nextEntryPosition-entryPosition);
-
                         if (entryPosition % this.Align != 0)
                             entryPosition += padSize;
                         reader.RelativeSeek(entryPosition, 0);
 
+                        int dataSize = (int)(nextEntryPosition-entryPosition);
                         byte[] entryData = new byte[dataSize];
                         reader.RwBytestring(ref entryData, dataSize);
                         return entryData;

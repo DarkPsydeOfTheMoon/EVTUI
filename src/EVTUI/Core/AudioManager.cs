@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
+
 using LibVLCSharp.Shared;
 
 namespace EVTUI;
@@ -39,16 +41,18 @@ public class AudioManager
     {
         this.AudioCueFiles.Clear();
         this.AcbList.Clear();
-        foreach (var acwbPath in acwbPaths)
+        Parallel.ForEach(acwbPaths, acwbPath =>
         {
             ACB soundFile = new ACB(acwbPath.ACB, eventCues, acwbPath.AWB);
-            if (soundFile.Cues is null)
-                continue;
-            Console.WriteLine(acwbPath.ACB);
-            string key = acwbPath.ACB.Substring((modPath.Length+1), acwbPath.ACB.Length-(modPath.Length+1));
-            this.AudioCueFiles[key] = soundFile;
-            this.AcbList.Add(key);
-        }
+            if (!(soundFile.Cues is null))
+            {
+                Console.WriteLine(acwbPath.ACB);
+                string key = acwbPath.ACB.Substring((modPath.Length+1), acwbPath.ACB.Length-(modPath.Length+1));
+                this.AudioCueFiles[key] = soundFile;
+                this.AcbList.Add(key);
+            }
+        });
+        this.AcbList.Sort();
         if (acwbPaths.Count > 0)
             this.ActiveACB = this.AcbList[0];
         else

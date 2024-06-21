@@ -208,7 +208,7 @@ public class ACB
                 int linkId = this.Tables["OutsideLink"].GetRowField(refIndex, "Id").GetValue();
                 UInt16 acbIndex = this.Tables["OutsideLink"].GetRowField(refIndex, "AcbNameStringIndex").GetValue();
                 if (acbIndex == 65535)
-                    for (int i=0; i<this.Tables["Cues"].Rows.Count; i++)
+                    for (int i=0; i<this.Tables["Cues"].Rows.Length; i++)
                         if (this.Tables["Cues"].GetRowField(i, "CueId").GetValue() == linkId)
                         {
                             int refType4 = this.Tables["Cues"].GetRowField(i, "ReferenceType").GetValue();

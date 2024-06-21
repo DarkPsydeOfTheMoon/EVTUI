@@ -23,8 +23,8 @@ public class UtfTable : ISerializable
     public UInt16    RowLength;
     public UInt32    RowCount;
 
-    public Dictionary<string, UtfField>       Fields;
-    public List<Dictionary<string, UtfValue>> Rows;
+    public Dictionary<string, UtfField>   Fields;
+    public Dictionary<string, UtfValue>[] Rows;
 
     private UtfValue TmpRowValue;
 
@@ -78,28 +78,25 @@ public class UtfTable : ISerializable
             }
 
         if (rw.IsConstructlike())
-            this.Rows = new List<Dictionary<string, UtfValue>>();
+            this.Rows = new Dictionary<string, UtfValue>[this.RowCount];
         rw.RelativeSeek(this.RowOffset + 8, 0);
         for (int i=0; i<this.RowCount; i++)
         {
             if (rw.IsConstructlike())
-                this.Rows.Add(new Dictionary<string, UtfValue>());
+                this.Rows[i] = new Dictionary<string, UtfValue>();
             foreach (string fieldName in this.Fields.Keys)
             {
                 if (this.Fields[fieldName].RowStorageFlag == 1)
                 {
-                    if (rw.IsParselike())
-                        this.TmpRowValue = this.Rows[i][fieldName];
-                    rw.RwObj(ref this.TmpRowValue, new Dictionary<string, object>()
+                    if (rw.IsConstructlike())
+                        this.Rows[i][fieldName] = new UtfValue();
+                    rw.RwObj(this.Rows[i][fieldName], new Dictionary<string, object>()
                     {
                         ["typeFlag"] = this.Fields[fieldName].TypeFlag,
                         ["stringsOffset"] = this.StringsOffset + 8,
                         ["encodingType"]  = this.EncodingType,
                         ["dataOffset"] = this.DataOffset + 8
                     });
-                    if (rw.IsConstructlike())
-                        this.Rows[i][fieldName] = this.TmpRowValue;
-                    this.TmpRowValue = null;
                 }
             }
         }
