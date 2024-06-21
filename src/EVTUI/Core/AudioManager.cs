@@ -61,8 +61,12 @@ public class AudioManager
         {
             if (!(this.Stream is null))
                 this.Stream.Dispose();
-            this.Stream = new MemoryStream(this.AudioCueFiles[this.ActiveACB].Cues[cueId].Tracks[trackIndex-1].GetBytes(AudioManager.KeyCode));
-            this.mediaPlayer.Media = new Media(libVLC, new StreamMediaInput(this.Stream));
+            byte[] trackBytes = this.AudioCueFiles[this.ActiveACB].GetTrackBytes(cueId, trackIndex, AudioManager.KeyCode);
+            if (!(trackBytes is null))
+            {
+                this.Stream = new MemoryStream(this.AudioCueFiles[this.ActiveACB].GetTrackBytes(cueId, trackIndex, AudioManager.KeyCode));
+                this.mediaPlayer.Media = new Media(libVLC, new StreamMediaInput(this.Stream));
+            }
             this.CurrentTrack = (cueId, trackIndex);
         }
         if (this.mediaPlayer.IsPlaying)

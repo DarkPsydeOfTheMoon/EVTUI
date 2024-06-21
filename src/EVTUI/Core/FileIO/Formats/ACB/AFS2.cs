@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 
 using Serialization;
@@ -50,7 +51,7 @@ public class Afs2 : ISerializable
         if (this.EntryCount > 1)
             rw.RwBytestring(ref this.HeaderPadding, (int)(this.Align - (rw.RelativeTell() % this.Align)));
 
-		rw.RelativeSeek(this.EndPosition.GetValue()-1, 0);
+        rw.RelativeSeek(this.EndPosition.GetValue()-1, 0);
         if ((rw.IsConstructlike() && !rw.IsEOF()) || (rw.IsParselike() && !(this.EntryData is null)))
             this.GetEntries(rw);
 
@@ -67,10 +68,10 @@ public class Afs2 : ISerializable
 
         for (int i=0; i<this.EntryCount; i++)
         {
-			int entryPosition = (int)this.EntryPositions[i].GetValue();
-			int nextEntryPosition = (int)this.EndPosition.GetValue();
-			if (i < this.EntryCount-1)
-				nextEntryPosition = (int)this.EntryPositions[i+1].GetValue();
+            int entryPosition = (int)this.EntryPositions[i].GetValue();
+            int nextEntryPosition = (int)this.EndPosition.GetValue();
+            if (i < this.EntryCount-1)
+                nextEntryPosition = (int)this.EntryPositions[i+1].GetValue();
 
             int padSize = (int)(this.Align - (entryPosition % this.Align));
             int dataSize = (int)(nextEntryPosition-entryPosition);
@@ -87,6 +88,48 @@ public class Afs2 : ISerializable
             rw.RwBytestring(ref this.EntryData[i], dataSize);
             rw.RelativeSeek(checkpoint, 0);
         }
+    }
+
+    public byte[] GetStreamEntry(string filepath, int awbId)
+    {
+        using (var stream = File.Open(filepath, FileMode.Open))
+        {
+            using (var r = new BinaryReader(stream))
+            {
+                for (int i=0; i<this.EntryCount; i++)
+                {
+                    if (this.EntryIds[i].GetValue() == awbId)
+                    {
+                        Reader reader = new Reader(r);
+
+                        int entryPosition = (int)this.EntryPositions[i].GetValue();
+                        int nextEntryPosition = (int)this.EndPosition.GetValue();
+                        if (i < this.EntryCount-1)
+                            nextEntryPosition = (int)this.EntryPositions[i+1].GetValue();
+
+                        int padSize = (int)(this.Align - (entryPosition % this.Align));
+                        int dataSize = (int)(nextEntryPosition-entryPosition);
+
+                        if (entryPosition % this.Align != 0)
+                            entryPosition += padSize;
+                        reader.RelativeSeek(entryPosition, 0);
+
+                        byte[] entryData = new byte[dataSize];
+                        reader.RwBytestring(ref entryData, dataSize);
+                        return entryData;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public byte[] GetMemoryEntry(int awbId)
+    {
+        for (int i=0; i<this.EntryCount; i++)
+            if (this.EntryIds[i].GetValue() == awbId)
+                return this.EntryData[i];
+        return null;
     }
 
     public void Write(string filepath) { TraitMethods.Write(this, filepath); }

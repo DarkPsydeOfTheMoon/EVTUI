@@ -14,7 +14,7 @@ public class ACB
     public string   AwbPath;
 
     public UtfTable SerialAcb;
-    public Afs2     SerialStreamAwb;
+    public Afs2     SerialStreamAwbHeader;
     public Afs2     SerialMemoryAwb;
 
     public Dictionary<string, UtfTable> Tables;
@@ -61,12 +61,8 @@ public class ACB
         this.SerialAcb = new UtfTable();
         this.SerialAcb.Read(this.AcbPath);
 
-        if (!(awbPath is null))
-        {
-            this.AwbPath = awbPath;
-            this.SerialStreamAwb = new Afs2();
-            this.SerialStreamAwb.Read(this.AwbPath);
-        }
+        this.SerialStreamAwbHeader = this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue().GetRowField(0, "Header").GetValue().GetValue();
+        this.AwbPath = awbPath;
 
         this.Tables = new Dictionary<string, UtfTable>();
         string[] tableNames = new string[]
@@ -130,13 +126,8 @@ public class ACB
                     bool streaming = (this.Tables["Waveform"].GetRowField(waveInds[j], "Streaming").GetValue() != 0);
                     int streamAwbId = this.Tables["Waveform"].GetRowField(waveInds[j], "StreamAwbId").GetValue();
                     int awbId = (streaming ? streamAwbId : memoryAwbId);
-                    Afs2 awb = (streaming ? this.SerialStreamAwb : this.SerialMemoryAwb);
-                    // TODO: should we actually make a dummy track here? does omitting empty cues break anything in-game...?
-                    if (!(awb is null) && !(awb.EntryData is null))
-                    {
-                        tracks.Add(new Track(awbId, encodeType, streaming, awb.EntryData[awbId]));
-                        trackList.Add(new TrackEntry(cueRanges[cueId].Name, cueId, cueNames[cueId], j+1, streaming, awbId, usage));
-                    }
+                    tracks.Add(new Track(awbId, encodeType, streaming));
+                    trackList.Add(new TrackEntry(cueRanges[cueId].Name, cueId, cueNames[cueId], j+1, streaming, awbId, usage));
                 }
 
                 this.Cues[cueId] = new Cue(cueNames[cueId], cueId, cueRanges[cueId], tracks);
@@ -145,6 +136,31 @@ public class ACB
         }
 
         this.TrackList = new ObservableCollection<TrackEntry>(trackList);
+    }
+
+    public byte[] GetTrackBytes(uint cueId, int trackIndex, ulong? keyCode = null)
+    {
+        Track track = this.Cues[cueId].Tracks[trackIndex-1];
+        if ((AudioEncodingType)track.EncodeType != AudioEncodingType.ADX)
+            return null;
+
+        byte[]? trackBytes = null;
+        if (track.Streaming)
+        {
+            if (this.AwbPath is null)
+                return null;
+            trackBytes = this.SerialStreamAwbHeader.GetStreamEntry(this.AwbPath, track.AwbId);
+        }
+        else
+            trackBytes = this.SerialMemoryAwb.GetMemoryEntry(track.AwbId);
+
+        if (trackBytes is null || keyCode is null)
+            return trackBytes;
+
+        Adx adx = new Adx();
+        adx.FromBytes(trackBytes);
+        adx.Decrypt((ulong)keyCode);
+        return adx.ToBytes();
     }
 
     /////////////////////////////
@@ -224,29 +240,16 @@ public class Cue
 
 public class Track
 {
-    public Track(int awbId, byte encodeType, bool streaming, byte[] serialAudio)
+    public Track(int awbId, byte encodeType, bool streaming)
     {
         this.AwbId       = awbId;
         this.EncodeType  = encodeType;
         this.Streaming   = streaming;
-        this.SerialAudio = serialAudio;
-    }
-
-    public byte[] GetBytes(ulong? keyCode = null)
-    {
-        if (keyCode is null)
-            return this.SerialAudio;
-
-        Adx adx = new Adx();
-        adx.FromBytes(this.SerialAudio);
-        adx.Decrypt((ulong)keyCode);
-        return adx.ToBytes();
     }
 
     public int    AwbId;
     public byte   EncodeType;
     public bool   Streaming;
-    public byte[] SerialAudio;
 }
 
 public class CueRange
