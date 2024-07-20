@@ -2,10 +2,6 @@
 	path = external/Atlus-Script-Tools
 	url = https://github.com/tge-was-taken/Atlus-Script-Tools.git
 	ignore = all
-[submodule "external/XV2-Tools"]
-	path = external/XV2-Tools
-	url = https://github.com/LazyBone152/XV2-Tools.git
-	ignore = all
 [submodule "external/GFD-Studio"]
 	path = external/GFD-Studio
 	url = https://github.com/tge-was-taken/GFD-Studio.git

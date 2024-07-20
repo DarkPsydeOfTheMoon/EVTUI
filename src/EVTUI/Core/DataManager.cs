@@ -12,7 +12,9 @@ public class DataManager
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
     public ProjectManager ProjectManager;
-    public EventManager EventManager;
+    public EventManager   EventManager;
+    public ScriptManager  ScriptManager;
+    public AudioManager   AudioManager;
 
     public bool ReadOnly;
     public bool ProjectLoaded;
@@ -95,6 +97,8 @@ public class DataManager
     {
         this.ProjectManager = new ProjectManager();
         this.EventManager   = new EventManager();
+        this.ScriptManager  = new ScriptManager();
+        this.AudioManager   = new AudioManager();
         this.CpkList        = new List<string>();
         this.Reset();
     }
@@ -130,7 +134,14 @@ public class DataManager
                 this.ProjectManager.UpdateProjectEvents(0, majorId, minorId);
         }
         this.EventLoaded = success;
-		return true;
+
+        this.ScriptManager.UpdateMessages(this.EventManager.BmdPaths, this.ModPath);
+
+        // TODO: load common files! system sounds, common voice lines, models, bustups, cutins
+        // so far, VOICE_SINGLEWORD gets loaded, but the rest will have to wait for full EVT/ECS parsing
+        this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcwbPaths, this.ModPath, this.ScriptManager.EventCues);
+
+        return true;
     }
 
     public List<string> GetCPKsFromPath(string? directoryPath)

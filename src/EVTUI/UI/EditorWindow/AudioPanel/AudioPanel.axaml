@@ -1,0 +1,30 @@
+<rxui:ReactiveUserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:rxui="http://reactiveui.net"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="using:EVTUI.ViewModels"
+             x:DataType="vm:AudioPanelViewModel"
+             x:Class="EVTUI.Views.AudioPanel"
+             x:TypeArguments="vm:AudioPanelViewModel">
+
+  <ScrollViewer>
+    <StackPanel VerticalAlignment="Top" Margin="20">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+        <Button Margin="10" Command="{Binding PlaySelectedTrack}" ToolTip.Tip="Play/Pause Selected Track">
+          <PathIcon Data="{StaticResource video_play_pause_regular}" />
+        </Button>
+        <ComboBox Margin="10" Width="NaN" MaxDropDownHeight="300" ItemsSource="{Binding AcbList}" SelectedItem="{Binding ActiveACB}" />
+      </StackPanel>
+      <DataGrid Margin="20" ItemsSource="{Binding TrackList}" SelectedItem="{Binding TrackSelection}"
+                VerticalAlignment="Top" HorizontalAlignment="Center"
+                Height="500" Width="NaN"
+                AutoGenerateColumns="True" IsReadOnly="True"
+                GridLinesVisibility="All"
+                CanUserReorderColumns="True" CanUserResizeColumns="True"
+                BorderThickness="1" BorderBrush="Gray">
+      </DataGrid>
+    </StackPanel>
+  </ScrollViewer>
+</rxui:ReactiveUserControl>
