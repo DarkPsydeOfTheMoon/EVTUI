@@ -137,8 +137,6 @@ public class EVT : ISerializable
             }
             rw.RwObj((ISerializable)this.CommandData[i], new Dictionary<string, object>()
                 { ["dataSize"] = this.Commands[i].DataSize });
-            // for debugging, TBD eventually
-            //Console.WriteLine(this.CommandData[i].GetType().ToString());
         }
 
         if (this.PointerToEventBmdPath != 0) {

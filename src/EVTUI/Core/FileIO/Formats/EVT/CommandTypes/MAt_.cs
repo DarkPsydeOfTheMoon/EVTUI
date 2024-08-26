@@ -8,16 +8,28 @@ namespace EVTUI;
 
 public partial class CommandTypes
 {
-    public class MRgs : ISerializable
+    public class MAt_ : ISerializable
     {
-        public Int32 ActionType;
+        public Int32 FrameDelay;
+        public Int32 BoneId;
+        public Int32 ChildObjectId;
+
+        public float[] RelativePosition = new float[3];
+        public float[] Rotation = new float[3];
 
         public UInt32[] UNUSED_UINT32 = new UInt32[3];
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
+            rw.RwInt32(ref this.FrameDelay);
+            rw.RwInt32(ref this.BoneId);
+            rw.RwInt32(ref this.ChildObjectId);
+
             rw.RwUInt32(ref this.UNUSED_UINT32[0]);
-            rw.RwInt32(ref this.ActionType);        // observed values: 0, 1, 2; 1 spawns model, 2 despawns... 0 presumably also despawns?
+
+            rw.RwFloat32s(ref this.RelativePosition, 3);
+            rw.RwFloat32s(ref this.Rotation, 3);
+
             rw.RwUInt32(ref this.UNUSED_UINT32[1]);
             rw.RwUInt32(ref this.UNUSED_UINT32[2]);
 

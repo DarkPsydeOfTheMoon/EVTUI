@@ -26,8 +26,6 @@ public class UtfTable : ISerializable
     public Dictionary<string, UtfField>   Fields;
     public Dictionary<string, UtfValue>[] Rows;
 
-    private UtfValue TmpRowValue;
-
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
         rw.SetLittleEndian(false);

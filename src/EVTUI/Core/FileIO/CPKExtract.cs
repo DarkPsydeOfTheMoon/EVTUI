@@ -26,6 +26,32 @@ public static class CPKExtract
         }
     }
 
+    public static List<string> ExtractMatchingFiles(List<string> CpkList, string filePattern, string OutputFolder)
+    {
+        List<string> matches = new List<string>();
+        Parallel.ForEach(CpkList, CpkPath =>
+        {
+            CpkFile[] files;
+            using (var fileStream = new FileStream(CpkPath, FileMode.Open))
+            using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, CriFsLib.Instance.GetKnownDecryptionFunction(KnownDecryptionFunction.P5R)))
+                { files = reader.GetFiles(); }
+            using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, CriFsLib.Instance.GetKnownDecryptionFunction(KnownDecryptionFunction.P5R));
+            Parallel.For(0, files.Length, x =>
+            {
+                var inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
+                var outputPath = Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath);
+                if (Regex.IsMatch(inCpkPath, filePattern))
+                {
+                    matches.Add(outputPath);
+                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
+                }
+            });
+            extractor.WaitForCompletion();
+            ArrayRental.Reset();
+        });
+        return matches;
+    }
+
     public static CpkEVTContents? ExtractEVTFiles(List<string> CpkList, string eventId, string OutputFolder)
     {
         var retval = new CpkEVTContents();
@@ -44,7 +70,6 @@ public static class CPKExtract
 
             using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, CriFsLib.Instance.GetKnownDecryptionFunction(KnownDecryptionFunction.P5R));
 
-            //for (int x = 0; x < files.Length; x++)
             Parallel.For(0, files.Length, x =>
             {
                 var inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
@@ -90,6 +115,26 @@ public static class CPKExtract
                     extractor.QueueItem(new ItemModel(outputPath, files[x]));
                 }
                 else if (Regex.IsMatch(inCpkPath, "VOICE_SINGLEWORD\\.AWB$"))
+                {
+                    retval.awbPaths.Add(outputPath);
+                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
+                }
+                else if (Regex.IsMatch(inCpkPath, "SYSTEM\\.ACB$"))
+                {
+                    retval.acbPaths.Add(outputPath);
+                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
+                }
+                else if (Regex.IsMatch(inCpkPath, "SYSTEM\\.AWB$"))
+                {
+                    retval.awbPaths.Add(outputPath);
+                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
+                }
+                else if (Regex.IsMatch(inCpkPath, "BGM\\.ACB$"))
+                {
+                    retval.acbPaths.Add(outputPath);
+                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
+                }
+                else if (Regex.IsMatch(inCpkPath, "BGM\\.AWB$"))
                 {
                     retval.awbPaths.Add(outputPath);
                     extractor.QueueItem(new ItemModel(outputPath, files[x]));

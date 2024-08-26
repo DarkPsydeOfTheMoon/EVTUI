@@ -14,7 +14,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <NoWarn>NU1605;8500;8600;8601;8602;8603;8604;8612;8618;8619;8622;8625;8629;8714;8765;8767</NoWarn>
+    <NoWarn>NU1605;NU1701;8500;8600;8601;8602;8603;8604;8612;8618;8619;8622;8625;8629;8714;8765;8767</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
@@ -28,7 +28,7 @@
 
   <!-- Avalonia packages -->
   <ItemGroup>
-    <PackageReference Include="OpenTK.Graphics" Version="4.1"/>
+    <PackageReference Include="OpenTK.Graphics" Version="4.1" />
     <PackageReference Include="Avalonia" Version="11.0.10" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.10" />
     <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
@@ -37,6 +37,7 @@
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.10" />
+    <!--PackageReference Include="ReactiveUI.Fody" Version="19.5.41" /-->
   </ItemGroup>
 
   <!-- AtlusScriptLibrary files -->
@@ -63,7 +64,15 @@
 
   <!-- GFDLibrary files -->
   <ItemGroup>
-    <ProjectReference Include="..\..\external\GFD-Studio\GFDLibrary.Rendering.OpenGL\GFDLibrary.Rendering.OpenGL.csproj"/>
+    <ProjectReference Include="..\..\external\GFD-Studio\GFDLibrary.Rendering.OpenGL\GFDLibrary.Rendering.OpenGL.csproj" />
+    <Content Include="..\..\external\GFD-Studio\**\*.fs">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\external\GFD-Studio\**\*.vs">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <!-- Other packages -->

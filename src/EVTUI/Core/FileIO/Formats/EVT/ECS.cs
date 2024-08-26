@@ -69,8 +69,6 @@ public class ECS : ISerializable
             }
             rw.RwObj((ISerializable)this.CommandData[i], new Dictionary<string, object>()
                 { ["dataSize"]  = this.Commands[i].DataSize });
-            // leaving this in temporarily just to show that parsing is happening
-            Console.WriteLine(this.CommandData[i].GetType().ToString());
         }
 
         rw.AssertEOF();

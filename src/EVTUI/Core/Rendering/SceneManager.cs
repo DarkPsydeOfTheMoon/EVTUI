@@ -70,9 +70,12 @@ public class SceneManager
 
     public GLPerspectiveCamera activeCamera;
 
+    public Queue<(string ModelPath, string? AnimPackPath, int? AnimInd, bool IsBlendAnim)> QueuedLoads;
+
     public SceneManager()
     {
         this.activeCamera = fallbackCamera;
+        this.QueuedLoads = new Queue<(string ModelPath, string? AnimPackPath, int? AnimInd, bool IsBlendAnim)>();
     }
 
     ////////////////////////////////
@@ -125,7 +128,8 @@ public class SceneManager
     //       GFD Studio), but the texture-bin management systems need to be worked into the
     //       SceneManager before it can be integrated.
     ////////////////////////////
-    public void LoadModel(string filepath)
+    //public void LoadModel(string filepath)
+    public int LoadModel(string filepath)
     {
         if (!File.Exists(filepath))
             throw new FileNotFoundException($"Model file '{filepath}' does not exist.");
@@ -174,6 +178,7 @@ public class SceneManager
         ////////////////////////////
 
         sceneModels.Add(new SceneModel(glmodel, model.AnimationPack));
+        return sceneModels.Count-1;
     }
 
     public void UnloadModel(int index)
@@ -190,12 +195,14 @@ public class SceneManager
     ///////////////////////////////////
     // *** GAP Memory Management *** //
     ///////////////////////////////////
-    public void LoadGAP(string filepath)
+    //public void LoadGAP(string filepath)
+    public int LoadGAP(string filepath)
     {
         if (!File.Exists(filepath))
             throw new FileNotFoundException($"GAP file '{filepath}' does not exist.");
         var anims = GFDLibrary.Api.FlatApi.LoadModel(filepath);
         this.externalGAPs.Add(anims.AnimationPack);
+        return this.externalGAPs.Count-1;
     }
 
     public void UnloadGAP(int index)
@@ -235,6 +242,7 @@ public class SceneManager
         this.shaders[index].Dispose();
         this.shaders.RemoveAt(index);
     }
+
     /////////////////////////////////////
     // *** Model State Management *** //
     ////////////////////////////////////

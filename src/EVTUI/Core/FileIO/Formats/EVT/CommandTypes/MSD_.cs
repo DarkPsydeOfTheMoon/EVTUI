@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using Serialization;
 
@@ -32,7 +33,10 @@ public partial class CommandTypes
             rw.RwInt32(ref this.FirstFrameInd);         // (an educated guess)
             rw.RwInt32(ref this.LastFrameInd);          // (an educated guess)
             for (var i=0; i<4; i++)
+            {
                 rw.RwUInt32(ref this.UNUSED_UINT32[i]); // observed values: 0
+                Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[i]}) in MSD_ reserve variable.");
+            }
         }
     }
 }

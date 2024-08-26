@@ -23,7 +23,7 @@ public partial class CommandTypes
             rw.RwInt32(ref this.MessageIndex);             // should be shown as 0 through the BMD file's number of messages
             rw.RwInt32(ref this.SelIndex);                 // should be shown as 0 through the BMD file's number of messages... iirc
             rw.RwInt32(ref this.EvtLocalDataIdSelStorage); // same as in Msg_ but only ever seems to be 0 or 1 since MsgR is rarer
-            rw.RwInt32(ref this.UNK_INT32[0]);             // same as Msg_
+            rw.RwInt32(ref this.UNK_INT32[0]);             // same as Msg_; observed values: 4, 5, 3
             rw.RwFloat32(ref this.UNK_FLOAT[0]);           // same as Msg_
             rw.RwFloat32(ref this.UNK_FLOAT[1]);           // same as Msg_
             rw.RwFloat32(ref this.UNK_FLOAT[2]);           // same as Msg_

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using GFDLibrary.Rendering.OpenGL;
@@ -13,18 +14,20 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     public float r;
     public float g;
     public float b;
+    public float a;
 
     public double width;
     public double height;
     public SceneManager sceneManager { get; set; } = new SceneManager();
     GLShaderProgram glShaderProgram;
-    bool testDataInitialised=false;
+    bool testDataInitialised = false;
     
-    public GFDRenderingPanelViewModel(float r, float g, float b)
+    public GFDRenderingPanelViewModel(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f)
     {
         this.r = r;
         this.g = g;
         this.b = b;
+        this.a = a;
     }
 
     ///////////////////////////////
@@ -56,9 +59,40 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         this.sceneManager.sceneModels.Last().StartAnimTimer();
     }
 
+    public void LoadQueuedItems()
+    {
+        string vsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio/app_data/shaders/default.glsl.vs");
+        string fsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio/app_data/shaders/default.glsl.fs");
+        if (!(File.Exists(vsPath) && File.Exists(fsPath)))
+            return; // i guess............ should probably error out
+        while (this.sceneManager.QueuedLoads.Count > 0)
+        {
+            var item = this.sceneManager.QueuedLoads.Dequeue();
+            string modelPath = item.ModelPath;
+            string? animPath = item.AnimPackPath;
+            int? animInd = item.AnimInd;
+            bool isBlendAnim = item.IsBlendAnim;
+            if (!(File.Exists(modelPath)))
+                continue;
+            this.sceneManager.LoadModel(modelPath);
+            this.glShaderProgram = this.sceneManager.LoadShader(vsPath, fsPath);
+            if (!(animPath is null) && !(animInd is null))
+            {
+                if (!(File.Exists(animPath)))
+                    continue;
+                this.sceneManager.LoadGAP((string)animPath);
+                if (isBlendAnim)
+                    this.sceneManager.ActivateBlendAnimationOnModel(0, 0, (int)animInd);
+                else
+                    this.sceneManager.ActivateAnimationOnModel(0, 0, (int)animInd);
+                this.sceneManager.sceneModels.Last().StartAnimTimer();
+            }
+        }
+    }
+
     public void RefreshSceneState()
     {
-        GL.ClearColor(this.r,this.g, this.b, 1);
+        GL.ClearColor(this.r, this.g, this.b, this.a);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         GL.Enable(EnableCap.DepthTest);
         GL.Viewport(0, 0, (int)this.width, (int)this.height);

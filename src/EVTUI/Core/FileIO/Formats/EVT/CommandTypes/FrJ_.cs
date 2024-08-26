@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 using Serialization;
 
@@ -16,9 +17,11 @@ public partial class CommandTypes
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.RwUInt32(ref this.JumpToFrame);      // (should be shown as 0 through the EVT's total number of frames -- can jump forward or backward)
-            rw.RwUInt32(ref this.UNUSED_UINT32[0]); // observed values: 0
-            rw.RwUInt32(ref this.UNUSED_UINT32[1]); // observed values: 0
-            rw.RwUInt32(ref this.UNUSED_UINT32[2]); // observed values: 0
+            for (int i=0; i<3; i++)
+            {
+                rw.RwUInt32(ref this.UNUSED_UINT32[i]);
+                Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[i]}) in reserve variable.");
+            }
         }
     }
 }
