@@ -7,21 +7,21 @@ public class SBEA : Generic
 {
     public SBEA(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
     {
-        this.LongName = "Sounds: Background Effects (All)";
-        this.UnkEnum = new StringSelectionField("(Unknown)", this.Editable, Enum.GetName(typeof(Options), this.CommandData.UnkEnum), new List<string>(Enum.GetNames(typeof(Options))));
+        this.LongName = "Sounds: Environment Noise (All)";
+        this.Action = new StringSelectionField("Action", this.Editable, Enum.GetName(typeof(ActionTypes), this.CommandData.Action), new List<string>(Enum.GetNames(typeof(ActionTypes))));
     }
 
-    public StringSelectionField UnkEnum { get; set; }
+    public StringSelectionField Action { get; set; }
 
     public new void SaveChanges()
     {
         base.SaveChanges();
-        this.CommandData.UnkEnum = (int)Enum.Parse(typeof(Options), this.UnkEnum.Choice);
+        this.CommandData.Action = (int)Enum.Parse(typeof(ActionTypes), this.Action.Choice);
     }
 
-    public enum Options : int
+    public enum ActionTypes : int
     {
-        Option1 = 1,
-        Option2 = 2
+        Play = 1,
+        Stop = 2
     }
 }

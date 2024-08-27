@@ -39,10 +39,10 @@ public class MSD_ : Generic
 
     public IntSelectionField AssetID        { get; set; }
     public IntSelectionField AnimationID    { get; set; }
-    public NumEntryField   X              { get; set; }
-    public NumEntryField   Y              { get; set; }
-    public NumEntryField   Z              { get; set; }
-    public NumEntryField   AnimationSpeed { get; set; }
+    public NumEntryField     X              { get; set; }
+    public NumEntryField     Y              { get; set; }
+    public NumEntryField     Z              { get; set; }
+    public NumEntryField     AnimationSpeed { get; set; }
     public BoolChoiceField   Loop           { get; set; }
     public NumEntryField     StartFrame     { get; set; }
     public NumEntryField     EndFrame       { get; set; }

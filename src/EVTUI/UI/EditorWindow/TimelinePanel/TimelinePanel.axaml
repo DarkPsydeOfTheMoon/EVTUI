@@ -29,6 +29,10 @@
     <Style Selector="Button.selected">
       <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
     </Style>
+    <Style Selector="Expander">
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="IsExpanded" Value="True"/>
+    </Style>
     <!--Style Selector="Button.space">
       <Setter Property="Height" Value="20"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -246,7 +250,7 @@
     <!-- COMMAND TYPES -->
 
     <DataTemplate DataType="{x:Type cmds:Basics}">
-      <Expander Header="Basics" IsExpanded="True">
+      <Expander Header="Basics" IsExpanded="{Binding HasCondition}">
         <StackPanel Classes="form">
           <ContentControl Content="{Binding ConditionalType}"/>
           <StackPanel Orientation="Vertical" IsVisible="{Binding HasCondition}">
@@ -606,7 +610,7 @@
             <PathIcon Data="{StaticResource eye_show_regular}" />
           </Button>
         </StackPanel>
-        <Expander Header="Position" IsExpanded="True">
+        <Expander Header="Position">
           <StackPanel>
             <ContentControl Content="{Binding X}"/>
             <ContentControl Content="{Binding Y}"/>
@@ -629,9 +633,7 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding MessageID}"/>
-        <Expander Header="Message Details" IsExpanded="True">
-          <ContentControl Content="{Binding MessageBlock}"/>
-        </Expander>
+        <ContentControl Content="{Binding MessageBlock}"/>
         <ContentControl Content="{Binding SelectionID}"/>
       </StackPanel>
     </DataTemplate>
@@ -642,24 +644,30 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding MessageID}"/>
-        <Expander Header="Message Details" IsExpanded="True">
-          <ContentControl Content="{Binding MessageBlock}"/>
-        </Expander>
+        <ContentControl Content="{Binding MessageBlock}"/>
         <ContentControl Content="{Binding SelectionID}"/>
       </StackPanel>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type cmds:MessagePreview}">
-      <StackPanel Classes="form">
-        <ContentControl Content="{Binding MessageType}"/>
-        <ContentControl Content="{Binding Speaker}"/>
-        <StackPanel Orientation="Horizontal">
-          <ContentControl Content="{Binding Dialogue}"/>
-          <Button Click="PlayVoiceTrack" Margin="10" ToolTip.Tip="Play/Pause Selected Track" IsVisible="{Binding HasVoiceLine}">
-            <PathIcon Data="{StaticResource video_play_pause_regular}" />
-          </Button>
+      <Expander Header="Message Details">
+        <StackPanel Classes="form">
+          <ContentControl Content="{Binding MessageType}"/>
+          <ContentControl Content="{Binding Speaker}"/>
+          <ItemsControl ItemsSource="{Binding Pages}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" Margin="5" HorizontalAlignment="Right">
+                  <ContentControl Content="{Binding Dialogue}"/>
+                  <Button Click="PlayVoiceTrack" Margin="10" ToolTip.Tip="Play/Pause Selected Track" IsVisible="{Binding HasVoiceLine}">
+                    <PathIcon Data="{StaticResource video_play_pause_regular}" />
+                  </Button>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
         </StackPanel>
-      </StackPanel>
+      </Expander>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type cmds:Scr_}">
@@ -671,12 +679,33 @@
       </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type cmds:SBE_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding CueID}"/>
+        <ContentControl Content="{Binding Action}"/>
+        <ContentControl Content="{Binding Enable}"/>
+      </StackPanel>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type cmds:SBEA}">
       <StackPanel Classes="form">
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <ContentControl Content="{Binding UnkEnum}"/>
+        <ContentControl Content="{Binding Action}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:SFts}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding Enable}"/>
       </StackPanel>
     </DataTemplate>
 

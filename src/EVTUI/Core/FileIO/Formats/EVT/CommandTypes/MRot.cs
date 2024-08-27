@@ -10,9 +10,9 @@ public partial class CommandTypes
 {
     public class MRot : ISerializable
     {
-        public UInt16  FrameDelay;
-        public float[] Rotation = new float[3];
-        public UInt32  FrameDuration;
+        public UInt16   FrameDelay;
+        public float[]  Rotation = new float[3];
+        public UInt32   FrameDuration;
 
         public UInt16[] Animation1Unks = new UInt16[4];
         public UInt32   Animation1LoopBool;
@@ -24,7 +24,7 @@ public partial class CommandTypes
         public float    Animation2Speed;
         public Int32    Animation2Ind;
 
-        public byte[] UNK_UINT8 = new byte[2];
+        public byte[]   UNK_UINT8 = new byte[2];
         public UInt32[] UNK_UINT32 = new UInt32[1];
 
         public UInt32[] UNUSED_UINT32 = new UInt32[8];

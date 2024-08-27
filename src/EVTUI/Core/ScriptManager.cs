@@ -144,14 +144,11 @@ public class ScriptManager
         get
         {
             List<string> names = new List<string>();
-            //foreach (Turn turn in this.MessageFiles[this.ActiveBMD].Turns)
             for (int i=0; i<this.MessageFiles[this.ActiveBMD].TurnCount; i++)
             {
                 string name = "";
-                //foreach (Node node in this.Parse(turn.Name, this.ActiveBMD.Contains("BASE.CPK")))
                 foreach (Node node in this.Parse(this.MessageFiles[this.ActiveBMD].Turns[i].Name, this.ActiveBMD.Contains("BASE.CPK")))
                     name += node.Text;
-                //if (Regex.IsMatch(name, "^M(SG|ND)_\\d\\d\\d_\\d_\\d$"))
                 if (this.MessageFiles[this.ActiveBMD].TurnKinds[i] == 0)
                     names.Add(name);
             }
@@ -164,14 +161,11 @@ public class ScriptManager
         get
         {
             List<string> names = new List<string>();
-            //foreach (Turn turn in this.MessageFiles[this.ActiveBMD].Turns)
             for (int i=0; i<this.MessageFiles[this.ActiveBMD].TurnCount; i++)
             {
                 string name = "";
-                //foreach (Node node in this.Parse(turn.Name, this.ActiveBMD.Contains("BASE.CPK")))
                 foreach (Node node in this.Parse(this.MessageFiles[this.ActiveBMD].Turns[i].Name, this.ActiveBMD.Contains("BASE.CPK")))
                     name += node.Text;
-                //if (Regex.IsMatch(name, "^SEL_\\d\\d\\d_\\d_\\d$"))
                 if (this.MessageFiles[this.ActiveBMD].TurnKinds[i] != 0)
                     names.Add(name);
             }
@@ -239,40 +233,38 @@ public class ScriptManager
         return name;
     }
 
-    public string GetTurnText(int turnIndex)
+    public int GetTurnElemCount(int turnIndex)
+    {
+        return this.MessageFiles[this.ActiveBMD].Turns[turnIndex].ElemCount;
+    }
+
+    public string GetTurnText(int turnIndex, int elemIndex)
     {
         string text = "";
-        foreach (byte[] elem in this.MessageFiles[this.ActiveBMD].Turns[turnIndex].Elems)
-            foreach (Node node in this.Parse(elem, this.ActiveBMD.Contains("BASE.CPK")))
-                text += node.Text;
+        foreach (Node node in this.Parse(this.MessageFiles[this.ActiveBMD].Turns[turnIndex].Elems[elemIndex], this.ActiveBMD.Contains("BASE.CPK")))
+            text += node.Text;
         return text;
     }
 
-    public List<(string Source, uint CueId)?> GetTurnVoices(int turnIndex)
+    public (string Source, uint CueId)? GetTurnVoice(int turnIndex, int elemIndex)
     {
-        List<(string Source, uint CueId)?> ret = new List<(string Source, uint CueId)?>();
-        foreach (byte[] elem in this.MessageFiles[this.ActiveBMD].Turns[turnIndex].Elems)
-            foreach (Node node in this.Parse(elem, this.ActiveBMD.Contains("BASE.CPK")))
-                if (node.FunctionTableIndex == 3 && node.FunctionIndex == 1 && node.FunctionArguments[3] != 0)
-                    switch (node.FunctionArguments[1])
-                    {
-                        case 0:
-                            if (this.GetTurnSpeakerName(turnIndex).StartsWith("(SE)"))
-                                ret.Add(("SFX", node.FunctionArguments[3]));
-                            else
-                                ret.Add(("Voice", node.FunctionArguments[3]));
-                            break;
-                        case 1:
-                            ret.Add(("Field", node.FunctionArguments[3]));
-                            break;
-                        case 2:
-                            ret.Add(("Common", node.FunctionArguments[3]));
-                            break;
-                        default:
-                            ret.Add(null);
-                            break;
-                    }
-        return ret;
+        foreach (Node node in this.Parse(this.MessageFiles[this.ActiveBMD].Turns[turnIndex].Elems[elemIndex], this.ActiveBMD.Contains("BASE.CPK")))
+            if (node.FunctionTableIndex == 3 && node.FunctionIndex == 1 && node.FunctionArguments[3] != 0)
+                switch (node.FunctionArguments[1])
+                {
+                    case 0:
+                        if (this.GetTurnSpeakerName(turnIndex).StartsWith("(SE)"))
+                            return ("SFX", node.FunctionArguments[3]);
+                        else
+                            return ("Voice", node.FunctionArguments[3]);
+                    case 1:
+                        return ("Field", node.FunctionArguments[3]);
+                    case 2:
+                        return ("Common", node.FunctionArguments[3]);
+                    default:
+                        break;
+                }
+        return null;
     }
 
     ////////////////////////////

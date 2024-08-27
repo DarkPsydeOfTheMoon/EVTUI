@@ -81,64 +81,35 @@ public static class CPKExtract
                     {
                         evtFound = true;
                         retval.evtPath = outputPath;
-                        extractor.QueueItem(new ItemModel(outputPath, files[x]));
                     }
                     else if (Regex.IsMatch(inCpkPath, "\\.ECS$"))
-                    {
                         retval.ecsPath = outputPath;
-                        extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                    }
                     else if (Regex.IsMatch(inCpkPath, "\\.ACB$"))
-                    {
                         retval.acbPaths.Add(outputPath);
-                        extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                    }
                     else if (Regex.IsMatch(inCpkPath, "\\.AWB$"))
-                    {
                         retval.awbPaths.Add(outputPath);
-                        extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                    }
                     else if (Regex.IsMatch(inCpkPath, "\\.BMD$"))
-                    {
                         retval.bmdPaths.Add(outputPath);
-                        extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                    }
                     else if (Regex.IsMatch(inCpkPath, "\\.BF$"))
-                    {
                         retval.bfPaths.Add(outputPath);
-                        extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                    }
+                    else
+                        return;
                 }
                 else if (Regex.IsMatch(inCpkPath, "VOICE_SINGLEWORD\\.ACB$"))
-                {
                     retval.acbPaths.Add(outputPath);
-                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                }
                 else if (Regex.IsMatch(inCpkPath, "VOICE_SINGLEWORD\\.AWB$"))
-                {
                     retval.awbPaths.Add(outputPath);
-                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                }
                 else if (Regex.IsMatch(inCpkPath, "SYSTEM\\.ACB$"))
-                {
                     retval.acbPaths.Add(outputPath);
-                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                }
                 else if (Regex.IsMatch(inCpkPath, "SYSTEM\\.AWB$"))
-                {
                     retval.awbPaths.Add(outputPath);
-                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                }
                 else if (Regex.IsMatch(inCpkPath, "BGM\\.ACB$"))
-                {
                     retval.acbPaths.Add(outputPath);
-                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                }
                 else if (Regex.IsMatch(inCpkPath, "BGM\\.AWB$"))
-                {
                     retval.awbPaths.Add(outputPath);
-                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
-                }
+                else
+                    return;
+                extractor.QueueItem(new ItemModel(outputPath, files[x]));
             });
             extractor.WaitForCompletion();
             ArrayRental.Reset();

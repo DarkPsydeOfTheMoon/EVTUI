@@ -48,12 +48,11 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
 
     public void PlayVoiceTrack(object sender, RoutedEventArgs e)
     {
-        MessagePreview msg = (MessagePreview)((ContentControl)LogicalExtensions.GetLogicalParent(
+        PagePreview page = (PagePreview)((ContentPresenter)LogicalExtensions.GetLogicalParent(
             (StackPanel)LogicalExtensions.GetLogicalParent(
-                (StackPanel)LogicalExtensions.GetLogicalParent(
-                    ((Button)sender))))).Content;
-        if (!(msg.Source is null) && !(msg.CueID is null))
-            ViewModel!.PlayCueFromSource((string)msg.Source, (int)msg.CueID, 1);
+                ((Button)sender)))).Content;
+        if (!(page.Source is null) && !(page.CueID is null))
+            ViewModel!.PlayCueFromSource((string)page.Source, (int)page.CueID, 1);
     }
 
     public void LoadModelInScene(object sender, EventArgs e)

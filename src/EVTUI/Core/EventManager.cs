@@ -106,75 +106,11 @@ public class EventManager
         this.SerialEventSounds = null;
     }
 
-    public int EventDuration
-    {
-        get
-        {
-            return this.SerialEvent.TotalFrame;
-        }
-    }
-
-    public SerialCommand[] EventCommands
-    {
-        get
-        {
-            return this.SerialEvent.Commands;
-        }
-    }
-
-    public ArrayList EventCommandData
-    {
-        get
-        {
-            return this.SerialEvent.CommandData;
-        }
-    }
-
-    public Dictionary<int, List<(string cmd, int ind)>> EvtCommandsByFrame
-    {
-        get
-        {
-            Dictionary <int, List<(string cmd, int ind)>> commands = new Dictionary<int, List<(string cmd, int ind)>>();
-            for (int i=0; i<this.EventCommands.Length; i++)
-            {
-                if (!commands.ContainsKey(this.EventCommands[i].FrameStart))
-                    commands[this.EventCommands[i].FrameStart] = new List<(string cmd, int ind)>();
-                commands[this.EventCommands[i].FrameStart].Add((this.EventCommands[i].CommandCode, i));
-            }
-            return commands;
-        }
-    }
-
-    public SerialCommand[] EventSoundCommands
-    {
-        get
-        {
-            return this.SerialEventSounds.Commands;
-        }
-    }
-
-    public ArrayList EventSoundCommandData
-    {
-        get
-        {
-            return this.SerialEventSounds.CommandData;
-        }
-    }
-
-    public Dictionary<int, List<(string cmd, int ind)>> EcsCommandsByFrame
-    {
-        get
-        {
-            Dictionary <int, List<(string cmd, int ind)>> commands = new Dictionary<int, List<(string cmd, int ind)>>();
-            for (int i=0; i<this.EventSoundCommands.Length; i++)
-            {
-                if (!commands.ContainsKey(this.EventSoundCommands[i].FrameStart))
-                    commands[this.EventSoundCommands[i].FrameStart] = new List<(string cmd, int ind)>();
-                commands[this.EventSoundCommands[i].FrameStart].Add((this.EventSoundCommands[i].CommandCode, i));
-            }
-            return commands;
-        }
-    }
+    public int EventDuration { get { return this.SerialEvent.TotalFrame; } }
+    public SerialCommand[] EventCommands { get { return this.SerialEvent.Commands; } }
+    public ArrayList EventCommandData { get { return this.SerialEvent.CommandData; } }
+    public SerialCommand[] EventSoundCommands { get { return this.SerialEventSounds.Commands; } }
+    public ArrayList EventSoundCommandData { get { return this.SerialEventSounds.CommandData; } }
 
     public List<int> AssetIDs
     {

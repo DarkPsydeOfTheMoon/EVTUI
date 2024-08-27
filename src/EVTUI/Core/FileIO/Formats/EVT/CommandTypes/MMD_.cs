@@ -37,7 +37,7 @@ public partial class CommandTypes
             rw.RwInt32(ref this.UnkEnum);      // values: 1-6
 
             for (int i=0; i<24; i++)
-                rw.RwFloat32s(ref this.Targets[i], 3);  // uh... do i need to initialize the second dimension arrays
+                rw.RwFloat32s(ref this.Targets[i], 3);
 
             rw.RwInt32(ref this.UnkIndex1);
             rw.RwFloat32(ref this.UnkFloat1);  // mode: ~4.5

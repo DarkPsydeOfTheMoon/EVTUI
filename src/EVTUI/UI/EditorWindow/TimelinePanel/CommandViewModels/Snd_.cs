@@ -25,20 +25,24 @@ public class Snd_ : Generic
                 this.CueID.Choice = 0;
             this.CueID.Choices = new ObservableCollection<int>(config.AudioManager.CueIds.ConvertAll(x => (int)x));
         });
+
+        this.FadeDuration = new NumEntryField("Fade Duration (ms)", this.Editable, this.CommandData.FadeDuration, null, null, 1);
     }
 
-    public IntSelectionField    CueID   { get; set; }
-    public StringSelectionField Action  { get; set; }
-    public StringSelectionField Channel { get; set; }
-    public StringSelectionField Source  { get; set; }
+    public IntSelectionField    CueID        { get; set; }
+    public StringSelectionField Action       { get; set; }
+    public StringSelectionField Channel      { get; set; }
+    public StringSelectionField Source       { get; set; }
+    public NumEntryField        FadeDuration { get; set; }
 
     public new void SaveChanges()
     {
         base.SaveChanges();
-        this.CommandData.CueId   = this.CueID.Choice;
-        this.CommandData.Action  = (int)Enum.Parse(typeof(ActionTypes),  this.Action.Choice );
-        this.CommandData.Channel = (int)Enum.Parse(typeof(ChannelTypes), this.Channel.Choice);
-        this.CommandData.Source  = (int)Enum.Parse(typeof(SourceTypes),  this.Source.Choice );
+        this.CommandData.CueId        = this.CueID.Choice;
+        this.CommandData.Action       = (int)Enum.Parse(typeof(ActionTypes),  this.Action.Choice );
+        this.CommandData.Channel      = (int)Enum.Parse(typeof(ChannelTypes), this.Channel.Choice);
+        this.CommandData.Source       = (int)Enum.Parse(typeof(SourceTypes),  this.Source.Choice );
+        this.CommandData.FadeDuration = (int)this.FadeDuration.Value;
     }
 
     public enum ActionTypes : int
