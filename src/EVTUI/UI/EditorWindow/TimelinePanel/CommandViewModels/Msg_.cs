@@ -81,8 +81,10 @@ public class Msg_ : Generic
             this.CommandData.SelectMinorId = byte.Parse(selPieces[2]);
             this.CommandData.SelectSubId = byte.Parse(selPieces[3]);
         }
-        this.MessageBlock.SaveChanges();
-        this.SelectionBlock.SaveChanges();
+        if (!(this.MessageBlock is null))
+            this.MessageBlock.SaveChanges();
+        if (!(this.SelectionBlock is null))
+            this.SelectionBlock.SaveChanges();
     }
 }
 

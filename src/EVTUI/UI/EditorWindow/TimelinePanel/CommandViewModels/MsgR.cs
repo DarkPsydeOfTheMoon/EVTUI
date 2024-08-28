@@ -70,7 +70,9 @@ public class MsgR : Generic
             this.CommandData.MessageIndex = this.Config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
         if (!(this.SelectionID is null))
             this.CommandData.SelIndex = this.Config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
-        this.MessageBlock.SaveChanges();
-        this.SelectionBlock.SaveChanges();
+        if (!(this.MessageBlock is null))
+            this.MessageBlock.SaveChanges();
+        if (!(this.SelectionBlock is null))
+            this.SelectionBlock.SaveChanges();
     }
 }
