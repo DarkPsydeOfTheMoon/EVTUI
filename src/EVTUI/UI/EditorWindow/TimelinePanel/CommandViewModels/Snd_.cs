@@ -11,7 +11,11 @@ public class Snd_ : Generic
     public Snd_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
     {
         this.LongName = "Sounds: Play Cue";
+
+        _isPlayCmd = ((ActionTypes)this.CommandData.Action == ActionTypes.Play);
         this.Action   = new StringSelectionField("Action", this.Editable, Enum.GetName(typeof(ActionTypes), this.CommandData.Action), new List<string>(Enum.GetNames(typeof(ActionTypes))));
+        this.WhenAnyValue(x => x.Action.Choice).Subscribe(x => this.IsPlayCmd = (this.Action.Choice == "Play"));
+
         this.Channel  = new StringSelectionField("Channel", this.Editable, Enum.GetName(typeof(ChannelTypes), this.CommandData.Channel), new List<string>(Enum.GetNames(typeof(ChannelTypes))));
 
         this.Source   = new StringSelectionField("Source", this.Editable, Enum.GetName(typeof(SourceTypes), this.CommandData.Source), new List<string>(Enum.GetNames(typeof(SourceTypes))));
@@ -34,6 +38,13 @@ public class Snd_ : Generic
     public StringSelectionField Channel      { get; set; }
     public StringSelectionField Source       { get; set; }
     public NumEntryField        FadeDuration { get; set; }
+
+    private bool _isPlayCmd;
+    public bool IsPlayCmd
+    {
+        get => _isPlayCmd;
+        set => this.RaiseAndSetIfChanged(ref _isPlayCmd, value);
+    }
 
     public new void SaveChanges()
     {
