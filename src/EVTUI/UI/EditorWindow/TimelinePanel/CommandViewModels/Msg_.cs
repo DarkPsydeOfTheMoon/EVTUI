@@ -69,17 +69,23 @@ public class Msg_ : Generic
         if (!(this.MessageID is null))
         {
             string[] msgPieces = this.MessageID.Choice.Split("_");
-            this.CommandData.MessageMajorId = Int16.Parse(msgPieces[1]);
-            this.CommandData.MessageMinorId = byte.Parse(msgPieces[2]);
-            this.CommandData.MessageSubId = byte.Parse(msgPieces[3]);
+            if (msgPieces.Length == 4)
+            {
+                this.CommandData.MessageMajorId = Int16.Parse(msgPieces[1]);
+                this.CommandData.MessageMinorId = byte.Parse(msgPieces[2]);
+                this.CommandData.MessageSubId = byte.Parse(msgPieces[3]);
+            }
         }
 
         if (!(this.SelectionID is null))
         {
             string[] selPieces = this.SelectionID.Choice.Split("_");
-            this.CommandData.SelectMajorId = Int16.Parse(selPieces[1]);
-            this.CommandData.SelectMinorId = byte.Parse(selPieces[2]);
-            this.CommandData.SelectSubId = byte.Parse(selPieces[3]);
+            if (selPieces.Length == 4)
+            {
+                this.CommandData.SelectMajorId = Int16.Parse(selPieces[1]);
+                this.CommandData.SelectMinorId = byte.Parse(selPieces[2]);
+                this.CommandData.SelectSubId = byte.Parse(selPieces[3]);
+            }
         }
         if (!(this.MessageBlock is null))
             this.MessageBlock.SaveChanges();
