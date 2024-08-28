@@ -250,7 +250,9 @@
           Maximum="{Binding UpperLimit}"
           Increment="{Binding Increment}"
           Value="{Binding Value}"
-          IsEnabled="{Binding Editable}" AllowSpin="true"/>
+          IsEnabled="{Binding Editable}"
+          AllowSpin="true"
+          VerticalAlignment="Center"/>
         <Slider
           Minimum="{Binding LowerLimit}"
           Maximum="{Binding UpperLimit}"
@@ -264,6 +266,7 @@
     <!-- COMMAND TYPES -->
 
     <DataTemplate DataType="{x:Type cmds:Basics}">
+      <StackPanel Spacing="10">
       <Expander Header="Conditions" IsExpanded="{Binding HasCondition}">
         <StackPanel Classes="form">
           <ContentControl Content="{Binding ConditionalType}"/>
@@ -274,6 +277,8 @@
           </StackPanel>
         </StackPanel>
       </Expander>
+      <Separator Classes="formsubtitle"/>
+      </StackPanel>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type cmds:FrJ_}">
@@ -467,6 +472,56 @@
             <PathIcon Data="{StaticResource eye_show_regular}" />
           </Button>
         </StackPanel>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <ContentControl Content="{Binding ChildAssetID}"/>
+          <Button Classes="preview">
+            <Button.Flyout>
+              <Flyout Opening="LoadModelInScene" Closed="ClearScene">
+                <StackPanel>
+                  <TextBlock Classes="formtitle" Text="Model Preview"/>
+                  <Separator Classes="formtitle"/>
+                  <views:GFDRenderingPanel DataContext="{Binding ChildModelPreviewVM}" Width="800" Height="600"/>
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+            <PathIcon Data="{StaticResource eye_show_regular}" />
+          </Button>
+        </StackPanel>
+        <ContentControl Content="{Binding FrameDelay}"/>
+        <TextBlock Classes="formsubtitle" Text="Relative Position"/>
+        <Separator Classes="formsubtitle"/>
+        <ContentControl Content="{Binding RelativeXPosition}"/>
+        <ContentControl Content="{Binding RelativeYPosition}"/>
+        <ContentControl Content="{Binding RelativeZPosition}"/>
+        <TextBlock Classes="formsubtitle" Text="Rotation (in degrees)"/>
+        <Separator Classes="formsubtitle"/>
+        <ContentControl Content="{Binding XRotation}"/>
+        <ContentControl Content="{Binding YRotation}"/>
+        <ContentControl Content="{Binding ZRotation}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MDt_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <ContentControl Content="{Binding AssetID}"/>
+          <Button Classes="preview">
+            <Button.Flyout>
+              <Flyout Opening="LoadModelInScene" Closed="ClearScene">
+                <StackPanel>
+                  <TextBlock Classes="formtitle" Text="Model Preview"/>
+                  <Separator Classes="formtitle"/>
+                  <views:GFDRenderingPanel DataContext="{Binding ParentModelPreviewVM}" Width="800" Height="600"/>
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+            <PathIcon Data="{StaticResource eye_show_regular}" />
+          </Button>
+        </StackPanel>
+        <ContentControl Content="{Binding BoneID}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
           <ContentControl Content="{Binding ChildAssetID}"/>
           <Button Classes="preview">
