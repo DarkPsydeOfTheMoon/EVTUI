@@ -40,6 +40,13 @@
     <!--Style Selector="Expander StackPanel">
       <Setter Property="Spacing" Value="10"/>
     </Style-->
+    <Style Selector="StackPanel.preview">
+      <Setter Property="Orientation" Value="Horizontal"/>
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+    <!--Style Selector="StackPanel.preview > Button">
+      <Setter Property="Margin" Value="10"/>
+    </Style-->
     <Style Selector="Button.preview">
       <Setter Property="Height" Value="32"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -299,7 +306,7 @@
         <StackPanel>
           <TextBlock Classes="formsubtitle" Text="Primary Animation"/>
           <Separator Classes="formsubtitle"/>
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <StackPanel Classes="preview">
             <ContentControl Content="{Binding PrimaryAnimationID}"/>
             <Button Classes="preview">
               <Button.Flyout>
@@ -319,7 +326,7 @@
         <StackPanel>
           <TextBlock Classes="formsubtitle" Text="Secondary Animation"/>
           <Separator Classes="formsubtitle"/>
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <StackPanel Classes="preview">
             <ContentControl Content="{Binding SecondaryAnimationID}"/>
             <Button Classes="preview">
               <Button.Flyout>
@@ -348,7 +355,7 @@
         <StackPanel> <!--IsVisible="{Binding HasPrimaryAnimation.Value}"-->
           <TextBlock Classes="formsubtitle" Text="Primary Animation"/>
           <Separator Classes="formsubtitle"/>
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <StackPanel Classes="preview">
             <ContentControl Content="{Binding PrimaryAnimationID}"/>
             <Button Classes="preview">
               <Button.Flyout>
@@ -370,7 +377,7 @@
         <StackPanel> <!--IsVisible="{Binding HasSecondaryAnimation.Value}"-->
           <TextBlock Classes="formsubtitle" Text="Secondary Animation"/>
           <Separator Classes="formsubtitle"/>
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+          <StackPanel Classes="preview">
             <ContentControl Content="{Binding SecondaryAnimationID}"/>
             <Button Classes="preview">
               <Button.Flyout>
@@ -407,7 +414,7 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Classes="preview">
           <ContentControl Content="{Binding AssetID}"/>
           <Button Classes="preview">
             <Button.Flyout>
@@ -423,7 +430,7 @@
           </Button>
         </StackPanel>
         <ContentControl Content="{Binding BoneID}"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Classes="preview">
           <ContentControl Content="{Binding ChildAssetID}"/>
           <Button Classes="preview">
             <Button.Flyout>
@@ -457,7 +464,7 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Classes="preview">
           <ContentControl Content="{Binding AssetID}"/>
           <Button Classes="preview">
             <Button.Flyout>
@@ -472,7 +479,7 @@
             <PathIcon Data="{StaticResource eye_show_regular}" />
           </Button>
         </StackPanel>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Classes="preview">
           <ContentControl Content="{Binding ChildAssetID}"/>
           <Button Classes="preview">
             <Button.Flyout>
@@ -506,7 +513,7 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Classes="preview">
           <ContentControl Content="{Binding AssetID}"/>
           <Button Classes="preview">
             <Button.Flyout>
@@ -522,7 +529,7 @@
           </Button>
         </StackPanel>
         <ContentControl Content="{Binding BoneID}"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Classes="preview">
           <ContentControl Content="{Binding ChildAssetID}"/>
           <Button Classes="preview">
             <Button.Flyout>
@@ -619,7 +626,7 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel Classes="preview">
           <ContentControl Content="{Binding AssetID}"/>
           <Button Classes="preview">
             <Button.Flyout>
@@ -693,9 +700,9 @@
           <ItemsControl ItemsSource="{Binding Pages}">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <StackPanel Orientation="Horizontal" Margin="5" HorizontalAlignment="Right">
+                <StackPanel Classes="preview">
                   <ContentControl Content="{Binding Dialogue}"/>
-                  <Button Click="PlayVoiceTrack" Margin="10" ToolTip.Tip="Play/Pause Selected Track" IsVisible="{Binding HasVoiceLine}">
+                  <Button Click="PlayVoiceTrack" ToolTip.Tip="Play/Pause Selected Track" IsVisible="{Binding HasVoiceLine}">
                     <PathIcon Data="{StaticResource video_play_pause_regular}" />
                   </Button>
                 </StackPanel>
@@ -767,9 +774,9 @@
         <ContentControl Content="{Binding Action}"/>
         <ContentControl Content="{Binding Source}"/>
         <ContentControl Content="{Binding Channel}"/>
-        <StackPanel Orientation="Horizontal">
+        <StackPanel Classes="preview">
           <ContentControl Content="{Binding CueID}"/>
-          <Button Click="PlaySFXTrack" Margin="10" ToolTip.Tip="Play/Pause Selected Track">
+          <Button Click="PlaySFXTrack" ToolTip.Tip="Play/Pause Selected Track">
             <PathIcon Data="{StaticResource video_play_pause_regular}" />
           </Button>
         </StackPanel>
