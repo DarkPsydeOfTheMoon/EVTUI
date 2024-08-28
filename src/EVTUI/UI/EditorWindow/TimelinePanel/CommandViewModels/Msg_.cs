@@ -11,35 +11,68 @@ public class Msg_ : Generic
     public Msg_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
     {
         this.LongName = "Dialogue Turn";
+
+        // there are more fields (0, 1, 2; 4, 5, 8) but I don't know what they do yet....
+        this.HasMessage = new BoolChoiceField("Includes Message?", this.Editable, (((this.CommandData.MessageMode) & 1) == 1));
+        this.HasSelection = new BoolChoiceField("Includes Selection?", this.Editable, (((this.CommandData.MessageMode >> 1) & 1) == 1));
+        this.IsSubtitle = new BoolChoiceField("Is Subtitle?", this.Editable, (((this.CommandData.MessageMode >> 2) & 1) == 1));
+
         int msgIndex = config.ScriptManager.GetTurnIndex(this.CommandData.MessageMajorId, this.CommandData.MessageMinorId, this.CommandData.MessageSubId);
         string msgId = config.ScriptManager.GetTurnName(msgIndex);
         this.MessageID = new StringSelectionField("Message ID", this.Editable, msgId, config.ScriptManager.MsgNames);
-        if (((this.CommandData.MessageMode >> 1) & 1) == 1)
-        {
-            int selIndex = config.ScriptManager.GetTurnIndex(this.CommandData.SelectMajorId, this.CommandData.SelectMinorId, this.CommandData.SelectSubId);
-            string selId = config.ScriptManager.GetTurnName(selIndex);
-            this.SelectionID = new StringSelectionField("Selection ID", this.Editable, selId, config.ScriptManager.SelNames);
-        }
-        this.MessageBlock = new MessagePreview(config, msgIndex);
+        if (config.ScriptManager.MsgNames.Contains(this.MessageID.Choice))
+            this.MessageBlock = new MessagePreview(config, msgIndex);
         this.WhenAnyValue(x => x.MessageID.Choice).Subscribe(x =>
         {
             int newMsgIndex = config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
-            this.MessageBlock.Update(config, newMsgIndex);
+            if (config.ScriptManager.MsgNames.Contains(config.ScriptManager.GetTurnName(newMsgIndex)))
+                this.MessageBlock = new MessagePreview(config, newMsgIndex);
+        });
+
+        int selIndex = config.ScriptManager.GetTurnIndex(this.CommandData.SelectMajorId, this.CommandData.SelectMinorId, this.CommandData.SelectSubId);
+        string selId = config.ScriptManager.GetTurnName(selIndex);
+        this.SelectionID = new StringSelectionField("Selection ID", this.Editable, selId, config.ScriptManager.SelNames);
+        if (config.ScriptManager.SelNames.Contains(this.SelectionID.Choice))
+            _selectionBlock = new SelectionPreview(config, selIndex);
+        this.WhenAnyValue(x => x.SelectionID.Choice).Subscribe(x =>
+        {
+            int newSelIndex = config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
+            if (config.ScriptManager.SelNames.Contains(config.ScriptManager.GetTurnName(newSelIndex)))
+                this.SelectionBlock = new SelectionPreview(config, newSelIndex);
         });
     }
 
+    public BoolChoiceField      HasMessage   { get; set; }
+    public BoolChoiceField      HasSelection { get; set; }
+    public BoolChoiceField      IsSubtitle   { get; set; }
     public StringSelectionField MessageID    { get; set; }
     public StringSelectionField SelectionID  { get; set; }
 
-    public MessagePreview       MessageBlock { get; set; }
+    private MessagePreview _messageBlock;
+    public MessagePreview MessageBlock
+    {
+        get => _messageBlock;
+        set => this.RaiseAndSetIfChanged(ref _messageBlock, value);
+    }
+
+    private SelectionPreview _selectionBlock;
+    public SelectionPreview SelectionBlock
+    {
+        get => _selectionBlock;
+        set => this.RaiseAndSetIfChanged(ref _selectionBlock, value);
+    }
 
     public new void SaveChanges()
     {
         base.SaveChanges();
-        string[] msgPieces = this.MessageID.Choice.Split("_");
-        this.CommandData.MessageMajorId = Int16.Parse(msgPieces[1]);
-        this.CommandData.MessageMinorId = byte.Parse(msgPieces[2]);
-        this.CommandData.MessageSubId = byte.Parse(msgPieces[3]);
+        this.CommandData.MessageMode = (Convert.ToInt32(this.IsSubtitle.Value) << 2) + (Convert.ToInt32(this.HasSelection.Value) << 1) + Convert.ToInt32(this.HasMessage.Value);
+        if (!(this.MessageID is null))
+        {
+            string[] msgPieces = this.MessageID.Choice.Split("_");
+            this.CommandData.MessageMajorId = Int16.Parse(msgPieces[1]);
+            this.CommandData.MessageMinorId = byte.Parse(msgPieces[2]);
+            this.CommandData.MessageSubId = byte.Parse(msgPieces[3]);
+        }
 
         if (!(this.SelectionID is null))
         {
@@ -49,6 +82,57 @@ public class Msg_ : Generic
             this.CommandData.SelectSubId = byte.Parse(selPieces[3]);
         }
         this.MessageBlock.SaveChanges();
+        this.SelectionBlock.SaveChanges();
+    }
+}
+
+public class MessagePreview : ReactiveObject
+{
+    public MessagePreview(DataManager config, int index)
+    {
+        this.Editable = !config.ReadOnly;
+        List<string> speakerNames = config.ScriptManager.SpeakerNames;
+        string speaker = config.ScriptManager.GetTurnSpeakerName(index);
+        string msgId = config.ScriptManager.GetTurnName(index);
+        if (speaker == "")
+            speaker = "(UNNAMED)";
+        this.MessageType = new StringSelectionField("Message Type", this.Editable, MessagePreview.MessageTypes[MessagePreview.MessagePrefixes.IndexOf(msgId.Substring(0, 3))], MessagePreview.MessageTypes);
+        this.Speaker = new StringSelectionField("Speaker Name", this.Editable, speaker, speakerNames);
+
+        this.Pages = new ObservableCollection<PagePreview>();
+        for (int i=0; i<config.ScriptManager.GetTurnElemCount(index); i++)
+            this.Pages.Add(new PagePreview(config, index, i));
+    }
+
+    // TODO: possibly get rid of Update logic now that entire object is observable...
+    public void Update(DataManager config, int index)
+    {
+        string speaker = config.ScriptManager.GetTurnSpeakerName(index);
+        string msgId = config.ScriptManager.GetTurnName(index);
+        if (speaker == "")
+            speaker = "(UNNAMED)";
+        this.MessageType.Choice = MessagePreview.MessageTypes[MessagePreview.MessagePrefixes.IndexOf(msgId.Substring(0, 3))];
+        this.Speaker.Choice = speaker;
+
+        this.Pages.Clear();
+        for (int i=0; i<config.ScriptManager.GetTurnElemCount(index); i++)
+            this.Pages.Add(new PagePreview(config, index, i));
+    }
+
+    public static List<string> MessagePrefixes = new List<string>{"DVL",   "MSG", "MND",     "PFM",    "SEL"   };
+    public static List<string> MessageTypes    = new List<string>{"Enemy", "NPC", "Thought", "System", "Select"};
+
+    public bool    Editable { get; }
+
+    public StringSelectionField MessageType { get; set; }
+    public StringSelectionField Speaker     { get; set; }
+
+    public ObservableCollection<PagePreview> Pages { get; set; }
+
+    public void SaveChanges()
+    {
+        foreach (PagePreview page in this.Pages)
+            page.SaveChanges();
     }
 }
 
@@ -97,67 +181,48 @@ public class PagePreview : ReactiveObject
     public void SaveChanges() {}
 }
 
-public class MessagePreview : ReactiveObject
+public class SelectionPreview : ReactiveObject
 {
-    public MessagePreview(DataManager config, int index)
+    public SelectionPreview(DataManager config, int index)
     {
-        this.Editable = !config.ReadOnly;
-        List<string> speakerNames = config.ScriptManager.SpeakerNames;
-        string speaker = config.ScriptManager.GetTurnSpeakerName(index);
-        string msgId = config.ScriptManager.GetTurnName(index);
-        if (speaker == "")
-            speaker = "(UNNAMED)";
-        this.MessageType = new StringSelectionField("Message Type", this.Editable, MessagePreview.MessageTypes[MessagePreview.MessagePrefixes.IndexOf(msgId.Substring(0, 3))], MessagePreview.MessageTypes);
-        this.Speaker = new StringSelectionField("Speaker Name", this.Editable, speaker, speakerNames);
-
-        this.Pages = new ObservableCollection<PagePreview>();
+        this.Options = new ObservableCollection<OptionPreview>();
         for (int i=0; i<config.ScriptManager.GetTurnElemCount(index); i++)
-            this.Pages.Add(new PagePreview(config, index, i));
+            this.Options.Add(new OptionPreview(config, index, i));
     }
 
     public void Update(DataManager config, int index)
     {
-        string speaker = config.ScriptManager.GetTurnSpeakerName(index);
-        string msgId = config.ScriptManager.GetTurnName(index);
-        //List<string> text = config.ScriptManager.GetTurnTexts(index);
-        if (speaker == "")
-            speaker = "(UNNAMED)";
-        this.MessageType.Choice = MessagePreview.MessageTypes[MessagePreview.MessagePrefixes.IndexOf(msgId.Substring(0, 3))];
-        this.Speaker.Choice = speaker;
-
-        this.Pages.Clear();
+        this.Options.Clear();
         for (int i=0; i<config.ScriptManager.GetTurnElemCount(index); i++)
-            this.Pages.Add(new PagePreview(config, index, i));
-        /*this.Dialogue.Text = text;
-        List<(string Source, uint CueId)?> tuples = config.ScriptManager.GetTurnVoices(index);
-        if (tuples.Count == 0 || tuples[0] is null)
-        {
-            this.Source = null;
-            this.CueID = null;
-            this.HasVoiceLine = false;
-        }
-        else
-        {
-            this.Source = (((string Source, uint CueId))tuples[0]).Source;
-            this.CueID = (((string Source, uint CueId))tuples[0]).CueId;
-            this.HasVoiceLine = true;
-        }*/
+            this.Options.Add(new OptionPreview(config, index, i));
     }
 
-    public static List<string> MessagePrefixes = new List<string>{"DVL",   "MSG", "MND",     "PFM",    "SEL"   };
-    public static List<string> MessageTypes    = new List<string>{"Enemy", "NPC", "Thought", "System", "Select"};
-
-    public bool    Editable { get; }
-
-    //public IntSelectionField    CueID       { get; set; }
-    public StringSelectionField MessageType { get; set; }
-    public StringSelectionField Speaker     { get; set; }
-
-    public ObservableCollection<PagePreview> Pages { get; set; }
+    public ObservableCollection<OptionPreview> Options { get; set; }
 
     public void SaveChanges()
     {
-        foreach (PagePreview page in this.Pages)
-            page.SaveChanges();
+        foreach (OptionPreview option in this.Options)
+            option.SaveChanges();
     }
+}
+
+public class OptionPreview : ReactiveObject
+{
+    public OptionPreview(DataManager config, int turnIndex, int pageIndex)
+    {
+        this.Editable = !config.ReadOnly;
+        this.Update(config, turnIndex, pageIndex);
+    }
+
+    public void Update(DataManager config, int turnIndex, int pageIndex)
+    {
+        string text = config.ScriptManager.GetTurnText(turnIndex, pageIndex);
+        this.Dialogue = new StringEntryField($"Option #{pageIndex+1}", this.Editable, text);
+    }
+
+    public StringEntryField     Dialogue    { get; set; }
+
+    public bool    Editable { get; }
+
+    public void SaveChanges() {}
 }

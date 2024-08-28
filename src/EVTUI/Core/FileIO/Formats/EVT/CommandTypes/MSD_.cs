@@ -30,7 +30,7 @@ public partial class CommandTypes
             rw.RwUInt32(ref this.UNK_UINT32);           // is a float in EvtTool but that makes no sense tbqh, also inconsistent with MAB_
             rw.RwInt32(ref this.LoopBool);              // it's only ever 0, 1, or -1020883212 (??), so it may be a bool... LoopBool?
             rw.RwFloat32(ref this.AnimationSpeed);      // most common is 1.0
-            rw.RwInt32(ref this.FirstFrameInd);         // (an educated guess)
+            rw.RwInt32(ref this.FirstFrameInd);         // (an educated guess... but there's some extra crap in there, sooo...)
             rw.RwInt32(ref this.LastFrameInd);          // (an educated guess)
             for (var i=0; i<4; i++)
             {

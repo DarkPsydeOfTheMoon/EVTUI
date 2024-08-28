@@ -33,6 +33,20 @@
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="IsExpanded" Value="True"/>
     </Style>
+    <Style Selector="Expander ToggleButton TextBlock">
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="FontWeight" Value="Light"/>
+    </Style>
+    <Style Selector="Expander StackPanel">
+      <Setter Property="Spacing" Value="10"/>
+    </Style>
+    <Style Selector="Button.preview">
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="5"/>
+      <Setter Property="ToolTip.Tip" Value="Preview"/>
+      <Setter Property="Width" Value="32"/>
+    </Style>
     <!--Style Selector="Button.space">
       <Setter Property="Height" Value="20"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -68,7 +82,7 @@
     <Style Selector="StackPanel.form">
       <Setter Property="Orientation" Value="Vertical"/>
       <Setter Property="Margin" Value="5"/>
-      <Setter Property="Spacing" Value="5"/>
+      <Setter Property="Spacing" Value="10"/>
     </Style>
     <Style Selector="TextBlock.formtitle">
       <Setter Property="FontSize" Value="24"/>
@@ -250,7 +264,7 @@
     <!-- COMMAND TYPES -->
 
     <DataTemplate DataType="{x:Type cmds:Basics}">
-      <Expander Header="Basics" IsExpanded="{Binding HasCondition}">
+      <Expander Header="Conditions" IsExpanded="{Binding HasCondition}">
         <StackPanel Classes="form">
           <ContentControl Content="{Binding ConditionalType}"/>
           <StackPanel Orientation="Vertical" IsVisible="{Binding HasCondition}">
@@ -282,12 +296,7 @@
           <Separator Classes="formsubtitle"/>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <ContentControl Content="{Binding PrimaryAnimationID}"/>
-            <Button
-             Height="32"
-             HorizontalAlignment="Center"
-             Margin="5"
-             ToolTip.Tip="Preview"
-             Width="32">
+            <Button Classes="preview">
               <Button.Flyout>
                 <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                   <StackPanel>
@@ -307,12 +316,7 @@
           <Separator Classes="formsubtitle"/>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <ContentControl Content="{Binding SecondaryAnimationID}"/>
-            <Button
-             Height="32"
-             HorizontalAlignment="Center"
-             Margin="5"
-             ToolTip.Tip="Preview"
-             Width="32">
+            <Button Classes="preview">
               <Button.Flyout>
                 <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                   <StackPanel>
@@ -341,12 +345,7 @@
           <Separator Classes="formsubtitle"/>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <ContentControl Content="{Binding PrimaryAnimationID}"/>
-            <Button
-             Height="32"
-             HorizontalAlignment="Center"
-             Margin="5"
-             ToolTip.Tip="Preview"
-             Width="32">
+            <Button Classes="preview">
               <Button.Flyout>
                 <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                   <StackPanel>
@@ -368,12 +367,7 @@
           <Separator Classes="formsubtitle"/>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
             <ContentControl Content="{Binding SecondaryAnimationID}"/>
-            <Button
-             Height="32"
-             HorizontalAlignment="Center"
-             Margin="5"
-             ToolTip.Tip="Preview"
-             Width="32">
+            <Button Classes="preview">
               <Button.Flyout>
                 <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                   <StackPanel>
@@ -410,12 +404,7 @@
         <ContentControl Content="{Binding Basics}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
           <ContentControl Content="{Binding AssetID}"/>
-          <Button
-           Height="32"
-           HorizontalAlignment="Center"
-           Margin="5"
-           ToolTip.Tip="Preview"
-           Width="32">
+          <Button Classes="preview">
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
@@ -431,12 +420,7 @@
         <ContentControl Content="{Binding BoneID}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
           <ContentControl Content="{Binding ChildAssetID}"/>
-          <Button
-           Height="32"
-           HorizontalAlignment="Center"
-           Margin="5"
-           ToolTip.Tip="Preview"
-           Width="32">
+          <Button Classes="preview">
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
@@ -470,12 +454,7 @@
         <ContentControl Content="{Binding Basics}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
           <ContentControl Content="{Binding AssetID}"/>
-          <Button
-           Height="32"
-           HorizontalAlignment="Center"
-           Margin="5"
-           ToolTip.Tip="Preview"
-           Width="32">
+          <Button Classes="preview">
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
@@ -490,12 +469,7 @@
         </StackPanel>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
           <ContentControl Content="{Binding ChildAssetID}"/>
-          <Button
-           Height="32"
-           HorizontalAlignment="Center"
-           Margin="5"
-           ToolTip.Tip="Preview"
-           Width="32">
+          <Button Classes="preview">
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
@@ -592,12 +566,7 @@
         <ContentControl Content="{Binding Basics}"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
           <ContentControl Content="{Binding AssetID}"/>
-          <Button
-           Height="32"
-           HorizontalAlignment="Center"
-           Margin="5"
-           ToolTip.Tip="Preview"
-           Width="32">
+          <Button Classes="preview">
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
@@ -632,9 +601,15 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <ContentControl Content="{Binding MessageID}"/>
-        <ContentControl Content="{Binding MessageBlock}"/>
-        <ContentControl Content="{Binding SelectionID}"/>
+        <ContentControl Content="{Binding IsSubtitle}"/>
+        <Separator Classes="formsubtitle"/>
+        <ContentControl Content="{Binding HasMessage}"/>
+        <ContentControl Content="{Binding MessageID}" IsVisible="{Binding HasMessage.Value}"/>
+        <ContentControl Content="{Binding MessageBlock}" IsVisible="{Binding HasMessage.Value}"/>
+        <Separator Classes="formsubtitle"/>
+        <ContentControl Content="{Binding HasSelection}"/>
+        <ContentControl Content="{Binding SelectionID}" IsVisible="{Binding HasSelection.Value}"/>
+        <ContentControl Content="{Binding SelectionBlock}" IsVisible="{Binding HasSelection.Value}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -643,9 +618,15 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <ContentControl Content="{Binding MessageID}"/>
-        <ContentControl Content="{Binding MessageBlock}"/>
-        <ContentControl Content="{Binding SelectionID}"/>
+        <ContentControl Content="{Binding IsSubtitle}"/>
+        <Separator Classes="formsubtitle"/>
+        <ContentControl Content="{Binding HasMessage}"/>
+        <ContentControl Content="{Binding MessageID}" IsVisible="{Binding HasMessage.Value}"/>
+        <ContentControl Content="{Binding MessageBlock}" IsVisible="{Binding HasMessage.Value}"/>
+        <Separator Classes="formsubtitle"/>
+        <ContentControl Content="{Binding HasSelection}"/>
+        <ContentControl Content="{Binding SelectionID}" IsVisible="{Binding HasSelection.Value}"/>
+        <ContentControl Content="{Binding SelectionBlock}" IsVisible="{Binding HasSelection.Value}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -663,6 +644,20 @@
                     <PathIcon Data="{StaticResource video_play_pause_regular}" />
                   </Button>
                 </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </Expander>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:SelectionPreview}">
+      <Expander Header="Selection Details">
+        <StackPanel Classes="form">
+          <ItemsControl ItemsSource="{Binding Options}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <ContentControl Content="{Binding Dialogue}"/>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>

@@ -26,13 +26,19 @@ public class NumEntryField : FieldBase
 {
     public NumEntryField(string name, bool editable, dynamic val, dynamic? lowerLimit, dynamic? upperLimit, dynamic increment) : base(name, editable)
     {
-        this.Value      = (decimal)val;
+        _value          = (decimal)val;
         this.LowerLimit = (decimal?)lowerLimit;
         this.UpperLimit = (decimal?)upperLimit;
         this.Increment  = (decimal)increment;
     }
 
-    public decimal  Value      { get; set; }
+    private decimal _value;
+    public decimal Value
+    {
+        get => _value;
+        set => this.RaiseAndSetIfChanged(ref _value, value);
+    }
+
     public decimal? LowerLimit { get; set; }
     public decimal? UpperLimit { get; set; }
     public decimal  Increment  { get; set; }
@@ -135,10 +141,15 @@ public class BoolChoiceField : FieldBase
 {
     public BoolChoiceField(string name, bool editable, bool val) : base(name, editable)
     {
-        this.Value = val;
+        _value = val;
     }
 
-    public bool Value { get; set; }
+    private bool _value;
+    public bool Value
+    {
+        get => _value;
+        set => this.RaiseAndSetIfChanged(ref _value, value);
+    }
 }
 
 public class Timeline
