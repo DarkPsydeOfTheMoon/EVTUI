@@ -774,8 +774,8 @@
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding Action}"/>
         <ContentControl Content="{Binding Source}"/>
+        <ContentControl Content="{Binding FadeDuration}"/>
         <ContentControl Content="{Binding Channel}" IsVisible="{Binding IsPlayCmd}"/>
-        <ContentControl Content="{Binding FadeDuration}" IsVisible="{Binding IsPlayCmd}"/>
         <StackPanel Classes="preview" IsVisible="{Binding IsPlayCmd}">
           <ContentControl Content="{Binding CueID}"/>
           <Button Click="PlaySFXTrack" ToolTip.Tip="Play/Pause Selected Track">
