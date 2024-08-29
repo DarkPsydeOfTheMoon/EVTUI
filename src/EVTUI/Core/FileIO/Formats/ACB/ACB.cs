@@ -63,7 +63,8 @@ public class ACB
         this.SerialAcb = new UtfTable();
         this.SerialAcb.Read(this.AcbPath);
 
-        this.SerialStreamAwbHeader = this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue().GetRowField(0, "Header").GetValue().GetValue();
+        if (!(this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue() is null))
+            this.SerialStreamAwbHeader = this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue().GetRowField(0, "Header").GetValue().GetValue();
         this.AwbPath = awbPath;
 
         this.Tables = new Dictionary<string, UtfTable>();

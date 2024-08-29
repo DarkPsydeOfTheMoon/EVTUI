@@ -39,7 +39,7 @@ public static class CPKExtract
             Parallel.For(0, files.Length, x =>
             {
                 var inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
-                var outputPath = Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath);
+                var outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
                 if (Regex.IsMatch(inCpkPath, filePattern))
                 {
                     matches.Add(outputPath);
@@ -73,7 +73,7 @@ public static class CPKExtract
             Parallel.For(0, files.Length, x =>
             {
                 var inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
-                var outputPath = Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath);
+                var outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
                 if (Regex.IsMatch(inCpkPath, eventPattern))
                 {
                     Console.WriteLine(inCpkPath);
