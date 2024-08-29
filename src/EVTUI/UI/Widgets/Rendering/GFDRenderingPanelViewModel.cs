@@ -40,6 +40,7 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         
         this.testDataInitialised = true;
 
+        // TODO: i'm leaving this in for posterity & since it's unused but these paths are nooot Windows-safe
         string modelPath = "./Assets/test_model.GMD";
         string animPath  = "./Assets/test_gap.GAP";
         string vsPath = "./Assets/shaders/default.glsl.vs";
@@ -61,10 +62,10 @@ public class GFDRenderingPanelViewModel : ViewModelBase
 
     public void LoadQueuedItems()
     {
-        string vsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio/app_data/shaders/default.glsl.vs");
-        string fsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio/app_data/shaders/default.glsl.fs");
+        string vsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio", "app_data", "shaders", "default.glsl.vs");
+        string fsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio", "app_data", "shaders", "default.glsl.fs");
         if (!(File.Exists(vsPath) && File.Exists(fsPath)))
-            return; // i guess............ should probably error out
+            throw new FileNotFoundException($"Shader files ({vsPath} & {fsPath}) do not exist.");
         while (this.sceneManager.QueuedLoads.Count > 0)
         {
             var item = this.sceneManager.QueuedLoads.Dequeue();
@@ -73,13 +74,13 @@ public class GFDRenderingPanelViewModel : ViewModelBase
             int? animInd = item.AnimInd;
             bool isBlendAnim = item.IsBlendAnim;
             if (!(File.Exists(modelPath)))
-                continue;
+                throw new FileNotFoundException($"Model file ({modelPath}) does not exist.");
             this.sceneManager.LoadModel(modelPath);
             this.glShaderProgram = this.sceneManager.LoadShader(vsPath, fsPath);
             if (!(animPath is null) && !(animInd is null))
             {
                 if (!(File.Exists(animPath)))
-                    continue;
+                    throw new FileNotFoundException($"Animation file ({animPath}) does not exist.");
                 this.sceneManager.LoadGAP((string)animPath);
                 if (isBlendAnim)
                     this.sceneManager.ActivateBlendAnimationOnModel(0, 0, (int)animInd);
