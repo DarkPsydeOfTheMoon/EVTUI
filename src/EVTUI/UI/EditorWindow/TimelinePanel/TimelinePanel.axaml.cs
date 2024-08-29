@@ -3,6 +3,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
@@ -63,6 +64,15 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     public void ClearScene(object sender, EventArgs e)
     {
         //Console.WriteLine("Clear!");
+    }
+
+    public void CloseMe(object sender, RoutedEventArgs e)
+    {
+        Popup flyout = (Popup)LogicalExtensions.GetLogicalParent(
+            (FlyoutPresenter)LogicalExtensions.GetLogicalParent(
+                (StackPanel)LogicalExtensions.GetLogicalParent(
+                    ((Button)sender))));
+        flyout.Close();
     }
 
 }

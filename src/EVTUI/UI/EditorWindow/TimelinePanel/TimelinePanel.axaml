@@ -45,6 +45,21 @@
       <Setter Property="Orientation" Value="Horizontal"/>
       <Setter Property="Spacing" Value="5"/>
     </Style>
+    <Style Selector="Button.popupclose">
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="Width" Value="20"/>
+      <Setter Property="Height" Value="20"/>                                                                                                                                                    
+    </Style>
+    <Style Selector="Button.popupclose > PathIcon">
+      <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+      <!--Setter Property="Padding" Value="10"/-->
+      <Setter Property="Width" Value="10"/>
+      <Setter Property="Height" Value="10"/>                                                                                                                                                    
+    </Style>
+    <Style Selector="Button.popupclose:pointerover > PathIcon">
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
     <!--Style Selector="StackPanel.preview > Button">
       <Setter Property="Margin" Value="10"/>
     </Style-->
@@ -313,6 +328,9 @@
               <Button.Flyout>
                 <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                   <StackPanel>
+                    <Button Classes="popupclose" Click="CloseMe">
+                      <PathIcon Data="{StaticResource dismiss_regular}" />
+                    </Button>
                     <TextBlock Classes="formtitle" Text="Model Preview"/>
                     <Separator Classes="formtitle"/>
                     <views:GFDRenderingPanel DataContext="{Binding PrimaryAnimPreviewVM}" Width="800" Height="600"/>
@@ -333,6 +351,9 @@
               <Button.Flyout>
                 <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                   <StackPanel>
+                    <Button Classes="popupclose" Click="CloseMe">
+                      <PathIcon Data="{StaticResource dismiss_regular}" />
+                    </Button>
                     <TextBlock Classes="formtitle" Text="Model Preview"/>
                     <Separator Classes="formtitle"/>
                     <views:GFDRenderingPanel DataContext="{Binding SecondaryAnimPreviewVM}" Width="800" Height="600"/>
@@ -362,6 +383,9 @@
               <Button.Flyout>
                 <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                   <StackPanel>
+                    <Button Classes="popupclose" Click="CloseMe">
+                      <PathIcon Data="{StaticResource dismiss_regular}" />
+                    </Button>
                     <TextBlock Classes="formtitle" Text="Model Preview"/>
                     <Separator Classes="formtitle"/>
                     <views:GFDRenderingPanel DataContext="{Binding PrimaryAnimPreviewVM}" Width="800" Height="600"/>
@@ -384,6 +408,9 @@
               <Button.Flyout>
                 <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                   <StackPanel>
+                    <Button Classes="popupclose" Click="CloseMe">
+                      <PathIcon Data="{StaticResource dismiss_regular}" />
+                    </Button>
                     <TextBlock Classes="formtitle" Text="Model Preview"/>
                     <Separator Classes="formtitle"/>
                     <views:GFDRenderingPanel DataContext="{Binding SecondaryAnimPreviewVM}" Width="800" Height="600"/>
@@ -421,6 +448,9 @@
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
+                  <Button Classes="popupclose" Click="CloseMe">
+                    <PathIcon Data="{StaticResource dismiss_regular}" />
+                  </Button>
                   <TextBlock Classes="formtitle" Text="Model Preview"/>
                   <Separator Classes="formtitle"/>
                   <views:GFDRenderingPanel DataContext="{Binding ParentModelPreviewVM}" Width="800" Height="600"/>
@@ -437,6 +467,9 @@
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
+                  <Button Classes="popupclose" Click="CloseMe">
+                    <PathIcon Data="{StaticResource dismiss_regular}" />
+                  </Button>
                   <TextBlock Classes="formtitle" Text="Model Preview"/>
                   <Separator Classes="formtitle"/>
                   <views:GFDRenderingPanel DataContext="{Binding ChildModelPreviewVM}" Width="800" Height="600"/>
@@ -471,6 +504,9 @@
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
+                  <Button Classes="popupclose" Click="CloseMe">
+                    <PathIcon Data="{StaticResource dismiss_regular}" />
+                  </Button>
                   <TextBlock Classes="formtitle" Text="Model Preview"/>
                   <Separator Classes="formtitle"/>
                   <views:GFDRenderingPanel DataContext="{Binding ParentModelPreviewVM}" Width="800" Height="600"/>
@@ -486,6 +522,9 @@
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
+                  <Button Classes="popupclose" Click="CloseMe">
+                    <PathIcon Data="{StaticResource dismiss_regular}" />
+                  </Button>
                   <TextBlock Classes="formtitle" Text="Model Preview"/>
                   <Separator Classes="formtitle"/>
                   <views:GFDRenderingPanel DataContext="{Binding ChildModelPreviewVM}" Width="800" Height="600"/>
@@ -520,6 +559,9 @@
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
+                  <Button Classes="popupclose" Click="CloseMe">
+                    <PathIcon Data="{StaticResource dismiss_regular}" />
+                  </Button>
                   <TextBlock Classes="formtitle" Text="Model Preview"/>
                   <Separator Classes="formtitle"/>
                   <views:GFDRenderingPanel DataContext="{Binding ParentModelPreviewVM}" Width="800" Height="600"/>
@@ -536,6 +578,9 @@
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
+                  <Button Classes="popupclose" Click="CloseMe">
+                    <PathIcon Data="{StaticResource dismiss_regular}" />
+                  </Button>
                   <TextBlock Classes="formtitle" Text="Model Preview"/>
                   <Separator Classes="formtitle"/>
                   <views:GFDRenderingPanel DataContext="{Binding ChildModelPreviewVM}" Width="800" Height="600"/>
@@ -633,6 +678,9 @@
             <Button.Flyout>
               <Flyout Opening="LoadModelInScene" Closed="ClearScene">
                 <StackPanel>
+                  <Button Classes="popupclose" Click="CloseMe">
+                    <PathIcon Data="{StaticResource dismiss_regular}" />
+                  </Button>
                   <TextBlock Classes="formtitle" Text="Model Preview"/>
                   <Separator Classes="formtitle"/>
                   <views:GFDRenderingPanel DataContext="{Binding ModelPreviewVM}" Width="800" Height="600"/>
