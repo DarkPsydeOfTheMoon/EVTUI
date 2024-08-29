@@ -144,23 +144,23 @@ public class EventManager
                 // cheat to just get all of the models if it's a 0
                 // i.e. it's detected with a datetime checker
                 if (obj.ResourceMinorId == 0)
-                   pattern = $"MODEL/CHARACTER/{obj.ResourceMajorId:0000}/C{obj.ResourceMajorId:0000}_00._{obj.ResourceSubId:00}\\.GMD";
+                   pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]C{obj.ResourceMajorId:0000}_00._{obj.ResourceSubId:00}\\.GMD";
                 else
                 {
                     if (obj.ResourceSubId == 0)
-                        pattern = $"MODEL/CHARACTER/{obj.ResourceMajorId:0000}/C{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}_..\\.GMD";
+                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]C{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}_..\\.GMD";
                     else
-                        pattern = $"MODEL/CHARACTER/{obj.ResourceMajorId:0000}/C{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}_{obj.ResourceSubId:00}\\.GMD";
+                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]C{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}_{obj.ResourceSubId:00}\\.GMD";
                 }
                 break;
             case ObjectTypes.Item:
-                pattern = $"MODEL/ITEM/IT{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GMD";
+                pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GMD";
                 break;
             case ObjectTypes.FieldObject:
-                pattern = $"MODEL/FIELD_TEX/OBJECT/M{obj.ResourceMajorId:000}_{obj.ResourceMinorId:000}\\.GMD";
+                pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]OBJECT[\\\\/]M{obj.ResourceMajorId:000}_{obj.ResourceMinorId:000}\\.GMD";
                 break;
             case ObjectTypes.Field:
-                pattern = $"MODEL/FIELD_TEX/F{obj.ResourceMajorId:000}_{obj.ResourceMinorId:000}_{obj.ResourceSubId}\\.GFS";
+                pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{obj.ResourceMajorId:000}_{obj.ResourceMinorId:000}_{obj.ResourceSubId}\\.GFS";
                 break;
             default:
                 Console.WriteLine(obj.Type);
@@ -182,19 +182,19 @@ public class EventManager
         {
             case ObjectTypes.Character:
                 if (blendAnims)
-                    pattern = $"MODEL/CHARACTER/{obj.ResourceMajorId:0000}/EMT{obj.ResourceMajorId:0000}\\.GAP";
+                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EMT{obj.ResourceMajorId:0000}\\.GAP";
                 else
-                    pattern = $"MODEL/CHARACTER/{obj.ResourceMajorId:0000}/EVENT/{animType}E{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
+                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EVENT[\\\\/]{animType}E{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
                 break;
             case ObjectTypes.Enemy:
-                pattern = $"MODEL/CHARACTER/ENEMY/{obj.ResourceMajorId:0000}/{animType}EM{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]{animType}EM{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
                 break;
             case ObjectTypes.Persona:
-                pattern = $"MODEL/CHARACTER/PERSONA/{obj.ResourceMajorId:0000}/{animType}PS{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]PERSONA[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]{animType}PS{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
                 break;
             case ObjectTypes.Item:
                 // yes, it's the GMD itself. for items, that's where animations are also stored
-                pattern = $"MODEL/ITEM/IT{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GMD";
+                pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GMD";
                 break;
             default:
                 break;
@@ -206,7 +206,7 @@ public class EventManager
             List<string> candidates = CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir);
             if (candidates.Count == 0 && (ObjectTypes)obj.Type == ObjectTypes.Character)
             {
-                pattern = $"MODEL/CHARACTER/COMMON_ANIM/{animType}CMN{animId:0000}\\.GAP";
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]COMMON_ANIM[\\\\/]{animType}CMN{animId:0000}\\.GAP";
                 candidates = CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir);
             }
             return candidates;
