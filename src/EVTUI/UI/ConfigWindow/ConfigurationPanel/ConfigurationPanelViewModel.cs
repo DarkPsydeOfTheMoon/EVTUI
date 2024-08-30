@@ -56,7 +56,6 @@ public class ConfigurationPanelViewModel : ViewModelBase
     public DisplayableDirectory CpkDirSelection { get; set; }
     public HashSet<string> CpkDirSet;
     public HashSet<string> ModDirSet;
-    public Event EventSelection { get; set; }
 
     public int? EventMajorId { get; set; } = 0;
     public int? EventMinorId { get; set; } = 0;
@@ -96,12 +95,12 @@ public class ConfigurationPanelViewModel : ViewModelBase
     }
 
     // all but the name are just placeholders for now
-    public string ModName { get; set; } = "";
-    public string ModType { get; set; } = "P5R PC (Steam)";
-    public string GameType { get; set; } = "Reloaded";
-    public bool UseAwbEmu { get; set; } = false;
-    public bool UseBfEmu { get; set; } = false;
-    public bool UseBgmEmu { get; set; } = false;
+    public string ModName   { get; set; } = "";
+    public string ModType   { get; set; } = "Reloaded";
+    public string GameType  { get; set; } = "P5R PC (Steam)";
+    public bool   UseAwbEmu { get; set; } = false;
+    public bool   UseBfEmu  { get; set; } = false;
+    public bool   UseBgmEmu { get; set; } = false;
     public List<String> ModLoadOrder { get; set; } = new List<string>(["<PRIMARY_MOD_PLACEHOLDER>"]);
 
     public string DisplayLoadedEvent
@@ -115,7 +114,35 @@ public class ConfigurationPanelViewModel : ViewModelBase
         }
     }
 
+    private ObservableCollection<Event> _eventList;
     public ObservableCollection<Event> EventList
+    {
+        get => _eventList;
+        set => this.RaiseAndSetIfChanged(ref _eventList, value);
+    }
+    public void UpdateEventList(List<Event> newElems)
+    {
+        //foreach (Event elem in newElems)
+        //    this.EventList.Add(elem);
+        this.EventList = new ObservableCollection<Event>(newElems);
+        /*this.AnyRecentEvents = (this.EventList.Count > 0);
+        this.NoRecentEvents = !this.AnyRecentEvents;
+        if (this.AnyRecentEvents)
+            this.EventSelection = this.EventList[0];
+        Console.WriteLine($"{this.AnyRecentEvents}, {this.NoRecentEvents}");
+        OnPropertyChanged(nameof(this.AnyRecentEvents));
+        OnPropertyChanged(nameof(this.NoRecentEvents));*/
+    }
+
+    //public Event EventSelection { get; set; }
+    private Event _eventSelection;
+    public Event EventSelection
+    {
+        get => _eventSelection;
+        set => this.RaiseAndSetIfChanged(ref _eventSelection, value);
+    }
+
+    /*public ObservableCollection<Event> EventList;
     {
         get
         {
@@ -126,7 +153,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
             else
                 return null;
         }
-    }
+    }*/
 
     public bool AnyRecentProjects
     {
@@ -152,7 +179,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
     }
     public bool NoRecentCpkDirs { get { return !this.AnyRecentCpkDirs; } }
 
-    public bool AnyRecentEvents
+    /*public bool AnyRecentEvents
     {
         get
         {
@@ -164,7 +191,21 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 return false;
         }
     }
-    public bool NoRecentEvents { get { return !this.AnyRecentEvents; } }
+    public bool NoRecentEvents { get { return !this.AnyRecentEvents; } }*/
+
+    private bool _anyRecentEvents;
+    public bool AnyRecentEvents
+    {
+        get => _anyRecentEvents;
+        set { Console.WriteLine("@@@@@@@@@@@"); this.RaiseAndSetIfChanged(ref _anyRecentEvents, value); }
+    }
+
+    private bool _noRecentEvents;
+    public bool NoRecentEvents
+    {
+        get => _noRecentEvents;
+        set => this.RaiseAndSetIfChanged(ref _noRecentEvents, value);
+    }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -214,6 +255,27 @@ public class ConfigurationPanelViewModel : ViewModelBase
             }
             this.CpkDirList = new ObservableCollection<DisplayableDirectory>(cpkList);
         }
+
+        _eventList = new ObservableCollection<Event>();
+        _eventSelection = null;
+        _anyRecentEvents = false;
+        _noRecentEvents = true;
+        this.WhenAnyValue(x => x.EventList).Subscribe(x =>
+        {
+            this.AnyRecentEvents = (this.EventList.Count > 0);
+            this.NoRecentEvents = !this.AnyRecentEvents;
+            if (this.AnyRecentEvents)
+                this.EventSelection = this.EventList[0];
+            Console.WriteLine(this.EventSelection);
+            //this.EventList = new ObservableCollection<Event>(newElems);
+            OnPropertyChanged(nameof(EventList));
+            OnPropertyChanged(nameof(EventSelection));
+            OnPropertyChanged(nameof(AnyRecentEvents));
+            OnPropertyChanged(nameof(NoRecentEvents));
+        });
+        if (this.ConfigType == "read-only")
+            this.UpdateEventList(this.Config.AllReadOnlyEvents);
+
     }
     
     public ICommand UseSelectedCpkDir { get { return ReactiveCommand.CreateFromTask(async () => 
@@ -320,14 +382,19 @@ public class ConfigurationPanelViewModel : ViewModelBase
             return;
         }
         this.Config.LoadProject(0);
-        OnPropertyChanged(nameof(this.EventList));
-        OnPropertyChanged(nameof(this.AnyRecentEvents));
-        OnPropertyChanged(nameof(this.NoRecentEvents));
+
+        //OnPropertyChanged(nameof(this.EventList));
+        //this.EventList.Clear();
+        if (!(this.Config.ActiveProject is null))
+            this.UpdateEventList(this.Config.ActiveProject.History.Events);
+
+        //OnPropertyChanged(nameof(this.AnyRecentEvents));
+        //OnPropertyChanged(nameof(this.NoRecentEvents));
         await this.DisplayMessage.Handle($"Loaded project \"{this.Config.ActiveProject.Mutable.Name}\"!");
         await this.OpenEventConfig.Handle(Unit.Default);
     });}}
 
-    public ICommand SetProject { get { return ReactiveCommand.CreateFromTask(async () => 
+    /*public ICommand SetProject { get { return ReactiveCommand.CreateFromTask(async () => 
     {
         if (this.ProjectSelection is null)
         {
@@ -336,12 +403,32 @@ public class ConfigurationPanelViewModel : ViewModelBase
         }
         this.Config.LoadProject(this.ProjectSelection.Ind);
         SetCPKsHelper(true);
-        OnPropertyChanged(nameof(this.EventList));
+
+        //OnPropertyChanged(nameof(this.EventList));
+        this.EventList.Clear();
+        if (!(this.Config.ActiveProject is null))
+            this.UpdateEventList(this.Config.ActiveProject.History.Events);
+
         OnPropertyChanged(nameof(this.AnyRecentEvents));
         OnPropertyChanged(nameof(this.NoRecentEvents));
         await this.DisplayMessage.Handle($"Loaded project \"{this.Config.ActiveProject.Mutable.Name}\"!");
         await this.OpenEventConfig.Handle(Unit.Default);
-    });}}
+    });}}*/
+    public (int Status, string Message) TrySetProject()
+    {
+        if (this.ProjectSelection is null)
+            return (1, "No project selected.");
+
+        this.Config.LoadProject(this.ProjectSelection.Ind);
+        SetCPKsHelper(true);
+
+        if (this.Config.ActiveProject is null)
+            return (1, "No project loaded.");
+
+        //this.EventList.Clear();
+        this.UpdateEventList(this.Config.ActiveProject.History.Events);
+        return (0, $"Loaded project \"{this.Config.ActiveProject.Mutable.Name}\"!");
+    }
 
     public ICommand InitReadOnly { get { return ReactiveCommand.CreateFromTask(async () => 
     {
@@ -355,10 +442,33 @@ public class ConfigurationPanelViewModel : ViewModelBase
         await this.OpenEventConfig.Handle(Unit.Default);
     });}}
 
-    public ICommand UseSelectedEvent { get { return ReactiveCommand.CreateFromTask(async () => 
+    /*public ICommand UseSelectedEvent { get { return ReactiveCommand.CreateFromTask(async () => 
     {
         await Task.Run(() => SetEVTHelper(true));
-    });}}
+    });}}*/
+    public (int Status, string Message) TryLoadEvent()
+    {
+        if (this.EventSelection is null)
+            return (1, "No event selected.");
+
+        try
+        {
+            bool validLoadAttempt = this.Config.LoadEvent((int)this.EventSelection.MajorId, (int)this.EventSelection.MinorId);
+            if (!validLoadAttempt)
+                return (1, "Must have a loaded project or be in read-only mode to load an event.");
+            else if (!this.Config.EventLoaded)
+                return (1, $"Event E{this.EventSelection.MajorId:000}_{this.EventSelection.MinorId:000} does not exist and could not be loaded.");
+        }
+        catch (Exception ex)
+        {
+            return (1, "Failed to extract EVT due to unhandled exception: '" + ex.ToString() + "'");
+        }
+
+        if (this.Config.ActiveEventId is null)
+            return (1, "No event loaded.");
+
+        return (0, $"Loaded event {this.Config.ActiveEventId}!");
+    }
 
     public ICommand SetEVT { get { return ReactiveCommand.CreateFromTask(async () => 
     {
@@ -409,9 +519,20 @@ public class ConfigurationPanelViewModel : ViewModelBase
         OnPropertyChanged(nameof(this.DisplayLoadedEvent));
         await Dispatcher.UIThread.InvokeAsync(async () =>
             { await this.DisplayMessage.Handle($"Loaded event {this.Config.ActiveEventId}!"); });
+
+        if (this.Config.ActiveEventId is null)
+        {
+            await Dispatcher.UIThread.InvokeAsync(async () =>
+                { await this.DisplayMessage.Handle("No event loaded."); });
+            return;
+        }
+        await Dispatcher.UIThread.InvokeAsync(async () =>
+            { await this.FinishConfig.Handle(0); });
+        return;
     }
 
-    public ICommand FinishConfigStartEdit { get { return ReactiveCommand.CreateFromTask(async () =>
+    //public ICommand FinishConfigStartEdit { get { return ReactiveCommand.CreateFromTask(async () =>
+    /*public async void FinishConfigStartEdit()
     {
         if (this.Config.ActiveEventId is null)
         {
@@ -420,7 +541,8 @@ public class ConfigurationPanelViewModel : ViewModelBase
         }
         await this.FinishConfig.Handle(0);
         return;
-    });}}
+    }
+    //});}}*/
 
     // View Interactions
     public Interaction<Unit,   string?> GetCPKDirectoryFromView { get; } = new Interaction<Unit,   string?>();

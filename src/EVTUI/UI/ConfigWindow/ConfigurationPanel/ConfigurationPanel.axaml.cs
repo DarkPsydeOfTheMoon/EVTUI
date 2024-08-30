@@ -22,12 +22,18 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         }
     }
 
+    private Window topLevel;
+
     public ConfigurationPanel()
     {
         InitializeComponent();
 
         this.WhenActivated(d =>
         {
+            var tl = TopLevel.GetTopLevel(this);
+            if (tl is null) throw new NullReferenceException();
+            this.topLevel = (Window)tl;
+
             if (this.ConfigType == "new-proj")
                 pages.SelectedIndex = 1;
             else if (this.ConfigType == "open-proj")
@@ -131,6 +137,22 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         var topLevel = (Window)tl;
         interaction.SetOutput(true);
         topLevel.Close(interaction.Input);
+    }
+
+    public async void SetProject(object sender, RoutedEventArgs e)
+    {
+        var retTuple = ViewModel!.TrySetProject();
+        await RaiseModal(retTuple.Message);
+        if (retTuple.Status == 0)
+            pages.SelectedIndex = 4;
+    }
+
+    public async void UseSelectedEvent(object sender, RoutedEventArgs e)
+    {
+        var retTuple = ViewModel!.TryLoadEvent();
+        await RaiseModal(retTuple.Message);
+        if (retTuple.Status == 0)
+            this.topLevel.Close(0);
     }
 
 }

@@ -202,7 +202,8 @@
               <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding GamePath}" />
             </DataGrid.Columns>
           </DataGrid>
-          <Button Command="{Binding SetProject}"><StackPanel>
+          <!--Button Command="{Binding SetProject}"><StackPanel-->
+          <Button Click="SetProject"><StackPanel>
               <PathIcon Data="{StaticResource arrow_next_regular}"/>
               <TextBlock Text="Load Selected Project &amp; Continue"/>
           </StackPanel></Button>
@@ -267,7 +268,8 @@
               <DataGridTextColumn Header="Minor ID" Binding="{Binding MinorId}" />
             </DataGrid.Columns>
           </DataGrid>
-          <Button Command="{Binding UseSelectedEvent}"><StackPanel>
+          <!--Button Command="{Binding UseSelectedEvent}"><StackPanel-->
+          <Button Click="UseSelectedEvent"><StackPanel>
             <PathIcon Data="{StaticResource document_regular}"/>
             <TextBlock Text="Load Selected Event"/>
           </StackPanel></Button>
@@ -285,6 +287,7 @@
           </StackPanel>
         </WrapPanel>
         <Button Command="{Binding SetEVT}">
+        <!--Button Click="SetEVT"-->
           <!-- I want this to happen eventually re: new events, but it's not ready for the big time yet. -->
           <!--SplitButton.Flyout>
             <MenuFlyout Placement="RightEdgeAlignedTop">
@@ -302,7 +305,7 @@
           </StackPanel>
         </Button>
 
-        <Separator/>
+        <!--Separator/>
         <StackPanel Classes="formentry" HorizontalAlignment="Right">
           <TextBlock Text="Loaded event:"/>
           <TextBox Classes="readonly" Text="{Binding DisplayLoadedEvent}"/>
@@ -311,7 +314,7 @@
           <PathIcon Data="{StaticResource arrow_next_regular}"/>
           <TextBlock Text="Finish Config &amp; View Event"/>
         </StackPanel></Button>
-        <Separator/>
+        <Separator/-->
 
       </StackPanel>
 
