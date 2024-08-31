@@ -76,35 +76,38 @@ public class AudioManager
         this.AcbList.Clear();
         foreach (string key in this.AcbByType.Keys)
             this.AcbByType[key].Clear();
-        object _lock = new();
-        Parallel.ForEach(acwbPaths, acwbPath =>
+        if (!(acwbPaths is null))
         {
-            ACB soundFile = new ACB(acwbPath.ACB, eventCues, acwbPath.AWB);
-            if (!(soundFile.Cues is null))
+            object _lock = new();
+            Parallel.ForEach(acwbPaths, acwbPath =>
             {
-                Console.WriteLine(acwbPath.ACB);
-                string key = acwbPath.ACB.Substring((modPath.Length+1), acwbPath.ACB.Length-(modPath.Length+1));
-                lock (_lock)
+                ACB soundFile = new ACB(acwbPath.ACB, eventCues, acwbPath.AWB);
+                if (!(soundFile.Cues is null))
                 {
-                    if (key.EndsWith("BGM.ACB"))
-                        this.AcbByType["BGM"].Add(key);
-                    else if (key.EndsWith("SYSTEM.ACB"))
-                        this.AcbByType["System"].Add(key);
-                    else if (key.EndsWith("VOICE_SINGLEWORD.ACB"))
-                        this.AcbByType["Common"].Add(key);
-                    else if (Regex.IsMatch(key, "E[0-9][0-9][0-9]_[0-9][0-9][0-9]\\.ACB$"))
-                        this.AcbByType["Voice"].Add(key);
-                    else if (Regex.IsMatch(key, "E[0-9][0-9][0-9]_[0-9][0-9][0-9]_SE\\.ACB$"))
-                        this.AcbByType["SFX"].Add(key);
-                    else if (Regex.IsMatch(key, "F[0-9][0-9][0-9]_[0-9][0-9][0-9]\\.ACB$"))
-                        this.AcbByType["Field"].Add(key);
-                    this.AudioCueFiles[key] = soundFile;
-                    this.AcbList.Add(key);
+                    Console.WriteLine(acwbPath.ACB);
+                    string key = acwbPath.ACB.Substring((modPath.Length+1), acwbPath.ACB.Length-(modPath.Length+1));
+                    lock (_lock)
+                    {
+                        if (key.EndsWith("BGM.ACB"))
+                            this.AcbByType["BGM"].Add(key);
+                        else if (key.EndsWith("SYSTEM.ACB"))
+                            this.AcbByType["System"].Add(key);
+                        else if (key.EndsWith("VOICE_SINGLEWORD.ACB"))
+                            this.AcbByType["Common"].Add(key);
+                        else if (Regex.IsMatch(key, "E[0-9][0-9][0-9]_[0-9][0-9][0-9]\\.ACB$"))
+                            this.AcbByType["Voice"].Add(key);
+                        else if (Regex.IsMatch(key, "E[0-9][0-9][0-9]_[0-9][0-9][0-9]_SE\\.ACB$"))
+                            this.AcbByType["SFX"].Add(key);
+                        else if (Regex.IsMatch(key, "F[0-9][0-9][0-9]_[0-9][0-9][0-9]\\.ACB$"))
+                            this.AcbByType["Field"].Add(key);
+                        this.AudioCueFiles[key] = soundFile;
+                        this.AcbList.Add(key);
+                    }
                 }
-            }
-        });
+            });
+        }
         this.AcbList.Sort();
-        if (acwbPaths.Count > 0)
+        if (this.AcbList.Count > 0)
             this.ActiveACB = this.AcbList[0];
         else
             this.ActiveACB = null;

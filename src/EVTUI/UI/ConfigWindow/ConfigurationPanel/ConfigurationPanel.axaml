@@ -141,7 +141,7 @@
 
           <!-- MOD DIR CONFIG -->
           <TabItem Header="Select Mod Folder"><StackPanel>
-            <Button Command="{Binding SetModDir}"><StackPanel>
+            <Button Click="GetModDirPathFromDialog"><StackPanel>
               <PathIcon Data="{StaticResource folder_add_regular}"/>
               <TextBlock Text="Pick New Folder"/>
             </StackPanel></Button>
@@ -156,13 +156,13 @@
                   <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding Directory}"/>
                 </DataGrid.Columns>
               </DataGrid>
-              <Button Command="{Binding UseSelectedCpkDir}"><StackPanel>
+              <Button Click="GetSelectedCpkDir"><StackPanel>
                 <PathIcon Data="{StaticResource folder_open_regular}"/>
                 <TextBlock Text="Use Selected Folder"/>
               </StackPanel></Button>
             </StackPanel>
             <TextBlock Classes="tableplaceholder" Text="No recent folders." IsVisible="{Binding NoRecentCpkDirs}"/>
-            <Button Command="{Binding SetCPKs}"><StackPanel>
+            <Button Click="GetCpkDirPathFromDialog"><StackPanel>
               <PathIcon Data="{StaticResource folder_add_regular}"/>
               <TextBlock Text="Pick New Folder"/>
             </StackPanel></Button>
@@ -179,7 +179,7 @@
           <TextBlock Text="Path to CPK directory:"/>
           <TextBox Classes="readonly" Text="{Binding DisplayCPKPath}"/>
         </StackPanel>
-        <Button Command="{Binding CreateProject}" HorizontalAlignment="Right"><StackPanel>
+        <Button Click="CreateProject" HorizontalAlignment="Right"><StackPanel>
           <PathIcon Data="{StaticResource arrow_next_regular}"/>
           <TextBlock Text="Create &amp; Continue"/>
         </StackPanel></Button>
@@ -202,8 +202,7 @@
               <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding GamePath}" />
             </DataGrid.Columns>
           </DataGrid>
-          <!--Button Command="{Binding SetProject}"><StackPanel-->
-          <Button Click="SetProject"><StackPanel>
+          <Button Click="UseProject"><StackPanel>
               <PathIcon Data="{StaticResource arrow_next_regular}"/>
               <TextBlock Text="Load Selected Project &amp; Continue"/>
           </StackPanel></Button>
@@ -229,28 +228,17 @@
                 <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding Directory}"/>
               </DataGrid.Columns>
             </DataGrid>
-            <Button Command="{Binding UseSelectedCpkDir}"><StackPanel>
+            <Button Click="GetSelectedCpkDir"><StackPanel>
               <PathIcon Data="{StaticResource folder_open_regular}"/>
               <TextBlock Text="Use Selected Folder"/>
             </StackPanel></Button>
           </StackPanel>
           <TextBlock Classes="tableplaceholder" Text="No recent folders." IsVisible="{Binding NoRecentCpkDirs}"/>
-          <Button Command="{Binding SetCPKs}"><StackPanel>
+          <Button Click="GetCpkDirPathFromDialog"><StackPanel>
             <PathIcon Data="{StaticResource folder_add_regular}"/>
             <TextBlock Text="Pick New Folder"/>
           </StackPanel></Button>
         </StackPanel>
-
-        <Separator/>
-        <StackPanel Classes="formentry" HorizontalAlignment="Right">
-          <TextBlock Text="Path to CPK directory:"/>
-          <TextBox Classes="readonly" Text="{Binding DisplayCPKPath}"/>
-        </StackPanel>
-        <Button Command="{Binding InitReadOnly}" HorizontalAlignment="Right"><StackPanel>
-          <PathIcon Data="{StaticResource arrow_next_regular}"/>
-          <TextBlock Text="Open &amp; Continue"/>
-        </StackPanel></Button>
-        <Separator/>
 
       </StackPanel>
 
@@ -260,15 +248,14 @@
         <TextBlock Classes="paneltitle" Text="Select Event"/>
         <Separator/>
 
-        <StackPanel IsVisible="{Binding AnyRecentEvents}">
+        <StackPanel IsVisible="{Binding AnyRecentEvents, Mode=TwoWay}">
           <TextBlock Classes="tabletitle" Text="Recent Events"/>
-          <DataGrid ItemsSource="{Binding EventList}" SelectedItem="{Binding EventSelection}">
+          <DataGrid ItemsSource="{Binding EventList, Mode=TwoWay}" SelectedItem="{Binding EventSelection, Mode=TwoWay}">
             <DataGrid.Columns>
               <DataGridTextColumn Header="Major ID" Binding="{Binding MajorId}"/>
               <DataGridTextColumn Header="Minor ID" Binding="{Binding MinorId}" />
             </DataGrid.Columns>
           </DataGrid>
-          <!--Button Command="{Binding UseSelectedEvent}"><StackPanel-->
           <Button Click="UseSelectedEvent"><StackPanel>
             <PathIcon Data="{StaticResource document_regular}"/>
             <TextBlock Text="Load Selected Event"/>
@@ -286,8 +273,7 @@
             <NumericUpDown Value="{Binding EventMinorId}" Increment="1" FormatString="000" Minimum="0" Maximum="999"/>
           </StackPanel>
         </WrapPanel>
-        <Button Command="{Binding SetEVT}">
-        <!--Button Click="SetEVT"-->
+        <Button Click="UseEnteredEvent">
           <!-- I want this to happen eventually re: new events, but it's not ready for the big time yet. -->
           <!--SplitButton.Flyout>
             <MenuFlyout Placement="RightEdgeAlignedTop">
@@ -304,17 +290,6 @@
             <TextBlock Text="Pick Entered Event"/>
           </StackPanel>
         </Button>
-
-        <!--Separator/>
-        <StackPanel Classes="formentry" HorizontalAlignment="Right">
-          <TextBlock Text="Loaded event:"/>
-          <TextBox Classes="readonly" Text="{Binding DisplayLoadedEvent}"/>
-        </StackPanel>
-        <Button Command="{Binding FinishConfigStartEdit}" HorizontalAlignment="Right"><StackPanel>
-          <PathIcon Data="{StaticResource arrow_next_regular}"/>
-          <TextBlock Text="Finish Config &amp; View Event"/>
-        </StackPanel></Button>
-        <Separator/-->
 
       </StackPanel>
 

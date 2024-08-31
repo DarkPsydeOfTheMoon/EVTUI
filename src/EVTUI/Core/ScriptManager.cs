@@ -288,15 +288,16 @@ public class ScriptManager
     {
         this.MessageFiles.Clear();
         this.BmdList.Clear();
-        foreach (var bmdPath in bmdPaths)
-        {
-            var messageFile = new BMD();
-            messageFile.Read(bmdPath);
-            string key = bmdPath.Substring((modPath.Length+1), bmdPath.Length-(modPath.Length+1));
-            this.MessageFiles[key] = messageFile;
-            this.BmdList.Add(key);
-        }
-        if (bmdPaths.Count > 0)
+        if (!(bmdPaths is null))
+            foreach (string bmdPath in bmdPaths)
+            {
+                var messageFile = new BMD();
+                messageFile.Read(bmdPath);
+                string key = bmdPath.Substring((modPath.Length+1), bmdPath.Length-(modPath.Length+1));
+                this.MessageFiles[key] = messageFile;
+                this.BmdList.Add(key);
+            }
+        if (this.BmdList.Count > 0)
             this.ActiveBMD = this.BmdList[0];
         else
             this.ActiveBMD = null;
