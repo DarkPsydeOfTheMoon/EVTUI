@@ -11,7 +11,7 @@ namespace EVTUI;
 public class EVT : ISerializable
 {
     private static string MAGIC         = "EVT";
-    private static Int32  ENTRY_SIZE    = 48;
+    public  static Int32  ENTRY_SIZE    = 48;
 
     public string Magic;
     public byte Endianness;
@@ -137,8 +137,6 @@ public class EVT : ISerializable
             }
             rw.RwObj((ISerializable)this.CommandData[i], new Dictionary<string, object>()
                 { ["dataSize"] = this.Commands[i].DataSize });
-            // for debugging, TBD eventually
-            //Console.WriteLine(this.CommandData[i].GetType().ToString());
         }
 
         if (this.PointerToEventBmdPath != 0) {

@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
+using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using static Avalonia.OpenGL.GlConsts;
 
@@ -12,6 +13,7 @@ using EVTUI.ViewModels;
 
 namespace EVTUI.Views
 {
+
     public partial class GFDRenderingPanel : OpenGlControlBase
     {
         /////////////////////////////
@@ -71,7 +73,8 @@ namespace EVTUI.Views
             // Init test data if it exists and has not already been
             // initialised (should be removed when real hooks exist).
             var ctx = getVM();
-            ctx.InitTestData();
+            //ctx.InitTestData();
+            ctx.LoadQueuedItems();
         }
 
         protected override void OnOpenGlDeinit(GlInterface GL)

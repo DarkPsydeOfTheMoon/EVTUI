@@ -8,16 +8,16 @@ namespace EVTUI;
 
 public partial class CommandTypes
 {
-    public class Scr_ : ISerializable
+    public class SBEA : ISerializable
     {
-        public Int32 ProcedureIndex;
+        public Int32 Action;
 
         public Int32[] UNUSED_INT32 = new Int32[3];
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.RwInt32(ref this.UNUSED_INT32[0]);
-            rw.RwInt32(ref this.ProcedureIndex); // (should be shown as 0 through the BF file's number of procedures)
+            rw.RwInt32(ref this.Action); // observed values: 1, 2
             rw.RwInt32(ref this.UNUSED_INT32[1]);
             rw.RwInt32(ref this.UNUSED_INT32[2]);
             for (int i=0; i<this.UNUSED_INT32.Length; i++)

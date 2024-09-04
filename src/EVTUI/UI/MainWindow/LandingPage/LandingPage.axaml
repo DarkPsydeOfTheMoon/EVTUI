@@ -20,7 +20,7 @@
       <Setter Property="Height" Value="50"></Setter>
     </Style>
     <Style Selector="PathIcon:pointerover">
-      <Setter Property="Foreground" Value="Red"></Setter>
+      <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
     </Style>
   </UserControl.Styles>
 

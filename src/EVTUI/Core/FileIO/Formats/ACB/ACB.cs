@@ -26,6 +26,8 @@ public class ACB
     public string                           ExtractionMode { get; set; } = "default";
     public Dictionary<uint, MessageCue>?    MessageCues    { get; set; }
 
+    public List<uint> CueIds { get { return new List<uint>(this.Cues.Keys); } }
+
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
@@ -50,7 +52,7 @@ public class ACB
             this.MessageCues    = locale.EventVoice;
         else if (Regex.IsMatch(this.AcbPath, "E[0-9]{3}_[0-9]{3}_SE\\.ACB$"))
             this.MessageCues    = locale.EventSFX;
-        else if (Regex.IsMatch(this.AcbPath, "(SYSTEM|BGM)\\.ACB$"))
+        else if (Regex.IsMatch(this.AcbPath, "SYSTEM\\.ACB$"))
             this.ExtractionMode = "used";
 
         // UpdateAudioCueFiles in the AudioManager should then just skip this file
@@ -61,7 +63,8 @@ public class ACB
         this.SerialAcb = new UtfTable();
         this.SerialAcb.Read(this.AcbPath);
 
-        this.SerialStreamAwbHeader = this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue().GetRowField(0, "Header").GetValue().GetValue();
+        if (!(this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue() is null))
+            this.SerialStreamAwbHeader = this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue().GetRowField(0, "Header").GetValue().GetValue();
         this.AwbPath = awbPath;
 
         this.Tables = new Dictionary<string, UtfTable>();
@@ -205,14 +208,14 @@ public class ACB
                 }
                 break;
             case CueReferenceType.Link:
-                int linkId = this.Tables["OutsideLink"].GetRowField(refIndex, "Id").GetValue();
+                uint linkId = this.Tables["OutsideLink"].GetRowField(refIndex, "Id").GetValue();
                 UInt16 acbIndex = this.Tables["OutsideLink"].GetRowField(refIndex, "AcbNameStringIndex").GetValue();
-                if (acbIndex == 65535)
-                    for (int i=0; i<this.Tables["Cues"].Rows.Length; i++)
-                        if (this.Tables["Cues"].GetRowField(i, "CueId").GetValue() == linkId)
+                if (acbIndex == 0xFFFF)
+                    for (int i=0; i<this.Tables["Cue"].Rows.Length; i++)
+                        if (this.Tables["Cue"].GetRowField(i, "CueId").GetValue() == linkId)
                         {
-                            int refType4 = this.Tables["Cues"].GetRowField(i, "ReferenceType").GetValue();
-                            int refIndex4 = this.Tables["Cues"].GetRowField(i, "ReferenceIndex").GetValue();
+                            int refType4 = this.Tables["Cue"].GetRowField(i, "ReferenceType").GetValue();
+                            int refIndex4 = this.Tables["Cue"].GetRowField(i, "ReferenceIndex").GetValue();
                             rowInds.AddRange(this.GetReference(refType4, refIndex4));
                             break;
                         }

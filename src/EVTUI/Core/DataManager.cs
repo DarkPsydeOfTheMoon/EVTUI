@@ -16,7 +16,7 @@ public class DataManager
     public ScriptManager  ScriptManager;
     public AudioManager   AudioManager;
 
-    public bool ReadOnly;
+    public bool ReadOnly { get; set; }
     public bool ProjectLoaded;
     public bool EventLoaded;
 
