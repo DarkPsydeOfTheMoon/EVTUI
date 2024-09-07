@@ -19,12 +19,12 @@ public class MDt_ : Generic
         this.ZRotation = new NumRangeField("Z", this.Editable, this.CommandData.Rotation[2], -180, 180, 0.1);
 
         this.ParentModelPreviewVM = new GFDRenderingPanelViewModel();
-        List<string> parentAssetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.ModPath);
+        List<string> parentAssetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.VanillaExtractionPath);
         if (parentAssetPaths.Count > 0)
             this.ParentModelPreviewVM.sceneManager.QueuedLoads.Enqueue((parentAssetPaths[0], null, null, false));
 
         this.ChildModelPreviewVM = new GFDRenderingPanelViewModel();
-        List<string> childAssetPaths = config.EventManager.GetAssetPaths(this.CommandData.ChildObjectId, config.CpkList, config.ModPath);
+        List<string> childAssetPaths = config.EventManager.GetAssetPaths(this.CommandData.ChildObjectId, config.CpkList, config.VanillaExtractionPath);
         if (childAssetPaths.Count > 0)
             this.ChildModelPreviewVM.sceneManager.QueuedLoads.Enqueue((childAssetPaths[0], null, null, false));
     }

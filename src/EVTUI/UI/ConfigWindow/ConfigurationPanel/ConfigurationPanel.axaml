@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:rxui="http://reactiveui.net"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:m="using:EVTUI"
              xmlns:vm="using:EVTUI.ViewModels"
              xmlns:views="using:EVTUI.Views"
              x:DataType="vm:ConfigurationPanelViewModel"
@@ -47,6 +48,11 @@
       <Setter Property="FontWeight" Value="Light"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
     </Style>
+    <Style Selector="ComboBox.tabletitle">
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="Light"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
     <Style Selector="TextBlock.tableplaceholder">
       <Setter Property="FontSize" Value="16"/>
       <Setter Property="FontStyle" Value="Italic"/>
@@ -74,9 +80,9 @@
       <Setter Property="CanUserReorderColumns" Value="True"/>
       <Setter Property="CanUserResizeColumns" Value="True"/>
       <Setter Property="GridLinesVisibility" Value="All"/>
-      <Setter Property="Height" Value="NaN"/>
+      <!--Setter Property="Height" Value="NaN"/-->
+      <Setter Property="Height" Value="300"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
-      <Setter Property="IsReadOnly" Value="True"/>
       <Setter Property="Margin" Value="20"/>
       <Setter Property="VerticalAlignment" Value="Top"/>
       <Setter Property="Width" Value="NaN"/>
@@ -99,11 +105,20 @@
       <Setter Property="Margin" Value="5"/>
       <Setter Property="Width" Value="300"/>
     </Style>
-    <Style Selector="StackPanel.formentry > StackPanel.checkboxes">
+    <!--Style Selector="StackPanel.formentry > StackPanel.checkboxes"-->
+    <Style Selector="StackPanel.formentry > ItemsControl.checkboxes">
       <Setter Property="Margin" Value="5"/>
-      <Setter Property="Orientation" Value="Vertical"/>
+      <!--Setter Property="Orientation" Value="Vertical"/-->
     </Style>
   </UserControl.Styles>
+
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="{x:Type m:Framework}">
+      <CheckBox IsChecked="{Binding Used}">
+        <TextBlock Text="{Binding Name}"/>
+      </CheckBox>
+    </DataTemplate>
+  </UserControl.DataTemplates>
 
   <ScrollViewer><StackPanel Orientation="Vertical" VerticalAlignment="Top" HorizontalAlignment="Center">
 
@@ -126,17 +141,18 @@
           <TabItem Header="Set Project Info"><StackPanel>
             <StackPanel Classes="formentry" HorizontalAlignment="Left">
               <TextBlock Text="Project/Mod Name:"/>
-              <TextBox Classes="editable" Text="{Binding ModName}"/>
+              <TextBox Classes="editable" Text="{Binding newProjectConfig.Name}"/>
             </StackPanel>
             <!-- (commented out because the booleans are unused for now, but it works fine) -->
-            <!--StackPanel Classes="formentry" HorizontalAlignment="Left">
+            <StackPanel Classes="formentry" HorizontalAlignment="Left">
               <TextBlock Text="Frameworks:"/>
-              <StackPanel Classes="checkboxes">
+              <!--StackPanel Classes="checkboxes">
                 <CheckBox IsChecked="{Binding UseAwbEmu}">AWBEmulator</CheckBox>
                 <CheckBox IsChecked="{Binding UseBfEmu}">BFEmulator</CheckBox>
-                <CheckBox IsChecked="{Binding UseBgmEmu}">BGME</CheckBox>
-              </StackPanel>
-            </StackPanel-->
+                <CheckBox IsChecked="{Binding UseRyo}">Ryo</CheckBox>
+              </StackPanel-->
+              <ItemsControl Classes="checkboxes" ItemsSource="{Binding newProjectConfig.Frameworks}" />
+            </StackPanel>
           </StackPanel></TabItem>
 
           <!-- MOD DIR CONFIG -->
@@ -149,20 +165,22 @@
 
           <!-- CPK DIR CONFIG -->
           <TabItem Header="Select Game (CPK) Folder"><StackPanel>
-            <StackPanel IsVisible="{Binding AnyRecentCpkDirs}">
+            <StackPanel IsVisible="{Binding AnyRecentGames}">
               <TextBlock Classes="tabletitle" Text="Recent Folders"/>
-              <DataGrid ItemsSource="{Binding CpkDirList}" SelectedItem="{Binding CpkDirSelection}">
+              <DataGrid ItemsSource="{Binding GameList}" SelectedItem="{Binding GameSelection}">
                 <DataGrid.Columns>
-                  <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding Directory}"/>
+                  <DataGridTextColumn Header="Game Type" Binding="{Binding Type}" IsReadOnly="True"/>
+                  <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" IsReadOnly="False"/>
+                  <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding Path}" IsReadOnly="True"/>
                 </DataGrid.Columns>
               </DataGrid>
-              <Button Click="GetSelectedCpkDir"><StackPanel>
+              <Button Click="GetSelectedGame"><StackPanel>
                 <PathIcon Data="{StaticResource folder_open_regular}"/>
                 <TextBlock Text="Use Selected Folder"/>
               </StackPanel></Button>
             </StackPanel>
-            <TextBlock Classes="tableplaceholder" Text="No recent folders." IsVisible="{Binding NoRecentCpkDirs}"/>
-            <Button Click="GetCpkDirPathFromDialog"><StackPanel>
+            <TextBlock Classes="tableplaceholder" Text="No recent folders." IsVisible="{Binding NoRecentGames}"/>
+            <Button Click="GetGamePathFromDialog"><StackPanel>
               <PathIcon Data="{StaticResource folder_add_regular}"/>
               <TextBlock Text="Pick New Folder"/>
             </StackPanel></Button>
@@ -197,9 +215,10 @@
           <TextBlock Classes="tabletitle" Text="Recent Projects"/>
           <DataGrid ItemsSource="{Binding ProjectList}" SelectedItem="{Binding ProjectSelection}">
             <DataGrid.Columns>
-              <DataGridTextColumn Header="Project Name" Binding="{Binding Name}"/>
-              <DataGridTextColumn Header="Mod Folder" Binding="{Binding ModPath}" />
-              <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding GamePath}" />
+              <DataGridTextColumn Header="Project Name" Binding="{Binding Name}" IsReadOnly="False"/>
+              <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" IsReadOnly="False"/>
+              <DataGridTextColumn Header="Mod Folder" Binding="{Binding ModPath}" IsReadOnly="True"/>
+              <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding GamePath}" IsReadOnly="True"/>
             </DataGrid.Columns>
           </DataGrid>
           <Button Click="UseProject"><StackPanel>
@@ -221,20 +240,22 @@
         <!-- CPK DIR CONFIG -->
         <StackPanel>
           <TextBlock Classes="sectiontitle" Text="Select Game (CPK) Folder"/>
-          <StackPanel IsVisible="{Binding AnyRecentCpkDirs}">
+          <StackPanel IsVisible="{Binding AnyRecentGames}">
             <TextBlock Classes="tabletitle" Text="Recent Folders"/>
-            <DataGrid ItemsSource="{Binding CpkDirList}" SelectedItem="{Binding CpkDirSelection}">
+            <DataGrid ItemsSource="{Binding GameList}" SelectedItem="{Binding GameSelection}">
               <DataGrid.Columns>
-                <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding Directory}"/>
+                <DataGridTextColumn Header="Game Type" Binding="{Binding Type}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" IsReadOnly="False"/>
+                <DataGridTextColumn Header="Game (CPK) Folder" Binding="{Binding Path}" IsReadOnly="True"/>
               </DataGrid.Columns>
             </DataGrid>
-            <Button Click="GetSelectedCpkDir"><StackPanel>
+            <Button Click="GetSelectedGame"><StackPanel>
               <PathIcon Data="{StaticResource folder_open_regular}"/>
               <TextBlock Text="Use Selected Folder"/>
             </StackPanel></Button>
           </StackPanel>
-          <TextBlock Classes="tableplaceholder" Text="No recent folders." IsVisible="{Binding NoRecentCpkDirs}"/>
-          <Button Click="GetCpkDirPathFromDialog"><StackPanel>
+          <TextBlock Classes="tableplaceholder" Text="No recent folders." IsVisible="{Binding NoRecentGames}"/>
+          <Button Click="GetGamePathFromDialog"><StackPanel>
             <PathIcon Data="{StaticResource folder_add_regular}"/>
             <TextBlock Text="Pick New Folder"/>
           </StackPanel></Button>
@@ -248,18 +269,23 @@
         <TextBlock Classes="paneltitle" Text="Select Event"/>
         <Separator/>
 
-        <StackPanel IsVisible="{Binding AnyRecentEvents, Mode=TwoWay}">
-          <TextBlock Classes="tabletitle" Text="Recent Events"/>
-          <DataGrid ItemsSource="{Binding EventList, Mode=TwoWay}" SelectedItem="{Binding EventSelection, Mode=TwoWay}">
-            <DataGrid.Columns>
-              <DataGridTextColumn Header="Major ID" Binding="{Binding MajorId}"/>
-              <DataGridTextColumn Header="Minor ID" Binding="{Binding MinorId}" />
-            </DataGrid.Columns>
-          </DataGrid>
-          <Button Click="UseSelectedEvent"><StackPanel>
-            <PathIcon Data="{StaticResource document_regular}"/>
-            <TextBlock Text="Load Selected Event"/>
-          </StackPanel></Button>
+        <StackPanel>
+          <!--TextBlock Classes="tabletitle" Text="Recent Events"/-->
+          <ComboBox Classes="tabletitle" ItemsSource="{Binding EventCollections}" SelectedItem="{Binding SelectedCollection}" />
+          <StackPanel IsVisible="{Binding AnyRecentEvents, Mode=TwoWay}">
+            <DataGrid ItemsSource="{Binding EventList, Mode=TwoWay}" SelectedItem="{Binding EventSelection, Mode=TwoWay}" IsVisible="{Binding AnyRecentEvents, Mode=TwoWay}">
+              <DataGrid.Columns>
+                <DataGridTextColumn Header="Major ID" Binding="{Binding MajorId}" />
+                <DataGridTextColumn Header="Minor ID" Binding="{Binding MinorId}" />
+                <DataGridTextColumn Header="Project Notes" Binding="{Binding ProjNotes}" IsVisible="{Binding ProjectLoaded}" />
+                <DataGridTextColumn Header="Game Notes" Binding="{Binding GameNotes}" />
+              </DataGrid.Columns>
+            </DataGrid>
+            <Button Click="UseSelectedEvent"><StackPanel>
+              <PathIcon Data="{StaticResource document_regular}"/>
+              <TextBlock Text="Load Selected Event"/>
+            </StackPanel></Button>
+          </StackPanel>
         </StackPanel>
         <TextBlock Classes="tableplaceholder" Text="No recent events." IsVisible="{Binding NoRecentEvents}"/>
         <Separator/>

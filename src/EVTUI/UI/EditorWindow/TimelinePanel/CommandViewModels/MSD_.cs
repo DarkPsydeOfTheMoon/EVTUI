@@ -19,10 +19,10 @@ public class MSD_ : Generic
         this.EndFrame = new NumEntryField("End at Frame", this.Editable, this.CommandData.LastFrameInd, 0, null, 1);
 
         this.ModelPreviewVM = new GFDRenderingPanelViewModel();
-        List<string> assetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.ModPath);
+        List<string> assetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.VanillaExtractionPath);
         if (assetPaths.Count > 0)
         {
-            List<string> animPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, true, false, config.CpkList, config.ModPath);
+            List<string> animPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, true, false, config.CpkList, config.VanillaExtractionPath);
             if (animPaths.Count > 0)
                 this.ModelPreviewVM.sceneManager.QueuedLoads.Enqueue((assetPaths[0], animPaths[0], this.CommandData.AnimationIndex, false));
             else

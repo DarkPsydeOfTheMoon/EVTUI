@@ -13,10 +13,7 @@ public static class UserCache
     /////////////////////////////
     private static string DefaultYaml = @"
 Projects: []
-ReadOnly:
-  History:
-    CPKs: []
-    Events: []
+Games: []
 Preferences: {}";
     private static ISerializer Serializer = new SerializerBuilder()
                                .WithIndentedSequences()
@@ -40,6 +37,7 @@ Preferences: {}";
 
         TextReader yamlStream;
         if (File.Exists(UserCacheFile))
+            // TODO: put a try/except here to just open up a default yaml if load fails i.e. if the existing cache is deprecated/fucked
             yamlStream = new StreamReader(UserCacheFile);
         else
             yamlStream = new StringReader(DefaultYaml);
@@ -66,28 +64,28 @@ Preferences: {}";
 
 public class User
 {
-    public List<Project>    Projects              { get; set; }
-    public ReadOnlySettings ReadOnly              { get; set; }
+    public List<Project>              Projects    { get; set; }
+    public List<GameSettings>         Games       { get; set; }
     public Dictionary<string, object> Preferences { get; set; }
 }
 
 public class Project
 {
-    public ImmutableSettings Immutable { get; set; }
-    public MutableSettings   Mutable   { get; set; }
-    public ProjectHistory    History   { get; set; }
-}
-
-public class ImmutableSettings
-{
-    public GameSettings Game { get; set; }
-    public ModSettings Mod   { get; set; }
+    public string                   Name       { get; set; }
+    public string                   Notes      { get; set; }
+    public string                   Game       { get; set; }
+    public ModSettings              Mod        { get; set; }
+    public Dictionary<string, bool> Frameworks { get; set; }
+    public List<string>             LoadOrder  { get; set; }
+    public EventCollections         Events     { get; set; }
 }
 
 public class GameSettings
 {
-    public string Path { get; set; }
-    public string Type { get; set; }
+    public string           Path   { get; set; }
+    public string           Type   { get; set; }
+    public string           Notes  { get; set; }
+    public EventCollections Events { get; set; }
 }
 
 public class ModSettings
@@ -96,31 +94,22 @@ public class ModSettings
     public string Type { get; set; }
 }
 
-public class MutableSettings
+public class EventCollections
 {
-    public string                   Name       { get; set; }
-    public Dictionary<string, bool> Frameworks { get; set; }
-    public List<string>             LoadOrder  { get; set; }
+    public List<SimpleEvent>   Pinned { get; set; }
+    public List<SimpleEvent>   Recent { get; set; }
+    public List<ExpandedEvent> Notes  { get; set; }
 }
 
-public class ProjectHistory
+public class SimpleEvent
 {
-    public List<Event> Events { get; set; }
+    public int    MajorId { get; set; }
+    public int    MinorId { get; set; }
 }
 
-public class ReadOnlySettings
+public class ExpandedEvent
 {
-    public ReadOnlyHistory History { get; set; }
-}
-
-public class ReadOnlyHistory
-{
-    public List<string> CPKs   { get; set; }
-    public List<Event>  Events { get; set; }
-}
-
-public class Event
-{
-    public int MajorId { get; set; }
-    public int MinorId { get; set; }
+    public int    MajorId { get; set; }
+    public int    MinorId { get; set; }
+    public string Text    { get; set; }
 }

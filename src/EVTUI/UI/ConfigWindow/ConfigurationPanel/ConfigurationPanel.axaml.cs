@@ -66,6 +66,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
 
     private void GoToEventPage()
     {
+        ViewModel!.DisplayEvents();
         pages.SelectedIndex = 4;
     }
 
@@ -103,16 +104,16 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
     // *** CPK SETUP FORM *** //
     ////////////////////////////
 
-    public async void GetSelectedCpkDir(object sender, RoutedEventArgs e)
+    public async void GetSelectedGame(object sender, RoutedEventArgs e)
     {
-        var retTuple = ViewModel!.TryUseCPKDir(null);
+        var retTuple = ViewModel!.TryUseCPKDir(null, null);
         if (retTuple.Status != 0)
             await RaiseModal(retTuple.Message);
         else if (ViewModel!.ConfigType == "read-only")
             this.GoToEventPage();
     }
 
-    public async void GetCpkDirPathFromDialog(object sender, RoutedEventArgs e)
+    public async void GetGamePathFromDialog(object sender, RoutedEventArgs e)
     {
         // Start async operation to open the dialog.
         var dirs = await this.topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
@@ -123,7 +124,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
 
         if (dirs.Count > 0)
         {
-            var retTuple = ViewModel!.TryUseCPKDir(dirs[0].Path.AbsolutePath);
+            var retTuple = ViewModel!.TryUseCPKDir(dirs[0].Path.AbsolutePath, ViewModel!.newProjectConfig.GameType);
             if (retTuple.Status != 0)
                 await RaiseModal(retTuple.Message);
             else if (ViewModel!.ConfigType == "read-only")
@@ -139,7 +140,10 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
     {
         var retTuple = ViewModel!.TryLoadProject();
         if (retTuple.Status == 0)
+        {
+            this.topLevel.Title = $"EVTUI ({ViewModel!.Config.ProjectManager.ActiveProject.Name})";
             this.GoToEventPage();
+        }
         else
             await RaiseModal(retTuple.Message);
     }

@@ -8,6 +8,11 @@ namespace EVTUI;
 public class DataManager
 {
 
+    /////////////////////////////
+    // *** PRIVATE MEMBERS *** //
+    /////////////////////////////
+    private static Regex CpkPattern = new Regex("\\.CPK$", RegexOptions.IgnoreCase);
+
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
@@ -22,73 +27,14 @@ public class DataManager
 
     public List<string> CpkList { get; set; }
 
-    public string? CpkPath
-    {
-        get
-        {
-            if (!this.ReadOnly && this.ProjectLoaded)
-                return this.ProjectManager.LatestProjectGamePath;
-            else if (this.ReadOnly)
-                return this.ProjectManager.LatestReadOnlyGamePath;
-            else
-                return null;
-        }
-    }
+    public string? CpkPath;
+    public string? ModPath;
+    public string VanillaExtractionPath = Path.Combine(UserCache.LocalDir, "Extracted");
 
-    public string? ModPath
-    {
-        get
-        {
-            if (!this.ReadOnly && this.ProjectLoaded)
-                return this.ProjectManager.LatestProjectModPath;
-            else if (this.ReadOnly)
-                return Path.Combine(UserCache.LocalDir, "Extracted");
-            else
-                return null;
-        }
-    }
+    public string? ActiveEventId { get => (this.ProjectManager.ActiveEvent is null) ? null : $"E{this.ProjectManager.ActiveEvent.MajorId:000}_{this.ProjectManager.ActiveEvent.MinorId:000}"; }
 
-    public Project? ActiveProject
-    {
-        get
-        {
-            if (!this.ReadOnly && this.ProjectLoaded)
-                return this.ProjectManager.LatestProject;
-            else
-                return null;
-        }
-    }
-
-    public Event? ActiveEvent
-    {
-        get
-        {
-            if (this.EventLoaded)
-            {
-                if (this.ReadOnly)
-                    return this.ProjectManager.LatestReadOnlyEvent;
-                else
-                    return this.ProjectManager.LatestProjectEvent;
-            }
-            else
-                return null;
-        }
-    }
-
-    public string? ActiveEventId
-    {
-        get
-        {
-            if (this.ActiveEvent is null)
-                return null;
-            else
-                return $"E{this.ActiveEvent.MajorId:000}_{this.ActiveEvent.MinorId:000}";
-        }
-    }
-
-    public List<Project> AllProjects { get { return this.ProjectManager.UserData.Projects; } }
-    public List<Event> AllReadOnlyEvents { get { return this.ProjectManager.UserData.ReadOnly.History.Events; } }
-    public List<string> AllReadOnlyCPKs { get { return this.ProjectManager.UserData.ReadOnly.History.CPKs; } }
+    public List<Project>      AllProjects   { get => this.ProjectManager.UserData.Projects; }
+    public List<GameSettings> AllGames      { get => this.ProjectManager.UserData.Games;    }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -105,6 +51,8 @@ public class DataManager
 
     public void Reset()
     {
+        this.ModPath = null;
+        this.CpkPath = null;
         this.ReadOnly      = false;
         this.ProjectLoaded = false;
         this.EventLoaded   = false;
@@ -114,9 +62,22 @@ public class DataManager
 
     public void LoadProject(int ind)
     {
+        // ActiveProject and ActiveGame should both be set
         this.ProjectManager.LoadProject(ind);
+        this.ModPath = this.ProjectManager.ActiveProject.Mod.Path;
+        this.CpkPath = this.ProjectManager.ActiveGame.Path;
         this.ReadOnly = false;
         this.ProjectLoaded = true;
+    }
+
+    public void LoadGameReadOnly(int ind)
+    {
+        // ActiveGame should be set, ActiveProject should be null
+        this.ProjectManager.LoadGameReadOnly(ind);
+        this.ModPath = null;
+        this.CpkPath = this.ProjectManager.ActiveGame.Path;
+        this.ReadOnly = true;
+        this.ProjectLoaded = false;
     }
 
     public bool LoadEvent(int majorId, int minorId)
@@ -125,21 +86,19 @@ public class DataManager
         if (!this.ReadOnly && !this.ProjectLoaded)
             return false;
 
-        bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.ModPath);
+        //bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.ModPath);
+        bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.VanillaExtractionPath);
         if (success)
-        {
-            if (this.ReadOnly)
-                this.ProjectManager.UpdateReadOnlyEvents(majorId, minorId);
-            else
-                this.ProjectManager.UpdateProjectEvents(0, majorId, minorId);
-        }
+            this.ProjectManager.LoadEvent(majorId, minorId);
         this.EventLoaded = success;
 
-        this.ScriptManager.UpdateMessages(this.EventManager.BmdPaths, this.ModPath);
+        //this.ScriptManager.UpdateMessages(this.EventManager.BmdPaths, this.ModPath);
+        this.ScriptManager.UpdateMessages(this.EventManager.BmdPaths, this.VanillaExtractionPath);
 
         // TODO: load common files! system sounds, common voice lines, models, bustups, cutins
         // so far, VOICE_SINGLEWORD gets loaded, but the rest will have to wait for full EVT/ECS parsing
-        this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcwbPaths, this.ModPath, this.ScriptManager.EventCues);
+        //this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcwbPaths, this.ModPath, this.ScriptManager.EventCues);
+        this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcwbPaths, this.VanillaExtractionPath, this.ScriptManager.EventCues);
 
         return true;
     }
@@ -149,9 +108,19 @@ public class DataManager
         var cpks = new List<string>();
         if (!(directoryPath is null))
             foreach(var file in Directory.GetFiles(directoryPath))
-                if (Regex.IsMatch(file, "\\.[Cc][Pp][Kk]$"))
+                if (DataManager.CpkPattern.IsMatch(file))
                     cpks.Add(file);
         return cpks;
+    }
+
+    public List<(int MajorId, int MinorId)> ListAllEvents()
+    {
+        return CPKExtract.ListAllEvents(this.CpkList);
+    }
+
+    public void ClearCache()
+    {
+        CPKExtract.ClearDirectory(this.VanillaExtractionPath);
     }
 
 }
