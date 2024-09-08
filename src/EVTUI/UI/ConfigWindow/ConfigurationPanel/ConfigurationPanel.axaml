@@ -275,10 +275,10 @@
           <StackPanel IsVisible="{Binding AnyRecentEvents, Mode=TwoWay}">
             <DataGrid ItemsSource="{Binding EventList, Mode=TwoWay}" SelectedItem="{Binding EventSelection, Mode=TwoWay}" IsVisible="{Binding AnyRecentEvents, Mode=TwoWay}">
               <DataGrid.Columns>
-                <DataGridTextColumn Header="Major ID" Binding="{Binding MajorId}" />
-                <DataGridTextColumn Header="Minor ID" Binding="{Binding MinorId}" />
-                <DataGridTextColumn Header="Project Notes" Binding="{Binding ProjNotes}" IsVisible="{Binding ProjectLoaded}" />
-                <DataGridTextColumn Header="Game Notes" Binding="{Binding GameNotes}" />
+                <DataGridTextColumn Header="Major ID" Binding="{Binding MajorId}" IsReadOnly="True" />
+                <DataGridTextColumn Header="Minor ID" Binding="{Binding MinorId}" IsReadOnly="True" />
+                <DataGridTextColumn Header="Project Notes" Binding="{Binding ProjNotes}" IsVisible="{Binding ProjectLoaded}" IsReadOnly="False" />
+                <DataGridTextColumn Header="Game Notes" Binding="{Binding GameNotes}" IsReadOnly="False" />
               </DataGrid.Columns>
             </DataGrid>
             <Button Click="UseSelectedEvent"><StackPanel>

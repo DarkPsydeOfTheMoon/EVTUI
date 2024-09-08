@@ -236,10 +236,10 @@ public class ConfigurationPanelViewModel : ViewModelBase
 
         this.WhenAnyValue(x => x.ProjectList).Subscribe(x =>
         {
+            OnPropertyChanged(nameof(ProjectList));
             this.ProjectSelection = null;
             if (this.ProjectList.Count > 0)
                 this.ProjectSelection = this.ProjectList[0];
-            OnPropertyChanged(nameof(ProjectList));
             OnPropertyChanged(nameof(ProjectSelection));
             OnPropertyChanged(nameof(AnyRecentProjects));
             OnPropertyChanged(nameof(NoRecentProjects));
@@ -247,10 +247,10 @@ public class ConfigurationPanelViewModel : ViewModelBase
 
         this.WhenAnyValue(x => x.GameList).Subscribe(x =>
         {
+            OnPropertyChanged(nameof(GameList));
             this.GameSelection = null;
             if (this.GameList.Count > 0)
                 this.GameSelection = this.GameList[0];
-            OnPropertyChanged(nameof(GameList));
             OnPropertyChanged(nameof(GameSelection));
             OnPropertyChanged(nameof(AnyRecentGames));
             OnPropertyChanged(nameof(NoRecentGames));
@@ -258,10 +258,10 @@ public class ConfigurationPanelViewModel : ViewModelBase
 
         this.WhenAnyValue(x => x.EventList).Subscribe(x =>
         {
+            OnPropertyChanged(nameof(EventList));
             this.EventSelection = null;
             if (this.EventList.Count > 0)
                 this.EventSelection = this.EventList[0];
-            OnPropertyChanged(nameof(EventList));
             OnPropertyChanged(nameof(EventSelection));
             OnPropertyChanged(nameof(AnyRecentEvents));
             OnPropertyChanged(nameof(NoRecentEvents));
