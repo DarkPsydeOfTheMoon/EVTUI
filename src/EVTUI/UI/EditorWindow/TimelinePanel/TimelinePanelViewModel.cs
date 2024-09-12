@@ -152,36 +152,133 @@ public class BoolChoiceField : FieldBase
     }
 }
 
-public class Timeline
+public class Timeline : ReactiveObject
 {
+
+    /*public static List<Category> Categories { get; set; } = new List<Category>
+    {
+        new Category("Field",    1 ),
+        new Category("Env",      2 ),
+        new Category("Camera",   3 ),
+        new Category("Model",    4 ),
+        new Category("Effect",   5 ),
+        new Category("Image",    6 ),
+        new Category("Movie",    7 ),
+        new Category("Dialogue", 8 ),
+        new Category("Texture",  9 ),
+        new Category("UI",       10 ),
+        new Category("Audio",    11),
+        new Category("Script",   12),
+        new Category("Flow",     13),
+        new Category("Other",    14),
+    };*/
+
     public Timeline(DataManager dataManager)
     {
         this.Frames = new List<Frame>();
 		for (int i=0; i<dataManager.EventManager.EventDuration; i++)
             this.Frames.Add(new Frame(i));
+        this.FrameCount = dataManager.EventManager.EventDuration;
+
+        this.Categories = new List<Category>();
+        this.Categories.Add(new Category("Field",    1,  this.FrameCount));
+        this.Categories.Add(new Category("Env",      2,  this.FrameCount));
+        this.Categories.Add(new Category("Camera",   3,  this.FrameCount));
+        this.Categories.Add(new Category("Model",    4,  this.FrameCount));
+        this.Categories.Add(new Category("Effect",   5,  this.FrameCount));
+        this.Categories.Add(new Category("Image",    6,  this.FrameCount));
+        this.Categories.Add(new Category("Movie",    7,  this.FrameCount));
+        this.Categories.Add(new Category("Dialogue", 8,  this.FrameCount));
+        this.Categories.Add(new Category("Texture",  9,  this.FrameCount));
+        this.Categories.Add(new Category("UI",       10, this.FrameCount));
+        this.Categories.Add(new Category("Post",     11, this.FrameCount));
+        this.Categories.Add(new Category("Audio",    12, this.FrameCount));
+        this.Categories.Add(new Category("Script",   13, this.FrameCount));
+        this.Categories.Add(new Category("Flow",     14, this.FrameCount));
+        this.Categories.Add(new Category("Hardware", 15, this.FrameCount));
+        this.Categories.Add(new Category("Other",    16, this.FrameCount));
+
+        //this.Commands = new List<CommandPointer>();
+        this.CommandTracks = new List<CommandTrack>();
+        for (int i=0; i<this.Categories.Count; i++)
+            this.CommandTracks.Add(new CommandTrack(this.FrameCount));
+
         for (int j=0; j<dataManager.EventManager.EventSoundCommands.Length; j++)
         {
             string code = dataManager.EventManager.EventSoundCommands[j].CommandCode;
             int i = dataManager.EventManager.EventSoundCommands[j].FrameStart;
-            if (i < this.Frames.Count)
+            int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
+            if (i >= 0 && i < this.Frames.Count)
             {
-                int k = this.Frames[i].Commands.Count;
-                this.Frames[i].Commands.Add(new CommandPointer(code, true, j, k));
+                ////int k = this.Frames[i].Commands.Count;
+                ////this.Frames[i].Commands.Add(new CommandPointer(code, true, j, k));
+                //this.Categories[10].Commands.Add(new CommandPointer(code, true, j, i, len));
+                CommandPointer newCmd = new CommandPointer(code, true, j, i, len);
+                this.Categories[11].AddCommand(newCmd);
+                this.CommandTracks[11].AddCommand(newCmd);
             }
         }
         for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
         {
             string code = dataManager.EventManager.EventCommands[j].CommandCode;
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
+            int len = dataManager.EventManager.EventCommands[j].FrameDuration;
             if (i >= 0 && i < this.Frames.Count)
             {
-                int k = this.Frames[i].Commands.Count;
-                this.Frames[i].Commands.Add(new CommandPointer(code, false, j, k));
+                //int k = this.Frames[i].Commands.Count;
+                //this.Frames[i].Commands.Add(new CommandPointer(code, false, j, k));
+                CommandPointer newCmd = new CommandPointer(code, false, j, i, len);
+                int catInd = -1;
+                if (code == "FbEn" || code == "Flbk" || code.StartsWith("Im"))
+                    catInd = 5;
+                else if (code == "Msg_" || code == "MsgR" || code == "Cht_")
+                    catInd = 7;
+                else if (code == "LBX_" || code == "Date")
+                    catInd = 9;
+                else if (code == "AlEf" || code.StartsWith("G"))
+                    catInd = 10;
+                else if (code == "Scr_")
+                    catInd = 12;
+                else if (code == "Chap" || code == "FrJ_")
+                    catInd = 13;
+                else if (code == "PRum" || code == "TrMc")
+                    catInd = 14;
+                else if (code.StartsWith("En"))
+                    catInd = 1;
+                else if (code.StartsWith("Mv"))
+                    catInd = 6;
+                else if (code.StartsWith("Fd"))
+                    catInd = 9;
+                else if (code.StartsWith("F"))
+                    catInd = 0;
+                else if (code.StartsWith("C"))
+                    catInd = 2;
+                else if (code.StartsWith("M"))
+                    catInd = 3;
+                else if (code.StartsWith("E"))
+                    catInd = 4;
+                else if (code.StartsWith("T"))
+                    catInd = 8;
+                else if (code.StartsWith("P"))
+                    catInd = 10;
+                else
+                    catInd = 15;
+                if (catInd > -1)
+                {
+                    this.Categories[catInd].AddCommand(newCmd);
+                    this.CommandTracks[catInd].AddCommand(newCmd);
+                    //this.Categories[catInd].Commands.Add(newCmd);
+                }
             }
         }
     }
 
-    public List<Frame> Frames { get; set; }
+    public int FrameCount { get; set; }
+
+    public List<Frame>          Frames     { get; set; }
+    public List<Category>       Categories { get; set; }
+    //public List<CommandPointer> Commands   { get; set; }
+    public List<CommandTrack> CommandTracks   { get; set; }
 }
 
 public class Frame
@@ -189,27 +286,95 @@ public class Frame
     public Frame(int index)
     {
         this.Index    = index;
-        this.Commands = new List<CommandPointer>();
+        this.Name     = (index+1).ToString();
+        //this.Commands = new List<CommandPointer>();
     }
 
     public int                  Index    { get; set; }
-    public List<CommandPointer> Commands { get; set; }
+    public string               Name     { get; set; }
+    //public List<CommandPointer> Commands { get; set; }
+}
+
+public class Category
+{
+    public Category(string name, int index, int frameCount)
+    {
+        this.FrameCount = frameCount;
+        this.Name  = name;
+        this.Index = index;
+        //this.Commands = new List<CommandPointer>();
+        this.MaxInOneFrame = 0;
+        this.FrameCounts = new Dictionary<int, int>();
+    }
+
+    private Dictionary<int, int> FrameCounts;
+
+    public void AddCommand(CommandPointer newCmd)
+    {
+        if (!(this.FrameCounts.ContainsKey(newCmd.Frame)))
+            this.FrameCounts[newCmd.Frame] = 0;
+        newCmd.PositionWithinFrame = this.FrameCounts[newCmd.Frame];
+        this.FrameCounts[newCmd.Frame] += 1;
+        if (this.FrameCounts[newCmd.Frame] > this.MaxInOneFrame)
+            this.MaxInOneFrame = this.FrameCounts[newCmd.Frame];
+        //this.Commands.Add(newCmd);
+    }
+
+    public int FrameCount    { get; set; }
+    public int MaxInOneFrame { get; set; }
+
+    public string Name  { get; set; }
+    public int    Index { get; set; }
+
+    //public List<CommandPointer> Commands   { get; set; }
+}
+
+public class CommandTrack
+{
+    public CommandTrack(int frameCount)
+    {
+        this.FrameCount = frameCount;
+        this.MaxInOneFrame = 0;
+        this.FrameCounts = new Dictionary<int, int>();
+        this.Commands = new List<CommandPointer>();
+    }
+
+    public void AddCommand(CommandPointer newCmd)
+    {
+        if (!(this.FrameCounts.ContainsKey(newCmd.Frame)))
+            this.FrameCounts[newCmd.Frame] = 0;
+        newCmd.PositionWithinFrame = this.FrameCounts[newCmd.Frame];
+        this.FrameCounts[newCmd.Frame] += 1;
+        if (this.FrameCounts[newCmd.Frame] > this.MaxInOneFrame)
+            this.MaxInOneFrame = this.FrameCounts[newCmd.Frame];
+        this.Commands.Add(newCmd);
+    }
+
+    private Dictionary<int, int> FrameCounts;
+    public List<CommandPointer> Commands   { get; set; }
+    public int FrameCount    { get; set; }
+    public int MaxInOneFrame { get; set; }
 }
 
 public class CommandPointer
 {
-    public CommandPointer(string code, bool isAudioCmd, int cmdIndex, int indexWithinFrame)
+    public CommandPointer(string code, bool isAudioCmd, int cmdIndex, int frame, int duration)
     {
-        this.Code             = code;
-        this.IsAudioCmd       = isAudioCmd;
-        this.CmdIndex         = cmdIndex;
-        this.IndexWithinFrame = indexWithinFrame;
+        this.Code       = code;
+        this.IsAudioCmd = isAudioCmd;
+        this.CmdIndex   = cmdIndex;
+        this.Frame      = frame;
+        this.Duration   = duration;
+        this.PositionWithinFrame = 0;
     }
 
-    public string Code             { get; }
-    public bool   IsAudioCmd       { get; }
-    public int    CmdIndex         { get; }
-    public int    IndexWithinFrame { get; }
+    public string Code       { get; }
+    public bool   IsAudioCmd { get; }
+    public int    CmdIndex   { get; }
+    public int    Frame      { get; }
+    public int    Duration   { get; }
+
+    public int    PositionWithinFrame { get; set; }
 }
 
 public class TimelinePanelViewModel : ViewModelBase

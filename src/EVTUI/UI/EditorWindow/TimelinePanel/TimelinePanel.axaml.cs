@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -13,8 +14,44 @@ using EVTUI.ViewModels.TimelineCommands;
 
 namespace EVTUI.Views;
 
-public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
+public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>, INotifyPropertyChanged
 {
+
+    // INotifyPropertyChanged Implementation
+    new public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private Vector _hPos = new Vector(0.0, 0.0);
+    public Vector HPos
+    //private double _hPos = 0.0;
+    //public double HPos
+    {
+        get => _hPos;
+        set
+        {
+            _hPos = value;
+            OnPropertyChanged(nameof(HPos));
+            //Console.WriteLine(HPos);
+        }
+    }
+
+    private Vector _vPos = new Vector(0.0, 0.0);
+    public Vector VPos
+    //private double _vPos = 0.0;
+    //public double VPos
+    {
+        get => _vPos;
+        set
+        {
+            _vPos = value;
+            OnPropertyChanged(nameof(VPos));
+            //Console.WriteLine(VPos);
+        }
+    }
 
     public TimelinePanel()
     {
