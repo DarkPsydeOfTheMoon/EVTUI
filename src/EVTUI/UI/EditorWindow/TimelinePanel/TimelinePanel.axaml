@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:c="clr-namespace:CalcBinding;assembly=CalcBindingAva"
              xmlns:rxui="http://reactiveui.net"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              xmlns:vm="using:EVTUI.ViewModels"
@@ -132,7 +133,7 @@
   </UserControl.Styles>
 
   <UserControl.Resources>
-    <Flyout x:Key="CommandFlyout" Opening="PopulateFlyout" Closed="ClearFlyout"/>
+    <Flyout x:Key="CommandFlyout" Opening="PopulateFlyout" Closed="ClearFlyout" Placement="Bottom"/>
     <!--Flyout x:Key="RenderFlyout" Opening="LoadModelInScene" Closed="ClearScene">
       <StackPanel Width="600" Height="400">
         <TextBlock Classes="formtitle" Text="Model Preview"/>
@@ -148,17 +149,22 @@
     <!-- CONTAINER TYPES -->
 
     <DataTemplate DataType="{x:Type vm:Timeline}">
+      <Grid>
+  <ScrollViewer Name="FramesScroller" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="105,0,16,16" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}">
+  <!--ScrollViewer.Styles>
+    <Style Selector="ScrollBar#PART_HorizontalScrollBar">
+      <Setter Property="ZIndex" Value="10"/>
+    </Style>
+  </ScrollViewer.Styles-->
       <ItemsControl ItemsSource="{Binding Frames}">
         <ItemsControl.Styles>
           <Style Selector="ItemsControl > ContentPresenter:nth-child(even) > Border">
             <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
           </Style>
           <Style Selector="ItemsControl > ContentPresenter:nth-child(odd) > Border">
-            <!--Setter Property="Background" Value="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}"/-->
             <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
           </Style>
           <Style Selector="ItemsControl > ContentPresenter:pointerover > Border">
-            <!--Setter Property="Background" Value="{DynamicResource SystemControlHighlightAccentBrush}"/-->
             <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
           </Style>
           <Style Selector="ItemsControl > ContentPresenter:pointerover > Border > StackPanel > TextBlock">
@@ -171,11 +177,50 @@
           </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
       </ItemsControl>
+  </ScrollViewer>
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Margin="0,37,0,16" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" AllowAutoHide="false">
+  <!--ScrollViewer.Styles>
+    <Style Selector="ScrollBar#PART_VerticalScrollBar">
+      <Setter Property="ZIndex" Value="10"/>
+    </Style>
+  </ScrollViewer.Styles-->
+        <ItemsControl ItemsSource="{Binding Categories}">
+        <ItemsControl.Styles>
+          <Style Selector="ItemsControl > ContentPresenter > Border">
+            <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
+          </Style>
+          <Style Selector="ItemsControl > ContentPresenter:pointerover > Border">
+            <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
+          </Style>
+          <Style Selector="ItemsControl > ContentPresenter:pointerover > Border > DockPanel > TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+          </Style>
+        </ItemsControl.Styles>
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,16,0"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+  </ScrollViewer>
+  <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="105,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16">
+  <!--Panel Width="{c:Binding 85*Frames.Count}" Height="{c:Binding 65*Categories.Count}"/-->
+        <ItemsControl ItemsSource="{Binding CommandTracks}" VerticalAlignment="Stretch">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,0,0"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+  </ScrollViewer>
+  </ScrollViewer>
+      </Grid>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:Frame}">
       <Border CornerRadius="5">
-      <StackPanel Width="100" Orientation="Vertical">
+      <StackPanel Width="80" Orientation="Vertical">
         <TextBlock Text="{Binding Index}"
          FontSize="18"
          Foreground="{DynamicResource SystemBaseMediumColor}"
@@ -183,29 +228,80 @@
          Margin="5"/>
         <Separator
          Background="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}"
-         Height="2"
-         Margin="0,0,0,20"/>
-        <ItemsControl ItemsSource="{Binding Commands}">
+         Height="5"
+         Margin="0,0,0,10"/>
+        <!--ItemsControl ItemsSource="{Binding Commands}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <StackPanel
-               Margin="0,0,0,20"
+               Margin="0,0,0,10"
                Orientation="Vertical"
                Spacing="5"/>
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
-        </ItemsControl>
+        </ItemsControl-->
       </StackPanel>
       </Border>
+      <!--TextBlock Grid.Row="0" Grid.Column="{Binding Index}" Text="{Binding Name}" Width="60"/-->
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:Category}">
+      <Border CornerRadius="5">
+      <DockPanel MinHeight="40" Height="{c:Binding 60*MaxInOneFrame + 20}" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+        <!--TextBlock Text="{Binding Name}" Width="100" VerticalAlignment="Center"/-->
+        <TextBlock Text="{Binding Name}"
+         DockPanel.Dock="Left"
+         FontSize="18"
+         Foreground="{DynamicResource SystemBaseMediumColor}"
+         HorizontalAlignment="Center"
+         TextAlignment="Center"
+         VerticalAlignment="Center"
+         Width="100"/>
+        <Rectangle
+         Fill="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}"
+         Width="5"
+         VerticalAlignment="Stretch"/>
+        <Panel DockPanel.Dock="Right" />
+        <!--ItemsControl ItemsSource="{Binding Commands}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <Canvas Height="{c:Binding 60*MaxInOneFrame + 20}" Width="{c:Binding 85*FrameCount}"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.Styles>
+	        <Style Selector="ContentPresenter" x:DataType="vm:CommandPointer">
+		      <Setter Property="Canvas.Left" Value="{c:Binding 85*Frame + 10}"/>
+		      <Setter Property="Canvas.Top" Value="{c:Binding 60*PositionWithinFrame + 10}"/>
+	        </Style>
+          </ItemsControl.Styles>
+        </ItemsControl-->
+      </DockPanel>
+      </Border>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:CommandTrack}">
+        <ItemsControl ItemsSource="{Binding Commands}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <Canvas MinHeight="40" Height="{c:Binding 60*MaxInOneFrame + 20}" Width="{c:Binding 85*FrameCount - 5}"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.Styles>
+	        <Style Selector="ContentPresenter" x:DataType="vm:CommandPointer">
+		      <Setter Property="Canvas.Left" Value="{c:Binding 85*Frame + 10}"/>
+		      <Setter Property="Canvas.Top" Value="{c:Binding 60*PositionWithinFrame + 10}"/>
+	        </Style>
+          </ItemsControl.Styles>
+        </ItemsControl>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:CommandPointer}">
       <Button Flyout="{StaticResource CommandFlyout}"
        Height="60"
        HorizontalAlignment="Center"
-       Width="60">
+       Width="{c:Binding 60 + 85*(Duration-1)}">
         <TextBlock Text="{Binding Code}"
-         HorizontalAlignment="Center"
+         HorizontalAlignment="Left"
          VerticalAlignment="Center"/>
       </Button>
     </DataTemplate>
@@ -845,8 +941,8 @@
 
   </UserControl.DataTemplates>
 
-  <ScrollViewer HorizontalScrollBarVisibility="Visible">
+  <!--ScrollViewer HorizontalScrollBarVisibility="Visible"-->
     <ContentControl Content="{Binding TimelineContent}"/>
-  </ScrollViewer>
+  <!--/ScrollViewer-->
 
 </rxui:ReactiveUserControl>
