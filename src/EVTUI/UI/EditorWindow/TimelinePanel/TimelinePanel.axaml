@@ -149,6 +149,22 @@
     <!-- CONTAINER TYPES -->
 
     <DataTemplate DataType="{x:Type vm:Timeline}">
+      <DockPanel>
+      <StackPanel Classes="field" DockPanel.Dock="Top">
+        <Slider
+          Minimum="0"
+          Maximum="{c:Binding FrameCount-1}"
+          TickFrequency="1" IsSnapToTickEnabled="true"
+          Value="{Binding ActiveFrame}"
+          Width="200"/>
+        <NumericUpDown ValueChanged="JumpToFrame"
+          Minimum="0"
+          Maximum="{c:Binding FrameCount-1}"
+          Increment="1"
+          Value="{Binding ActiveFrame}"
+          AllowSpin="true"
+          VerticalAlignment="Center"/>
+      </StackPanel>
       <Grid>
   <ScrollViewer Name="FramesScroller" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="105,0,16,16" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}">
   <!--ScrollViewer.Styles>
@@ -216,6 +232,7 @@
   </ScrollViewer>
   </ScrollViewer>
       </Grid>
+      </DockPanel>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:Frame}">

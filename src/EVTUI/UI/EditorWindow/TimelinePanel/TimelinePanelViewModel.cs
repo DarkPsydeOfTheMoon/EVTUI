@@ -179,6 +179,7 @@ public class Timeline : ReactiveObject
 		for (int i=0; i<dataManager.EventManager.EventDuration; i++)
             this.Frames.Add(new Frame(i));
         this.FrameCount = dataManager.EventManager.EventDuration;
+        this.ActiveFrame = 0;
 
         this.Categories = new List<Category>();
         this.Categories.Add(new Category("Field",    1,  this.FrameCount));
@@ -279,6 +280,13 @@ public class Timeline : ReactiveObject
     public List<Category>       Categories { get; set; }
     //public List<CommandPointer> Commands   { get; set; }
     public List<CommandTrack> CommandTracks   { get; set; }
+
+    private int _activeFrame;
+    public int ActiveFrame
+    {
+        get => _activeFrame;
+        set => this.RaiseAndSetIfChanged(ref _activeFrame, value);
+    }
 }
 
 public class Frame
