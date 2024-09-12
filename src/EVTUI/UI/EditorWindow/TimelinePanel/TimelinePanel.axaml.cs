@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 
 using Avalonia;
@@ -8,6 +9,8 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
+
+using ReactiveUI;
 
 using EVTUI.ViewModels;
 using EVTUI.ViewModels.TimelineCommands;
@@ -53,9 +56,21 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         }
     }
 
+    private List<double> FramePositions;
+
     public TimelinePanel()
     {
         InitializeComponent();
+        this.WhenActivated(d =>
+        {
+            // TODO: move this to a method that can be run upon update
+            // like if a frame is added or deleted
+            this.FramePositions = new List<double>();
+            ScrollViewer framesScroller = LogicalExtensions.FindLogicalDescendantOfType<ScrollViewer>(this, false);
+            ItemsControl frames = LogicalExtensions.FindLogicalDescendantOfType<ItemsControl>(framesScroller);
+            foreach (var child in LogicalExtensions.GetLogicalChildren(frames))
+                this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
+        });
     }
 
     public void PopulateFlyout(object sender, EventArgs e)
@@ -110,6 +125,11 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                 (StackPanel)LogicalExtensions.GetLogicalParent(
                     ((Button)sender))));
         flyout.Close();
+    }
+
+    public void JumpToFrame(object sender, NumericUpDownValueChangedEventArgs e)
+    {
+        this.HPos = this.HPos.WithX(this.FramePositions[(int)e.NewValue]);
     }
 
 }
