@@ -148,95 +148,8 @@
 
     <!-- CONTAINER TYPES -->
 
-    <DataTemplate DataType="{x:Type vm:Timeline}">
-      <DockPanel>
-      <StackPanel Classes="field" DockPanel.Dock="Top">
-        <Slider
-          Minimum="0"
-          Maximum="{c:Binding FrameCount-1}"
-          TickFrequency="1" IsSnapToTickEnabled="true"
-          Value="{Binding ActiveFrame}"
-          Width="200"/>
-        <NumericUpDown ValueChanged="JumpToFrame"
-          Minimum="0"
-          Maximum="{c:Binding FrameCount-1}"
-          Increment="1"
-          Value="{Binding ActiveFrame}"
-          AllowSpin="true"
-          VerticalAlignment="Center"/>
-      </StackPanel>
-      <Grid>
-  <ScrollViewer Name="FramesScroller" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="105,0,16,16" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}">
-  <!--ScrollViewer.Styles>
-    <Style Selector="ScrollBar#PART_HorizontalScrollBar">
-      <Setter Property="ZIndex" Value="10"/>
-    </Style>
-  </ScrollViewer.Styles-->
-      <ItemsControl ItemsSource="{Binding Frames}">
-        <ItemsControl.Styles>
-          <Style Selector="ItemsControl > ContentPresenter:nth-child(even) > Border">
-            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-          </Style>
-          <Style Selector="ItemsControl > ContentPresenter:nth-child(odd) > Border">
-            <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
-          </Style>
-          <Style Selector="ItemsControl > ContentPresenter:pointerover > Border">
-            <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
-          </Style>
-          <Style Selector="ItemsControl > ContentPresenter:pointerover > Border > StackPanel > TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
-          </Style>
-        </ItemsControl.Styles>
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <StackPanel Orientation="Horizontal" Spacing="5"/>
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-      </ItemsControl>
-  </ScrollViewer>
-  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Margin="0,37,0,16" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" AllowAutoHide="false">
-  <!--ScrollViewer.Styles>
-    <Style Selector="ScrollBar#PART_VerticalScrollBar">
-      <Setter Property="ZIndex" Value="10"/>
-    </Style>
-  </ScrollViewer.Styles-->
-        <ItemsControl ItemsSource="{Binding Categories}">
-        <ItemsControl.Styles>
-          <Style Selector="ItemsControl > ContentPresenter > Border">
-            <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
-          </Style>
-          <Style Selector="ItemsControl > ContentPresenter:pointerover > Border">
-            <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
-          </Style>
-          <Style Selector="ItemsControl > ContentPresenter:pointerover > Border > DockPanel > TextBlock">
-            <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
-          </Style>
-        </ItemsControl.Styles>
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,16,0"/>
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-        </ItemsControl>
-  </ScrollViewer>
-  <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="105,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
-  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16">
-  <!--Panel Width="{c:Binding 85*Frames.Count}" Height="{c:Binding 65*Categories.Count}"/-->
-        <ItemsControl ItemsSource="{Binding CommandTracks}" VerticalAlignment="Stretch">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,0,0"/>
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-        </ItemsControl>
-  </ScrollViewer>
-  </ScrollViewer>
-      </Grid>
-      </DockPanel>
-    </DataTemplate>
-
     <DataTemplate DataType="{x:Type vm:Frame}">
-      <Border CornerRadius="5">
+      <Border CornerRadius="5,5,0,0">
       <StackPanel Width="80" Orientation="Vertical">
         <TextBlock Text="{Binding Index}"
          FontSize="18"
@@ -262,66 +175,16 @@
       <!--TextBlock Grid.Row="0" Grid.Column="{Binding Index}" Text="{Binding Name}" Width="60"/-->
     </DataTemplate>
 
-    <DataTemplate DataType="{x:Type vm:Category}">
-      <Border CornerRadius="5">
-      <DockPanel MinHeight="40" Height="{c:Binding 60*MaxInOneFrame + 20}" VerticalAlignment="Center" HorizontalAlignment="Stretch">
-        <!--TextBlock Text="{Binding Name}" Width="100" VerticalAlignment="Center"/-->
-        <TextBlock Text="{Binding Name}"
-         DockPanel.Dock="Left"
-         FontSize="18"
-         Foreground="{DynamicResource SystemBaseMediumColor}"
-         HorizontalAlignment="Center"
-         TextAlignment="Center"
-         VerticalAlignment="Center"
-         Width="100"/>
-        <Rectangle
-         Fill="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}"
-         Width="5"
-         VerticalAlignment="Stretch"/>
-        <Panel DockPanel.Dock="Right" />
-        <!--ItemsControl ItemsSource="{Binding Commands}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <Canvas Height="{c:Binding 60*MaxInOneFrame + 20}" Width="{c:Binding 85*FrameCount}"/>
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.Styles>
-	        <Style Selector="ContentPresenter" x:DataType="vm:CommandPointer">
-		      <Setter Property="Canvas.Left" Value="{c:Binding 85*Frame + 10}"/>
-		      <Setter Property="Canvas.Top" Value="{c:Binding 60*PositionWithinFrame + 10}"/>
-	        </Style>
-          </ItemsControl.Styles>
-        </ItemsControl-->
-      </DockPanel>
-      </Border>
-    </DataTemplate>
-
-    <DataTemplate DataType="{x:Type vm:CommandTrack}">
-        <ItemsControl ItemsSource="{Binding Commands}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <Canvas MinHeight="40" Height="{c:Binding 60*MaxInOneFrame + 20}" Width="{c:Binding 85*FrameCount - 5}"/>
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.Styles>
-	        <Style Selector="ContentPresenter" x:DataType="vm:CommandPointer">
-		      <Setter Property="Canvas.Left" Value="{c:Binding 85*Frame + 10}"/>
-		      <Setter Property="Canvas.Top" Value="{c:Binding 60*PositionWithinFrame + 10}"/>
-	        </Style>
-          </ItemsControl.Styles>
-        </ItemsControl>
-    </DataTemplate>
-
-    <DataTemplate DataType="{x:Type vm:CommandPointer}">
+       <!--Height="60"-->
+    <!--DataTemplate DataType="{x:Type vm:CommandPointer}">
       <Button Flyout="{StaticResource CommandFlyout}"
-       Height="60"
        HorizontalAlignment="Center"
        Width="{c:Binding 60 + 85*(Duration-1)}">
         <TextBlock Text="{Binding Code}"
          HorizontalAlignment="Left"
          VerticalAlignment="Center"/>
       </Button>
-    </DataTemplate>
+    </DataTemplate-->
 
     <!-- FIELD TYPES -->
 
@@ -958,8 +821,199 @@
 
   </UserControl.DataTemplates>
 
-  <!--ScrollViewer HorizontalScrollBarVisibility="Visible"-->
-    <ContentControl Content="{Binding TimelineContent}"/>
-  <!--/ScrollViewer-->
+  <DockPanel DataContext="{Binding TimelineContent}">
+    <DockPanel DockPanel.Dock="Top">
+      <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+        <Button Name="ShowCategories" Click="ShowAllCategories" CornerRadius="5,0,0,5" Background="{DynamicResource SystemAccentColor}">
+          <Button.Styles>
+            <Style Selector="Button#ShowCategories:pointerover ContentPresenter">
+              <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark1}"/>
+            </Style>
+          </Button.Styles>
+          Show All
+        </Button>
+        <Button Click="HideAllCategories" CornerRadius="0,5,5,0">Hide All</Button>
+      </StackPanel>
+      <StackPanel Classes="field" DockPanel.Dock="Right">
+        <Slider
+         Minimum="0"
+         Maximum="{c:Binding FrameCount-1}"
+         TickFrequency="1" IsSnapToTickEnabled="true"
+         Value="{Binding ActiveFrame}"
+         Width="200"/>
+        <NumericUpDown ValueChanged="JumpToFrame"
+         Minimum="0"
+         Maximum="{c:Binding FrameCount-1}"
+         Increment="1"
+         Value="{Binding ActiveFrame}"
+         AllowSpin="true"
+         VerticalAlignment="Center"/>
+      </StackPanel>
+    </DockPanel>
+    <Grid>
+      <ScrollViewer Name="FramesScroller" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="153,0,16,16" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}">
+        <ItemsControl ItemsSource="{Binding Frames}" Name="FramesHaver">
+          <ItemsControl.Styles>
+            <Style Selector="ItemsControl > ContentPresenter:nth-child(even) > Border">
+              <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+            </Style>
+            <Style Selector="ItemsControl > ContentPresenter:nth-child(odd) > Border">
+              <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
+            </Style>
+            <Style Selector="ItemsControl > ContentPresenter:pointerover > Border">
+              <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
+            </Style>
+            <Style Selector="ItemsControl > ContentPresenter:pointerover > Border > StackPanel > TextBlock">
+              <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+            </Style>
+          </ItemsControl.Styles>
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" Spacing="5"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+      </ScrollViewer>
+      <ScrollViewer Name="CategoriesScroller" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Visible" Margin="0,37,0,16" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" AllowAutoHide="false">
+        <ItemsControl ItemsSource="{Binding Categories}">
+          <ItemsControl.Styles>
+            <Style Selector="ItemsControl > ContentPresenter > Border">
+              <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
+            </Style>
+            <Style Selector="ItemsControl > ContentPresenter > Border.hide">
+              <Setter Property="Background" Value="{DynamicResource SystemAltLowColor}"/>
+            </Style>
+            <Style Selector="ItemsControl > ContentPresenter:pointerover > Border">
+              <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
+            </Style>
+            <!--Style Selector="ItemsControl > ContentPresenter:pointerover > Border.hide">
+              <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
+            </Style-->
+            <Style Selector="ItemsControl > ContentPresenter:pointerover > Border > DockPanel > ToggleButton TextBlock">
+              <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+            </Style>
+          </ItemsControl.Styles>
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,16,0"/>
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border CornerRadius="5,0,0,5"
+                 Classes.show="{Binding IsOpen}"
+                 Classes.hide="{Binding !IsOpen}">
+                <DockPanel MinHeight="40" Height="{c:Binding (IsOpen) ? 60*MaxInOneFrame + 20 : 40}" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+                  <ToggleButton IsChecked="{Binding IsOpen}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" DockPanel.Dock="Left" CornerRadius="0">
+                    <ToggleButton.Styles>
+                      <Style Selector="ToggleButton">
+                        <Setter Property="Background" Value="Transparent"/>
+                      </Style>
+                      <Style Selector="ToggleButton:checked">
+                        <Setter Property="Background" Value="Transparent"/>
+                      </Style>
+                      <Style Selector="ToggleButton ContentPresenter">
+                        <Setter Property="Background" Value="Transparent"/>
+                      </Style>
+                      <Style Selector="ToggleButton:pointerover ContentPresenter">
+                        <Setter Property="Background" Value="Transparent"/>
+                      </Style>
+                      <Style Selector="ToggleButton:checked ContentPresenter">
+                        <Setter Property="Background" Value="Transparent"/>
+                      </Style>
+                      <Style Selector="ToggleButton PathIcon">
+                        <Setter Property="Data" Value="{StaticResource chevron_up_regular}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemBaseLowColor}"/>
+                      </Style>
+                      <Style Selector="ToggleButton:checked PathIcon">
+                        <Setter Property="Data" Value="{StaticResource chevron_down_regular}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+                      </Style>
+                    </ToggleButton.Styles>
+                    <DockPanel>
+                      <PathIcon DockPanel.Dock="Left" Margin="5"/>
+                      <TextBlock Text="{Binding Name}"
+                       FontSize="18"
+                       Foreground="{DynamicResource SystemBaseMediumColor}"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       VerticalAlignment="Center"
+                       Width="100"/>
+                    </DockPanel>
+                  </ToggleButton>
+                  <Rectangle
+                   Fill="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}"
+                   Width="5"
+                   VerticalAlignment="Stretch"/>
+                  <Panel DockPanel.Dock="Right" />
+                </DockPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+      <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="153,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16">
+          <ItemsControl ItemsSource="{Binding Categories}" VerticalAlignment="Stretch">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Orientation="Vertical" Spacing="5"/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <ItemsControl ItemsSource="{Binding Commands}" MinHeight="40"
+                 Classes.show="{Binding IsOpen}"
+                 Classes.hide="{Binding !IsOpen}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <Canvas MinHeight="40" Height="{c:Binding (IsOpen) ? 60*MaxInOneFrame + 20 : 40}" Width="{c:Binding 85*FrameCount - 5}" Classes.open="{Binding IsOpen}" Classes.closed="{Binding !IsOpen}"/>
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.Styles>
+                    <Style Selector="ContentPresenter"> <!--x:DataType="vm:CommandPointer"-->
+                      <!--Setter Property="IsVisible" Value="{Binding $parent[ItemsControl].((vm:Category)DataContext).IsOpen}"/-->
+                      <Setter Property="Canvas.Left" Value="{c:Binding 85*Frame + 10}"/>
+                    </Style>
+                    <Style Selector="ItemsControl.show > ContentPresenter">
+                      <Setter Property="Canvas.Top" Value="{c:Binding 60*PositionWithinFrame + 10}"/>
+                    </Style>
+                    <Style Selector="ItemsControl.hide > ContentPresenter">
+                      <Setter Property="Canvas.Top" Value="10"/>
+                    </Style>
+                    <Style Selector="ItemsControl.show > ContentPresenter > Button">
+                      <Setter Property="Height" Value="60"/>
+                      <Setter Property="IsEnabled" Value="true"/>
+                    </Style>
+                    <Style Selector="ItemsControl.hide > ContentPresenter > Button">
+                      <Setter Property="Height" Value="20"/>
+                      <Setter Property="IsEnabled" Value="false"/>
+                    </Style>
+                    <Style Selector="ItemsControl.show ContentPresenter > Button > TextBlock">
+                      <Setter Property="IsVisible" Value="true"/>
+                    </Style>
+                    <Style Selector="ItemsControl.hide ContentPresenter > Button > TextBlock">
+                      <Setter Property="IsVisible" Value="false"/>
+                    </Style>
+                  </ItemsControl.Styles>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Button Flyout="{StaticResource CommandFlyout}"
+                       HorizontalAlignment="Center"
+                       Width="{c:Binding 60 + 85*(Duration-1)}">
+                        <TextBlock Text="{Binding Code}"
+                         HorizontalAlignment="Left"
+                         VerticalAlignment="Center"/>
+                      </Button>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </ScrollViewer>
+    </Grid>
+  </DockPanel>
 
 </rxui:ReactiveUserControl>

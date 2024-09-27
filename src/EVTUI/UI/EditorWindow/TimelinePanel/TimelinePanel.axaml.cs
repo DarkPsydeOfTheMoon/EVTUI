@@ -66,9 +66,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
             // TODO: move this to a method that can be run upon update
             // like if a frame is added or deleted
             this.FramePositions = new List<double>();
-            ScrollViewer framesScroller = LogicalExtensions.FindLogicalDescendantOfType<ScrollViewer>(this, false);
-            ItemsControl frames = LogicalExtensions.FindLogicalDescendantOfType<ItemsControl>(framesScroller);
-            foreach (var child in LogicalExtensions.GetLogicalChildren(frames))
+            foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
                 this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
         });
     }
@@ -132,4 +130,15 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         this.HPos = this.HPos.WithX(this.FramePositions[(int)e.NewValue]);
     }
 
+    public void ShowAllCategories(object sender, RoutedEventArgs e)
+    {
+        foreach (Category cat in ViewModel!.TimelineContent.Categories)
+           cat.IsOpen = true;
+    }
+
+    public void HideAllCategories(object sender, RoutedEventArgs e)
+    {
+        foreach (Category cat in ViewModel!.TimelineContent.Categories)
+           cat.IsOpen = false;
+    }
 }
