@@ -65,9 +65,15 @@ public class EventManager
         this.AcwbPaths = new List<(string ACB, string? AWB)>();
         foreach (string acbPath in cpkEVTContents.Value.acbPaths)
         {
-            string awbPath = acbPath.Substring(0, acbPath.Length-4) + ".AWB";
-            if (cpkEVTContents.Value.awbPaths.Contains(awbPath))
-                this.AcwbPaths.Add((acbPath, awbPath));
+            //string awbPath = acbPath.Substring(0, acbPath.Length-4) + ".AWB";
+            //if (cpkEVTContents.Value.awbPaths.Contains(awbPath))
+            //    this.AcwbPaths.Add((acbPath, awbPath));
+            // TODO: smarter way to make this case-insensitive...
+            string basePath = acbPath.Substring(0, acbPath.Length-4);
+            if (cpkEVTContents.Value.awbPaths.Contains(basePath+".AWB"))
+                this.AcwbPaths.Add((acbPath, basePath+".AWB"));
+            else if (cpkEVTContents.Value.awbPaths.Contains(basePath+".awb"))
+                this.AcwbPaths.Add((acbPath, basePath+".awb"));
             else
                 this.AcwbPaths.Add((acbPath, null));
         }

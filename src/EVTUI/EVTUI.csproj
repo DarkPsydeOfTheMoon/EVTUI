@@ -28,6 +28,7 @@
 
   <!-- Avalonia packages -->
   <ItemGroup>
+    <PackageReference Include="CalcBindingAva" Version="2.5.3" />
     <PackageReference Include="OpenTK.Graphics" Version="4.1" />
     <PackageReference Include="Avalonia" Version="11.0.10" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.10" />

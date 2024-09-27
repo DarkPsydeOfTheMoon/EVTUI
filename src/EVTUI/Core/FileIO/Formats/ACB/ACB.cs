@@ -16,6 +16,7 @@ public class ACB
     public UtfTable SerialAcb;
     public Afs2     SerialStreamAwbHeader;
     public Afs2     SerialMemoryAwb;
+    public bool     SimpleAwbId;
 
     public Dictionary<string, UtfTable> Tables;
     public Dictionary<uint,   Cue>      Cues;
@@ -41,18 +42,19 @@ public class ACB
         else
             locale = eventCues.EnCues;
 
-        if (Regex.IsMatch(this.AcbPath, "VOICE_SINGLEWORD\\.ACB$"))
+        // TODO: this logic should really be in the audiomanager... passed as extractionMode arg, maybe
+        if (AudioManager.Patterns["Common"].IsMatch(this.AcbPath))
         {
             this.ExtractionMode = "grouped";
             this.MessageCues    = locale.Common;
         }
-        else if (Regex.IsMatch(this.AcbPath, "F[0-9]{3}_[0-9]{3}\\.ACB$"))
+        else if (AudioManager.Patterns["Field"].IsMatch(this.AcbPath))
             this.MessageCues    = locale.Field;
-        else if (Regex.IsMatch(this.AcbPath, "E[0-9]{3}_[0-9]{3}\\.ACB$"))
+        else if (AudioManager.Patterns["Voice"].IsMatch(this.AcbPath))
             this.MessageCues    = locale.EventVoice;
-        else if (Regex.IsMatch(this.AcbPath, "E[0-9]{3}_[0-9]{3}_SE\\.ACB$"))
+        else if (AudioManager.Patterns["SFX"].IsMatch(this.AcbPath))
             this.MessageCues    = locale.EventSFX;
-        else if (Regex.IsMatch(this.AcbPath, "SYSTEM\\.ACB$"))
+        else if (AudioManager.Patterns["System"].IsMatch(this.AcbPath))
             this.ExtractionMode = "used";
 
         // UpdateAudioCueFiles in the AudioManager should then just skip this file
@@ -64,18 +66,39 @@ public class ACB
         this.SerialAcb.Read(this.AcbPath);
 
         if (!(this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue() is null))
-            this.SerialStreamAwbHeader = this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue().GetRowField(0, "Header").GetValue().GetValue();
+        {
+            if (this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().Magic == "@UTF")
+                this.SerialStreamAwbHeader = this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue().GetRowField(0, "Header").GetValue().GetValue();
+            else
+                this.SerialStreamAwbHeader = this.SerialAcb.GetRowField(0, "StreamAwbAfs2Header").GetValue().GetValue();
+        }
         this.AwbPath = awbPath;
 
         this.Tables = new Dictionary<string, UtfTable>();
-        string[] tableNames = new string[]
+        foreach (string shortName in new string[]{ "TrackEvent", "TrackCommand", "SynthCommand", "SeqCommand" })
+        {
+            string longName = $"{shortName}Table";
+            if (this.SerialAcb.Fields.ContainsKey(longName))
+                this.Tables[shortName] = this.SerialAcb.GetRowField(0, longName).GetValue().GetValue();
+            else if (this.SerialAcb.Fields.ContainsKey("CommandTable"))
+                this.Tables[shortName] = this.SerialAcb.GetRowField(0, "CommandTable").GetValue().GetValue();
+            else
+                throw new Exception("Unknown ACB version.");
+        }
+        
+        foreach (string name in new string[]
         {
             "Cue", "CueName", "Waveform", "Synth",
-            "Track", "Sequence", "TrackEvent",
-            "OutsideLink", "StringValue"
-        };
-        foreach (string name in tableNames)
+            "Track", "Sequence", "OutsideLink", "StringValue"
+        })
             this.Tables[name] = this.SerialAcb.GetRowField(0, $"{name}Table").GetValue().GetValue();
+
+        if (this.Tables["Waveform"].Fields.ContainsKey("Id"))
+            this.SimpleAwbId = true;
+        else if (this.Tables["Waveform"].Fields.ContainsKey("MemoryAwbId") && this.Tables["Waveform"].Fields.ContainsKey("StreamAwbId"))
+            this.SimpleAwbId = false;
+        else
+            throw new Exception("Unknown ACB version.");
 
         this.SerialMemoryAwb = this.SerialAcb.GetRowField(0, "AwbFile").GetValue().GetValue();
 
@@ -124,11 +147,17 @@ public class ACB
                 List<int> waveInds = this.GetReference(refType, refIndex);
                 for (int j=0; j<waveInds.Count; j++)
                 {
-                    int memoryAwbId = this.Tables["Waveform"].GetRowField(waveInds[j], "MemoryAwbId").GetValue();
                     byte encodeType = this.Tables["Waveform"].GetRowField(waveInds[j], "EncodeType").GetValue();
                     bool streaming = (this.Tables["Waveform"].GetRowField(waveInds[j], "Streaming").GetValue() != 0);
-                    int streamAwbId = this.Tables["Waveform"].GetRowField(waveInds[j], "StreamAwbId").GetValue();
-                    int awbId = (streaming ? streamAwbId : memoryAwbId);
+                    int awbId = 0;
+                    if (this.SimpleAwbId)
+                        awbId = this.Tables["Waveform"].GetRowField(waveInds[j], "Id").GetValue();
+                    else
+                    {
+                        int memoryAwbId = this.Tables["Waveform"].GetRowField(waveInds[j], "MemoryAwbId").GetValue();
+                        int streamAwbId = this.Tables["Waveform"].GetRowField(waveInds[j], "StreamAwbId").GetValue();
+                        awbId = (streaming ? streamAwbId : memoryAwbId);
+                    }
                     tracks.Add(new Track(awbId, encodeType, streaming));
                     trackList.Add(new TrackEntry(cueRanges[cueId].Name, cueId, cueNames[cueId], j+1, streaming, awbId, usage));
                 }
@@ -208,17 +237,24 @@ public class ACB
                 }
                 break;
             case CueReferenceType.Link:
-                uint linkId = this.Tables["OutsideLink"].GetRowField(refIndex, "Id").GetValue();
-                UInt16 acbIndex = this.Tables["OutsideLink"].GetRowField(refIndex, "AcbNameStringIndex").GetValue();
-                if (acbIndex == 0xFFFF)
-                    for (int i=0; i<this.Tables["Cue"].Rows.Length; i++)
-                        if (this.Tables["Cue"].GetRowField(i, "CueId").GetValue() == linkId)
-                        {
-                            int refType4 = this.Tables["Cue"].GetRowField(i, "ReferenceType").GetValue();
-                            int refIndex4 = this.Tables["Cue"].GetRowField(i, "ReferenceIndex").GetValue();
-                            rowInds.AddRange(this.GetReference(refType4, refIndex4));
-                            break;
-                        }
+                if (!(this.Tables["OutsideLink"] is null))
+                {
+                    UInt16 acbIndex = 0xFFFF;
+                    if (this.Tables["OutsideLink"].Fields.ContainsKey("AcbNameStringIndex"))
+                        acbIndex = this.Tables["OutsideLink"].GetRowField(refIndex, "AcbNameStringIndex").GetValue();
+                    if (acbIndex == 0xFFFF)
+                    {
+                        uint linkId = this.Tables["OutsideLink"].GetRowField(refIndex, "Id").GetValue();
+                        for (int i=0; i<this.Tables["Cue"].Rows.Length; i++)
+                            if (this.Tables["Cue"].GetRowField(i, "CueId").GetValue() == linkId)
+                            {
+                                int refType4 = this.Tables["Cue"].GetRowField(i, "ReferenceType").GetValue();
+                                int refIndex4 = this.Tables["Cue"].GetRowField(i, "ReferenceIndex").GetValue();
+                                rowInds.AddRange(this.GetReference(refType4, refIndex4));
+                                break;
+                            }
+                    }
+                }
                 break;
         }
         return rowInds;
