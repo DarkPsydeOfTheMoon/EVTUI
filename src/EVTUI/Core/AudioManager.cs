@@ -19,15 +19,13 @@ public class AudioManager
     private MediaPlayer                  mediaPlayer;
     private MemoryStream                 Stream;
     private (uint CueId, int TrackIndex) CurrentTrack;
-    //private static ulong                 KeyCode = 9923540143823782;
-    //private static ulong                 KeyCode = 0;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public string?                    ActiveACB = null;
-    public Dictionary<string, ACB>    AudioCueFiles { get; }
-    public List<string>               AcbList       { get; }
+    public string?                          ActiveACB = null;
+    public Dictionary<string, ACB>          AudioCueFiles { get; }
+    public List<string>                     AcbList       { get; }
     public Dictionary<string, List<string>> AcbByType     { get; }
 
     public List<uint> CueIds
@@ -71,8 +69,7 @@ public class AudioManager
         mediaPlayer   = new MediaPlayer(libVLC);
     }
 
-    // TODO: move logic here so this can be private
-    public static Dictionary<string, Regex> Patterns = new Dictionary<string, Regex>()
+    private static Dictionary<string, Regex> Patterns = new Dictionary<string, Regex>()
     {    
         ["BGM"]    = new Regex("BGM\\.ACB$",                                 RegexOptions.IgnoreCase),
         ["System"] = new Regex("SYSTEM\\.ACB$",                              RegexOptions.IgnoreCase),
@@ -93,7 +90,25 @@ public class AudioManager
             object _lock = new();
             Parallel.ForEach(acwbPaths, acwbPath =>
             {
-                ACB soundFile = new ACB(acwbPath.ACB, eventCues, acwbPath.AWB);
+                // stuff to be passed to the ACB object
+                string extractionMode = "default";
+                Dictionary<uint, MessageCue>? messageCues = null;
+                LocaleCues locale = (acwbPath.ACB.Contains("_J")) ? eventCues.JpCues : eventCues.EnCues;
+                if (AudioManager.Patterns["Common"].IsMatch(acwbPath.ACB))
+                {
+                    extractionMode = "grouped";
+                    messageCues    = locale.Common;
+                }
+                else if (AudioManager.Patterns["Field"].IsMatch(acwbPath.ACB))
+                    messageCues    = locale.Field;
+                else if (AudioManager.Patterns["Voice"].IsMatch(acwbPath.ACB))
+                    messageCues    = locale.EventVoice;
+                else if (AudioManager.Patterns["SFX"].IsMatch(acwbPath.ACB))
+                    messageCues    = locale.EventSFX;
+                else if (AudioManager.Patterns["System"].IsMatch(acwbPath.ACB))
+                    extractionMode = "used";
+
+                ACB soundFile = new ACB(acwbPath.ACB, messageCues, extractionMode, acwbPath.AWB);
                 if (!(soundFile.Cues is null))
                 {
                     string key = acwbPath.ACB.Substring((modPath.Length+1), acwbPath.ACB.Length-(modPath.Length+1));

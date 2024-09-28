@@ -24,42 +24,18 @@ public class ACB
     public Stack<CueRange> CueRanges;
     public ObservableCollection<TrackEntry> TrackList;
 
-    public string                           ExtractionMode { get; set; } = "default";
-    public Dictionary<uint, MessageCue>?    MessageCues    { get; set; }
-
     public List<uint> CueIds { get { return new List<uint>(this.Cues.Keys); } }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public ACB(string acbPath, AudioCues eventCues, string awbPath = null)
+    public ACB(string acbPath, Dictionary<uint, MessageCue>? messageCues, string extractionMode, string awbPath = null)
     {
         this.AcbPath = acbPath;
 
-        LocaleCues locale;
-        if (this.AcbPath.Contains("_J"))
-            locale = eventCues.JpCues;
-        else
-            locale = eventCues.EnCues;
-
-        // TODO: this logic should really be in the audiomanager... passed as extractionMode arg, maybe
-        if (AudioManager.Patterns["Common"].IsMatch(this.AcbPath))
-        {
-            this.ExtractionMode = "grouped";
-            this.MessageCues    = locale.Common;
-        }
-        else if (AudioManager.Patterns["Field"].IsMatch(this.AcbPath))
-            this.MessageCues    = locale.Field;
-        else if (AudioManager.Patterns["Voice"].IsMatch(this.AcbPath))
-            this.MessageCues    = locale.EventVoice;
-        else if (AudioManager.Patterns["SFX"].IsMatch(this.AcbPath))
-            this.MessageCues    = locale.EventSFX;
-        else if (AudioManager.Patterns["System"].IsMatch(this.AcbPath))
-            this.ExtractionMode = "used";
-
         // UpdateAudioCueFiles in the AudioManager should then just skip this file
         // (i.e., it won't be displayed)
-        if (this.ExtractionMode != "default" && (this.MessageCues is null || this.MessageCues.Count == 0))
+        if (extractionMode != "default" && (messageCues is null || messageCues.Count == 0))
             return;
 
         this.SerialAcb = new UtfTable();
@@ -115,7 +91,7 @@ public class ACB
             else
                 this.CueRanges.Push(new CueRange(cueId));
             cueRanges[cueId] = this.CueRanges.Peek();
-            if (this.ExtractionMode == "grouped" && this.MessageCues.ContainsKey(cueId))
+            if (extractionMode == "grouped" && messageCues.ContainsKey(cueId))
                 baseRanges.Add(this.CueRanges.Peek());
         }
 
@@ -136,12 +112,12 @@ public class ACB
             int refIndex = this.Tables["Cue"].GetRowField(i, "ReferenceIndex").GetValue();
 
             // TODO: how do we pick up when multiple messages refer to the same cue...?
-            string? usage = (!(this.MessageCues is null) && this.MessageCues.ContainsKey((ushort)cueId)) ? this.MessageCues[(ushort)cueId].Stringification : null;
+            string? usage = (!(messageCues is null) && messageCues.ContainsKey((ushort)cueId)) ? messageCues[(ushort)cueId].Stringification : null;
 
             if (
-                this.ExtractionMode == "default" ||
-                (this.ExtractionMode == "grouped" && baseRanges.Contains(cueRanges[cueId])) || 
-                (this.ExtractionMode == "used" && this.MessageCues.ContainsKey(cueId))
+                extractionMode == "default" ||
+                (extractionMode == "grouped" && baseRanges.Contains(cueRanges[cueId])) || 
+                (extractionMode == "used" && messageCues.ContainsKey(cueId))
             ) {
                 List<Track> tracks = new List<Track>();
                 List<int> waveInds = this.GetReference(refType, refIndex);

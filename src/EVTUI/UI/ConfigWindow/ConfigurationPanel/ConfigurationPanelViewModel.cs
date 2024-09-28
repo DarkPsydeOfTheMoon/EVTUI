@@ -82,13 +82,10 @@ public class DisplayableGame : ReactiveObject
 
 public class DisplayableEvent : ReactiveObject
 {
-    //public DisplayableEvent(DataManager config, int gameind, int projectind, int majorid, int minorid)
     public DisplayableEvent(DataManager config, GameSettings game, Project project, int majorid, int minorid)
     {
         this.Game = game;
         this.Proj = project;
-        //GameSettings game = config.AllGames[gameind];
-        //Project project = config.AllProjects[projectind];
         Config  = config;
         MajorId = majorid;
         MinorId = minorid;
@@ -103,8 +100,8 @@ public class DisplayableEvent : ReactiveObject
 
     private DataManager Config;
 
-    public int    MajorId { get; set; }
-    public int    MinorId { get; set; }
+    public int MajorId { get; set; }
+    public int MinorId { get; set; }
 
     private string _gameNotes;
     public string GameNotes
@@ -131,8 +128,6 @@ public class DisplayableEvent : ReactiveObject
         }
     }
 
-    //public int GameInd { get; set; }
-    //public int ProjInd { get; set; }
     private GameSettings Game;
     private Project      Proj;
 
@@ -151,15 +146,6 @@ public class ConfigurationPanelViewModel : ViewModelBase
 
     public string DisplayCPKPath { get => (this.newProjectConfig.GamePath is null) ? "(none)" : this.newProjectConfig.GamePath; }
     public string DisplayModPath { get => (this.newProjectConfig.ModPath is null) ? "(none)" : this.newProjectConfig.ModPath; }
-
-    // all but the name are just placeholders for now
-    /*public string ModName   { get; set; } = "";
-    public string ModType   { get; set; } = "Reloaded";
-    public string GameType  { get; set; } = "P5R PC (Steam)";
-    public bool   UseAwbEmu { get; set; } = false;
-    public bool   UseBfEmu  { get; set; } = false;
-    public bool   UseRyo    { get; set; } = false;
-    public List<String> ModLoadOrder { get; set; } = new List<string>(["<PRIMARY_MOD_PLACEHOLDER>"]);*/
 
     ////////////////////////////////
     // *** OBSERVABLE MEMBERS *** //
@@ -219,7 +205,6 @@ public class ConfigurationPanelViewModel : ViewModelBase
             this.Config.ReadOnly = false;
             for (int i=0; i<this.Config.AllProjects.Count; i++)
                 this.ProjectList.Add(new DisplayableProject(this.Config, i));
-                //this.ProjectList.Add(new DisplayableProject(this.Config.AllProjects[i], i));
         }
         else
         {
@@ -228,8 +213,6 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 this.Config.ReadOnly = false;
             else if (this.ConfigType == "read-only")
                 this.Config.ReadOnly = true;
-            //foreach (GameSettings game in this.Config.AllGames)
-            //    this.GameList.Add(new DisplayableGame(game.Type, game.Notes, game.Path));
             for (int i=0; i<this.Config.AllGames.Count; i++)
                 this.GameList.Add(new DisplayableGame(this.Config, i));
         }
@@ -266,9 +249,6 @@ public class ConfigurationPanelViewModel : ViewModelBase
             OnPropertyChanged(nameof(AnyRecentEvents));
             OnPropertyChanged(nameof(NoRecentEvents));
         });
-        // TODO
-        //if (this.ConfigType == "read-only")
-        //    this.EventList = new ObservableCollection<DisplayableEvent>(this.Config.AllUserEvents);
 
         this.WhenAnyValue(x => x.SelectedCollection).Subscribe(x => this.DisplayEvents());
     }
@@ -306,7 +286,6 @@ public class ConfigurationPanelViewModel : ViewModelBase
         if (this.newProjectConfig.ModPath is null || this.newProjectConfig.ModPath == "")
             return (1, "Mod folder hasn't been set.");
 
-        //bool projectSuccess = this.Config.ProjectManager.TryUpdateProjects(this.CpkPath, this.GameType, this.ModPath, this.ModType, this.ModName, (new Dictionary<string, bool>{{"AWBEmulator", this.UseAwbEmu}, {"BFEmulator", this.UseBfEmu}, {"Ryo", this.UseRyo}}), this.ModLoadOrder);
         bool projectSuccess = this.Config.ProjectManager.TryUpdateProjects(this.newProjectConfig);
         if (!projectSuccess)
             return (1, "Something is wrong with the provided folders. Project could not be created.");
@@ -327,9 +306,6 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 return (1, "No CPK folder selected.");
             if (this.GameSelection.Path is null)
                 return (1, "CPK folder selection is invalid.");
-            //cpkdir = this.GameSelection.Path;
-            //gametype = this.GameSelection.Type;
-            //notes = this.GameSelection.Notes;
             if (!this.TrySetCPKs(this.GameSelection.Path))
                 return (1, "No CPKs in selected folder.");
             if (this.Config.ReadOnly)

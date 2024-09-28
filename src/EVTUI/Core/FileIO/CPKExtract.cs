@@ -35,19 +35,23 @@ public static class CPKExtract
             dir.Delete(true); 
     }
 
-    public static List<string> ExtractMatchingFiles(List<string> CpkList, string filePatternString, string OutputFolder)
+    public static List<string> ExtractMatchingFiles(List<string> CpkList, string filePatternString, string OutputFolder, string decryptionFunctionName)
     {
         Regex filePattern = new Regex(filePatternString, RegexOptions.IgnoreCase);
         List<string> matches = new List<string>();
+
+        KnownDecryptionFunction decryptionFunctionIndex;
+        InPlaceDecryptionFunction decryptionFunction = null;
+        if (Enum.TryParse(decryptionFunctionName, out decryptionFunctionIndex))
+            decryptionFunction = CriFsLib.Instance.GetKnownDecryptionFunction(decryptionFunctionIndex);
+
         Parallel.ForEach(CpkList, CpkPath =>
         {
             CpkFile[] files;
             using (var fileStream = new FileStream(CpkPath, FileMode.Open))
-            using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, CriFsLib.Instance.GetKnownDecryptionFunction(KnownDecryptionFunction.P5R)))
-            //using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true))
+            using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, decryptionFunction))
                 { files = reader.GetFiles(); }
-            using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, CriFsLib.Instance.GetKnownDecryptionFunction(KnownDecryptionFunction.P5R));
-            //using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath);
+            using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, decryptionFunction);
             Parallel.For(0, files.Length, x =>
             {
                 var inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
@@ -61,6 +65,7 @@ public static class CPKExtract
             extractor.WaitForCompletion();
             ArrayRental.Reset();
         });
+
         return matches;
     }
 
@@ -80,18 +85,22 @@ public static class CPKExtract
         ["BGM:AWB"] = new Regex("BGM\\.AWB$",              RegexOptions.IgnoreCase),
     };
 
-    public static List<(int MajorId, int MinorId)> ListAllEvents(List<string> CpkList)
+    public static List<(int MajorId, int MinorId)> ListAllEvents(List<string> CpkList, string decryptionFunctionName)
     {
         Regex pattern = new Regex("^EVENT[\\\\/]E\\d\\d\\d[\\\\/]E\\d\\d\\d[\\\\/]E\\d\\d\\d_\\d\\d\\d\\.EVT$", RegexOptions.IgnoreCase);
-        //List<(int MajorId, int MinorId)> events = new List<(int MajorId, int MinorId)>();
         HashSet<(int MajorId, int MinorId)> events = new HashSet<(int MajorId, int MinorId)>();
+
+        KnownDecryptionFunction decryptionFunctionIndex;
+        InPlaceDecryptionFunction decryptionFunction = null;
+        if (Enum.TryParse(decryptionFunctionName, out decryptionFunctionIndex))
+            decryptionFunction = CriFsLib.Instance.GetKnownDecryptionFunction(decryptionFunctionIndex);
+
         object _lock = new();
         Parallel.ForEach(CpkList, CpkPath =>
         {
             CpkFile[] files;
             using (var fileStream = new FileStream(CpkPath, FileMode.Open))
-            using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, CriFsLib.Instance.GetKnownDecryptionFunction(KnownDecryptionFunction.P5R)))
-            //using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true))
+            using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, decryptionFunction))
             {
                 files = reader.GetFiles();
             }
@@ -101,8 +110,6 @@ public static class CPKExtract
                 var inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
                 if (pattern.IsMatch(inCpkPath))
                 {
-                    //Console.WriteLine(files[x].FileName);
-                    //string basename = Path.GetFileNameWithoutExtension(inCpkPath);
                     lock (_lock)
                     {
                         events.Add((int.Parse(files[x].FileName.Substring(1, 3)), int.Parse(files[x].FileName.Substring(5, 3))));
@@ -110,14 +117,13 @@ public static class CPKExtract
                 }
             });
         });
-        //events.Sort();
-        //return events;
+
         List<(int MajorId, int MinorId)> ret = new List<(int MajorId, int MinorId)>(events);
         ret.Sort();
         return ret;
     }
 
-    public static CpkEVTContents? ExtractEVTFiles(List<string> CpkList, string eventId, string OutputFolder)
+    public static CpkEVTContents? ExtractEVTFiles(List<string> CpkList, string eventId, string OutputFolder, string decryptionFunctionName)
     {
         // clear it first!
         CPKExtract.ClearDirectory(OutputFolder);
@@ -126,19 +132,22 @@ public static class CPKExtract
         Regex eventPattern = new Regex($"[\\\\/]{eventId}([\\\\/\\.]|_SE)", RegexOptions.IgnoreCase);
         bool evtFound = false;
 
+        KnownDecryptionFunction decryptionFunctionIndex;
+        InPlaceDecryptionFunction decryptionFunction = null;
+        if (Enum.TryParse(decryptionFunctionName, out decryptionFunctionIndex))
+            decryptionFunction = CriFsLib.Instance.GetKnownDecryptionFunction(decryptionFunctionIndex);
+
         Parallel.ForEach(CpkList, CpkPath =>
         {
             Console.WriteLine(CpkPath);
             CpkFile[] files;
             using (var fileStream = new FileStream(CpkPath, FileMode.Open))
-            using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, CriFsLib.Instance.GetKnownDecryptionFunction(KnownDecryptionFunction.P5R)))
-            //using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true))
+            using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, decryptionFunction))
             {
                 files = reader.GetFiles();
             }
 
-            using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, CriFsLib.Instance.GetKnownDecryptionFunction(KnownDecryptionFunction.P5R));
-            //using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath);
+            using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, decryptionFunction);
 
             Parallel.For(0, files.Length, x =>
             {

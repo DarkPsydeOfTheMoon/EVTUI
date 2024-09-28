@@ -5,96 +5,6 @@ using System.IO;
 
 namespace EVTUI;
 
-/*public class User
-{
-    public User(SerialUser serialUser)
-    {
-        this.Games = new Dictionary<string, GameWrapper>();
-        foreach (ExpandedGameSettings game in serialUser.Games)
-            this.Games[game.Path] = new Game(game);
-
-        this.Projects = new Dictionary<string, ProjectWrapper>();
-        foreach (SerialProject project in serialUser.Projects)
-            this.Projects[project.Mod.Path] = new ProjectWrapper(project, this.Games[project.Game.Path]);
-
-        this.Preferences = serialUser.Preferences;
-    }
-
-    public Dictionary<string, ProjectWrapper> Projects    { get; set; }
-    public Dictionary<string, GameWrapper>    Games       { get; set; }
-    public Dictionary<string, object>         Preferences { get; set; }
-
-    public SerialUser Serialize()
-    {
-        SerialUser ret = new SerialUser();
-        return ret;
-    }
-}
-
-public class GameWrapper
-{
-    public GameWrapper(ExpandedGameSettings game)
-    {
-        this.GameSettings  = game;
-
-        this.EventNotes = new Dictionary<(int MajorId, int MinorId), string>();
-        foreach (ExpandedEvent evt in project.Events.Notes)
-            this.EventNotes[(evt.MajorId, evt.MinorId)] = evt.Text;
-    }
-
-    public ExpandedGameSettings                           GameSettings { get; set; }
-    public Dictionary<(int MajorId, int MinorId), string> EventNotes   { get; set; }
-
-    public ExpandedGameSettings Serialize()
-    {
-        ExpandedGameSettings ret = new ExpandedGameSettings();
-        return ret;
-    }
-}
-
-public class ProjectWrapper
-{
-    public ProjectWrapper(SerialProject project, ExpandedGameSettings game)
-    {
-        this.GameSettings  = game;
-        this.Project       = project;
-
-        this.EventNotes = new Dictionary<(int MajorId, int MinorId), string>();
-        foreach (ExpandedEvent evt in project.Events.Notes)
-            this.EventNotes[(evt.MajorId, evt.MinorId)] = evt.Text;
-    }
-
-    public ExpandedGameSettings                           GameSettings { get; set; }
-    public SerialProject                                  Project      { get; set; }
-    public Dictionary<(int MajorId, int MinorId), string> EventNotes   { get; set; }
-
-    public SerialProject Serialize()
-    {
-        SerialProject ret = new SerialProject();
-        return ret;
-    }
-}*/
-
-/*public class DisplayableEvent
-{
-    public Event(int majorId, int minorId, bool gamePin, bool projPin, string gameNotes, string projNotes)
-    {
-        this.MajorId   = majorId;
-        this.MinorId   = minorId;
-        this.GamePin   = gamePin;
-        this.ProjPin   = projPin;
-        this.GameNotes = gameNotes;
-        this.ProjNotes = projNotes;
-    }
-
-    public int    MajorId   { get; set; }
-    public int    MinorId   { get; set; }
-    public bool   GamePin   { get; set; }
-    public bool   ProjPin   { get; set; }
-    public string GameNotes { get; set; }
-    public string ProjNotes { get; set; }
-}*/
-
 public class NewProjectConfig
 {
     public NewProjectConfig()
@@ -157,73 +67,7 @@ public class ProjectManager
     public SimpleEvent?  ActiveEvent;
 
     public ulong AdxKey { get => (this.ActiveGame is null) ? 0 : ProjectManager.KeyCodes[this.ActiveGame.Type]; }
-
-    /*public Project? LatestProject
-    {
-        get
-        {
-            if (this.UserData.Projects.Count > 0)
-                return this.UserData.Projects[0];
-            else
-                return null;
-        }
-    }
-
-    public string? LatestProjectGamePath
-    {
-        get
-        {
-            if (this.UserData.Projects.Count > 0)
-                return this.UserData.Projects[0].Game;
-            else
-                return null;
-        }
-    }
-
-    public string? LatestProjectModPath
-    {
-        get
-        {
-            if (this.UserData.Projects.Count > 0)
-                return this.UserData.Projects[0].Mod.Path;
-            else
-                return null;
-        }
-    }
-
-    public SimpleEvent? LatestProjectEvent
-    {
-        get
-        {
-            if (this.UserData.Projects.Count > 0 && this.UserData.Projects[0].Events.Recent.Count > 0)
-                return this.UserData.Projects[0].Events.Recent[0];
-            else
-                return null;
-        }
-    }
-
-    public string? LatestReadOnlyGamePath
-    {
-        get
-        {
-            if (this.UserData.Games.Count > 0)
-                return this.UserData.Games[0].Path;
-            else
-                return null;
-        }
-    }
-
-    public SimpleEvent? LatestReadOnlyEvent
-    {
-        get
-        {
-            // TODO: this is not robust
-            if (this.UserData.Games[0].Events.Recent.Count > 0)
-                return this.UserData.Games[0].Events.Recent[0];
-            else
-                return null;
-        }
-    }*/
+    public string CpkDecryptionFunctionName { get => (this.ActiveGame is null || !this.ActiveGame.Type.StartsWith("P5R")) ? null : "P5R"; }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -231,21 +75,6 @@ public class ProjectManager
     public ProjectManager()
     {
         this.UserData = UserCache.InitializeOrLoadUser();
-
-        // TODO: make these into unit tests
-        //this.UpdateReadOnlyEvents(726, 84);
-        //this.UpdateReadOnlyCPKs("/path/to/CPKs");
-        //this.TryUpdateProjects("/path/to/CPKs", "P5R PC (Steam)", "/path/to/MyMod", "Reloaded", "My First Mod", new Dictionary<string, bool>{["AWBEmulator"]=false, ["BFEmulator"]=false, ["BGME"]=false}, new List<string>(["/path/to/OtherMod", "/path/to/AnotherMod", "<PRIMARY_MOD_PLACEHOLDER>"]));
-        //this.TryUpdateProjects("/path/to/CPKs", "P5R PC (Steam)", "/path/to/MyOtherMod", "Reloaded", "My Second Mod", new Dictionary<string, bool>(), new List<string>(["/path/to/OtherMod", "/path/to/AnotherMod", "<PRIMARY_MOD_PLACEHOLDER>"]));
-        //this.UpdateProjectEvents(0, 223, 1);
-        //this.SetProjectName(0, "My 1st Mod");
-        //this.SetProjectFramework(0, "BFEmulator", true);
-        //this.SetProjectLoadOrder(0, new List<string>(["<PRIMARY_MOD_PLACEHOLDER>", "/path/to/YetAnotherMod"]));
-        //if (!(this.ActiveProject is null))
-        //    Console.WriteLine(this.ActiveProject.Name);
-        //this.LoadProject(1);
-        //if (!(this.ActiveProject is null))
-        //    Console.WriteLine(this.ActiveProject.Name);
     }
 
     private void SaveUserCache()
@@ -261,16 +90,11 @@ public class ProjectManager
         return false;
     }
 
-    //public bool TryUpdateProjects(string gamePath, string gameType, string modPath, string modType, string name, Dictionary<string, bool> frameworks, List<string> loadOrder)
     public bool TryUpdateProjects(NewProjectConfig config)
     {
         // just gonna treat these as one for error catching purposes... sure hope i don't regret this later when debugging
         if (this.ModPathAlreadyUsed(config.ModPath) || !Directory.Exists(config.GamePath))
             return false;
-
-        //GameSettings game = new GameSettings();
-        //game.Path = gamePath;
-        //game.Type = gameType;
 
         ModSettings mod = new ModSettings();
         mod.Path = config.ModPath;
@@ -293,16 +117,6 @@ public class ProjectManager
 
         return true;
     }
-
-    /*public void UpdateProjectEvents(int ind, int majorId, int minorId)
-    {
-        (this.UserData.Projects[ind].Events.Recent).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-        SimpleEvent newEvent = new SimpleEvent();
-        newEvent.MajorId = majorId;
-        newEvent.MinorId = minorId;
-        this.UserData.Projects[ind].Events.Recent.Insert(0, newEvent);
-        this.SaveUserCache();
-    }*/
 
     // there's probably a better way to handle these errors...
     public void LoadProject(int projInd)
@@ -475,15 +289,5 @@ public class ProjectManager
         this.SaveUserCache();
         this.ActiveGame = newGame;
     }
-
-    /*public void UpdateReadOnlyEvents(int majorId, int minorId)
-    {
-        (this.UserData.Games[0].Events.Recent).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-        SimpleEvent newEvent = new SimpleEvent();
-        newEvent.MajorId = majorId;
-        newEvent.MinorId = minorId;
-        this.UserData.Games[0].Events.Recent.Insert(0, newEvent);
-        this.SaveUserCache();
-    }*/
 
 }

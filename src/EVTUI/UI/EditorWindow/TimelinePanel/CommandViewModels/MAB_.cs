@@ -24,12 +24,12 @@ public class MAB_ : Generic
         List<string> assetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.VanillaExtractionPath);
         if (assetPaths.Count > 0)
         {
-            //if (this.HasPrimaryAnimation.Value)
-            //{
+            if (this.HasPrimaryAnimation.Value)
+            {
                 List<string> primaryAnimPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, !this.PrimaryAnimationFromSecondaryFile.Value, false, config.CpkList, config.VanillaExtractionPath);
                 if (primaryAnimPaths.Count > 0)
                     this.PrimaryAnimPreviewVM.sceneManager.QueuedLoads.Enqueue((assetPaths[0], primaryAnimPaths[0], this.CommandData.PrimaryAnimationIndex, false));
-            //}
+            }
             if (this.HasSecondaryAnimation.Value)
             {
                 List<string> secondaryAnimPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, !this.SecondaryAnimationFromSecondaryFile.Value, false, config.CpkList, config.VanillaExtractionPath);

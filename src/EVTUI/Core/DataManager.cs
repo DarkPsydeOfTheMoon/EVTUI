@@ -86,18 +86,15 @@ public class DataManager
         if (!this.ReadOnly && !this.ProjectLoaded)
             return false;
 
-        //bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.ModPath);
-        bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.VanillaExtractionPath);
+        bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.VanillaExtractionPath, this.ProjectManager.CpkDecryptionFunctionName);
         if (success)
             this.ProjectManager.LoadEvent(majorId, minorId);
         this.EventLoaded = success;
 
-        //this.ScriptManager.UpdateMessages(this.EventManager.BmdPaths, this.ModPath);
         this.ScriptManager.UpdateMessages(this.EventManager.BmdPaths, this.VanillaExtractionPath);
 
         // TODO: load common files! system sounds, common voice lines, models, bustups, cutins
         // so far, VOICE_SINGLEWORD gets loaded, but the rest will have to wait for full EVT/ECS parsing
-        //this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcwbPaths, this.ModPath, this.ScriptManager.EventCues);
         this.AudioManager.UpdateAudioCueFiles(this.EventManager.AcwbPaths, this.VanillaExtractionPath, this.ScriptManager.EventCues);
 
         return true;
@@ -115,7 +112,7 @@ public class DataManager
 
     public List<(int MajorId, int MinorId)> ListAllEvents()
     {
-        return CPKExtract.ListAllEvents(this.CpkList);
+        return CPKExtract.ListAllEvents(this.CpkList, this.ProjectManager.CpkDecryptionFunctionName);
     }
 
     public void ClearCache()

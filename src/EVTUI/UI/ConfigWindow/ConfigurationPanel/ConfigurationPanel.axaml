@@ -80,7 +80,6 @@
       <Setter Property="CanUserReorderColumns" Value="True"/>
       <Setter Property="CanUserResizeColumns" Value="True"/>
       <Setter Property="GridLinesVisibility" Value="All"/>
-      <!--Setter Property="Height" Value="NaN"/-->
       <Setter Property="Height" Value="300"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
       <Setter Property="Margin" Value="20"/>
@@ -105,10 +104,8 @@
       <Setter Property="Margin" Value="5"/>
       <Setter Property="Width" Value="300"/>
     </Style>
-    <!--Style Selector="StackPanel.formentry > StackPanel.checkboxes"-->
     <Style Selector="StackPanel.formentry > ItemsControl.checkboxes">
       <Setter Property="Margin" Value="5"/>
-      <!--Setter Property="Orientation" Value="Vertical"/-->
     </Style>
   </UserControl.Styles>
 
@@ -143,14 +140,8 @@
               <TextBlock Text="Project/Mod Name:"/>
               <TextBox Classes="editable" Text="{Binding newProjectConfig.Name}"/>
             </StackPanel>
-            <!-- (commented out because the booleans are unused for now, but it works fine) -->
             <StackPanel Classes="formentry" HorizontalAlignment="Left">
               <TextBlock Text="Frameworks:"/>
-              <!--StackPanel Classes="checkboxes">
-                <CheckBox IsChecked="{Binding UseAwbEmu}">AWBEmulator</CheckBox>
-                <CheckBox IsChecked="{Binding UseBfEmu}">BFEmulator</CheckBox>
-                <CheckBox IsChecked="{Binding UseRyo}">Ryo</CheckBox>
-              </StackPanel-->
               <ItemsControl Classes="checkboxes" ItemsSource="{Binding newProjectConfig.Frameworks}" />
             </StackPanel>
           </StackPanel></TabItem>
@@ -270,7 +261,6 @@
         <Separator/>
 
         <StackPanel>
-          <!--TextBlock Classes="tabletitle" Text="Recent Events"/-->
           <ComboBox Classes="tabletitle" ItemsSource="{Binding EventCollections}" SelectedItem="{Binding SelectedCollection}" />
           <StackPanel IsVisible="{Binding AnyRecentEvents, Mode=TwoWay}">
             <DataGrid ItemsSource="{Binding EventList, Mode=TwoWay}" SelectedItem="{Binding EventSelection, Mode=TwoWay}" IsVisible="{Binding AnyRecentEvents, Mode=TwoWay}">

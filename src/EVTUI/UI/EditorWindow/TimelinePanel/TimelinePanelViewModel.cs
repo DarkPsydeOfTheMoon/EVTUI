@@ -173,7 +173,6 @@ public class Timeline
         {
             string code = dataManager.EventManager.EventCommands[j].CommandCode;
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
-            //Console.WriteLine(i);
             if (i >= 0 && i < this.Frames.Count)
             {
                 int k = this.Frames[i].Commands.Count;
