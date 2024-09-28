@@ -20,26 +20,29 @@ public class Msg_ : Generic
         int msgIndex = config.ScriptManager.GetTurnIndex(this.CommandData.MessageMajorId, this.CommandData.MessageMinorId, this.CommandData.MessageSubId);
         string msgId = config.ScriptManager.GetTurnName(msgIndex);
         this.MessageID = new StringSelectionField("Message ID", this.Editable, msgId, config.ScriptManager.MsgNames);
-        if (config.ScriptManager.MsgNames.Contains(this.MessageID.Choice))
-            this.MessageBlock = new MessagePreview(config, msgIndex);
-        this.WhenAnyValue(x => x.MessageID.Choice).Subscribe(x =>
+        if (!(config.ScriptManager.ActiveBMD is null))
         {
-            int newMsgIndex = config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
-            if (config.ScriptManager.MsgNames.Contains(config.ScriptManager.GetTurnName(newMsgIndex)))
-                this.MessageBlock = new MessagePreview(config, newMsgIndex);
-        });
+            if (config.ScriptManager.MsgNames.Contains(this.MessageID.Choice))
+                this.MessageBlock = new MessagePreview(config, msgIndex);
+            this.WhenAnyValue(x => x.MessageID.Choice).Subscribe(x =>
+            {
+                int newMsgIndex = config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
+                if (config.ScriptManager.MsgNames.Contains(config.ScriptManager.GetTurnName(newMsgIndex)))
+                    this.MessageBlock = new MessagePreview(config, newMsgIndex);
+            });
 
-        int selIndex = config.ScriptManager.GetTurnIndex(this.CommandData.SelectMajorId, this.CommandData.SelectMinorId, this.CommandData.SelectSubId);
-        string selId = config.ScriptManager.GetTurnName(selIndex);
-        this.SelectionID = new StringSelectionField("Selection ID", this.Editable, selId, config.ScriptManager.SelNames);
-        if (config.ScriptManager.SelNames.Contains(this.SelectionID.Choice))
-            _selectionBlock = new SelectionPreview(config, selIndex);
-        this.WhenAnyValue(x => x.SelectionID.Choice).Subscribe(x =>
-        {
-            int newSelIndex = config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
-            if (config.ScriptManager.SelNames.Contains(config.ScriptManager.GetTurnName(newSelIndex)))
-                this.SelectionBlock = new SelectionPreview(config, newSelIndex);
-        });
+            int selIndex = config.ScriptManager.GetTurnIndex(this.CommandData.SelectMajorId, this.CommandData.SelectMinorId, this.CommandData.SelectSubId);
+            string selId = config.ScriptManager.GetTurnName(selIndex);
+            this.SelectionID = new StringSelectionField("Selection ID", this.Editable, selId, config.ScriptManager.SelNames);
+            if (config.ScriptManager.SelNames.Contains(this.SelectionID.Choice))
+                _selectionBlock = new SelectionPreview(config, selIndex);
+            this.WhenAnyValue(x => x.SelectionID.Choice).Subscribe(x =>
+            {
+                int newSelIndex = config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
+                if (config.ScriptManager.SelNames.Contains(config.ScriptManager.GetTurnName(newSelIndex)))
+                    this.SelectionBlock = new SelectionPreview(config, newSelIndex);
+            });
+        }
     }
 
     public BoolChoiceField      HasMessage   { get; set; }

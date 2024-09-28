@@ -13,10 +13,10 @@ public class MAA_ : Generic
 
         this.PrimaryAnimPreviewVM = new GFDRenderingPanelViewModel();
         this.SecondaryAnimPreviewVM = new GFDRenderingPanelViewModel();
-        List<string> assetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.ModPath);
+        List<string> assetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.VanillaExtractionPath);
         if (assetPaths.Count > 0)
         {
-            List<string> animPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, true, true, config.CpkList, config.ModPath);
+            List<string> animPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, true, true, config.CpkList, config.VanillaExtractionPath);
             if (animPaths.Count > 0)
             {
                 this.PrimaryAnimPreviewVM.sceneManager.QueuedLoads.Enqueue((assetPaths[0], animPaths[0], this.CommandData.PrimaryAnimationIndex, true));

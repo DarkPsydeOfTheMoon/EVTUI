@@ -1,10 +1,8 @@
+using System;
+
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
-
 using Avalonia.Interactivity;
-
-using System;
 
 namespace EVTUI.Views;
 
@@ -21,9 +19,8 @@ public partial class MessageBox : UserControl
 
     public void OnInitialized(object? sender, EventArgs e)
     {
-        var modalText = this.FindControl<TextBlock>("ModalText");
-        if (modalText is null) throw new NullReferenceException();
-        modalText.Text = this.text;
+        this.ModalText.Text = this.text;
+        this.OKButton.AttachedToVisualTree += (s, e) => this.OKButton.Focus();
     }
 
     public void ClickHandler(object sender, RoutedEventArgs args)

@@ -56,7 +56,7 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
         if (configtype == "read-only")
             editorWindowView.Title = $"EVTUI: {config.ActiveEventId} (read-only)";
         else
-            editorWindowView.Title = $"EVTUI: {config.ActiveEventId} ({config.ActiveProject.Mutable.Name})";
+            editorWindowView.Title = $"EVTUI: {config.ActiveEventId} ({config.ProjectManager.ActiveProject.Name})";
 
         res = await ((Window)editorWindowView).ShowDialog<int?>(topLevel);
         config.Reset();

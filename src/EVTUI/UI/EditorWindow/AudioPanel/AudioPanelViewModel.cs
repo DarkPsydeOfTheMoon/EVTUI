@@ -57,6 +57,6 @@ public class AudioPanelViewModel : ViewModelBase
     public void PlaySelectedTrack()
     {
         if (this.TrackSelection != null)
-            this.Config.AudioManager.PlayCueTrack(this.TrackSelection.CueId, this.TrackSelection.TrackIndex);
+            this.Config.AudioManager.PlayCueTrack(this.TrackSelection.CueId, this.TrackSelection.TrackIndex, this.Config.ProjectManager.AdxKey);
     }
 }

@@ -19,14 +19,13 @@ public class AudioManager
     private MediaPlayer                  mediaPlayer;
     private MemoryStream                 Stream;
     private (uint CueId, int TrackIndex) CurrentTrack;
-    private static ulong                 KeyCode = 9923540143823782;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public string?                    ActiveACB = null;
-    public Dictionary<string, ACB>    AudioCueFiles { get; }
-    public List<string>               AcbList       { get; }
+    public string?                          ActiveACB = null;
+    public Dictionary<string, ACB>          AudioCueFiles { get; }
+    public List<string>                     AcbList       { get; }
     public Dictionary<string, List<string>> AcbByType     { get; }
 
     public List<uint> CueIds
@@ -70,41 +69,67 @@ public class AudioManager
         mediaPlayer   = new MediaPlayer(libVLC);
     }
 
+    private static Dictionary<string, Regex> Patterns = new Dictionary<string, Regex>()
+    {    
+        ["BGM"]    = new Regex("BGM\\.ACB$",                                 RegexOptions.IgnoreCase),
+        ["System"] = new Regex("SYSTEM\\.ACB$",                              RegexOptions.IgnoreCase),
+        ["Common"] = new Regex("VOICE_SINGLEWORD\\.ACB$",                    RegexOptions.IgnoreCase),
+        ["Voice"]  = new Regex("E[0-9][0-9][0-9]_[0-9][0-9][0-9]\\.ACB$",    RegexOptions.IgnoreCase),
+        ["SFX"]    = new Regex("E[0-9][0-9][0-9]_[0-9][0-9][0-9]_SE\\.ACB$", RegexOptions.IgnoreCase),
+        ["Field"]  = new Regex("F[0-9][0-9][0-9]_[0-9][0-9][0-9]\\.ACB$",    RegexOptions.IgnoreCase),
+    };
+
     public void UpdateAudioCueFiles(List<(string ACB, string? AWB)> acwbPaths, string modPath, AudioCues eventCues)
     {
         this.AudioCueFiles.Clear();
         this.AcbList.Clear();
         foreach (string key in this.AcbByType.Keys)
             this.AcbByType[key].Clear();
-        object _lock = new();
-        Parallel.ForEach(acwbPaths, acwbPath =>
+        if (!(acwbPaths is null))
         {
-            ACB soundFile = new ACB(acwbPath.ACB, eventCues, acwbPath.AWB);
-            if (!(soundFile.Cues is null))
+            object _lock = new();
+            Parallel.ForEach(acwbPaths, acwbPath =>
             {
-                Console.WriteLine(acwbPath.ACB);
-                string key = acwbPath.ACB.Substring((modPath.Length+1), acwbPath.ACB.Length-(modPath.Length+1));
-                lock (_lock)
+                // stuff to be passed to the ACB object
+                string extractionMode = "default";
+                Dictionary<uint, MessageCue>? messageCues = null;
+                LocaleCues locale = (acwbPath.ACB.Contains("_J")) ? eventCues.JpCues : eventCues.EnCues;
+                if (AudioManager.Patterns["Common"].IsMatch(acwbPath.ACB))
                 {
-                    if (key.EndsWith("BGM.ACB"))
-                        this.AcbByType["BGM"].Add(key);
-                    else if (key.EndsWith("SYSTEM.ACB"))
-                        this.AcbByType["System"].Add(key);
-                    else if (key.EndsWith("VOICE_SINGLEWORD.ACB"))
-                        this.AcbByType["Common"].Add(key);
-                    else if (Regex.IsMatch(key, "E[0-9][0-9][0-9]_[0-9][0-9][0-9]\\.ACB$"))
-                        this.AcbByType["Voice"].Add(key);
-                    else if (Regex.IsMatch(key, "E[0-9][0-9][0-9]_[0-9][0-9][0-9]_SE\\.ACB$"))
-                        this.AcbByType["SFX"].Add(key);
-                    else if (Regex.IsMatch(key, "F[0-9][0-9][0-9]_[0-9][0-9][0-9]\\.ACB$"))
-                        this.AcbByType["Field"].Add(key);
-                    this.AudioCueFiles[key] = soundFile;
-                    this.AcbList.Add(key);
+                    extractionMode = "grouped";
+                    messageCues    = locale.Common;
                 }
-            }
-        });
+                else if (AudioManager.Patterns["Field"].IsMatch(acwbPath.ACB))
+                    messageCues    = locale.Field;
+                else if (AudioManager.Patterns["Voice"].IsMatch(acwbPath.ACB))
+                    messageCues    = locale.EventVoice;
+                else if (AudioManager.Patterns["SFX"].IsMatch(acwbPath.ACB))
+                    messageCues    = locale.EventSFX;
+                else if (AudioManager.Patterns["System"].IsMatch(acwbPath.ACB))
+                    extractionMode = "used";
+
+                ACB soundFile = new ACB(acwbPath.ACB, messageCues, extractionMode, acwbPath.AWB);
+                if (!(soundFile.Cues is null))
+                {
+                    string key = acwbPath.ACB.Substring((modPath.Length+1), acwbPath.ACB.Length-(modPath.Length+1));
+                    lock (_lock)
+                    {
+                        foreach (string typeKey in AudioManager.Patterns.Keys)
+                        {
+                            if (AudioManager.Patterns[typeKey].IsMatch(key))
+                            {
+                                this.AcbByType[typeKey].Add(key);
+                                break;
+                            }
+                        }
+                        this.AudioCueFiles[key] = soundFile;
+                        this.AcbList.Add(key);
+                    }
+                }
+            });
+        }
         this.AcbList.Sort();
-        if (acwbPaths.Count > 0)
+        if (this.AcbList.Count > 0)
             this.ActiveACB = this.AcbList[0];
         else
             this.ActiveACB = null;
@@ -113,16 +138,16 @@ public class AudioManager
         Console.WriteLine(this.AcbByType["Voice"].Count);
     }
 
-    public void PlayCueTrack(uint cueId, int trackIndex)
+    public void PlayCueTrack(uint cueId, int trackIndex, ulong keyCode)
     {
         if (this.CurrentTrack != (cueId, trackIndex) || this.mediaPlayer.State.ToString() == "Ended")
         {
             if (!(this.Stream is null))
                 this.Stream.Dispose();
-            byte[] trackBytes = this.AudioCueFiles[this.ActiveACB].GetTrackBytes(cueId, trackIndex, AudioManager.KeyCode);
+            byte[] trackBytes = this.AudioCueFiles[this.ActiveACB].GetTrackBytes(cueId, trackIndex, keyCode);
             if (!(trackBytes is null))
             {
-                this.Stream = new MemoryStream(this.AudioCueFiles[this.ActiveACB].GetTrackBytes(cueId, trackIndex, AudioManager.KeyCode));
+                this.Stream = new MemoryStream(this.AudioCueFiles[this.ActiveACB].GetTrackBytes(cueId, trackIndex, keyCode));
                 this.mediaPlayer.Media = new Media(libVLC, new StreamMediaInput(this.Stream));
             }
             this.CurrentTrack = (cueId, trackIndex);
