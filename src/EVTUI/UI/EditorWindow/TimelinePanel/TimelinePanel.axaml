@@ -134,14 +134,6 @@
 
   <UserControl.Resources>
     <Flyout x:Key="CommandFlyout" Opening="PopulateFlyout" Closed="ClearFlyout" Placement="Bottom"/>
-    <!--Flyout x:Key="RenderFlyout" Opening="LoadModelInScene" Closed="ClearScene">
-      <StackPanel Width="600" Height="400">
-        <TextBlock Classes="formtitle" Text="Model Preview"/>
-        <Separator Classes="formtitle"/>
-        <views:GFDRenderingPanel DataContext="{Binding ModelPreviewVM}"/>
-      </StackPanel>
-    </Flyout-->
-    <!--Content="{Binding ActiveCommand}"-->
   </UserControl.Resources>
 
   <UserControl.DataTemplates>
@@ -160,31 +152,9 @@
          Background="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}"
          Height="5"
          Margin="0,0,0,10"/>
-        <!--ItemsControl ItemsSource="{Binding Commands}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel
-               Margin="0,0,0,10"
-               Orientation="Vertical"
-               Spacing="5"/>
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-        </ItemsControl-->
       </StackPanel>
       </Border>
-      <!--TextBlock Grid.Row="0" Grid.Column="{Binding Index}" Text="{Binding Name}" Width="60"/-->
     </DataTemplate>
-
-       <!--Height="60"-->
-    <!--DataTemplate DataType="{x:Type vm:CommandPointer}">
-      <Button Flyout="{StaticResource CommandFlyout}"
-       HorizontalAlignment="Center"
-       Width="{c:Binding 60 + 85*(Duration-1)}">
-        <TextBlock Text="{Binding Code}"
-         HorizontalAlignment="Left"
-         VerticalAlignment="Center"/>
-      </Button>
-    </DataTemplate-->
 
     <!-- FIELD TYPES -->
 
@@ -886,9 +856,6 @@
             <Style Selector="ItemsControl > ContentPresenter:pointerover > Border">
               <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
             </Style>
-            <!--Style Selector="ItemsControl > ContentPresenter:pointerover > Border.hide">
-              <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
-            </Style-->
             <Style Selector="ItemsControl > ContentPresenter:pointerover > Border > DockPanel > ToggleButton TextBlock">
               <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
             </Style>
@@ -972,7 +939,6 @@
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.Styles>
                     <Style Selector="ContentPresenter"> <!--x:DataType="vm:CommandPointer"-->
-                      <!--Setter Property="IsVisible" Value="{Binding $parent[ItemsControl].((vm:Category)DataContext).IsOpen}"/-->
                       <Setter Property="Canvas.Left" Value="{c:Binding 85*Frame + 10}"/>
                     </Style>
                     <Style Selector="ItemsControl.show > ContentPresenter">

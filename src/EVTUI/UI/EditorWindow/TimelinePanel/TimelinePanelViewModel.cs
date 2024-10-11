@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 using ReactiveUI;
-// TODO: add this back in when it no longer breaks Audio Panel...
 //using ReactiveUI.Fody.Helpers;
 
 namespace EVTUI.ViewModels;
@@ -154,24 +153,6 @@ public class BoolChoiceField : FieldBase
 
 public class Timeline : ReactiveObject
 {
-
-    /*public static List<Category> Categories { get; set; } = new List<Category>
-    {
-        new Category("Field",    1 ),
-        new Category("Env",      2 ),
-        new Category("Camera",   3 ),
-        new Category("Model",    4 ),
-        new Category("Effect",   5 ),
-        new Category("Image",    6 ),
-        new Category("Movie",    7 ),
-        new Category("Dialogue", 8 ),
-        new Category("Texture",  9 ),
-        new Category("UI",       10 ),
-        new Category("Audio",    11),
-        new Category("Script",   12),
-        new Category("Flow",     13),
-        new Category("Other",    14),
-    };*/
 
     public Timeline(DataManager dataManager)
     {

@@ -30,29 +30,23 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
 
     private Vector _hPos = new Vector(0.0, 0.0);
     public Vector HPos
-    //private double _hPos = 0.0;
-    //public double HPos
     {
         get => _hPos;
         set
         {
             _hPos = value;
             OnPropertyChanged(nameof(HPos));
-            //Console.WriteLine(HPos);
         }
     }
 
     private Vector _vPos = new Vector(0.0, 0.0);
     public Vector VPos
-    //private double _vPos = 0.0;
-    //public double VPos
     {
         get => _vPos;
         set
         {
             _vPos = value;
             OnPropertyChanged(nameof(VPos));
-            //Console.WriteLine(VPos);
         }
     }
 
