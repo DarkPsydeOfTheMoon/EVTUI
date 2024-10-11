@@ -1,26 +1,19 @@
+using System;
+using System.Threading.Tasks;
+
+using ReactiveUI;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.ReactiveUI;
+
 using EVTUI.ViewModels;
-using ReactiveUI;
-using System;
-using System.IO;
-using System.Reactive;
-using System.Threading.Tasks;
-using System.Windows.Input;
 
 namespace EVTUI.Views;
 
 public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanelViewModel>
 {
 
-    private string ConfigType
-    {
-        get
-        {
-            return ((ConfigurationPanelViewModel)DataContext).ConfigType;
-        }
-    }
+    private Window topLevel;
 
     public ConfigurationPanel()
     {
@@ -28,85 +21,32 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
 
         this.WhenActivated(d =>
         {
-            if (this.ConfigType == "new-proj")
-                pages.SelectedIndex = 1;
-            else if (this.ConfigType == "open-proj")
-                pages.SelectedIndex = 2;
-            else if (this.ConfigType == "read-only")
-                pages.SelectedIndex = 3;
-            else
-                pages.SelectedIndex = 0;
-            d(ViewModel!.GetCPKDirectoryFromView.RegisterHandler(GetCpkDirPathFromDialog));
-            d(ViewModel!.GetModDirectoryFromView.RegisterHandler(GetModDirPathFromDialog));
-            d(ViewModel!.DisplayMessage.RegisterHandler(DisplayMessageBox));
-            d(ViewModel!.OpenEventConfig.RegisterHandler(GoToEventPage));
-            d(ViewModel!.FinishConfig.RegisterHandler(CloseModal));
+            var tl = TopLevel.GetTopLevel(this);
+            if (tl is null) throw new NullReferenceException();
+            this.topLevel = (Window)tl;
+
+            switch (ViewModel!.ConfigType)
+            {
+                case "new-proj":
+                    pages.SelectedIndex = 1;
+                    break;
+                case "open-proj":
+                    pages.SelectedIndex = 2;
+                    break;
+                case "read-only":
+                    pages.SelectedIndex = 3;
+                    break;
+                default:
+                    pages.SelectedIndex = 0;
+                    break;
+            }
         });
-    }
-
-    private async Task GoToEventPage(InteractionContext<Unit, bool> interaction)
-    {
-        pages.SelectedIndex = 4;
-        interaction.SetOutput(true);
-    }
-
-    private async Task GetCpkDirPathFromDialog(InteractionContext<Unit, string?> interaction)
-    {
-        var tl = TopLevel.GetTopLevel(this);
-        if (tl is null) throw new NullReferenceException();
-        var topLevel = (Window)tl;
-
-        // Start async operation to open the dialog.
-        var dirs = await topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
-        {
-            Title = "Open CPK Directory",
-            AllowMultiple = false
-        });
-
-        if (dirs.Count > 0)
-            interaction.SetOutput(dirs[0].Path.AbsolutePath);
-        else
-            interaction.SetOutput(null);
-    }
-
-    private async Task GetModDirPathFromDialog(InteractionContext<Unit, string?> interaction)
-    {
-        var tl = TopLevel.GetTopLevel(this);
-        if (tl is null) throw new NullReferenceException();
-        var topLevel = (Window)tl;
-
-        // Start async operation to open the dialog.
-        var dirs = await topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
-        {
-            Title = "Open Mod Directory",
-            AllowMultiple = false
-        });
-
-        if (dirs.Count > 0)
-            interaction.SetOutput(dirs[0].Path.AbsolutePath);
-        else
-            interaction.SetOutput(null);
-    }
-
-    public async Task DisplayMessageBox(InteractionContext<string, bool> interaction)
-    {
-        // Hiding RaiseModal inside this function suppresses a
-        // "[IME] Error while destroying the context:
-        // Tmds.DBus.Protocol.DBusException: org.freedesktop.DBus.Error.UnknownMethod: 
-        // Method Destroy is not implemented on interface org.freedesktop.IBus.Service"
-        // exception apparently caused by a bug in the Avalonia 11.0 release.
-        int closecode = await RaiseModal(interaction.Input);
-        interaction.SetOutput(closecode == 0);
-        return;
     }
 
     // If we need to pop boxes like this from multiple places, we should add this to
     // a View base class or something.
     public async Task<int> RaiseModal(string text)
     {
-        var tl = TopLevel.GetTopLevel(this);
-        if (tl is null) throw new NullReferenceException();
-        var topLevel = (Window)tl;
         Window sampleWindow =
             new Window 
             { 
@@ -117,20 +57,117 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
 
         // Launch window and get a return code to distinguish how the window
         // was closed.
-        int? res = await sampleWindow.ShowDialog<int?>(topLevel);
+        int? res = await sampleWindow.ShowDialog<int?>(this.topLevel);
         if (res is null)
             return 1;
         else
             return (int)res;
     }
 
-    public async Task CloseModal(InteractionContext<int?,bool> interaction)
+    private void GoToEventPage()
     {
-        var tl = TopLevel.GetTopLevel(this);
-        if (tl is null) throw new NullReferenceException();
-        var topLevel = (Window)tl;
-        interaction.SetOutput(true);
-        topLevel.Close(interaction.Input);
+        ViewModel!.DisplayEvents();
+        pages.SelectedIndex = 4;
+    }
+
+    ///////////////////////////////////
+    // *** PROJECT CREATION FORM *** //
+    ///////////////////////////////////
+
+    public async void GetModDirPathFromDialog(object sender, RoutedEventArgs e)
+    {
+        // Start async operation to open the dialog.
+        var dirs = await this.topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
+        {
+            Title = "Open Mod Directory",
+            AllowMultiple = false
+        });
+
+        if (dirs.Count > 0)
+        {
+            var retTuple = ViewModel!.TrySetModDir(dirs[0].Path.AbsolutePath);
+            if (retTuple.Status != 0)
+                await RaiseModal(retTuple.Message);
+        }
+    }
+
+    public async void CreateProject(object sender, RoutedEventArgs e)
+    {
+        var retTuple = ViewModel!.TryCreateProject();
+        if (retTuple.Status == 0)
+            this.GoToEventPage();
+        else
+            await RaiseModal(retTuple.Message);
+    }
+
+    ////////////////////////////
+    // *** CPK SETUP FORM *** //
+    ////////////////////////////
+
+    public async void GetSelectedGame(object sender, RoutedEventArgs e)
+    {
+        var retTuple = ViewModel!.TryUseCPKDir(null, null);
+        if (retTuple.Status != 0)
+            await RaiseModal(retTuple.Message);
+        else if (ViewModel!.ConfigType == "read-only")
+            this.GoToEventPage();
+    }
+
+    public async void GetGamePathFromDialog(object sender, RoutedEventArgs e)
+    {
+        // Start async operation to open the dialog.
+        var dirs = await this.topLevel.StorageProvider.OpenFolderPickerAsync(new Avalonia.Platform.Storage.FolderPickerOpenOptions
+        {
+            Title = "Open CPK Directory",
+            AllowMultiple = false
+        });
+
+        if (dirs.Count > 0)
+        {
+            var retTuple = ViewModel!.TryUseCPKDir(dirs[0].Path.AbsolutePath, ViewModel!.newProjectConfig.GameType);
+            if (retTuple.Status != 0)
+                await RaiseModal(retTuple.Message);
+            else if (ViewModel!.ConfigType == "read-only")
+                this.GoToEventPage();
+        }
+    }
+
+    ////////////////////////////////////
+    // *** PROJECT SELECTION FORM *** //
+    ////////////////////////////////////
+
+    public async void UseProject(object sender, RoutedEventArgs e)
+    {
+        var retTuple = ViewModel!.TryLoadProject();
+        if (retTuple.Status == 0)
+        {
+            this.topLevel.Title = $"EVTUI ({ViewModel!.Config.ProjectManager.ActiveProject.Name})";
+            this.GoToEventPage();
+        }
+        else
+            await RaiseModal(retTuple.Message);
+    }
+
+    //////////////////////////////////
+    // *** EVENT SELECTION FORM *** //
+    //////////////////////////////////
+
+    public async void UseSelectedEvent(object sender, RoutedEventArgs e)
+    {
+        var retTuple = ViewModel!.TryLoadEvent(true);
+        if (retTuple.Status == 0)
+            this.topLevel.Close(0);
+        else
+            await RaiseModal(retTuple.Message);
+    }
+
+    public async void UseEnteredEvent(object sender, RoutedEventArgs e)
+    {
+        var retTuple = ViewModel!.TryLoadEvent(false);
+        if (retTuple.Status == 0)
+            this.topLevel.Close(0);
+        else
+            await RaiseModal(retTuple.Message);
     }
 
 }

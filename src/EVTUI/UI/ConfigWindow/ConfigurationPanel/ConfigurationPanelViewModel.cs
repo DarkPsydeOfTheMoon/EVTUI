@@ -1,43 +1,160 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using ReactiveUI;
 
-using Avalonia.Threading;
+using ReactiveUI;
+//using ReactiveUI.Fody.Helpers;
 
 namespace EVTUI.ViewModels;
 
-public class DisplayableProject
+public class DisplayableProject : ReactiveObject
 {
-    public DisplayableProject(Project project, int ind)
+    public DisplayableProject(DataManager config, int ind)
     {
-        Name = project.Mutable.Name;
-        GamePath = project.Immutable.Game.Path;
-        ModPath = project.Immutable.Mod.Path;
-        Ind = ind;
+        Project project = config.AllProjects[ind];
+        Config   = config;
+        _name     = project.Name;
+        _notes   = project.Notes;
+        GamePath = project.Game;
+        ModPath  = project.Mod.Path;
+        Ind      = ind;
     }
 
-    public string Name     { get; set; }
+    private DataManager Config;
+
+    private string _name;
+    public string Name
+    {
+        get => _name;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _name, value);
+            this.Config.ProjectManager.SetProjectName(this.Ind, _name);
+        }
+    }
+
+    private string _notes;
+    public string Notes
+    {
+        get => _notes;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _notes, value);
+            this.Config.ProjectManager.SetProjectNotes(this.Ind, _notes);
+        }
+    }
+
     public string GamePath { get; set; }
     public string ModPath  { get; set; }
-    public int Ind         { get; set; }
+    public int    Ind      { get; set; }
 }
 
-public class DisplayableDirectory
+public class DisplayableGame : ReactiveObject
 {
-    public DisplayableDirectory(string directory)
+    public DisplayableGame(DataManager config, int ind)
     {
-        Directory = directory;
+        GameSettings game = config.AllGames[ind];
+        Config = config;
+        Type   = game.Type;
+        _notes = game.Notes;
+        Path   = game.Path;
+        Ind    = ind;
     }
 
-    public string Directory { get; set; }
+    private DataManager Config;
+
+    public string Type  { get; set; }
+
+    private string _notes;
+    public string Notes
+    {
+        get => _notes;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _notes, value);
+            this.Config.ProjectManager.SetGameNotes(this.Ind, _notes);
+        }
+    }
+
+    public string Path  { get; set; }
+    public int    Ind   { get; set; }
+}
+
+public class DisplayableEvent : ReactiveObject
+{
+    public DisplayableEvent(DataManager config, GameSettings game, Project project, int majorid, int minorid, bool hasProjPin, bool hasGamePin)
+    {
+        this.Game = game;
+        this.Proj = project;
+        Config  = config;
+        MajorId = majorid;
+        MinorId = minorid;
+        foreach (ExpandedEvent evt in game.Events.Notes)
+            if (evt.MajorId == majorid && evt.MinorId == minorid)
+                _gameNotes  = evt.Text;
+        if (!(project is null))
+            foreach (ExpandedEvent evt in project.Events.Notes)
+                if (evt.MajorId == majorid && evt.MinorId == minorid)
+                    _projNotes  = evt.Text;
+        _hasProjPin = hasProjPin;
+        _hasGamePin = hasGamePin;
+    }
+
+    private DataManager Config;
+
+    public int MajorId { get; set; }
+    public int MinorId { get; set; }
+
+    private bool _hasProjPin;
+    public bool HasProjPin
+    {
+        get => _hasProjPin;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _hasProjPin, value);
+            this.Config.ProjectManager.SetProjectPin(this.Proj, this.MajorId, this.MinorId, _hasProjPin);
+        }
+    }
+
+    private bool _hasGamePin;
+    public bool HasGamePin
+    {
+        get => _hasGamePin;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _hasGamePin, value);
+            this.Config.ProjectManager.SetGamePin(this.Game, this.MajorId, this.MinorId, _hasGamePin);
+        }
+    }
+
+    private string _gameNotes;
+    public string GameNotes
+    {
+        get => _gameNotes;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _gameNotes, value);
+            this.Config.ProjectManager.SetGameEventNotes(this.Game, this.MajorId, this.MinorId, _gameNotes);
+        }
+    }
+
+    private string _projNotes;
+    public string ProjNotes
+    {
+        get => _projNotes;
+        set
+        {
+            if (!(this.Proj is null))
+            {
+                this.RaiseAndSetIfChanged(ref _projNotes, value);
+                this.Config.ProjectManager.SetProjectEventNotes(this.Proj, this.MajorId, this.MinorId, _projNotes);
+            }
+        }
+    }
+
+    private GameSettings Game;
+    private Project      Proj;
+
 }
 
 public class ConfigurationPanelViewModel : ViewModelBase
@@ -46,125 +163,54 @@ public class ConfigurationPanelViewModel : ViewModelBase
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public DataManager Config;
-    public string ConfigType;
+    public DataManager Config { get; }
+    public string      ConfigType;
 
-    public ObservableCollection<DisplayableProject> ProjectList { get; }
-    public DisplayableProject ProjectSelection { get; set; }
+    public NewProjectConfig newProjectConfig { get; set; }
 
-    public ObservableCollection<DisplayableDirectory> CpkDirList { get; }
-    public DisplayableDirectory CpkDirSelection { get; set; }
-    public HashSet<string> CpkDirSet;
-    public HashSet<string> ModDirSet;
-    public Event EventSelection { get; set; }
+    public string DisplayCPKPath { get => (this.newProjectConfig.GamePath is null) ? "(none)" : this.newProjectConfig.GamePath; }
+    public string DisplayModPath { get => (this.newProjectConfig.ModPath is null) ? "(none)" : this.newProjectConfig.ModPath; }
 
+    ////////////////////////////////
+    // *** OBSERVABLE MEMBERS *** //
+    ////////////////////////////////
+    public ObservableCollection<DisplayableGame> GameList      { get; }
+    public DisplayableGame                       GameSelection { get; set; }
+    public bool AnyRecentGames { get => (!(this.GameList is null) && this.GameList.Count > 0); }
+    public bool NoRecentGames  { get { return !this.AnyRecentGames; } }
+
+    public ObservableCollection<DisplayableProject> ProjectList      { get; }
+    public DisplayableProject                       ProjectSelection { get; set; }
+    public bool AnyRecentProjects { get => (this.Config.AllProjects.Count > 0); }
+    public bool NoRecentProjects { get => !this.AnyRecentProjects; }
+
+    private ObservableCollection<DisplayableEvent> _eventList;
+    public ObservableCollection<DisplayableEvent> EventList
+    {
+        get => _eventList;
+        set => this.RaiseAndSetIfChanged(ref _eventList, value);
+    }
+    public bool AnyRecentEvents { get => (!(this.EventList is null) && this.EventList.Count > 0); }
+    public bool NoRecentEvents  { get => !this.AnyRecentEvents; }
+
+    private DisplayableEvent _eventSelection;
+    public DisplayableEvent EventSelection
+    {
+        get => _eventSelection;
+        set => this.RaiseAndSetIfChanged(ref _eventSelection, value);
+    }
     public int? EventMajorId { get; set; } = 0;
     public int? EventMinorId { get; set; } = 0;
 
-    public string CpkPath;
-    public string DisplayCPKPath
-    {
-        get 
-        {
-            if (this.CpkPath is null)
-                return "(none)";
-            else
-                return this.CpkPath;
-        }
-        set
-        {
-            this.CpkPath = value; 
-            OnPropertyChanged(nameof(DisplayCPKPath));
-        }
-    }
+    public bool ProjectLoaded { get => this.Config.ProjectLoaded; }
 
-    public string? ModPath;
-    public string DisplayModPath
+    public ObservableCollection<string> EventCollections { get; } = new ObservableCollection<string>{"Recent Events", "Pinned Events", "All Events"};
+    private string _selectedCollection = "Recent Events";
+    public string SelectedCollection
     {
-        get 
-        {
-            if (this.ModPath is null)
-                return "(none)";
-            else
-                return this.ModPath;
-        }
-        set
-        {
-            this.ModPath = value; 
-            OnPropertyChanged(nameof(DisplayModPath));
-        }
+        get => _selectedCollection;
+        set => this.RaiseAndSetIfChanged(ref _selectedCollection, value);
     }
-
-    // all but the name are just placeholders for now
-    public string ModName { get; set; } = "";
-    public string ModType { get; set; } = "P5R PC (Steam)";
-    public string GameType { get; set; } = "Reloaded";
-    public bool UseAwbEmu { get; set; } = false;
-    public bool UseBfEmu { get; set; } = false;
-    public bool UseBgmEmu { get; set; } = false;
-    public List<String> ModLoadOrder { get; set; } = new List<string>(["<PRIMARY_MOD_PLACEHOLDER>"]);
-
-    public string DisplayLoadedEvent
-    {
-        get 
-        {
-            if (this.Config.ActiveEventId is null)
-                return "(none)";
-            else
-                return this.Config.ActiveEventId;
-        }
-    }
-
-    public ObservableCollection<Event> EventList
-    {
-        get
-        {
-            if (this.ConfigType == "read-only")
-                return new ObservableCollection<Event>(this.Config.AllReadOnlyEvents);
-            else if (!(this.Config.ActiveProject is null))
-                return new ObservableCollection<Event>(this.Config.ActiveProject.History.Events);
-            else
-                return null;
-        }
-    }
-
-    public bool AnyRecentProjects
-    {
-        get
-        {
-            if (this.ConfigType == "read-only")
-                return false;
-            else
-                return (this.Config.AllProjects.Count > 0);
-        }
-    }
-    public bool NoRecentProjects { get { return !this.AnyRecentProjects; } }
-
-    public bool AnyRecentCpkDirs
-    {
-        get
-        {
-            if (this.CpkDirList is null)
-                 return false;
-            else
-                 return (this.CpkDirList.Count > 0);
-        }
-    }
-    public bool NoRecentCpkDirs { get { return !this.AnyRecentCpkDirs; } }
-
-    public bool AnyRecentEvents
-    {
-        get
-        {
-            if (this.ConfigType == "read-only")
-                return (this.Config.AllReadOnlyEvents.Count > 0);
-            else if (!(this.Config.ActiveProject is null))
-                return (this.Config.ActiveProject.History.Events.Count > 0);
-            else
-                return false;
-        }
-    }
-    public bool NoRecentEvents { get { return !this.AnyRecentEvents; } }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -174,207 +220,212 @@ public class ConfigurationPanelViewModel : ViewModelBase
         this.Config = dataManager;
         this.ConfigType = configtype;
 
-        this.ModDirSet = new HashSet<string>();
-        foreach (Project project in this.Config.AllProjects)
-            this.ModDirSet.Add(project.Immutable.Mod.Path);
+        this.ProjectList = new ObservableCollection<DisplayableProject>();
+        this.GameList    = new ObservableCollection<DisplayableGame>();
+        _eventList = new ObservableCollection<DisplayableEvent>();
 
         if (this.ConfigType == "open-proj")
         {
             this.Config.ReadOnly = false;
-            List<DisplayableProject> projectList = new List<DisplayableProject>();
             for (int i=0; i<this.Config.AllProjects.Count; i++)
-                projectList.Add(new DisplayableProject(this.Config.AllProjects[i], i));
-            this.ProjectList = new ObservableCollection<DisplayableProject>(projectList);
+                this.ProjectList.Add(new DisplayableProject(this.Config, i));
         }
         else
         {
+            this.newProjectConfig = new NewProjectConfig();
             if (this.ConfigType == "new-proj")
                 this.Config.ReadOnly = false;
             else if (this.ConfigType == "read-only")
                 this.Config.ReadOnly = true;
-            // I was originally splitting the project vs. read-only CPK histories, but eh
-            // ...it's just more convenient to always show both in any recent files tables
-            List<DisplayableDirectory> cpkList = new List<DisplayableDirectory>();
-            this.CpkDirSet = new HashSet<string>();
-            foreach (Project project in this.Config.AllProjects)
-            {
-                if (!(this.CpkDirSet.Contains(project.Immutable.Game.Path)))
-                {
-                    cpkList.Add(new DisplayableDirectory(project.Immutable.Game.Path));
-                    this.CpkDirSet.Add(project.Immutable.Game.Path);
-                }
-            }
-            foreach (string cpkDir in this.Config.AllReadOnlyCPKs)
-            {
-                if (!(this.CpkDirSet.Contains(cpkDir)))
-                {
-                    cpkList.Add(new DisplayableDirectory(cpkDir));
-                    this.CpkDirSet.Add(cpkDir);
-                }
-            }
-            this.CpkDirList = new ObservableCollection<DisplayableDirectory>(cpkList);
+            for (int i=0; i<this.Config.AllGames.Count; i++)
+                this.GameList.Add(new DisplayableGame(this.Config, i));
         }
+
+        this.WhenAnyValue(x => x.ProjectList).Subscribe(x =>
+        {
+            OnPropertyChanged(nameof(ProjectList));
+            this.ProjectSelection = null;
+            if (this.ProjectList.Count > 0)
+                this.ProjectSelection = this.ProjectList[0];
+            OnPropertyChanged(nameof(ProjectSelection));
+            OnPropertyChanged(nameof(AnyRecentProjects));
+            OnPropertyChanged(nameof(NoRecentProjects));
+        });
+
+        this.WhenAnyValue(x => x.GameList).Subscribe(x =>
+        {
+            OnPropertyChanged(nameof(GameList));
+            this.GameSelection = null;
+            if (this.GameList.Count > 0)
+                this.GameSelection = this.GameList[0];
+            OnPropertyChanged(nameof(GameSelection));
+            OnPropertyChanged(nameof(AnyRecentGames));
+            OnPropertyChanged(nameof(NoRecentGames));
+        });
+
+        this.WhenAnyValue(x => x.EventList).Subscribe(x =>
+        {
+            OnPropertyChanged(nameof(EventList));
+            this.EventSelection = null;
+            if (this.EventList.Count > 0)
+                this.EventSelection = this.EventList[0];
+            OnPropertyChanged(nameof(EventSelection));
+            OnPropertyChanged(nameof(AnyRecentEvents));
+            OnPropertyChanged(nameof(NoRecentEvents));
+        });
+
+        this.WhenAnyValue(x => x.SelectedCollection).Subscribe(x => this.DisplayEvents());
     }
     
-    public ICommand UseSelectedCpkDir { get { return ReactiveCommand.CreateFromTask(async () => 
+    public bool TrySetCPKs(string cpkdir)
     {
-        await Task.Run(() => SetCPKsHelper(true));
-    });}}
+        List<string> cpks = this.Config.GetCPKsFromPath(cpkdir);
+        if (cpks.Count <= 0)
+            return false;
 
-    public ICommand SetCPKs { get { return ReactiveCommand.CreateFromTask(async () => 
-    {
-        await Task.Run(() => SetCPKsHelper(false));
-    });}}
-
-    public async void SetCPKsHelper(bool fromSelection)
-    {
-        var cpks = new List<string>();  
-        while (cpks.Count <= 0)
+        if (!(newProjectConfig is null))
         {
-            // Yeah, you shouldn't use exceptions for control flow, whatever...
-            string? cpkdir = null;
-            if (fromSelection)
-            {
-                if (this.ConfigType == "open-proj")
-                {
-                    if (this.ProjectSelection is null)
-                    {
-                        await Dispatcher.UIThread.InvokeAsync(async () =>
-                            { await DisplayMessage.Handle("No project selected."); });
-                        return;
-                    }
-                    else
-                        cpkdir = this.ProjectSelection.GamePath;
-                }
-                else if (this.CpkDirSelection is null)
-                {
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
-                        { await DisplayMessage.Handle("No folder selected."); });
-                    return;
-                }
-                else
-                    cpkdir = this.CpkDirSelection.Directory;
-            }
-            else
-                cpkdir = await GetCPKDirectoryFromView.Handle(Unit.Default);
-            try
-            {
-                cpks = this.Config.GetCPKsFromPath(cpkdir);
-                if (cpks.Count <= 0)
-                {
-                    bool tryagain = await Dispatcher.UIThread.InvokeAsync(async () =>
-                        { return await DisplayMessage.Handle("No CPKs in selected folder."); });
-                    if (tryagain)
-                        continue;
-                    else
-                        break;
-                }
-                this.DisplayCPKPath = cpkdir;
-                this.Config.CpkList = cpks;
-            }
-            catch (NullReferenceException)     { break; }
-            catch (DirectoryNotFoundException) { await Dispatcher.UIThread.InvokeAsync(async () =>
-                { await DisplayMessage.Handle("'" + cpkdir + "' is not a directory."); } ); }
+            this.newProjectConfig.GamePath = cpkdir;
+            OnPropertyChanged(nameof(DisplayCPKPath));
         }
-        return;
+        this.Config.CpkList = cpks;
+        return true;
     }
 
-    public ICommand SetModDir { get { return ReactiveCommand.CreateFromTask(async () => 
+    public (int Status, string Message) TrySetModDir(string maybedir)
     {
-        string? maybedir = null;
-        while (true)
-        {
-            maybedir = await GetModDirectoryFromView.Handle(Unit.Default);
-            if (maybedir is null)
-                return;
-            else if (this.Config.ProjectManager.ModPathAlreadyUsed(maybedir))
-                await this.DisplayMessage.Handle("Selected mod directory is used in another project and cannot be reused.");
-            else
-                break;
-        }
-        this.ModPath = maybedir;
+        if (this.Config.ProjectManager.ModPathAlreadyUsed(maybedir))
+            return (1, "Selected mod directory is used in another project and cannot be reused.");
+        this.newProjectConfig.ModPath = maybedir;
         OnPropertyChanged(nameof(DisplayModPath));
-    });}}
+        return (0, null);
+    }
 
-    public ICommand CreateProject { get { return ReactiveCommand.CreateFromTask(async () => 
+    public (int Status, string Message) TryCreateProject()
     {
-        if (this.ModName is null || this.ModName == "")
-        {
-            await this.DisplayMessage.Handle("Project name hasn't been set.");
-            return;
-        }
-        if (this.CpkPath is null || this.CpkPath == "")
-        {
-            await this.DisplayMessage.Handle("Game (CPK) folder hasn't been set.");
-            return;
-        }
-        if (this.ModPath is null || this.ModPath == "")
-        {
-            await this.DisplayMessage.Handle("Mod folder hasn't been set.");
-            return;
-        }
-        bool projectSuccess = this.Config.ProjectManager.TryUpdateProjects(this.CpkPath, this.GameType, this.ModPath, this.ModType, this.ModName, (new Dictionary<string, bool>{{"AWBEmulator", this.UseAwbEmu}, {"BFEmulator", this.UseBfEmu}, {"BGME", this.UseBgmEmu}}), this.ModLoadOrder);
-        if (!projectSuccess)
-        {
-            await this.DisplayMessage.Handle("Something is wrong with the provided folders. Project could not be created.");
-            return;
-        }
-        this.Config.LoadProject(0);
-        OnPropertyChanged(nameof(this.EventList));
-        OnPropertyChanged(nameof(this.AnyRecentEvents));
-        OnPropertyChanged(nameof(this.NoRecentEvents));
-        await this.DisplayMessage.Handle($"Loaded project \"{this.Config.ActiveProject.Mutable.Name}\"!");
-        await this.OpenEventConfig.Handle(Unit.Default);
-    });}}
+        if (this.newProjectConfig.Name is null || this.newProjectConfig.Name == "")
+            return (1, "Project name hasn't been set.");
+        if (this.newProjectConfig.GamePath is null || this.newProjectConfig.GamePath == "")
+            return (1, "Game (CPK) folder hasn't been set.");
+        if (this.newProjectConfig.ModPath is null || this.newProjectConfig.ModPath == "")
+            return (1, "Mod folder hasn't been set.");
 
-    public ICommand SetProject { get { return ReactiveCommand.CreateFromTask(async () => 
+        bool projectSuccess = this.Config.ProjectManager.TryUpdateProjects(this.newProjectConfig);
+        if (!projectSuccess)
+            return (1, "Something is wrong with the provided folders. Project could not be created.");
+
+        this.Config.LoadProject(0);
+
+        if (this.Config.ProjectManager.ActiveProject is null)
+            return (1, "Failed to load project for some reason.");
+
+        return (0, $"Loaded project \"{this.Config.ProjectManager.ActiveProject.Name}\"!");
+    }
+
+    public (int Status, string Message) TryUseCPKDir(string cpkdir, string gametype)
+    {
+        if (cpkdir is null)
+        {
+            if (this.GameSelection is null)
+                return (1, "No CPK folder selected.");
+            if (this.GameSelection.Path is null)
+                return (1, "CPK folder selection is invalid.");
+            if (!this.TrySetCPKs(this.GameSelection.Path))
+                return (1, "No CPKs in selected folder.");
+            if (this.Config.ReadOnly)
+                this.Config.ProjectManager.LoadGameReadOnly(this.GameSelection.Ind);
+        }
+        else
+        {
+            if (!this.TrySetCPKs(cpkdir))
+                return (1, "No CPKs in selected folder.");
+            if (this.Config.ReadOnly)
+                this.Config.ProjectManager.UpdateReadOnlyCPKs(cpkdir, gametype, "");
+        }
+        return (0, null);
+    }
+
+    public (int Status, string Message) TryLoadProject()
     {
         if (this.ProjectSelection is null)
-        {
-            await DisplayMessage.Handle("No project selected.");
-            return;
-        }
+            return (1, "No project selected.");
+        if (this.ProjectSelection.GamePath is null)
+            return (1, "Project has no game path set.");
+
+        if (!this.TrySetCPKs(this.ProjectSelection.GamePath))
+            return (1, "No CPKs in selected folder.");
+
         this.Config.LoadProject(this.ProjectSelection.Ind);
-        SetCPKsHelper(true);
-        OnPropertyChanged(nameof(this.EventList));
-        OnPropertyChanged(nameof(this.AnyRecentEvents));
-        OnPropertyChanged(nameof(this.NoRecentEvents));
-        await this.DisplayMessage.Handle($"Loaded project \"{this.Config.ActiveProject.Mutable.Name}\"!");
-        await this.OpenEventConfig.Handle(Unit.Default);
-    });}}
+        if (this.Config.ProjectManager.ActiveProject is null)
+            return (1, "No project loaded.");
 
-    public ICommand InitReadOnly { get { return ReactiveCommand.CreateFromTask(async () => 
+        return (0, $"Loaded project \"{this.Config.ProjectManager.ActiveProject.Name}\"!");
+    }
+
+    public List<DisplayableEvent> ConstructDisplayableEvents(List<SimpleEvent> evts, List<SimpleEvent> projPins, List<SimpleEvent> gamePins)
     {
-        if (this.CpkPath is null || this.CpkPath == "")
+        List<DisplayableEvent> ret = new List<DisplayableEvent>();
+        foreach (SimpleEvent evt in evts)
         {
-            await this.DisplayMessage.Handle("Game (CPK) folder hasn't been set.");
-            return;
+            bool hasProjPin = false;
+            if (!(projPins is null))
+                foreach (SimpleEvent pin in projPins)
+                    if (pin.MajorId == evt.MajorId && pin.MinorId == evt.MinorId)
+                    {
+                        hasProjPin = true;
+                        break;
+                    }
+            bool hasGamePin = false;
+            foreach (SimpleEvent pin in gamePins)
+                if (pin.MajorId == evt.MajorId && pin.MinorId == evt.MinorId)
+                {
+                    hasGamePin = true;
+                    break;
+                }
+            ret.Add(new DisplayableEvent(this.Config, this.Config.ProjectManager.ActiveGame, this.Config.ProjectManager.ActiveProject, evt.MajorId, evt.MinorId, hasProjPin, hasGamePin));
         }
-        // other issues should already be handled by SetCpks, unless shit's really fucked
-        this.Config.ProjectManager.UpdateReadOnlyCPKs(this.CpkPath);
-        await this.OpenEventConfig.Handle(Unit.Default);
-    });}}
+        return ret;
+    }
 
-    public ICommand UseSelectedEvent { get { return ReactiveCommand.CreateFromTask(async () => 
+    public void DisplayEvents()
     {
-        await Task.Run(() => SetEVTHelper(true));
-    });}}
+        OnPropertyChanged(nameof(ProjectLoaded));
 
-    public ICommand SetEVT { get { return ReactiveCommand.CreateFromTask(async () => 
-    {
-        await Task.Run(() => SetEVTHelper(false));
-    });}}
+        ObservableCollection<DisplayableEvent> eventList = new ObservableCollection<DisplayableEvent>();
+        if (this.SelectedCollection == "All Events")
+            foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ListAllEvents(), (this.Config.ProjectManager.ActiveProject is null) ? null : this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                eventList.Add(evt);
+        else if (!(this.Config.ProjectManager.ActiveProject is null))
+        {
+            if (this.SelectedCollection == "Recent Events")
+                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ProjectManager.ActiveProject.Events.Recent, this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                    eventList.Add(evt);
+            else if (this.SelectedCollection == "Pinned Events")
+            {
+                HashSet<SimpleEvent> combinedPins = new HashSet<SimpleEvent>(this.Config.ProjectManager.ActiveProject.Events.Pinned);
+                combinedPins.UnionWith(this.Config.ProjectManager.ActiveGame.Events.Pinned);
+                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(new List<SimpleEvent>(combinedPins), this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                    eventList.Add(evt);
+            }
+        }
+        else if (!(this.Config.ProjectManager.ActiveGame is null))
+        {
+            if (this.SelectedCollection == "Recent Events")
+                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ProjectManager.ActiveGame.Events.Recent, null, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                    eventList.Add(evt);
+            else if (this.SelectedCollection == "Pinned Events")
+                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ProjectManager.ActiveGame.Events.Pinned, null, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                    eventList.Add(evt);
+        }
+        this.EventList = eventList;
+    }
 
-    public async void SetEVTHelper(bool fromSelection)
+    public (int Status, string Message) TryLoadEvent(bool fromSelection)
     {
         if (fromSelection)
         {
             if (this.EventSelection is null)
-            {
-                await Dispatcher.UIThread.InvokeAsync(async () =>
-                    { await DisplayMessage.Handle("No event selected."); });
-                return;
-            }
+                return (1, "No event selected.");
             this.EventMajorId = this.EventSelection.MajorId;
             this.EventMinorId = this.EventSelection.MinorId;
             OnPropertyChanged(nameof(this.EventMajorId));
@@ -384,49 +435,20 @@ public class ConfigurationPanelViewModel : ViewModelBase
         try
         {
             bool validLoadAttempt = this.Config.LoadEvent((int)this.EventMajorId, (int)this.EventMinorId);
-			if (!validLoadAttempt)
-            {
-                await Dispatcher.UIThread.InvokeAsync(async () =>
-                    { await this.DisplayMessage.Handle("Must have a loaded project or be in read-only mode to load an event."); });
-                return;
-            }
+            if (!validLoadAttempt)
+                return (1, "Must have a loaded project or be in read-only mode to load an event.");
             else if (!this.Config.EventLoaded)
-            {
-                await Dispatcher.UIThread.InvokeAsync(async () =>
-                    { await this.DisplayMessage.Handle($"Event E{this.EventMajorId:000}_{this.EventMinorId:000} does not exist and could not be loaded."); });
-                OnPropertyChanged(nameof(this.DisplayLoadedEvent));
-                return;
-            }
+                return (1, $"Event E{this.EventMajorId:000}_{this.EventMinorId:000} does not exist and could not be loaded.");
         }
         catch (Exception ex)
         {
-            // I think this should only throw if some really wacky OS stuff happens.
-            await Dispatcher.UIThread.InvokeAsync(async () =>
-                { await this.DisplayMessage.Handle("Failed to extract EVT due to unhandled exception: '" + ex.ToString() + "'"); });
-            return;
+            return (1, "Failed to extract EVT due to unhandled exception: '" + ex.ToString() + "'");
         }
 
-        OnPropertyChanged(nameof(this.DisplayLoadedEvent));
-        await Dispatcher.UIThread.InvokeAsync(async () =>
-            { await this.DisplayMessage.Handle($"Loaded event {this.Config.ActiveEventId}!"); });
-    }
-
-    public ICommand FinishConfigStartEdit { get { return ReactiveCommand.CreateFromTask(async () =>
-    {
         if (this.Config.ActiveEventId is null)
-        {
-            await this.DisplayMessage.Handle("No event loaded.");
-            return;
-        }
-        await this.FinishConfig.Handle(0);
-        return;
-    });}}
+            return (1, "No event loaded.");
 
-    // View Interactions
-    public Interaction<Unit,   string?> GetCPKDirectoryFromView { get; } = new Interaction<Unit,   string?>();
-    public Interaction<Unit,   string?> GetModDirectoryFromView { get; } = new Interaction<Unit,   string?>();
-    public Interaction<string, bool   > DisplayMessage          { get; } = new Interaction<string, bool   > ();
-    public Interaction<Unit,   bool   > OpenEventConfig         { get; } = new Interaction<Unit,   bool>();
-    public Interaction<int?,   bool   > FinishConfig            { get; } = new Interaction<int?,   bool>();
+        return (0, $"Loaded event {this.Config.ActiveEventId}!");
+    }
 
 }

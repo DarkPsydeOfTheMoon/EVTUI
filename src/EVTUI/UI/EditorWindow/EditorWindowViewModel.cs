@@ -1,4 +1,8 @@
-﻿namespace EVTUI.ViewModels;
+﻿using System;
+
+using EVTUI;
+
+namespace EVTUI.ViewModels;
 
 public class EditorWindowViewModel : ViewModelBase
 {
@@ -18,6 +22,11 @@ public class EditorWindowViewModel : ViewModelBase
         this.Config          = dataManager;
         this.audioPanelVM    = new AudioPanelViewModel(this.Config);
         this.timelinePanelVM = new TimelinePanelViewModel(this.Config);
+    }
+
+    public void ClearCache()
+    {
+        this.Config.ClearCache();
     }
 
 }

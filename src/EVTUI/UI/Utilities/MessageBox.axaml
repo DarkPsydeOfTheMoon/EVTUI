@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="EVTUI.Views.MessageBox">
-  <StackPanel  Margin="20" VerticalAlignment="Center">
-   <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" Margin="20" Name="ModalText"/>
-   <Button Content="OK" Grid.Row="1" Grid.Column="0" Click="ClickHandler" HorizontalAlignment="Center" Margin="20"/>
+  <StackPanel Margin="20" VerticalAlignment="Center">
+    <TextBlock Name="ModalText" HorizontalAlignment="Center" Margin="20"/>
+    <Button Name="OKButton" Content="OK" Click="ClickHandler" Background="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center" Padding="10" Margin="20" Focusable="True"/>
   </StackPanel>
 </UserControl>

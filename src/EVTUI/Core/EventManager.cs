@@ -9,7 +9,6 @@ using System.Collections.Generic;
 
 namespace EVTUI;
 
-
 public struct CpkEVTContents
 {
     public string? evtPath;
@@ -22,15 +21,15 @@ public struct CpkEVTContents
     public CpkEVTContents() {}
 }
 
-
 public class EventManager
 {
 
     /////////////////////////////
     // *** PRIVATE MEMBERS *** //
     ///////////////./////////////
-    private EVT? SerialEvent       = null;
-    private ECS? SerialEventSounds = null;
+    private EVT?   SerialEvent               = null;
+    private ECS?   SerialEventSounds         = null;
+    private string CpkDecryptionFunctionName = null;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
@@ -42,10 +41,12 @@ public class EventManager
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public bool Load(List<string> cpkList, string evtid, string targetdir)
+    public bool Load(List<string> cpkList, string evtid, string targetdir, string cpkDecryptionFunctionName)
     {
         this.Clear();
-        CpkEVTContents? cpkEVTContents = CPKExtract.ExtractEVTFiles(cpkList, evtid, targetdir);
+        this.CpkDecryptionFunctionName = cpkDecryptionFunctionName;
+
+        CpkEVTContents? cpkEVTContents = CPKExtract.ExtractEVTFiles(cpkList, evtid, targetdir, this.CpkDecryptionFunctionName);
         if (cpkEVTContents is null)
             return false;
 
@@ -65,9 +66,12 @@ public class EventManager
         this.AcwbPaths = new List<(string ACB, string? AWB)>();
         foreach (string acbPath in cpkEVTContents.Value.acbPaths)
         {
-            string awbPath = acbPath.Substring(0, acbPath.Length-4) + ".AWB";
-            if (cpkEVTContents.Value.awbPaths.Contains(awbPath))
-                this.AcwbPaths.Add((acbPath, awbPath));
+            // TODO: smarter way to make this case-insensitive...
+            string basePath = acbPath.Substring(0, acbPath.Length-4);
+            if (cpkEVTContents.Value.awbPaths.Contains(basePath+".AWB"))
+                this.AcwbPaths.Add((acbPath, basePath+".AWB"));
+            else if (cpkEVTContents.Value.awbPaths.Contains(basePath+".awb"))
+                this.AcwbPaths.Add((acbPath, basePath+".awb"));
             else
                 this.AcwbPaths.Add((acbPath, null));
         }
@@ -102,8 +106,9 @@ public class EventManager
 
     public void Clear()
     {
-        this.SerialEvent       = null;
-        this.SerialEventSounds = null;
+        this.SerialEvent               = null;
+        this.SerialEventSounds         = null;
+        this.CpkDecryptionFunctionName = null;
     }
 
     public int EventDuration { get { return this.SerialEvent.TotalFrame; } }
@@ -169,7 +174,7 @@ public class EventManager
         if (pattern == "")
             return new List<string>();
         else
-            return CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir);
+            return CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir, this.CpkDecryptionFunctionName);
     }
 
     public List<string> GetAnimPaths(int assetId, bool fromBaseAnims, bool blendAnims, List<string> cpkList, string targetdir)
@@ -203,11 +208,11 @@ public class EventManager
             return new List<string>();
         else
         {
-            List<string> candidates = CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir);
+            List<string> candidates = CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir, this.CpkDecryptionFunctionName);
             if (candidates.Count == 0 && (ObjectTypes)obj.Type == ObjectTypes.Character)
             {
                 pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]COMMON_ANIM[\\\\/]{animType}CMN{animId:0000}\\.GAP";
-                candidates = CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir);
+                candidates = CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir, this.CpkDecryptionFunctionName);
             }
             return candidates;
         }

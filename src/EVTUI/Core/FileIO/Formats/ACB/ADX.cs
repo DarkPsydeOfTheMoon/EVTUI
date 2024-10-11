@@ -145,6 +145,8 @@ public class Adx : ISerializable
 
     public void Crypt(ulong keyCode)
     {
+        if (keyCode == 0)
+            return;
         keyCode -= 1;
         int seed = (int)(keyCode >> 27)  & 0x7fff;
         int mult = (int)((keyCode >> 12) & 0x7ffc) | 1;

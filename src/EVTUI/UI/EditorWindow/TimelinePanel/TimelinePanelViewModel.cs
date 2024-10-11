@@ -173,7 +173,7 @@ public class Timeline
         {
             string code = dataManager.EventManager.EventCommands[j].CommandCode;
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
-            if (i < this.Frames.Count)
+            if (i >= 0 && i < this.Frames.Count)
             {
                 int k = this.Frames[i].Commands.Count;
                 this.Frames[i].Commands.Add(new CommandPointer(code, false, j, k));
@@ -255,7 +255,7 @@ public class TimelinePanelViewModel : ViewModelBase
         if (this.Config.AudioManager.AcbByType[source].Count > 0)
         {
             this.Config.AudioManager.ActiveACB = this.Config.AudioManager.AcbByType[source][0];
-            this.Config.AudioManager.PlayCueTrack((uint)cueId, trackIndex);
+            this.Config.AudioManager.PlayCueTrack((uint)cueId, trackIndex, this.Config.ProjectManager.AdxKey);
         }
     }
 
