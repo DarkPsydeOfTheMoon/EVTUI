@@ -255,10 +255,19 @@
             </StackPanel></Button>
           </StackPanel>
           <TextBlock Classes="tableplaceholder" Text="No recent folders." IsVisible="{Binding NoRecentGames}"/>
-          <Button Click="GetGamePathFromDialog"><StackPanel>
-            <PathIcon Data="{StaticResource folder_add_regular}"/>
-            <TextBlock Text="Pick New Folder"/>
-          </StackPanel></Button>
+          <Separator/>
+          <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+            <Button Click="GetGamePathFromDialog"><StackPanel>
+              <PathIcon Data="{StaticResource folder_add_regular}"/>
+              <TextBlock Text="Pick New Folder"/>
+            </StackPanel></Button>
+            <TextBlock Text="for game type" VerticalAlignment="Center" Margin="5" />
+            <ComboBox
+              ItemsSource="{Binding newProjectConfig.GameTypes}"
+              SelectedItem="{Binding newProjectConfig.GameType}"
+              MaxDropDownHeight="300"
+              VerticalAlignment="Center" />
+          </StackPanel>
         </StackPanel>
 
       </StackPanel>
