@@ -30,6 +30,8 @@ public class NewProjectConfig
 
     public List<Framework> Frameworks { get; set; }
     public List<string>    LoadOrder  { get; set; }
+
+    public static List<string> GameTypes { get; } = new List<string> {"P5R PC (Steam)", "P5 Dev Build"};
 }
 
 public class Framework

@@ -405,7 +405,6 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 HashSet<SimpleEvent> combinedPins = new HashSet<SimpleEvent>(this.Config.ProjectManager.ActiveProject.Events.Pinned);
                 combinedPins.UnionWith(this.Config.ProjectManager.ActiveGame.Events.Pinned);
                 foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(new List<SimpleEvent>(combinedPins), this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
-                //foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
                     eventList.Add(evt);
             }
         }
