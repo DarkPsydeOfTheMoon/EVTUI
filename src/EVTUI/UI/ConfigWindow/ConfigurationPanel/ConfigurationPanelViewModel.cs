@@ -82,7 +82,7 @@ public class DisplayableGame : ReactiveObject
 
 public class DisplayableEvent : ReactiveObject
 {
-    public DisplayableEvent(DataManager config, GameSettings game, Project project, int majorid, int minorid)
+    public DisplayableEvent(DataManager config, GameSettings game, Project project, int majorid, int minorid, bool hasProjPin, bool hasGamePin)
     {
         this.Game = game;
         this.Proj = project;
@@ -96,12 +96,36 @@ public class DisplayableEvent : ReactiveObject
             foreach (ExpandedEvent evt in project.Events.Notes)
                 if (evt.MajorId == majorid && evt.MinorId == minorid)
                     _projNotes  = evt.Text;
+        _hasProjPin = hasProjPin;
+        _hasGamePin = hasGamePin;
     }
 
     private DataManager Config;
 
     public int MajorId { get; set; }
     public int MinorId { get; set; }
+
+    private bool _hasProjPin;
+    public bool HasProjPin
+    {
+        get => _hasProjPin;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _hasProjPin, value);
+            this.Config.ProjectManager.SetProjectPin(this.Proj, this.MajorId, this.MinorId, _hasProjPin);
+        }
+    }
+
+    private bool _hasGamePin;
+    public bool HasGamePin
+    {
+        get => _hasGamePin;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _hasGamePin, value);
+            this.Config.ProjectManager.SetGamePin(this.Game, this.MajorId, this.MinorId, _hasGamePin);
+        }
+    }
 
     private string _gameNotes;
     public string GameNotes
@@ -338,31 +362,61 @@ public class ConfigurationPanelViewModel : ViewModelBase
         return (0, $"Loaded project \"{this.Config.ProjectManager.ActiveProject.Name}\"!");
     }
 
+    public List<DisplayableEvent> ConstructDisplayableEvents(List<SimpleEvent> evts, List<SimpleEvent> projPins, List<SimpleEvent> gamePins)
+    {
+        List<DisplayableEvent> ret = new List<DisplayableEvent>();
+        foreach (SimpleEvent evt in evts)
+        {
+            bool hasProjPin = false;
+            if (!(projPins is null))
+                foreach (SimpleEvent pin in projPins)
+                    if (pin.MajorId == evt.MajorId && pin.MinorId == evt.MinorId)
+                    {
+                        hasProjPin = true;
+                        break;
+                    }
+            bool hasGamePin = false;
+            foreach (SimpleEvent pin in gamePins)
+                if (pin.MajorId == evt.MajorId && pin.MinorId == evt.MinorId)
+                {
+                    hasGamePin = true;
+                    break;
+                }
+            ret.Add(new DisplayableEvent(this.Config, this.Config.ProjectManager.ActiveGame, this.Config.ProjectManager.ActiveProject, evt.MajorId, evt.MinorId, hasProjPin, hasGamePin));
+        }
+        return ret;
+    }
+
     public void DisplayEvents()
     {
         OnPropertyChanged(nameof(ProjectLoaded));
 
         ObservableCollection<DisplayableEvent> eventList = new ObservableCollection<DisplayableEvent>();
         if (this.SelectedCollection == "All Events")
-            foreach (var evt in this.Config.ListAllEvents())
-                eventList.Add(new DisplayableEvent(this.Config, this.Config.ProjectManager.ActiveGame, this.Config.ProjectManager.ActiveProject, evt.MajorId, evt.MinorId));
+            foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ListAllEvents(), (this.Config.ProjectManager.ActiveProject is null) ? null : this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                eventList.Add(evt);
         else if (!(this.Config.ProjectManager.ActiveProject is null))
         {
             if (this.SelectedCollection == "Recent Events")
-                foreach (SimpleEvent evt in this.Config.ProjectManager.ActiveProject.Events.Recent)
-                    eventList.Add(new DisplayableEvent(this.Config, this.Config.ProjectManager.ActiveGame, this.Config.ProjectManager.ActiveProject, evt.MajorId, evt.MinorId));
+                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ProjectManager.ActiveProject.Events.Recent, this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                    eventList.Add(evt);
             else if (this.SelectedCollection == "Pinned Events")
-                foreach (SimpleEvent evt in this.Config.ProjectManager.ActiveProject.Events.Pinned)
-                    eventList.Add(new DisplayableEvent(this.Config, this.Config.ProjectManager.ActiveGame, this.Config.ProjectManager.ActiveProject, evt.MajorId, evt.MinorId));
+            {
+                HashSet<SimpleEvent> combinedPins = new HashSet<SimpleEvent>(this.Config.ProjectManager.ActiveProject.Events.Pinned);
+                combinedPins.UnionWith(this.Config.ProjectManager.ActiveGame.Events.Pinned);
+                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(new List<SimpleEvent>(combinedPins), this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                //foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                    eventList.Add(evt);
+            }
         }
         else if (!(this.Config.ProjectManager.ActiveGame is null))
         {
             if (this.SelectedCollection == "Recent Events")
-                foreach (SimpleEvent evt in this.Config.ProjectManager.ActiveGame.Events.Recent)
-                    eventList.Add(new DisplayableEvent(this.Config, this.Config.ProjectManager.ActiveGame, this.Config.ProjectManager.ActiveProject, evt.MajorId, evt.MinorId));
+                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ProjectManager.ActiveGame.Events.Recent, null, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                    eventList.Add(evt);
             else if (this.SelectedCollection == "Pinned Events")
-                foreach (SimpleEvent evt in this.Config.ProjectManager.ActiveGame.Events.Pinned)
-                    eventList.Add(new DisplayableEvent(this.Config, this.Config.ProjectManager.ActiveGame, this.Config.ProjectManager.ActiveProject, evt.MajorId, evt.MinorId));
+                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(this.Config.ProjectManager.ActiveGame.Events.Pinned, null, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                    eventList.Add(evt);
         }
         this.EventList = eventList;
     }

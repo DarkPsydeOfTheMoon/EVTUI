@@ -215,6 +215,32 @@ public class ProjectManager
         this.SaveUserCache();
     }
 
+    public void SetProjectPin(Project project, int majorId, int minorId, bool hasPin)
+    {
+        (project.Events.Pinned).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+        if (hasPin)
+        {
+            SimpleEvent newEvent = new SimpleEvent();
+            newEvent.MajorId = majorId;
+            newEvent.MinorId = minorId;
+            project.Events.Pinned.Insert(0, newEvent);
+            this.SaveUserCache();
+        }
+    }
+
+    public void SetGamePin(GameSettings game, int majorId, int minorId, bool hasPin)
+    {
+        (game.Events.Pinned).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+        if (hasPin)
+        {
+            SimpleEvent newEvent = new SimpleEvent();
+            newEvent.MajorId = majorId;
+            newEvent.MinorId = minorId;
+            game.Events.Pinned.Insert(0, newEvent);
+            this.SaveUserCache();
+        }
+    }
+
     public void SetProjectEventNotes(int ind, int majorId, int minorId, string notes)
     {
         (this.UserData.Projects[ind].Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);

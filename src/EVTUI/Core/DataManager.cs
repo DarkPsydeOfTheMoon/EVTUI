@@ -110,9 +110,17 @@ public class DataManager
         return cpks;
     }
 
-    public List<(int MajorId, int MinorId)> ListAllEvents()
+    public List<SimpleEvent> ListAllEvents()
     {
-        return CPKExtract.ListAllEvents(this.CpkList, this.ProjectManager.CpkDecryptionFunctionName);
+        List<SimpleEvent> ret = new List<SimpleEvent>();
+        foreach (var tuple in CPKExtract.ListAllEvents(this.CpkList, this.ProjectManager.CpkDecryptionFunctionName))
+        {
+            SimpleEvent evt = new SimpleEvent();
+            evt.MajorId = tuple.MajorId;
+            evt.MinorId = tuple.MinorId;
+            ret.Add(evt);
+        }
+        return ret;
     }
 
     public void ClearCache()

@@ -267,6 +267,8 @@
               <DataGrid.Columns>
                 <DataGridTextColumn Header="Major ID" Binding="{Binding MajorId}" IsReadOnly="True" />
                 <DataGridTextColumn Header="Minor ID" Binding="{Binding MinorId}" IsReadOnly="True" />
+                <DataGridCheckBoxColumn Header="Pin for Project" Binding="{Binding HasProjPin}" IsVisible="{Binding ProjectLoaded}" IsReadOnly="False" />
+                <DataGridCheckBoxColumn Header="Pin for Game" Binding="{Binding HasGamePin}" IsReadOnly="False" />
                 <DataGridTextColumn Header="Project Notes" Binding="{Binding ProjNotes}" IsVisible="{Binding ProjectLoaded}" IsReadOnly="False" />
                 <DataGridTextColumn Header="Game Notes" Binding="{Binding GameNotes}" IsReadOnly="False" />
               </DataGrid.Columns>

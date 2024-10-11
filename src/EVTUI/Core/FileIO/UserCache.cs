@@ -38,6 +38,7 @@ Preferences: {}";
         TextReader yamlStream;
         if (File.Exists(UserCacheFile))
             // TODO: put a try/except here to just open up a default yaml if load fails i.e. if the existing cache is deprecated/fucked
+            // or just return null and let App.axaml.cs handle it and show a popup....
             yamlStream = new StreamReader(UserCacheFile);
         else
             yamlStream = new StringReader(DefaultYaml);
