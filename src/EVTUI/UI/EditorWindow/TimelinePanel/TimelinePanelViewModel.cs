@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 using ReactiveUI;
-// TODO: add this back in when it no longer breaks Audio Panel...
 //using ReactiveUI.Fody.Helpers;
 
 namespace EVTUI.ViewModels;
@@ -152,36 +151,109 @@ public class BoolChoiceField : FieldBase
     }
 }
 
-public class Timeline
+public class Timeline : ReactiveObject
 {
+
     public Timeline(DataManager dataManager)
     {
         this.Frames = new List<Frame>();
 		for (int i=0; i<dataManager.EventManager.EventDuration; i++)
             this.Frames.Add(new Frame(i));
+        this.FrameCount = dataManager.EventManager.EventDuration;
+        this.ActiveFrame = 0;
+
+        this.Categories = new List<Category>();
+        this.Categories.Add(new Category("Field",    1,  this.FrameCount));
+        this.Categories.Add(new Category("Env",      2,  this.FrameCount));
+        this.Categories.Add(new Category("Camera",   3,  this.FrameCount));
+        this.Categories.Add(new Category("Model",    4,  this.FrameCount));
+        this.Categories.Add(new Category("Effect",   5,  this.FrameCount));
+        this.Categories.Add(new Category("Crowd",    6,  this.FrameCount));
+        this.Categories.Add(new Category("Image",    7,  this.FrameCount));
+        this.Categories.Add(new Category("Movie",    8,  this.FrameCount));
+        this.Categories.Add(new Category("Dialogue", 9,  this.FrameCount));
+        this.Categories.Add(new Category("Texture",  10, this.FrameCount));
+        this.Categories.Add(new Category("UI",       11, this.FrameCount));
+        this.Categories.Add(new Category("Post",     12, this.FrameCount));
+        this.Categories.Add(new Category("Audio",    13, this.FrameCount));
+        this.Categories.Add(new Category("Script",   14, this.FrameCount));
+        this.Categories.Add(new Category("Timing",   15, this.FrameCount));
+        this.Categories.Add(new Category("Hardware", 16, this.FrameCount));
+        this.Categories.Add(new Category("Other",    17, this.FrameCount));
+
         for (int j=0; j<dataManager.EventManager.EventSoundCommands.Length; j++)
         {
             string code = dataManager.EventManager.EventSoundCommands[j].CommandCode;
             int i = dataManager.EventManager.EventSoundCommands[j].FrameStart;
-            if (i < this.Frames.Count)
+            int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
+            if (i >= 0 && i < this.Frames.Count)
             {
-                int k = this.Frames[i].Commands.Count;
-                this.Frames[i].Commands.Add(new CommandPointer(code, true, j, k));
+                CommandPointer newCmd = new CommandPointer(code, true, j, i, len);
+                this.Categories[12].AddCommand(newCmd);
             }
         }
         for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
         {
             string code = dataManager.EventManager.EventCommands[j].CommandCode;
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
+            int len = dataManager.EventManager.EventCommands[j].FrameDuration;
             if (i >= 0 && i < this.Frames.Count)
             {
-                int k = this.Frames[i].Commands.Count;
-                this.Frames[i].Commands.Add(new CommandPointer(code, false, j, k));
+                CommandPointer newCmd = new CommandPointer(code, false, j, i, len);
+                int catInd = -1;
+                if (code == "FbEn" || code == "Flbk" || code.StartsWith("Im"))
+                    catInd = 6;
+                else if (code == "Msg_" || code == "MsgR" || code == "Cht_")
+                    catInd = 8;
+                else if (code == "LBX_" || code == "Date")
+                    catInd = 10;
+                else if (code == "AlEf" || code.StartsWith("G"))
+                    catInd = 11;
+                else if (code == "Scr_")
+                    catInd = 13;
+                else if (code == "Chap" || code == "FrJ_")
+                    catInd = 14;
+                else if (code == "PRum" || code == "TrMc")
+                    catInd = 15;
+                else if (code.StartsWith("En"))
+                    catInd = 1;
+                else if (code.StartsWith("Cw"))
+                    catInd = 5;
+                else if (code.StartsWith("Mv"))
+                    catInd = 7;
+                else if (code.StartsWith("Fd"))
+                    catInd = 10;
+                else if (code.StartsWith("F"))
+                    catInd = 0;
+                else if (code.StartsWith("C"))
+                    catInd = 2;
+                else if (code.StartsWith("M"))
+                    catInd = 3;
+                else if (code.StartsWith("E"))
+                    catInd = 4;
+                else if (code.StartsWith("T"))
+                    catInd = 9;
+                else if (code.StartsWith("P"))
+                    catInd = 11;
+                else
+                    catInd = 16;
+                if (catInd > -1)
+                    this.Categories[catInd].AddCommand(newCmd);
             }
         }
     }
 
-    public List<Frame> Frames { get; set; }
+    public int FrameCount { get; set; }
+
+    public List<Frame>          Frames     { get; set; }
+    public List<Category>       Categories { get; set; }
+
+    private int _activeFrame;
+    public int ActiveFrame
+    {
+        get => _activeFrame;
+        set => this.RaiseAndSetIfChanged(ref _activeFrame, value);
+    }
 }
 
 public class Frame
@@ -189,27 +261,77 @@ public class Frame
     public Frame(int index)
     {
         this.Index    = index;
-        this.Commands = new List<CommandPointer>();
+        this.Name     = (index+1).ToString();
     }
 
     public int                  Index    { get; set; }
-    public List<CommandPointer> Commands { get; set; }
+    public string               Name     { get; set; }
+}
+
+public class Category : ViewModelBase
+{
+    public Category(string name, int index, int frameCount)
+    {
+        this.FrameCount = frameCount;
+        this.Name  = name;
+        this.Index = index;
+        this.Commands = new List<CommandPointer>();
+        this.MaxInOneFrame = 0;
+        this.FrameCounts = new Dictionary<int, int>();
+        this.IsOpen = true;
+    }
+
+    private Dictionary<int, int> FrameCounts;
+
+    public void AddCommand(CommandPointer newCmd)
+    {
+        if (!(this.FrameCounts.ContainsKey(newCmd.Frame)))
+            this.FrameCounts[newCmd.Frame] = 0;
+        newCmd.PositionWithinFrame = this.FrameCounts[newCmd.Frame];
+        this.FrameCounts[newCmd.Frame] += 1;
+        if (this.FrameCounts[newCmd.Frame] > this.MaxInOneFrame)
+            this.MaxInOneFrame = this.FrameCounts[newCmd.Frame];
+        this.Commands.Add(newCmd);
+    }
+
+    public int FrameCount    { get; set; }
+    public int MaxInOneFrame { get; set; }
+
+    public string Name  { get; set; }
+    public int    Index { get; set; }
+
+    public List<CommandPointer> Commands   { get; set; }
+    private bool _isOpen;
+    public bool IsOpen
+    {
+        get => _isOpen;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isOpen, value);
+            OnPropertyChanged(nameof(IsOpen));
+        }
+    }
 }
 
 public class CommandPointer
 {
-    public CommandPointer(string code, bool isAudioCmd, int cmdIndex, int indexWithinFrame)
+    public CommandPointer(string code, bool isAudioCmd, int cmdIndex, int frame, int duration)
     {
-        this.Code             = code;
-        this.IsAudioCmd       = isAudioCmd;
-        this.CmdIndex         = cmdIndex;
-        this.IndexWithinFrame = indexWithinFrame;
+        this.Code       = code;
+        this.IsAudioCmd = isAudioCmd;
+        this.CmdIndex   = cmdIndex;
+        this.Frame      = frame;
+        this.Duration   = duration;
+        this.PositionWithinFrame = 0;
     }
 
-    public string Code             { get; }
-    public bool   IsAudioCmd       { get; }
-    public int    CmdIndex         { get; }
-    public int    IndexWithinFrame { get; }
+    public string Code       { get; }
+    public bool   IsAudioCmd { get; }
+    public int    CmdIndex   { get; }
+    public int    Frame      { get; }
+    public int    Duration   { get; }
+
+    public int    PositionWithinFrame { get; set; }
 }
 
 public class TimelinePanelViewModel : ViewModelBase

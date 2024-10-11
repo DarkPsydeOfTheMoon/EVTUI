@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -8,17 +10,59 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
 
+using ReactiveUI;
+
 using EVTUI.ViewModels;
 using EVTUI.ViewModels.TimelineCommands;
 
 namespace EVTUI.Views;
 
-public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
+public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>, INotifyPropertyChanged
 {
+
+    // INotifyPropertyChanged Implementation
+    new public event PropertyChangedEventHandler? PropertyChanged;
+
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private Vector _hPos = new Vector(0.0, 0.0);
+    public Vector HPos
+    {
+        get => _hPos;
+        set
+        {
+            _hPos = value;
+            OnPropertyChanged(nameof(HPos));
+        }
+    }
+
+    private Vector _vPos = new Vector(0.0, 0.0);
+    public Vector VPos
+    {
+        get => _vPos;
+        set
+        {
+            _vPos = value;
+            OnPropertyChanged(nameof(VPos));
+        }
+    }
+
+    private List<double> FramePositions;
 
     public TimelinePanel()
     {
         InitializeComponent();
+        this.WhenActivated(d =>
+        {
+            // TODO: move this to a method that can be run upon update
+            // like if a frame is added or deleted
+            this.FramePositions = new List<double>();
+            foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
+                this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
+        });
     }
 
     public void PopulateFlyout(object sender, EventArgs e)
@@ -75,4 +119,20 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         flyout.Close();
     }
 
+    public void JumpToFrame(object sender, NumericUpDownValueChangedEventArgs e)
+    {
+        this.HPos = this.HPos.WithX(this.FramePositions[(int)e.NewValue]);
+    }
+
+    public void ShowAllCategories(object sender, RoutedEventArgs e)
+    {
+        foreach (Category cat in ViewModel!.TimelineContent.Categories)
+           cat.IsOpen = true;
+    }
+
+    public void HideAllCategories(object sender, RoutedEventArgs e)
+    {
+        foreach (Category cat in ViewModel!.TimelineContent.Categories)
+           cat.IsOpen = false;
+    }
 }

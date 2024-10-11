@@ -222,8 +222,8 @@
             </DataGrid.Columns>
           </DataGrid>
           <Button Click="UseProject"><StackPanel>
-              <PathIcon Data="{StaticResource arrow_next_regular}"/>
-              <TextBlock Text="Load Selected Project &amp; Continue"/>
+            <PathIcon Data="{StaticResource arrow_next_regular}"/>
+            <TextBlock Text="Load Selected Project &amp; Continue"/>
           </StackPanel></Button>
         </StackPanel>
         <TextBlock Classes="tableplaceholder" Text="No recent projects." IsVisible="{Binding NoRecentProjects}"/>
@@ -326,7 +326,6 @@
             <TextBlock Text="Pick Entered Event"/>
           </StackPanel>
         </Button>
-
       </StackPanel>
 
     </Carousel.Items></Carousel>
