@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-	<DefineConstants>OS_WINDOWS</DefineConstants>
+    <DefineConstants>OS_WINDOWS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,55 +19,9 @@
     </None>
   </ItemGroup>
 
-  <!-- AtlusScriptLibrary files -->
+  <!-- EVTUI lib -->
   <ItemGroup>
-    <Compile Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.cs">
-      <Link>AtlusScriptLibrary\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Compile>
-    <Content Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.json">
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.tsv">
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <!-- AtlusScriptLibrary packages -->
-  <ItemGroup>
-    <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-
-  <!-- GFDLibrary files -->
-  <ItemGroup>
-    <ProjectReference Include="..\..\external\GFD-Studio\GFDLibrary.Rendering.OpenGL\GFDLibrary.Rendering.OpenGL.csproj" />
-    <Content Include="..\..\external\GFD-Studio\**\*.fs">
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\external\GFD-Studio\**\*.vs">
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <!-- EVTUI lib files -->
-  <ItemGroup>
-    <Compile Include="..\lib\**\*.cs">
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Compile>
-  </ItemGroup>
-
-  <!-- Other packages -->
-  <ItemGroup>
-    <PackageReference Include="YamlDotNet" Version="15.1.2" />
-    <PackageReference Include="CriFsV2Lib" Version="2.1.2" />
-    <PackageReference Include="LibVLCSharp" Version="3.8.2" />
-    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Windows'))" Include="VideoLAN.LibVLC.Windows" Version="3.0.20" />
+    <ProjectReference Include="..\lib\EVTUI.Lib.csproj" />
   </ItemGroup>
 
 </Project>

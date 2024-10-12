@@ -31,7 +31,7 @@ TBD.
 
 ## Building
 
-Although this project is a WIP and has no official release, you can see the current state by building a standalone executable for your target OS like so (or just `build` and `run` like any .NET Core application):
+Although this project is a WIP and has no official release, you can see the current state by building a standalone executable of the project in `src/gui/` for your target OS like so (or just `build` and `run` like any .NET Core application):
 
 ### Windows
 
