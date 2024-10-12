@@ -1,0 +1,95 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+    <!-- this seems more efficient than the above but doesn't work when building for windows on linux -->
+    <!--IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract-->
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <Nullable>enable</Nullable>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <NoWarn>NU1605;NU1701;8500;8600;8601;8602;8603;8604;8612;8618;8619;8622;8625;8629;8714;8765;8767</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+	<DefineConstants>OS_WINDOWS</DefineConstants>
+  </PropertyGroup>
+	
+  <!-- Avalonia files -->
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <!-- Avalonia packages -->
+  <ItemGroup>
+    <PackageReference Include="CalcBindingAva" Version="2.5.3" />
+    <PackageReference Include="OpenTK.Graphics" Version="4.1" />
+    <PackageReference Include="Avalonia" Version="11.0.10" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.0.10" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.10" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.0.10" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.0.10" />
+    <!--PackageReference Include="ReactiveUI.Fody" Version="19.5.41" /-->
+  </ItemGroup>
+
+  <!-- AtlusScriptLibrary files -->
+  <ItemGroup>
+    <Compile Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.cs">
+      <Link>AtlusScriptLibrary\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
+    <Content Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.json">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.tsv">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- AtlusScriptLibrary packages -->
+  <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <!-- GFDLibrary files -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\GFD-Studio\GFDLibrary.Rendering.OpenGL\GFDLibrary.Rendering.OpenGL.csproj" />
+    <Content Include="..\..\external\GFD-Studio\**\*.fs">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\external\GFD-Studio\**\*.vs">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- EVTUI lib files -->
+  <ItemGroup>
+    <Compile Include="..\lib\**\*.cs">
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
+  <!-- Other packages -->
+  <ItemGroup>
+    <PackageReference Include="YamlDotNet" Version="15.1.2" />
+    <PackageReference Include="CriFsV2Lib" Version="2.1.2" />
+    <PackageReference Include="LibVLCSharp" Version="3.8.2" />
+    <PackageReference Condition="$([MSBuild]::IsOsPlatform('Windows'))" Include="VideoLAN.LibVLC.Windows" Version="3.0.20" />
+  </ItemGroup>
+
+</Project>
