@@ -10,8 +10,8 @@ public class EditorWindowViewModel : ViewModelBase
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public DataManager Config;
-    public AudioPanelViewModel audioPanelVM { get; }
+    public DataManager            Config          { get; }
+    public AudioPanelViewModel    audioPanelVM    { get; }
     public TimelinePanelViewModel timelinePanelVM { get; }
 
     ////////////////////////////

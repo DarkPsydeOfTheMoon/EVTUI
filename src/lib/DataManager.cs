@@ -130,16 +130,21 @@ public class DataManager
 
     public void SaveModdedFiles(bool evt, bool ecs)
     {
+        if (this.ReadOnly)
+            return;
+
         if (evt)
         {
-            string moddedEvtPath = Path.Combine(this.ProjectManager.ModdedFileDir, this.EventManager.EvtPath.Substring((this.VanillaExtractionPath.Length+1), this.EventManager.EvtPath.Length-(this.VanillaExtractionPath.Length+1)));
+            string baseEvtPath = this.EventManager.EvtPath.Substring((this.VanillaExtractionPath.Length+1), this.EventManager.EvtPath.Length-(this.VanillaExtractionPath.Length+1));
+            string moddedEvtPath = Path.Combine(this.ProjectManager.ModdedFileDir, baseEvtPath);
             (new FileInfo(moddedEvtPath)).Directory.Create();
             this.EventManager.SaveEVT(moddedEvtPath);
         }
 
         if (ecs)
         {
-            string moddedEcsPath = Path.Combine(this.ProjectManager.ModdedFileDir, this.EventManager.EcsPath.Substring((this.VanillaExtractionPath.Length+1), this.EventManager.EcsPath.Length-(this.VanillaExtractionPath.Length+1)));
+            string baseEcsPath = this.EventManager.EcsPath.Substring((this.VanillaExtractionPath.Length+1), this.EventManager.EcsPath.Length-(this.VanillaExtractionPath.Length+1));
+            string moddedEcsPath = Path.Combine(this.ProjectManager.ModdedFileDir, baseEcsPath);
             (new FileInfo(moddedEcsPath)).Directory.Create();
             this.EventManager.SaveECS(moddedEcsPath);
         }

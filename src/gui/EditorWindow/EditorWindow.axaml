@@ -13,7 +13,7 @@
 
   <DockPanel>
   <Menu DockPanel.Dock="Top" HorizontalAlignment="Right">
-    <MenuItem Header="Save">
+    <MenuItem Header="Save" IsEnabled="{Binding !Config.ReadOnly}">
       <MenuItem Header="Save all" Click="SaveMod" />
       <MenuItem Header="Save EVT" Click="SaveMod" Name="EVT" />
       <MenuItem Header="Save ECS" Click="SaveMod" Name="ECS" />
