@@ -29,6 +29,8 @@ public class EventManager
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ///////////////.////////////
+    public string       EvtPath;
+    public string       EcsPath;
     public List<(string ACB, string? AWB)> AcwbPaths;
     public List<string> BfPaths;
     public List<string> BmdPaths;
@@ -45,11 +47,13 @@ public class EventManager
         if (cpkEVTContents is null)
             return false;
 
+        this.EvtPath = cpkEVTContents.Value.evtPath;
         this.SerialEvent = new EVT();
-        this.SerialEvent.Read(cpkEVTContents.Value.evtPath);
+        this.SerialEvent.Read(this.EvtPath);
 
+        this.EcsPath = cpkEVTContents.Value.ecsPath;
         this.SerialEventSounds = new ECS();
-        this.SerialEventSounds.Read(cpkEVTContents.Value.ecsPath);
+        this.SerialEventSounds.Read(this.EcsPath);
 
         // the DataManager will pass these to the AudioManager
         this.AcwbPaths = new List<(string ACB, string? AWB)>();
@@ -76,6 +80,9 @@ public class EventManager
         this.SerialEventSounds         = null;
         this.CpkDecryptionFunctionName = null;
     }
+
+    public void SaveEVT(string path) { this.SerialEvent.Write(path); }
+    public void SaveECS(string path) { this.SerialEventSounds.Write(path); }
 
     public int EventDuration { get { return this.SerialEvent.TotalFrame; } }
     public SerialCommand[] EventCommands { get { return this.SerialEvent.Commands; } }

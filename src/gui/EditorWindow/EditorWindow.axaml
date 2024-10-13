@@ -11,11 +11,23 @@
         Width="1200" Height="800" WindowStartupLocation="CenterScreen"
         Title="EVTUI">
 
-  <TabControl Margin="5">
+  <DockPanel>
+  <Menu DockPanel.Dock="Top" HorizontalAlignment="Right">
+    <MenuItem Header="Save">
+      <MenuItem Header="Save all" Click="SaveMod" />
+      <MenuItem Header="Save EVT" Click="SaveMod" Name="EVT" />
+      <MenuItem Header="Save ECS" Click="SaveMod" Name="ECS" />
+    </MenuItem>
+    <MenuItem Header="Reload">
+      <MenuItem Header="Reload all" />
+      <MenuItem Header="Reload EVT" />
+      <MenuItem Header="Reload ECS" />
+    </MenuItem>
+  </Menu>
+  <TabControl Margin="5" DockPanel.Dock="Bottom">
     <TabItem Header="Editors">
       <TabControl Margin="5">
         <TabItem Header="Timeline">
-          <!--TextBlock Text="This is the Timeline Editor tab." /-->
           <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
         </TabItem>
         <TabItem Header="Dialogue">
@@ -43,5 +55,6 @@
       <TextBlock Text="This is the Render tab." />
     </TabItem>
   </TabControl>
+  </DockPanel>
 
 </Window>

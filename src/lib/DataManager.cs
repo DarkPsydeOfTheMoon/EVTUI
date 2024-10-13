@@ -128,4 +128,21 @@ public class DataManager
         CPKExtract.ClearDirectory(this.VanillaExtractionPath);
     }
 
+    public void SaveModdedFiles(bool evt, bool ecs)
+    {
+        if (evt)
+        {
+            string moddedEvtPath = Path.Combine(this.ProjectManager.ModdedFileDir, this.EventManager.EvtPath.Substring((this.VanillaExtractionPath.Length+1), this.EventManager.EvtPath.Length-(this.VanillaExtractionPath.Length+1)));
+            (new FileInfo(moddedEvtPath)).Directory.Create();
+            this.EventManager.SaveEVT(moddedEvtPath);
+        }
+
+        if (ecs)
+        {
+            string moddedEcsPath = Path.Combine(this.ProjectManager.ModdedFileDir, this.EventManager.EcsPath.Substring((this.VanillaExtractionPath.Length+1), this.EventManager.EcsPath.Length-(this.VanillaExtractionPath.Length+1)));
+            (new FileInfo(moddedEcsPath)).Directory.Create();
+            this.EventManager.SaveECS(moddedEcsPath);
+        }
+    }
+
 }

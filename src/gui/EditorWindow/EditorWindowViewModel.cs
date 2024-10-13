@@ -29,4 +29,22 @@ public class EditorWindowViewModel : ViewModelBase
         this.Config.ClearCache();
     }
 
+    public void SaveMod(string which)
+    {
+        switch (which)
+        {
+            case "EVT":
+                this.Config.SaveModdedFiles(true, false);
+                break;
+            case "ECS":
+                this.Config.SaveModdedFiles(false, true);
+                break;
+            case null:
+                this.Config.SaveModdedFiles(true, true);
+                break;
+            default:
+                break;
+        }
+    }
+
 }
