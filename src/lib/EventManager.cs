@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace EVTUI;
 
@@ -38,12 +39,12 @@ public class EventManager
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public bool Load(List<string> cpkList, string evtid, string targetdir, string cpkDecryptionFunctionName)
+    public bool Load(List<string> cpkList, string evtid, string vanillaDir, string moddedDir, string cpkDecryptionFunctionName)
     {
         this.Clear();
         this.CpkDecryptionFunctionName = cpkDecryptionFunctionName;
 
-        CpkEVTContents? cpkEVTContents = CPKExtract.ExtractEVTFiles(cpkList, evtid, targetdir, this.CpkDecryptionFunctionName);
+        CpkEVTContents? cpkEVTContents = CPKExtract.ExtractEVTFiles(cpkList, evtid, vanillaDir, moddedDir, this.CpkDecryptionFunctionName);
         if (cpkEVTContents is null)
             return false;
 
@@ -81,8 +82,8 @@ public class EventManager
         this.CpkDecryptionFunctionName = null;
     }
 
-    public void SaveEVT(string path) { this.SerialEvent.Write(path); }
-    public void SaveECS(string path) { this.SerialEventSounds.Write(path); }
+    public void SaveEVT() { this.SerialEvent.Write(this.EvtPath); }
+    public void SaveECS() { this.SerialEventSounds.Write(this.EcsPath); }
 
     public int EventDuration { get { return this.SerialEvent.TotalFrame; } }
     public SerialCommand[] EventCommands { get { return this.SerialEvent.Commands; } }
