@@ -967,6 +967,13 @@
                       <Button Flyout="{StaticResource CommandFlyout}"
                        HorizontalAlignment="Center"
                        Width="{c:Binding 60 + 85*(Duration-1)}">
+                        <Button.ContextMenu>
+                          <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
+                            <MenuItem Header="Cut" />
+                            <MenuItem Header="Copy" />
+                            <MenuItem Header="Delete" Click= "DeleteCommand"/>
+                          </ContextMenu>
+                        </Button.ContextMenu> 
                         <TextBlock Text="{Binding Code}"
                          HorizontalAlignment="Left"
                          VerticalAlignment="Center"/>

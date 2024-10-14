@@ -156,13 +156,13 @@ public class Timeline : ReactiveObject
 
     public Timeline(DataManager dataManager)
     {
-        this.Frames = new List<Frame>();
+        this.Frames = new ObservableCollection<Frame>();
 		for (int i=0; i<dataManager.EventManager.EventDuration; i++)
             this.Frames.Add(new Frame(i));
         this.FrameCount = dataManager.EventManager.EventDuration;
         this.ActiveFrame = 0;
 
-        this.Categories = new List<Category>();
+        this.Categories = new ObservableCollection<Category>();
         this.Categories.Add(new Category("Field",    1,  this.FrameCount));
         this.Categories.Add(new Category("Env",      2,  this.FrameCount));
         this.Categories.Add(new Category("Camera",   3,  this.FrameCount));
@@ -243,10 +243,19 @@ public class Timeline : ReactiveObject
         }
     }
 
+    public void DeleteCommand(Category cat, CommandPointer cmd)
+    {
+        foreach (Category _cat in this.Categories)
+            foreach (CommandPointer _cmd in _cat.Commands)
+                if (_cmd.IsAudioCmd == cmd.IsAudioCmd && _cmd.CmdIndex > cmd.CmdIndex)
+                    _cmd.CmdIndex -= 1;
+        cat.DeleteCommand(cmd);
+    }
+
     public int FrameCount { get; set; }
 
-    public List<Frame>          Frames     { get; set; }
-    public List<Category>       Categories { get; set; }
+    public ObservableCollection<Frame>    Frames     { get; set; }
+    public ObservableCollection<Category> Categories { get; set; }
 
     private int _activeFrame;
     public int ActiveFrame
@@ -256,7 +265,7 @@ public class Timeline : ReactiveObject
     }
 }
 
-public class Frame
+public class Frame : ViewModelBase
 {
     public Frame(int index)
     {
@@ -275,7 +284,7 @@ public class Category : ViewModelBase
         this.FrameCount = frameCount;
         this.Name  = name;
         this.Index = index;
-        this.Commands = new List<CommandPointer>();
+        this.Commands = new ObservableCollection<CommandPointer>();
         this.MaxInOneFrame = 0;
         this.FrameCounts = new Dictionary<int, int>();
         this.IsOpen = true;
@@ -294,13 +303,52 @@ public class Category : ViewModelBase
         this.Commands.Add(newCmd);
     }
 
+    public void DeleteCommand(CommandPointer cmd)
+    {
+        // remove the command
+        for (int i=this.Commands.Count-1; i>=0; i--)
+            if (this.Commands[i] == cmd)
+            {
+                this.FrameCounts[cmd.Frame] -= 1;
+                this.Commands.RemoveAt(i);
+                break;
+            }
+
+        // TODO: deal with it if nothing was removed somehow???
+
+        // shrink the category height if necessary
+		if (this.FrameCounts[cmd.Frame] + 1 == this.MaxInOneFrame)
+		{
+			this.MaxInOneFrame -= 1;
+			foreach (int frame in this.FrameCounts.Keys)
+				if (this.FrameCounts[frame] > this.MaxInOneFrame)
+					this.MaxInOneFrame = this.FrameCounts[frame];
+		}
+
+        // move up all subsequent commands in the same category + frame
+        for (int i=this.Commands.Count-1; i>=0; i--)
+            if (this.Commands[i].Frame == cmd.Frame && this.Commands[i].PositionWithinFrame > cmd.PositionWithinFrame)
+                this.Commands[i].PositionWithinFrame -= 1;
+    }
+
     public int FrameCount    { get; set; }
-    public int MaxInOneFrame { get; set; }
+
+    private int _maxInOneFrame;
+    public int MaxInOneFrame
+    {
+        get => _maxInOneFrame;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _maxInOneFrame, value);
+            OnPropertyChanged(nameof(MaxInOneFrame));
+        }
+    }
 
     public string Name  { get; set; }
     public int    Index { get; set; }
 
-    public List<CommandPointer> Commands   { get; set; }
+    public ObservableCollection<CommandPointer> Commands   { get; set; }
+
     private bool _isOpen;
     public bool IsOpen
     {
@@ -313,7 +361,7 @@ public class Category : ViewModelBase
     }
 }
 
-public class CommandPointer
+public class CommandPointer : ViewModelBase
 {
     public CommandPointer(string code, bool isAudioCmd, int cmdIndex, int frame, int duration)
     {
@@ -327,11 +375,31 @@ public class CommandPointer
 
     public string Code       { get; }
     public bool   IsAudioCmd { get; }
-    public int    CmdIndex   { get; }
+
+    private int _cmdIndex;
+    public int CmdIndex
+    {
+        get => _cmdIndex;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _cmdIndex, value);
+            OnPropertyChanged(nameof(CmdIndex));
+        }
+    }
+
     public int    Frame      { get; }
     public int    Duration   { get; }
 
-    public int    PositionWithinFrame { get; set; }
+    private int _positionWithinFrame;
+    public int PositionWithinFrame
+    {
+        get => _positionWithinFrame;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _positionWithinFrame, value);
+            OnPropertyChanged(nameof(PositionWithinFrame));
+        }
+    }
 }
 
 public class TimelinePanelViewModel : ViewModelBase
@@ -370,6 +438,12 @@ public class TimelinePanelViewModel : ViewModelBase
         if (!this.Config.ReadOnly && saveFirst)
             this.ActiveCommand.SaveChanges();
         this.ActiveCommand = null;
+    }
+
+    public void DeleteCommand(Category cat, CommandPointer cmd)
+    {
+        this.Config.EventManager.DeleteCommand(cmd.CmdIndex, cmd.IsAudioCmd);
+        this.TimelineContent.DeleteCommand(cat, cmd);
     }
 
     public void PlayCueFromSource(string source, int cueId, int trackIndex)

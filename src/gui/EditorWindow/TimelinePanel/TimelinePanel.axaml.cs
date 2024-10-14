@@ -65,6 +65,20 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         });
     }
 
+    public void DeleteCommand(object sender, RoutedEventArgs e)
+    {
+        Button target = (Button)LogicalExtensions.GetLogicalParent(
+            (Control)(((Popup)LogicalExtensions.GetLogicalParent(
+                (ContextMenu)LogicalExtensions.GetLogicalParent(
+                    (MenuItem)sender))).PlacementTarget));
+        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
+        Category cat = (Category)((ContentPresenter)LogicalExtensions.GetLogicalParent(
+            (ItemsControl)LogicalExtensions.GetLogicalParent(
+                (ContentPresenter)LogicalExtensions.GetLogicalParent(
+                    target)))).Content;
+        ViewModel!.DeleteCommand(cat, cmd);
+    }
+
     public void PopulateFlyout(object sender, EventArgs e)
     {
         Button target = (Button)((Flyout)sender).Target;
