@@ -920,7 +920,13 @@
         </ItemsControl>
       </ScrollViewer>
       <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="153,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16" PointerPressed="LogPosition">
+          <ScrollViewer.ContextMenu>
+            <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
+              <MenuItem Header="New" />
+              <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).HasCopiedCommand}" />
+            </ContextMenu>
+          </ScrollViewer.ContextMenu> 
           <ItemsControl ItemsSource="{Binding Categories}" VerticalAlignment="Stretch">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
@@ -969,9 +975,9 @@
                        Width="{c:Binding 60 + 85*(Duration-1)}">
                         <Button.ContextMenu>
                           <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
-                            <MenuItem Header="Cut" />
-                            <MenuItem Header="Copy" />
-                            <MenuItem Header="Delete" Click= "DeleteCommand"/>
+                            <MenuItem Header="Cut"    Click="CutCommand"    />
+                            <MenuItem Header="Copy"   Click="CopyCommand"   />
+                            <MenuItem Header="Delete" Click="DeleteCommand" />
                           </ContextMenu>
                         </Button.ContextMenu> 
                         <TextBlock Text="{Binding Code}"

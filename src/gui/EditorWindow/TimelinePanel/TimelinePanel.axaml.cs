@@ -6,6 +6,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
@@ -52,6 +53,8 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
 
     private List<double> FramePositions;
 
+    private int LastFrameClicked;
+
     public TimelinePanel()
     {
         InitializeComponent();
@@ -77,6 +80,47 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                 (ContentPresenter)LogicalExtensions.GetLogicalParent(
                     target)))).Content;
         ViewModel!.DeleteCommand(cat, cmd);
+    }
+
+    public void CopyCommand(object sender, RoutedEventArgs e)
+    {
+        Button target = (Button)LogicalExtensions.GetLogicalParent(
+            (Control)(((Popup)LogicalExtensions.GetLogicalParent(
+                (ContextMenu)LogicalExtensions.GetLogicalParent(
+                    (MenuItem)sender))).PlacementTarget));
+        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
+        Category cat = (Category)((ContentPresenter)LogicalExtensions.GetLogicalParent(
+            (ItemsControl)LogicalExtensions.GetLogicalParent(
+                (ContentPresenter)LogicalExtensions.GetLogicalParent(
+                    target)))).Content;
+        ViewModel!.CopyCommand(cat, cmd, false);
+    }
+
+    public void CutCommand(object sender, RoutedEventArgs e)
+    {
+        Button target = (Button)LogicalExtensions.GetLogicalParent(
+            (Control)(((Popup)LogicalExtensions.GetLogicalParent(
+                (ContextMenu)LogicalExtensions.GetLogicalParent(
+                    (MenuItem)sender))).PlacementTarget));
+        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
+        Category cat = (Category)((ContentPresenter)LogicalExtensions.GetLogicalParent(
+            (ItemsControl)LogicalExtensions.GetLogicalParent(
+                (ContentPresenter)LogicalExtensions.GetLogicalParent(
+                    target)))).Content;
+        ViewModel!.CopyCommand(cat, cmd, true);
+    }
+
+    private void LogPosition(object? sender, PointerPressedEventArgs e)
+    {
+        var point = e.GetCurrentPoint(sender as Control);
+        // boy, it sure feels silly to have to calculate it this way
+        // ...but it is what it is!
+        this.LastFrameClicked = (int)(point.Position.X / 85);
+    }
+
+    public void PasteCommand(object sender, RoutedEventArgs e)
+    {
+        ViewModel!.PasteCommand(this.LastFrameClicked);
     }
 
     public void PopulateFlyout(object sender, EventArgs e)

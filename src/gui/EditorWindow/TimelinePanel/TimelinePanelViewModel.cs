@@ -99,8 +99,6 @@ public class IntSelectionField : FieldBase
         get => _choice;
         set => this.RaiseAndSetIfChanged(ref _choice, value);
     }
-    //private readonly ObservableAsPropertyHelper<int> _choice;
-    //public int Choice => _choice.Value;
 
     private ObservableCollection<int> _choices;
     public ObservableCollection<int> Choices
@@ -405,6 +403,13 @@ public class CommandPointer : ViewModelBase
 public class TimelinePanelViewModel : ViewModelBase
 {
 
+    /////////////////////////////
+    // *** PRIVATE MEMBERS *** //
+    /////////////////////////////
+    private Category       CopiedCategory;
+    private CommandPointer CopiedCommand;
+    private bool           DeleteOriginal;
+
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
@@ -412,6 +417,8 @@ public class TimelinePanelViewModel : ViewModelBase
 
     public Timeline TimelineContent { get; set; }
     public dynamic ActiveCommand { get; set; }
+
+    public bool HasCopiedCommand { get; set; } = false;
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -442,8 +449,36 @@ public class TimelinePanelViewModel : ViewModelBase
 
     public void DeleteCommand(Category cat, CommandPointer cmd)
     {
-        this.Config.EventManager.DeleteCommand(cmd.CmdIndex, cmd.IsAudioCmd);
-        this.TimelineContent.DeleteCommand(cat, cmd);
+        bool success = this.Config.EventManager.DeleteCommand(cmd.CmdIndex, cmd.IsAudioCmd);
+        if (success)
+        {
+            this.TimelineContent.DeleteCommand(cat, cmd);
+            // if something gets deleted between cut and paste
+            this.DeleteOriginal = false;
+        }
+    }
+
+    public void CopyCommand(Category cat, CommandPointer cmd, bool deleteOriginal)
+    {
+        this.CopiedCategory = cat;
+        this.CopiedCommand  = cmd;
+        this.DeleteOriginal = deleteOriginal;
+        this.HasCopiedCommand = true;
+    }
+
+    public void PasteCommand(int frame)
+    {
+        int newCmdIndex = this.Config.EventManager.CopyCommandToNewFrame(this.CopiedCommand.CmdIndex, this.CopiedCommand.IsAudioCmd, frame);
+        if (newCmdIndex >= 0)
+        {
+            CommandPointer newCmd = new CommandPointer(this.CopiedCommand.Code, this.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.CopiedCommand.Duration);
+            this.CopiedCategory.AddCommand(newCmd);
+            if (this.DeleteOriginal)
+            {
+                this.DeleteCommand(this.CopiedCategory, this.CopiedCommand);
+                this.DeleteOriginal = false;
+            }
+        }
     }
 
     public void PlayCueFromSource(string source, int cueId, int trackIndex)
