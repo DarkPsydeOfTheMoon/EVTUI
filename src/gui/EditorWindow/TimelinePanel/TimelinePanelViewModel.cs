@@ -187,7 +187,9 @@ public class Timeline : ReactiveObject
             if (i >= 0 && i < this.Frames.Count)
             {
                 CommandPointer newCmd = new CommandPointer(code, true, j, i, len);
-                this.Categories[12].AddCommand(newCmd);
+                int catInd = Timeline.CodeToCategory(code, true);
+                if (catInd > -1)
+                    this.Categories[catInd].AddCommand(newCmd);
             }
         }
         for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
@@ -198,47 +200,55 @@ public class Timeline : ReactiveObject
             if (i >= 0 && i < this.Frames.Count)
             {
                 CommandPointer newCmd = new CommandPointer(code, false, j, i, len);
-                int catInd = -1;
-                if (code == "FbEn" || code == "Flbk" || code.StartsWith("Im"))
-                    catInd = 6;
-                else if (code == "Msg_" || code == "MsgR" || code == "Cht_")
-                    catInd = 8;
-                else if (code == "LBX_" || code == "Date")
-                    catInd = 10;
-                else if (code == "AlEf" || code.StartsWith("G"))
-                    catInd = 11;
-                else if (code == "Scr_")
-                    catInd = 13;
-                else if (code == "Chap" || code == "FrJ_")
-                    catInd = 14;
-                else if (code == "PRum" || code == "TrMc")
-                    catInd = 15;
-                else if (code.StartsWith("En"))
-                    catInd = 1;
-                else if (code.StartsWith("Cw"))
-                    catInd = 5;
-                else if (code.StartsWith("Mv"))
-                    catInd = 7;
-                else if (code.StartsWith("Fd"))
-                    catInd = 10;
-                else if (code.StartsWith("F"))
-                    catInd = 0;
-                else if (code.StartsWith("C"))
-                    catInd = 2;
-                else if (code.StartsWith("M"))
-                    catInd = 3;
-                else if (code.StartsWith("E"))
-                    catInd = 4;
-                else if (code.StartsWith("T"))
-                    catInd = 9;
-                else if (code.StartsWith("P"))
-                    catInd = 11;
-                else
-                    catInd = 16;
+                int catInd = Timeline.CodeToCategory(code, false);
                 if (catInd > -1)
                     this.Categories[catInd].AddCommand(newCmd);
             }
         }
+    }
+
+    public static int CodeToCategory(string code, bool isAudio)
+    {
+        if (isAudio)
+            return 12;
+        int catInd = -1;
+        if (code == "FbEn" || code == "Flbk" || code.StartsWith("Im"))
+            catInd = 6;
+        else if (code == "Msg_" || code == "MsgR" || code == "Cht_")
+            catInd = 8;
+        else if (code == "LBX_" || code == "Date")
+            catInd = 10;
+        else if (code == "AlEf" || code.StartsWith("G"))
+            catInd = 11;
+        else if (code == "Scr_")
+            catInd = 13;
+        else if (code == "Chap" || code == "FrJ_")
+            catInd = 14;
+        else if (code == "PRum" || code == "TrMc")
+            catInd = 15;
+        else if (code.StartsWith("En"))
+            catInd = 1;
+        else if (code.StartsWith("Cw"))
+            catInd = 5;
+        else if (code.StartsWith("Mv"))
+            catInd = 7;
+        else if (code.StartsWith("Fd"))
+            catInd = 10;
+        else if (code.StartsWith("F"))
+            catInd = 0;
+        else if (code.StartsWith("C"))
+            catInd = 2;
+        else if (code.StartsWith("M"))
+            catInd = 3;
+        else if (code.StartsWith("E"))
+            catInd = 4;
+        else if (code.StartsWith("T"))
+            catInd = 9;
+        else if (code.StartsWith("P"))
+            catInd = 11;
+        else
+            catInd = 16;
+        return catInd;
     }
 
     public void DeleteCommand(Category cat, CommandPointer cmd)
@@ -368,7 +378,6 @@ public class CommandPointer : ViewModelBase
         this.CmdIndex   = cmdIndex;
         this.Frame      = frame;
         this.Duration   = duration;
-        this.PositionWithinFrame = 0;
     }
 
     public string Code       { get; }
@@ -419,6 +428,8 @@ public class TimelinePanelViewModel : ViewModelBase
     public dynamic ActiveCommand { get; set; }
 
     public bool HasCopiedCommand { get; set; } = false;
+
+    public List<string> AddableCodes { get => this.Config.EventManager.AddableCodes; }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -478,6 +489,18 @@ public class TimelinePanelViewModel : ViewModelBase
                 this.DeleteCommand(this.CopiedCategory, this.CopiedCommand);
                 this.DeleteOriginal = false;
             }
+        }
+    }
+
+    public void NewCommand(string code, int frame)
+    {
+        bool isAudio = ECS.ValidEcsCommands.Contains(code);
+        int newCmdIndex = this.Config.EventManager.NewCommand(code, frame);
+        if (newCmdIndex >= 0)
+        {
+            int len = ((isAudio) ? this.Config.EventManager.EventSoundCommands : this.Config.EventManager.EventCommands)[newCmdIndex].FrameDuration;
+            CommandPointer newCmd = new CommandPointer(code, isAudio, newCmdIndex, frame, len);
+            this.TimelineContent.Categories[Timeline.CodeToCategory(code, isAudio)].AddCommand(newCmd);
         }
     }
 

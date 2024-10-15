@@ -51,6 +51,31 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         }
     }
 
+    private string _addCode;
+    public string AddCode
+    {
+        get => _addCode;
+        set
+        {
+            _addCode = value;
+            OnPropertyChanged(nameof(AddCode));
+            OnPropertyChanged(nameof(AddCodeIsSelected));
+        }
+    }
+
+    public bool AddCodeIsSelected { get => !(this.AddCode is null); }
+
+    private bool _modalIsOpen = false;
+    public bool ModalIsOpen
+    {
+        get => _modalIsOpen;
+        set
+        {
+            _modalIsOpen = value;
+            OnPropertyChanged(nameof(ModalIsOpen));
+        }
+    }
+
     private List<double> FramePositions;
 
     private int LastFrameClicked;
@@ -121,6 +146,26 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     public void PasteCommand(object sender, RoutedEventArgs e)
     {
         ViewModel!.PasteCommand(this.LastFrameClicked);
+    }
+
+    public void OpenModal(object sender, RoutedEventArgs e)
+    {
+        this.ModalIsOpen = true;
+    }
+
+    public void CloseModal(object sender, RoutedEventArgs e)
+    {
+        this.ModalIsOpen = false;
+    }
+
+    public void NewCommand(object sender, RoutedEventArgs e)
+    {
+        if (!(this.AddCode is null))
+        {
+            ViewModel!.NewCommand(this.AddCode, this.LastFrameClicked);
+            this.ModalIsOpen = false;
+            this.AddCode = null;
+        }
     }
 
     public void PopulateFlyout(object sender, EventArgs e)
