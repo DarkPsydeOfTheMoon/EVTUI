@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class FrJ_ : ISerializable
     {
+        public const int DataSize = 16;
+
         public UInt32 JumpToFrame;
 
         public UInt32[] UNUSED_UINT32 = new UInt32[3];

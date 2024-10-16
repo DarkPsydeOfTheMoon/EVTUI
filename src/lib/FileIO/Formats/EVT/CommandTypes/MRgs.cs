@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class MRgs : ISerializable
     {
+        public const int DataSize = 16;
+
         public Int32 ActionType;
 
         public UInt32[] UNUSED_UINT32 = new UInt32[3];

@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class MMD_ : ISerializable
     {
+        public const int DataSize = 384;
+
         public Int32 UnkBool1;
         public Int32 UnkEnum;
         public float[][] Targets = new float[24][];

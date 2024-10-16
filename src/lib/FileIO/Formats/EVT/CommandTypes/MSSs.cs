@@ -9,6 +9,8 @@ public partial class CommandTypes
 {
     public class MSSs : ISerializable
     {
+        public const int DataSize = 16;
+
         public Int32 ShoeLayerIndex;
 
         public Int32[] UNUSED_INT32 = new Int32[3];

@@ -9,6 +9,8 @@ public partial class CommandTypes
 {
     public class MsgR : ISerializable
     {
+        public const int DataSize = 32;
+
         public Int32 MessageMode;
         public Int32 MessageIndex;
         public Int32 SelIndex;

@@ -9,6 +9,8 @@ public partial class CommandTypes
 {
     public class MAA_ : ISerializable
     {
+        public const int DataSize = 32;
+
         public Int32 UnkEnum;
         public Int32 PrimaryAnimationIndex;
         public Int32 SecondaryAnimationIndex;

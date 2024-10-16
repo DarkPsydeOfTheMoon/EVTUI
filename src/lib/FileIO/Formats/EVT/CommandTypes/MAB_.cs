@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class MAB_ : ISerializable
     {
+        public const int DataSize = 64;
+
         public Int32 PrimaryAnimationIndex;
         public Int32 PrimaryLoopBool;
         public float PrimaryAnimationSpeed;

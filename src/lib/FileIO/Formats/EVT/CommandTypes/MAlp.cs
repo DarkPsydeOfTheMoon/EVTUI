@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class MAlp : ISerializable
     {
+        public const int DataSize = 16;
+
         public byte AlphaLevel;
 
         public byte[] UNK_BYTE = new byte[11];

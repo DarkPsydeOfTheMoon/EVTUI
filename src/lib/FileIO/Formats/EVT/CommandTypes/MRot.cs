@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class MRot : ISerializable
     {
+        public const int DataSize = 96;
+
         public UInt16   FrameDelay;
         public float[]  Rotation = new float[3];
         public UInt32   FrameDuration;

@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class SFts : ISerializable
     {
+        public const int DataSize = 16;
+
         public Int32 Enable;
         public Int32 ObjectId;
 
