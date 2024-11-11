@@ -13,6 +13,7 @@ public class EditorWindowViewModel : ViewModelBase
     public DataManager            Config          { get; }
     public AudioPanelViewModel    audioPanelVM    { get; }
     public TimelinePanelViewModel timelinePanelVM { get; }
+    public ScriptPanelViewModel   scriptPanelVM   { get; }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -22,6 +23,7 @@ public class EditorWindowViewModel : ViewModelBase
         this.Config          = dataManager;
         this.audioPanelVM    = new AudioPanelViewModel(this.Config);
         this.timelinePanelVM = new TimelinePanelViewModel(this.Config);
+        this.scriptPanelVM   = new ScriptPanelViewModel(this.Config);
     }
 
     public void ClearCache()
@@ -34,13 +36,19 @@ public class EditorWindowViewModel : ViewModelBase
         switch (which)
         {
             case "EVT":
-                this.Config.SaveModdedFiles(true, false);
+                this.Config.SaveModdedFiles(true, false, false, false);
                 break;
             case "ECS":
-                this.Config.SaveModdedFiles(false, true);
+                this.Config.SaveModdedFiles(false, true, false, false);
+                break;
+            case "BMD":
+                this.Config.SaveModdedFiles(false, false, true, false);
+                break;
+            case "BF":
+                this.Config.SaveModdedFiles(false, false, false, true);
                 break;
             case null:
-                this.Config.SaveModdedFiles(true, true);
+                this.Config.SaveModdedFiles(true, true, true, true);
                 break;
             default:
                 break;

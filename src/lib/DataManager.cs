@@ -30,6 +30,7 @@ public class DataManager
     public string? CpkPath;
     public string? ModPath;
     public string VanillaExtractionPath = Path.Combine(UserCache.LocalDir, "Extracted");
+    public string WorkingPath = Path.Combine(UserCache.LocalDir, "Working");
 
     public string? ActiveEventId { get => (this.ProjectManager.ActiveEvent is null) ? null : $"E{this.ProjectManager.ActiveEvent.MajorId:000}_{this.ProjectManager.ActiveEvent.MinorId:000}"; }
 
@@ -41,12 +42,18 @@ public class DataManager
     ////////////////////////////
     public DataManager()
     {
+        if (!Directory.Exists(this.VanillaExtractionPath))
+            Directory.CreateDirectory(this.VanillaExtractionPath);
+        if (!Directory.Exists(this.WorkingPath))
+            Directory.CreateDirectory(this.WorkingPath);
+
         this.ProjectManager = new ProjectManager();
         this.EventManager   = new EventManager();
         this.ScriptManager  = new ScriptManager();
         this.AudioManager   = new AudioManager();
         this.CpkList        = new List<string>();
         this.Reset();
+
     }
 
     public void Reset()
@@ -58,6 +65,7 @@ public class DataManager
         this.EventLoaded   = false;
         this.EventManager.Clear();
         this.CpkList.Clear();
+        this.ClearCache();
     }
 
     public void LoadProject(int ind)
@@ -91,7 +99,7 @@ public class DataManager
             this.ProjectManager.LoadEvent(majorId, minorId);
         this.EventLoaded = success;
 
-        this.ScriptManager.UpdateMessages(this.EventManager.BmdPaths, this.VanillaExtractionPath);
+        this.ScriptManager.PopulateWorkingDir(this.WorkingPath, this.VanillaExtractionPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.EmulatedFileDir, this.EventManager.BmdPaths, this.EventManager.BfPaths, this.ProjectManager.ActiveGame.Type);
 
         // TODO: load common files! system sounds, common voice lines, models, bustups, cutins
         // so far, VOICE_SINGLEWORD gets loaded, but the rest will have to wait for full EVT/ECS parsing
@@ -100,11 +108,21 @@ public class DataManager
         return true;
     }
 
+    public string CompileMessage(string fileBase)
+    {
+        return this.ScriptManager.CompileMessage(this.VanillaExtractionPath, fileBase);
+    }
+
+    public string CompileScript(string fileBase)
+    {
+        return this.ScriptManager.CompileScript(this.VanillaExtractionPath, fileBase);
+    }
+
     public List<string> GetCPKsFromPath(string? directoryPath)
     {
         var cpks = new List<string>();
         if (!(directoryPath is null))
-            foreach(var file in Directory.GetFiles(directoryPath))
+            foreach (var file in Directory.GetFiles(directoryPath))
                 if (DataManager.CpkPattern.IsMatch(file))
                     cpks.Add(file);
         return cpks;
@@ -126,9 +144,20 @@ public class DataManager
     public void ClearCache()
     {
         CPKExtract.ClearDirectory(this.VanillaExtractionPath);
+        CPKExtract.ClearDirectory(this.WorkingPath);
     }
 
-    public void SaveModdedFiles(bool evt, bool ecs)
+    public void SaveBF()
+    {
+        this.ScriptManager.SaveScript("BF", this.WorkingPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.HasFramework("BFEmulator") ? this.ProjectManager.EmulatedFileDir : null);
+    }
+
+    public void SaveBMD()
+    {
+        this.ScriptManager.SaveScript("BMD", this.WorkingPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.HasFramework("BMDEmulator") ? this.ProjectManager.EmulatedFileDir : null);
+    }
+
+    public void SaveModdedFiles(bool evt, bool ecs, bool bmd, bool bf)
     {
         if (this.ReadOnly)
             return;
@@ -154,6 +183,12 @@ public class DataManager
             (new FileInfo(this.EventManager.EcsPath)).Directory.Create();
             this.EventManager.SaveECS();
         }
+
+        if (bmd)
+            this.SaveBMD();
+
+        if (bf)
+            this.SaveBF();
     }
 
 }

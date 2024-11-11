@@ -3,7 +3,7 @@
 # these probably won't change
 #USER="psy"
 # these will probably change over time for versioning
-#TARGETBRANCH="evt-patched-v1.1"
+#TARGETBRANCH="evt-patched-v1.2"
 #TARGETBRANCH="my-local-branch"
 
 # this all assumes patches/${REPO}.patch exists

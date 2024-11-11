@@ -1,15 +1,19 @@
-From cd3026fe2838051eca4652b21bb2ccd7bbf53f2e Mon Sep 17 00:00:00 2001
+From 84c2d590ff3794e0daa3e6de87bffd2039fd4dab Mon Sep 17 00:00:00 2001
 From: DarkPsydeOfTheMoon <avalanchebreakdown@gmail.com>
-Date: Tue, 9 Apr 2024 01:14:01 -0700
-Subject: [PATCH] Inelegant changes to make paths Linux-compatible.
+Date: Wed, 23 Oct 2024 00:43:17 -0700
+Subject: [PATCH] Fixes for non-building master + inelegant Linux
+ compatibility.
 
 ---
  .../AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs  | 8 +++++++-
  .../Libraries/Serialization/ExternalJsonPathConverter.cs  | 5 ++++-
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ .../FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs | 2 +-
+ .../Compiler/MessageScriptCompiler.cs                     | 2 +-
+ .../Compiler/Parser/MessageScriptParserHelper.cs          | 2 ++
+ 5 files changed, 15 insertions(+), 4 deletions(-)
 
 diff --git a/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs b/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs
-index b2b941a..d579470 100644
+index f903d2b..57d6ef9 100644
 --- a/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs
 +++ b/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs
 @@ -2,6 +2,7 @@
@@ -17,50 +21,89 @@ index b2b941a..d579470 100644
  using System.IO;
  using System.Linq;
 +using System.Runtime.InteropServices;
- using Newtonsoft.Json;
+ using System.Text.Json;
  
- namespace AtlusScriptLibrary.Common.Libraries
-@@ -57,7 +58,12 @@ namespace AtlusScriptLibrary.Common.Libraries
-         {
-             EnsureInitialized();
-             string jsonText = File.ReadAllText( path );
--            return JsonConvert.DeserializeObject< Library >( jsonText );
-+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-+                return JsonConvert.DeserializeObject<Library>(jsonText);
-+            else {
-+                var _path = Path.Combine(jsonText.Split(new Char[] { '/', '\\' }));
-+                return JsonConvert.DeserializeObject< Library >( _path );
-+            }
-         }
+ namespace AtlusScriptLibrary.Common.Libraries;
+@@ -62,6 +63,11 @@ public static class LibraryLookup
+     {
+         EnsureInitialized();
+         string jsonText = File.ReadAllText(path);
+-        return JsonSerializer.Deserialize<Library>(jsonText);
++        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
++            return JsonSerializer.Deserialize<Library>(jsonText);
++        else {
++            var _path = Path.Combine(jsonText.Split(new Char[] { '/', '\\' }));
++            return JsonSerializer.Deserialize<Library>(_path);
++        }
      }
  }
 diff --git a/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs b/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs
-index 1b4b67b..5fded2c 100644
+index f8c3e43..fe7377b 100644
 --- a/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs
 +++ b/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs
-@@ -1,5 +1,6 @@
- using System;
+@@ -3,6 +3,7 @@ using System.Collections.Generic;
+ using System.Diagnostics;
  using System.IO;
+ using System.Reflection;
 +using System.Runtime.InteropServices;
- using Newtonsoft.Json;
+ using System.Text.Json;
+ using System.Text.Json.Serialization;
  
- namespace AtlusScriptLibrary.Common.Libraries.Serialization
-@@ -18,6 +19,8 @@ namespace AtlusScriptLibrary.Common.Libraries.Serialization
+@@ -43,6 +44,8 @@ internal class ExternalJsonPathConverter : JsonConverterFactory
  
-             var fullPath = Path.Combine( LibraryLookup.LibraryBaseDirectoryPath, path );
-             var jsonString = File.ReadAllText( fullPath );
+             var fullPath = Path.Combine(LibraryLookup.LibraryBaseDirectoryPath, path);
+             var jsonString = File.ReadAllText(fullPath);
 +            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 +                jsonString = Path.Combine(jsonString.Split("\\"));
-             var obj = JsonConvert.DeserializeObject( jsonString, objectType );
+             var obj = JsonSerializer.Deserialize<List<T>>(jsonString, _options);
  
              return obj;
-@@ -28,4 +31,4 @@ namespace AtlusScriptLibrary.Common.Libraries.Serialization
+@@ -54,4 +57,4 @@ internal class ExternalJsonPathConverter : JsonConverterFactory
              throw new NotImplementedException();
          }
      }
 -}
 \ No newline at end of file
 +}
+diff --git a/Source/AtlusScriptLibrary/FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs b/Source/AtlusScriptLibrary/FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs
+index 6a9dba1..eec2b3d 100644
+--- a/Source/AtlusScriptLibrary/FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs
++++ b/Source/AtlusScriptLibrary/FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs
+@@ -179,7 +179,7 @@ public class FlowScriptDecompiler
+                 return false;
+             }
+ 
+-            var importPath = MessageScriptFilePath.Replace(Path.GetDirectoryName(mFilePath), "").TrimStart('\\');
++            var importPath = MessageScriptFilePath.Replace(Path.GetDirectoryName(mFilePath), "").TrimStart('\\').TrimStart('/');
+             mCompilationUnit.Imports.Add(new Import(importPath));
+         }
+ 
+diff --git a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/MessageScriptCompiler.cs b/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/MessageScriptCompiler.cs
+index b035b84..a27a74a 100644
+--- a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/MessageScriptCompiler.cs
++++ b/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/MessageScriptCompiler.cs
+@@ -9,7 +9,7 @@ using System.Globalization;
+ using System.IO;
+ using System.Linq;
+ using System.Text;
+-using MessageScriptParser = AtlusScriptLibrary.MessageScriptLanguage.Compiler.Parser.MessageScriptParser;
++using MessageScriptParser = AtlusScriptLibrary.FlowScriptLanguage.Compiler.Parser.MessageScriptParser;
+ using MessageScriptParserHelper = AtlusScriptLibrary.MessageScriptLanguage.Compiler.Parser.MessageScriptParserHelper;
+ 
+ namespace AtlusScriptLibrary.MessageScriptLanguage.Compiler;
+diff --git a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs b/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs
+index 1d4b2b1..d5379cf 100644
+--- a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs
++++ b/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs
+@@ -1,6 +1,8 @@
+ ﻿using Antlr4.Runtime;
+ using System.IO;
+ 
++using AtlusScriptLibrary.FlowScriptLanguage.Compiler.Parser;
++
+ namespace AtlusScriptLibrary.MessageScriptLanguage.Compiler.Parser;
+ 
+ public static class MessageScriptParserHelper
 -- 
-2.25.1
+2.34.1
 

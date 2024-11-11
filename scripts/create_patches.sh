@@ -1,7 +1,7 @@
 #!/bin/bash
 
-REPO=$1   # e.g., Atlus-Script-tools
-BRANCH=$2 # e.g., psy/evt-patched-v1.0
+REPO=$1   # e.g., Atlus-Script-Tools
+BRANCH=$2 # e.g., psy/evt-patched-v1.2
 HEAD=$3   # e.g., master
 
 # this all assumes we've already done...

@@ -17,6 +17,8 @@
       <MenuItem Header="Save all" Click="SaveMod" />
       <MenuItem Header="Save EVT" Click="SaveMod" Name="EVT" />
       <MenuItem Header="Save ECS" Click="SaveMod" Name="ECS" />
+      <MenuItem Header="Save BMD" Click="SaveMod" Name="BMD" />
+      <MenuItem Header="Save BF"  Click="SaveMod" Name="BF" />
     </MenuItem>
     <MenuItem Header="Reload">
       <MenuItem Header="Reload all" />
@@ -30,11 +32,8 @@
         <TabItem Header="Timeline">
           <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
         </TabItem>
-        <TabItem Header="Dialogue">
-          <TextBlock Text="This is the Dialogue Editor tab." />
-        </TabItem>
         <TabItem Header="Scripts">
-          <TextBlock Text="This is the Script Editor tab." />
+          <views:ScriptPanel DataContext="{Binding scriptPanelVM}" Padding="10"/>
         </TabItem>
       </TabControl>
     </TabItem>
