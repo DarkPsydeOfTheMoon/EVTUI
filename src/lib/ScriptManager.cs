@@ -293,8 +293,15 @@ public class ScriptManager
                     foreach (string ext in new[] { ".flow", ".msg" })
                         if (this.ScriptTexts[scriptType][script].ContainsKey(ext))
                         {
-                            File.WriteAllText(this.BasePath(workingDir, script)+ext, this.ScriptTexts[scriptType][script][ext]);
-                            File.Copy(this.BasePath(workingDir, script)+ext, Path.Combine(emuDir, scriptType, Path.GetFileNameWithoutExtension(script)+ext), true);
+                            // if they already have full path femu, fine, just use that
+                            if (File.Exists(this.BasePath(Path.Combine(emuDir, scriptType), script)+ext))
+                                File.Copy(this.BasePath(workingDir, script)+ext, this.BasePath(Path.Combine(emuDir, scriptType), script)+ext, true);
+                            // otherwise, do it the dummy + top-level (recommended) way
+                            else
+                            {
+                                File.WriteAllText(this.BasePath(workingDir, script)+ext, this.ScriptTexts[scriptType][script][ext]);
+                                File.Copy(this.BasePath(workingDir, script)+ext, Path.Combine(emuDir, scriptType, Path.GetFileNameWithoutExtension(script)+ext), true);
+                            }
                         }
                 }
             }
@@ -400,8 +407,12 @@ public class ScriptManager
         foreach (string scriptType in this.ScriptTexts.Keys)
             foreach (string fileBase in this.ScriptTexts[scriptType].Keys)
                 foreach (string fileExt in this.ScriptTexts[scriptType][fileBase].Keys)
+                    // recommended format is dummy file in essentials + top-level femu
                     if (File.Exists(Path.Combine(modDir, fileBase)) && File.Exists(Path.Combine(emuDir, scriptType, Path.GetFileNameWithoutExtension(fileBase))+fileExt))
                         File.Copy(Path.Combine(emuDir, scriptType, Path.GetFileNameWithoutExtension(fileBase))+fileExt, this.BasePath(workingDir, fileBase)+fileExt, true);
+                    // ...but full-path femu is also fine
+                    else if (File.Exists(this.BasePath(Path.Combine(emuDir, scriptType), fileBase)+fileExt))
+                        File.Copy(this.BasePath(Path.Combine(emuDir, scriptType), fileBase)+fileExt, this.BasePath(workingDir, fileBase)+fileExt, true);
     }
 
     public void RefreshScriptTexts(string targetDir)
