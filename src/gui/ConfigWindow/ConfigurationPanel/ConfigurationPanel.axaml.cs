@@ -64,7 +64,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
 
         if (dirs.Count > 0)
         {
-            var retTuple = ViewModel!.TrySetModDir(dirs[0].Path.AbsolutePath);
+            var retTuple = ViewModel!.TrySetModDir(dirs[0].Path.LocalPath);
             if (retTuple.Status != 0)
                 await Utils.RaiseModal(this.topLevel, retTuple.Message);
         }
@@ -103,7 +103,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
 
         if (dirs.Count > 0)
         {
-            var retTuple = ViewModel!.TryUseCPKDir(dirs[0].Path.AbsolutePath, ViewModel!.newProjectConfig.GameType);
+            var retTuple = ViewModel!.TryUseCPKDir(dirs[0].Path.LocalPath, ViewModel!.newProjectConfig.GameType);
             if (retTuple.Status != 0)
                 await Utils.RaiseModal(this.topLevel, retTuple.Message);
             else if (ViewModel!.ConfigType == "read-only")
