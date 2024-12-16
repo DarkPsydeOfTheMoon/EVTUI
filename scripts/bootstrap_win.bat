@@ -14,7 +14,7 @@ cd ..
 cd ..
 echo Applying patch to Atlus-Script-Tools...
 cd Atlus-Script-Tools
-git apply --reject --whitespace=fix ../../../patches/Atlus-Script-Tools.patch
+git apply --reject --whitespace=fix ../../patches/Atlus-Script-Tools.patch
 cd ..
 cd ..
 
