@@ -62,7 +62,7 @@ public class EventManager
         foreach (string acbPath in cpkEVTContents.Value.acbPaths)
         {
             string basePath = acbPath.Substring(0, acbPath.Length-4);
-            Regex awbPattern = new Regex(basePath+"\\.AWB$", RegexOptions.IgnoreCase);
+            Regex awbPattern = new Regex(Regex.Escape(basePath)+"\\.AWB$", RegexOptions.IgnoreCase);
             string awbPath = null;
             foreach (string candidateAwbPath in cpkEVTContents.Value.awbPaths)
                 if (awbPattern.IsMatch(candidateAwbPath))
