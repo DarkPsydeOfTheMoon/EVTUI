@@ -402,7 +402,7 @@ public class ScriptManager
 
     public void MaybeOverwriteScripts(string workingDir, string modDir, string emuDir)
     {
-        if (modDir is null)
+        if (modDir is null || emuDir is null)
             return;
         foreach (string scriptType in this.ScriptTexts.Keys)
             foreach (string fileBase in this.ScriptTexts[scriptType].Keys)
