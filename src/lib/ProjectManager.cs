@@ -101,6 +101,17 @@ public class ProjectManager
 
     public bool TryUpdateProjects(NewProjectConfig config)
     {
+        // create the game object if it doesn't already exist
+        if (!(this.UserData.Games).Exists(game => game.Path == config.GamePath))
+        {
+            GameSettings newGame = new GameSettings();
+            newGame.Path = config.GamePath;
+            newGame.Type = config.GameType;
+            newGame.Notes = "";
+            newGame.Events = new EventCollections();
+            this.UserData.Games.Insert(0, newGame);
+        }
+
         // just gonna treat these as one for error catching purposes... sure hope i don't regret this later when debugging
         if (this.ModPathAlreadyUsed(config.ModPath) || !Directory.Exists(config.GamePath))
             return false;

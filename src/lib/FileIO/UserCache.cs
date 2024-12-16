@@ -107,6 +107,13 @@ public class EventCollections
     public List<SimpleEvent>   Pinned { get; set; }
     public List<SimpleEvent>   Recent { get; set; }
     public List<ExpandedEvent> Notes  { get; set; }
+
+    public EventCollections()
+    {
+        this.Pinned = new List<SimpleEvent>();
+        this.Recent = new List<SimpleEvent>();
+        this.Notes  = new List<ExpandedEvent>();
+    }
 }
 
 public class SimpleEvent
