@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 using ReactiveUI;
 //using ReactiveUI.Fody.Helpers;
@@ -402,9 +403,12 @@ public class ConfigurationPanelViewModel : ViewModelBase
                     eventList.Add(evt);
             else if (this.SelectedCollection == "Pinned Events")
             {
-                HashSet<SimpleEvent> combinedPins = new HashSet<SimpleEvent>(this.Config.ProjectManager.ActiveProject.Events.Pinned);
-                combinedPins.UnionWith(this.Config.ProjectManager.ActiveGame.Events.Pinned);
-                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(new List<SimpleEvent>(combinedPins), this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
+                Dictionary<(int MajorId, int MinorId), SimpleEvent> combinedPins = new Dictionary<(int MajorId, int MinorId), SimpleEvent>();
+                foreach (SimpleEvent evt in this.Config.ProjectManager.ActiveProject.Events.Pinned)
+                    combinedPins[(evt.MajorId, evt.MinorId)] = evt;
+                foreach (SimpleEvent evt in this.Config.ProjectManager.ActiveGame.Events.Pinned)
+                    combinedPins[(evt.MajorId, evt.MinorId)] = evt;
+                foreach (DisplayableEvent evt in this.ConstructDisplayableEvents(combinedPins.Values.ToList(), this.Config.ProjectManager.ActiveProject.Events.Pinned, this.Config.ProjectManager.ActiveGame.Events.Pinned))
                     eventList.Add(evt);
             }
         }

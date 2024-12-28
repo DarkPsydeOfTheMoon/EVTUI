@@ -154,11 +154,14 @@ public static class CPKExtract
                 string inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
                 string outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
 
+                // hmmmokay right now the behavior is to skip extracting if it exists
+                // but actually... it should not do this, that's silly
+                // (that's a TODO for a future file management PR)
                 string maybeExistingPath = null;
                 if (!(existingFolder is null))
                 {
                     maybeExistingPath = Path.Combine(existingFolder, Path.GetFileName(CpkPath), inCpkPath);
-                    if (File.Exists(maybeExistingPath))
+                    if (File.Exists(maybeExistingPath) && new FileInfo(maybeExistingPath).Length > 0)
                         outputPath = maybeExistingPath;
                 }
 

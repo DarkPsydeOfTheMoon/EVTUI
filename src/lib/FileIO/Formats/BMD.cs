@@ -140,6 +140,13 @@ public class BMD : ISerializable
         TraitMethods.Write(this, filepath);
     }
     public void Read (string filepath) { TraitMethods.Read (this, filepath); }
+    public byte[] ToBytes()
+    {
+        TraitMethods.ToBytes(this);
+        return TraitMethods.ToBytes(this);
+    }
+    public void FromBytes (byte[] bytes) { TraitMethods.FromBytes (this, bytes); }
+    public MemoryStream ToStream() { return new MemoryStream(this.ToBytes()); }
 }
 
 public class Turn : ISerializable

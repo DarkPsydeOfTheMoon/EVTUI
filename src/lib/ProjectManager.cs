@@ -68,6 +68,7 @@ public class ProjectManager
     public Project?      ActiveProject;
     public SimpleEvent?  ActiveEvent;
     public string        ModdedFileDir;
+    public string        EmulatedFileDir;
 
     public ulong AdxKey { get => (this.ActiveGame is null) ? 0 : ProjectManager.KeyCodes[this.ActiveGame.Type]; }
     public string CpkDecryptionFunctionName { get => (this.ActiveGame is null || !this.ActiveGame.Type.StartsWith("P5R")) ? null : "P5R"; }
@@ -83,6 +84,11 @@ public class ProjectManager
     private void SaveUserCache()
     {
         UserCache.SaveToYaml(this.UserData);
+    }
+
+    public bool HasFramework(string name)
+    {
+        return this.ActiveProject.Frameworks.ContainsKey(name) && this.ActiveProject.Frameworks[name];
     }
 
     public bool ModPathAlreadyUsed(string modPath)
@@ -151,10 +157,23 @@ public class ProjectManager
         Trace.Assert(!(this.ActiveGame is null) && !(this.ActiveProject is null), "Game specified for project doesn't exist.");
 
         this.ModdedFileDir = this.ActiveProject.Mod.Path;
-        if (this.ActiveProject.Frameworks.ContainsKey("P5REssentials") && this.ActiveProject.Frameworks["P5REssentials"])
+        if (this.HasFramework("P5REssentials"))
             this.ModdedFileDir = Path.Combine(this.ModdedFileDir, "P5REssentials", "CPK");
         if (!Directory.Exists(this.ModdedFileDir))
             Directory.CreateDirectory(this.ModdedFileDir);
+
+        if (this.HasFramework("BFEmulator") || this.HasFramework("BMDEmulator"))
+        {
+            this.EmulatedFileDir = Path.Combine(this.ActiveProject.Mod.Path, "FEmulator");
+            if (!Directory.Exists(this.EmulatedFileDir))
+                Directory.CreateDirectory(this.EmulatedFileDir);
+            if (this.HasFramework("BFEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BF")))
+                Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BF"));
+            if (this.HasFramework("BMDEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BMD")))
+                Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BMD"));
+        }
+        else
+            this.EmulatedFileDir = null;
 
         this.SaveUserCache();
     }
@@ -171,9 +190,10 @@ public class ProjectManager
             this.SaveUserCache();
         }
 
-        this.ActiveGame = this.UserData.Games[0];
-        this.ActiveProject = null;
-        this.ModdedFileDir = null;
+        this.ActiveGame      = this.UserData.Games[0];
+        this.ActiveProject   = null;
+        this.ModdedFileDir   = null;
+        this.EmulatedFileDir = null;
     }
 
     public void LoadEvent(int majorId, int minorId)

@@ -3,7 +3,7 @@
 # these probably won't change
 #USER="psy"
 # these will probably change over time for versioning
-#TARGETBRANCH="evt-patched-v1.1"
+#TARGETBRANCH="evt-patched-v1.2"
 #TARGETBRANCH="my-local-branch"
 
 # this all assumes patches/${REPO}.patch exists
@@ -19,10 +19,10 @@ for REPO in $(echo "Atlus-Script-Tools" "GFD-Studio"); do
 	# get rid of prior patch
 	# if you've made other changes, too bad, why are you running this script
 	git reset --hard HEAD
-	# update master branch, assuming it's called "master"
-	# (a safe assumption for now, but an assumption indeed)
 	git submodule update --init
 	git submodule sync
+	# update master branch, assuming it's called "master"
+	# (a safe assumption for now, but an assumption indeed)
 	#git checkout master
 	#git pull
 	# make new branch (off of master) to be patched
