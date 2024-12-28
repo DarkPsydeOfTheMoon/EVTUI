@@ -135,7 +135,6 @@ public class AudioManager
             this.ActiveACB = null;
         foreach (string key in this.AcbByType.Keys)
             this.AcbByType[key].Sort((x, y) => x.CompareTo(y));
-        Console.WriteLine(this.AcbByType["Voice"].Count);
     }
 
     public void PlayCueTrack(uint cueId, int trackIndex, ulong keyCode)

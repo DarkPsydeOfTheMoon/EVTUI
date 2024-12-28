@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace EVTUI;
 
@@ -29,6 +30,8 @@ public class EventManager
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ///////////////.////////////
+    public string       EvtPath;
+    public string       EcsPath;
     public List<(string ACB, string? AWB)> AcwbPaths;
     public List<string> BfPaths;
     public List<string> BmdPaths;
@@ -36,20 +39,22 @@ public class EventManager
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public bool Load(List<string> cpkList, string evtid, string targetdir, string cpkDecryptionFunctionName)
+    public bool Load(List<string> cpkList, string evtid, string vanillaDir, string moddedDir, string cpkDecryptionFunctionName)
     {
         this.Clear();
         this.CpkDecryptionFunctionName = cpkDecryptionFunctionName;
 
-        CpkEVTContents? cpkEVTContents = CPKExtract.ExtractEVTFiles(cpkList, evtid, targetdir, this.CpkDecryptionFunctionName);
+        CpkEVTContents? cpkEVTContents = CPKExtract.ExtractEVTFiles(cpkList, evtid, vanillaDir, moddedDir, this.CpkDecryptionFunctionName);
         if (cpkEVTContents is null)
             return false;
 
+        this.EvtPath = cpkEVTContents.Value.evtPath;
         this.SerialEvent = new EVT();
-        this.SerialEvent.Read(cpkEVTContents.Value.evtPath);
+        this.SerialEvent.Read(this.EvtPath);
 
+        this.EcsPath = cpkEVTContents.Value.ecsPath;
         this.SerialEventSounds = new ECS();
-        this.SerialEventSounds.Read(cpkEVTContents.Value.ecsPath);
+        this.SerialEventSounds.Read(this.EcsPath);
 
         // the DataManager will pass these to the AudioManager
         this.AcwbPaths = new List<(string ACB, string? AWB)>();
@@ -76,6 +81,9 @@ public class EventManager
         this.SerialEventSounds         = null;
         this.CpkDecryptionFunctionName = null;
     }
+
+    public void SaveEVT() { this.SerialEvent.Write(this.EvtPath); }
+    public void SaveECS() { this.SerialEventSounds.Write(this.EcsPath); }
 
     public int EventDuration { get { return this.SerialEvent.TotalFrame; } }
     public SerialCommand[] EventCommands { get { return this.SerialEvent.Commands; } }

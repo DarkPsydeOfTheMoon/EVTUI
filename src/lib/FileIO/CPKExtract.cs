@@ -123,7 +123,7 @@ public static class CPKExtract
         return ret;
     }
 
-    public static CpkEVTContents? ExtractEVTFiles(List<string> CpkList, string eventId, string OutputFolder, string decryptionFunctionName)
+    public static CpkEVTContents? ExtractEVTFiles(List<string> CpkList, string eventId, string OutputFolder, string existingFolder, string decryptionFunctionName)
     {
         // clear it first!
         CPKExtract.ClearDirectory(OutputFolder);
@@ -151,11 +151,19 @@ public static class CPKExtract
 
             Parallel.For(0, files.Length, x =>
             {
-                var inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
-                var outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
+                string inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
+                string outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
+
+                string maybeExistingPath = null;
+                if (!(existingFolder is null))
+                {
+                    maybeExistingPath = Path.Combine(existingFolder, Path.GetFileName(CpkPath), inCpkPath);
+                    if (File.Exists(maybeExistingPath))
+                        outputPath = maybeExistingPath;
+                }
+
                 if (eventPattern.IsMatch(inCpkPath))
                 {
-                    Console.WriteLine(inCpkPath);
                     if (CPKExtract.Patterns["EVT:EVT"].IsMatch(inCpkPath))
                     {
                         evtFound = true;
@@ -188,7 +196,9 @@ public static class CPKExtract
                     retval.awbPaths.Add(outputPath);
                 else
                     return;
-                extractor.QueueItem(new ItemModel(outputPath, files[x]));
+                Console.WriteLine(outputPath);
+                if (outputPath != maybeExistingPath)
+                    extractor.QueueItem(new ItemModel(outputPath, files[x]));
             });
             extractor.WaitForCompletion();
             ArrayRental.Reset();

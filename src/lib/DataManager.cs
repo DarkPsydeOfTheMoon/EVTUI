@@ -86,7 +86,7 @@ public class DataManager
         if (!this.ReadOnly && !this.ProjectLoaded)
             return false;
 
-        bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.VanillaExtractionPath, this.ProjectManager.CpkDecryptionFunctionName);
+        bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.VanillaExtractionPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.CpkDecryptionFunctionName);
         if (success)
             this.ProjectManager.LoadEvent(majorId, minorId);
         this.EventLoaded = success;
@@ -126,6 +126,34 @@ public class DataManager
     public void ClearCache()
     {
         CPKExtract.ClearDirectory(this.VanillaExtractionPath);
+    }
+
+    public void SaveModdedFiles(bool evt, bool ecs)
+    {
+        if (this.ReadOnly)
+            return;
+
+        if (evt)
+        {
+            if (!this.EventManager.EvtPath.StartsWith(this.ProjectManager.ModdedFileDir))
+            {
+                string baseEvtPath = this.EventManager.EvtPath.Substring((this.VanillaExtractionPath.Length+1), this.EventManager.EvtPath.Length-(this.VanillaExtractionPath.Length+1));
+                this.EventManager.EvtPath = Path.Combine(this.ProjectManager.ModdedFileDir, baseEvtPath);
+            }
+            (new FileInfo(this.EventManager.EvtPath)).Directory.Create();
+            this.EventManager.SaveEVT();
+        }
+
+        if (ecs)
+        {
+            if (!this.EventManager.EcsPath.StartsWith(this.ProjectManager.ModdedFileDir))
+            {
+                string baseEcsPath = this.EventManager.EcsPath.Substring((this.VanillaExtractionPath.Length+1), this.EventManager.EcsPath.Length-(this.VanillaExtractionPath.Length+1));
+                this.EventManager.EcsPath = Path.Combine(this.ProjectManager.ModdedFileDir, baseEcsPath);
+            }
+            (new FileInfo(this.EventManager.EcsPath)).Directory.Create();
+            this.EventManager.SaveECS();
+        }
     }
 
 }

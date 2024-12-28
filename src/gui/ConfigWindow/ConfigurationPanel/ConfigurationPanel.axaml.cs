@@ -43,27 +43,6 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         });
     }
 
-    // If we need to pop boxes like this from multiple places, we should add this to
-    // a View base class or something.
-    public async Task<int> RaiseModal(string text)
-    {
-        Window sampleWindow =
-            new Window 
-            { 
-                SizeToContent = SizeToContent.WidthAndHeight,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner
-            };
-        sampleWindow.Content = new MessageBox(text);
-
-        // Launch window and get a return code to distinguish how the window
-        // was closed.
-        int? res = await sampleWindow.ShowDialog<int?>(this.topLevel);
-        if (res is null)
-            return 1;
-        else
-            return (int)res;
-    }
-
     private void GoToEventPage()
     {
         ViewModel!.DisplayEvents();
@@ -87,7 +66,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         {
             var retTuple = ViewModel!.TrySetModDir(dirs[0].Path.AbsolutePath);
             if (retTuple.Status != 0)
-                await RaiseModal(retTuple.Message);
+                await Utils.RaiseModal(this.topLevel, retTuple.Message);
         }
     }
 
@@ -97,7 +76,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         if (retTuple.Status == 0)
             this.GoToEventPage();
         else
-            await RaiseModal(retTuple.Message);
+            await Utils.RaiseModal(this.topLevel, retTuple.Message);
     }
 
     ////////////////////////////
@@ -108,7 +87,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
     {
         var retTuple = ViewModel!.TryUseCPKDir(null, null);
         if (retTuple.Status != 0)
-            await RaiseModal(retTuple.Message);
+            await Utils.RaiseModal(this.topLevel, retTuple.Message);
         else if (ViewModel!.ConfigType == "read-only")
             this.GoToEventPage();
     }
@@ -126,7 +105,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         {
             var retTuple = ViewModel!.TryUseCPKDir(dirs[0].Path.AbsolutePath, ViewModel!.newProjectConfig.GameType);
             if (retTuple.Status != 0)
-                await RaiseModal(retTuple.Message);
+                await Utils.RaiseModal(this.topLevel, retTuple.Message);
             else if (ViewModel!.ConfigType == "read-only")
                 this.GoToEventPage();
         }
@@ -145,7 +124,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
             this.GoToEventPage();
         }
         else
-            await RaiseModal(retTuple.Message);
+            await Utils.RaiseModal(this.topLevel, retTuple.Message);
     }
 
     //////////////////////////////////
@@ -158,7 +137,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         if (retTuple.Status == 0)
             this.topLevel.Close(0);
         else
-            await RaiseModal(retTuple.Message);
+            await Utils.RaiseModal(this.topLevel, retTuple.Message);
     }
 
     public async void UseEnteredEvent(object sender, RoutedEventArgs e)
@@ -167,7 +146,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         if (retTuple.Status == 0)
             this.topLevel.Close(0);
         else
-            await RaiseModal(retTuple.Message);
+            await Utils.RaiseModal(this.topLevel, retTuple.Message);
     }
 
 }
