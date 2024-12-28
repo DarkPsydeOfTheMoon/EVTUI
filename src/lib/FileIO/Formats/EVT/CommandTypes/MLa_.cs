@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class MLa_ : ISerializable
     {
+        public const int DataSize = 32;
+
         public Int16 UnkBool;
         public Int16 UnkIndex1;
         public Int16 UnkEnum1;

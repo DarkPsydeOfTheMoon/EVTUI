@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace EVTUI;
 
@@ -60,14 +61,16 @@ public class EventManager
         this.AcwbPaths = new List<(string ACB, string? AWB)>();
         foreach (string acbPath in cpkEVTContents.Value.acbPaths)
         {
-            // TODO: smarter way to make this case-insensitive...
             string basePath = acbPath.Substring(0, acbPath.Length-4);
-            if (cpkEVTContents.Value.awbPaths.Contains(basePath+".AWB"))
-                this.AcwbPaths.Add((acbPath, basePath+".AWB"));
-            else if (cpkEVTContents.Value.awbPaths.Contains(basePath+".awb"))
-                this.AcwbPaths.Add((acbPath, basePath+".awb"));
-            else
-                this.AcwbPaths.Add((acbPath, null));
+            Regex awbPattern = new Regex(basePath+"\\.AWB$", RegexOptions.IgnoreCase);
+            string awbPath = null;
+            foreach (string candidateAwbPath in cpkEVTContents.Value.awbPaths)
+                if (awbPattern.IsMatch(candidateAwbPath))
+                {
+                    awbPath = candidateAwbPath;
+                    break;
+                }
+            this.AcwbPaths.Add((acbPath, awbPath));
         }
         this.BfPaths  = cpkEVTContents.Value.bfPaths;
         this.BmdPaths = cpkEVTContents.Value.bmdPaths;
@@ -90,6 +93,41 @@ public class EventManager
     public ArrayList EventCommandData { get { return this.SerialEvent.CommandData; } }
     public SerialCommand[] EventSoundCommands { get { return this.SerialEventSounds.Commands; } }
     public ArrayList EventSoundCommandData { get { return this.SerialEventSounds.CommandData; } }
+
+    public bool DeleteCommand(int index, bool isAudio)
+    {
+        if (isAudio)
+            return this.SerialEventSounds.DeleteCommand(index);
+        else
+            return this.SerialEvent.DeleteCommand(index);
+    }
+
+    public int CopyCommandToNewFrame(int index, bool isAudio, int frame)
+    {
+        if (isAudio)
+            return this.SerialEventSounds.CopyCommandToNewFrame(index, frame);
+        else
+            return this.SerialEvent.CopyCommandToNewFrame(index, frame);
+    }
+
+    public int NewCommand(string commandCode, int frameStart)
+    {
+        if (ECS.ValidEcsCommands.Contains(commandCode))
+            return this.SerialEventSounds.NewCommand(commandCode, frameStart);
+        else
+            return this.SerialEvent.NewCommand(commandCode, frameStart);
+    }
+
+    public List<string> AddableCodes
+    {
+        get
+        {
+            List<string> codes = new List<string>();
+            foreach (Type t in typeof(CommandTypes).GetNestedTypes())
+                codes.Add(t.Name);
+            return codes;
+        }
+    }
 
     public List<int> AssetIDs
     {
@@ -115,6 +153,8 @@ public class EventManager
 
     public List<string> GetAssetPaths(int assetId, List<string> cpkList, string targetdir)
     {
+        if (!(this.ObjectsById.ContainsKey(assetId)))
+            return new List<string>();
         SerialObject obj = this.ObjectsById[assetId];
         string pattern = "";
         switch ((ObjectTypes)obj.Type)

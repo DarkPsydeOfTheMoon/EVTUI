@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class Snd_ : ISerializable
     {
+        public const int DataSize = 32;
+
         public Int32 Source;
         public Int32 Action;
         public Int32 Channel;

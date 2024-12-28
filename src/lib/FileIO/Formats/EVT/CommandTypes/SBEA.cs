@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class SBEA : ISerializable
     {
+        public const int DataSize = 16;
+
         public Int32 Action;
 
         public Int32[] UNUSED_INT32 = new Int32[3];

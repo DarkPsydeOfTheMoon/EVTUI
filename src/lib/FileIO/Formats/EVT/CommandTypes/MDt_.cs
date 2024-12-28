@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class MDt_ : ISerializable
     {
+        public const int DataSize = 48;
+
         public Int32 FrameDelay;
         public Int32 BoneId;
         public Int32 ChildObjectId;

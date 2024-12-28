@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class MIc_ : ISerializable
     {
+        public const int DataSize = 16;
+
         public Int32 IconType;
         public Int32 IconSize;
 

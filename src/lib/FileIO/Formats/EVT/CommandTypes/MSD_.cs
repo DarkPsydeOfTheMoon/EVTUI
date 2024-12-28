@@ -10,6 +10,8 @@ public partial class CommandTypes
 {
     public class MSD_ : ISerializable
     {
+        public const int DataSize = 64;
+
         public float[] Position = new float[3];
         public float[] Rotation = new float[3];
         public Int32 AnimationIndex;
