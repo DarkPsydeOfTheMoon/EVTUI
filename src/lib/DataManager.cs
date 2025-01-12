@@ -110,12 +110,12 @@ public class DataManager
 
     public string CompileMessage(string fileBase)
     {
-        return this.ScriptManager.CompileMessage(this.VanillaExtractionPath, fileBase);
+        return this.ScriptManager.CompileMessage(this.WorkingPath, fileBase);
     }
 
     public string CompileScript(string fileBase)
     {
-        return this.ScriptManager.CompileScript(this.VanillaExtractionPath, fileBase);
+        return this.ScriptManager.CompileScript(this.WorkingPath, fileBase);
     }
 
     public List<string> GetCPKsFromPath(string? directoryPath)

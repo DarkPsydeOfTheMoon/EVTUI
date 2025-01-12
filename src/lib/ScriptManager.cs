@@ -469,7 +469,9 @@ public class ScriptManager
             MessageScript msgScript = new MessageScript(FormatVersion.Version1BigEndian, this.Encoding);
             bool success = compiler.TryCompile(this.ScriptTexts["BMD"][fileBase][".msg"], out msgScript);
             this.BMDFiles[fileBase] = new BMD();
-            this.BMDFiles[fileBase].FromBytes(((MemoryStream)msgScript.ToBinary().ToStream()).ToArray());
+            byte[] newBytes = ((MemoryStream)msgScript.ToBinary().ToStream()).ToArray();
+            this.BMDFiles[fileBase].FromBytes(newBytes);
+            File.WriteAllBytes(outPath+".BMD", newBytes);
         }
         catch (Exception ex)
         {
@@ -521,14 +523,18 @@ public class ScriptManager
 
         try
         {
-            FlowScriptCompiler compiler = new FlowScriptCompiler(FlowFormatVersion.Unknown);
+            // TODO: should detect the version from the vanilla extracted file...?
+            // orrrr output version just depends on game type?
+            FlowScriptCompiler compiler = new FlowScriptCompiler(FlowFormatVersion.Version1BigEndian);
             compiler.Encoding = this.Encoding;
             compiler.Library = LibraryLookup.GetLibrary(this.GameName);
             compiler.AddListener(listener);
-            FlowScript flowScript = new FlowScript(FlowFormatVersion.Unknown);
+            FlowScript flowScript = new FlowScript(FlowFormatVersion.Version1BigEndian);
             bool success = compiler.TryCompile(this.ScriptTexts["BF"][fileBase][".flow"], out flowScript);
+            byte[] newBytes = ((MemoryStream)flowScript.ToBinary().ToStream()).ToArray();
             //this.BFFiles[fileBase] = new BF();
-            //this.BFFiles[fileBase].FromBytes(((MemoryStream)flowScript.ToBinary().ToStream()).ToArray());
+            //this.BFFiles[fileBase].FromBytes(newBytes);
+            File.WriteAllBytes(outPath+".BF", newBytes);
         }
         catch (Exception ex)
         {
