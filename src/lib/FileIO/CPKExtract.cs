@@ -131,6 +131,7 @@ public static class CPKExtract
         var retval = new CpkEVTContents();
         Regex eventPattern = new Regex($"[\\\\/]{eventId}([\\\\/\\.]|_SE)", RegexOptions.IgnoreCase);
         bool evtFound = false;
+        Char[] dirSeps = new Char[] { '/', '\\' };
 
         KnownDecryptionFunction decryptionFunctionIndex;
         InPlaceDecryptionFunction decryptionFunction = null;
@@ -151,7 +152,7 @@ public static class CPKExtract
 
             Parallel.For(0, files.Length, x =>
             {
-                string inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
+                string inCpkPath = Path.Combine(files[x].Directory ?? "", Path.Combine(files[x].FileName.Split(dirSeps)));
                 string outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
 
                 // hmmmokay right now the behavior is to skip extracting if it exists
