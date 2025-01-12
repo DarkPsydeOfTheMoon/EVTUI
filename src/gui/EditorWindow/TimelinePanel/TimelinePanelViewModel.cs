@@ -155,7 +155,7 @@ public class Timeline : ReactiveObject
     public Timeline(DataManager dataManager)
     {
         this.Frames = new ObservableCollection<Frame>();
-		for (int i=0; i<dataManager.EventManager.EventDuration; i++)
+        for (int i=0; i<dataManager.EventManager.EventDuration; i++)
             this.Frames.Add(new Frame(i));
         this.FrameCount = dataManager.EventManager.EventDuration;
         this.ActiveFrame = 0;
@@ -325,13 +325,13 @@ public class Category : ViewModelBase
         // TODO: deal with it if nothing was removed somehow???
 
         // shrink the category height if necessary
-		if (this.FrameCounts[cmd.Frame] + 1 == this.MaxInOneFrame)
-		{
-			this.MaxInOneFrame -= 1;
-			foreach (int frame in this.FrameCounts.Keys)
-				if (this.FrameCounts[frame] > this.MaxInOneFrame)
-					this.MaxInOneFrame = this.FrameCounts[frame];
-		}
+        if (this.FrameCounts[cmd.Frame] + 1 == this.MaxInOneFrame)
+        {
+            this.MaxInOneFrame -= 1;
+            foreach (int frame in this.FrameCounts.Keys)
+                if (this.FrameCounts[frame] > this.MaxInOneFrame)
+                    this.MaxInOneFrame = this.FrameCounts[frame];
+        }
 
         // move up all subsequent commands in the same category + frame
         for (int i=this.Commands.Count-1; i>=0; i--)
@@ -445,7 +445,7 @@ public class TimelinePanelViewModel : ViewModelBase
         SerialCommand command     = ((cmd.IsAudioCmd) ? this.Config.EventManager.EventSoundCommands : this.Config.EventManager.EventCommands)[cmd.CmdIndex];
         dynamic       commandData = ((cmd.IsAudioCmd) ? this.Config.EventManager.EventSoundCommandData : this.Config.EventManager.EventCommandData)[cmd.CmdIndex];
         Type          commandType = Type.GetType($"EVTUI.ViewModels.TimelineCommands.{cmd.Code}");
-		if (commandType is null)
+        if (commandType is null)
             this.ActiveCommand = new TimelineCommands.Generic(this.Config, command, commandData);
         else
             this.ActiveCommand = Activator.CreateInstance(commandType, new object[] { this.Config, command, commandData });

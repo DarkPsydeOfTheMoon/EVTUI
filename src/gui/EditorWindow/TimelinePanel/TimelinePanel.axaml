@@ -577,6 +577,86 @@
       </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type cmds:MMD_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <StackPanel>
+          <TextBlock Classes="formsubtitle" Text="Movement"/>
+          <Separator Classes="formsubtitle"/>
+          <ContentControl Content="{Binding InterpolationType}"/>
+          <ContentControl Content="{Binding NumControlGroups}"/>
+          <ContentControl Content="{Binding MovementSpeed}"/>
+          <ContentControl Content="{Binding MovementLoopBool}"/>
+          <ContentControl Content="{Binding DisableOrientationChange}"/>
+          <ContentControl Content="{Binding StartSpeedType}"/>
+          <ContentControl Content="{Binding FinalSpeedType}"/>
+        </StackPanel>
+        <StackPanel> <!--IsVisible="{Binding MovingAnimationEnabled.Value}"-->
+          <TextBlock Classes="formsubtitle" Text="Moving Animation"/>
+          <Separator Classes="formsubtitle"/>
+          <ContentControl Content="{Binding MovingAnimationEnabled}"/>
+          <StackPanel IsVisible="{Binding MovingAnimationEnabled.Value}">
+          <ContentControl Content="{Binding MovingAnimationFromExt}"/>
+          <StackPanel Classes="preview">
+            <ContentControl Content="{Binding MovingAnimationID}"/>
+            <Button Classes="preview">
+              <Button.Flyout>
+                <Flyout Opening="LoadModelInScene" Closed="ClearScene">
+                  <StackPanel>
+                    <Button Classes="popupclose" Click="CloseMe">
+                      <PathIcon Data="{StaticResource dismiss_regular}" />
+                    </Button>
+                    <TextBlock Classes="formtitle" Text="Model Preview"/>
+                    <Separator Classes="formtitle"/>
+                    <views:GFDRenderingPanel DataContext="{Binding MovingAnimationPreviewVM}" Width="800" Height="600"/>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+              <PathIcon Data="{StaticResource eye_show_regular}" />
+            </Button>
+          </StackPanel>
+          <ContentControl Content="{Binding MovingAnimationInterpolatedFrames}"/>
+          <ContentControl Content="{Binding MovingAnimationLoopBool}"/>
+          <ContentControl Content="{Binding MovingAnimationPlaybackSpeed}"/>
+          <ContentControl Content="{Binding MovingAnimationStartingFrame}"/>
+          </StackPanel>
+        </StackPanel>
+        <StackPanel> <!--IsVisible="{Binding WaitingAnimationEnabled.Value}"-->
+          <TextBlock Classes="formsubtitle" Text="Waiting Animation"/>
+          <Separator Classes="formsubtitle"/>
+          <ContentControl Content="{Binding WaitingAnimationEnabled}"/>
+          <StackPanel IsVisible="{Binding WaitingAnimationEnabled.Value}">
+          <ContentControl Content="{Binding WaitingAnimationFromExt}"/>
+          <StackPanel Classes="preview">
+            <ContentControl Content="{Binding WaitingAnimationID}"/>
+            <Button Classes="preview">
+              <Button.Flyout>
+                <Flyout Opening="LoadModelInScene" Closed="ClearScene">
+                  <StackPanel>
+                    <Button Classes="popupclose" Click="CloseMe">
+                      <PathIcon Data="{StaticResource dismiss_regular}" />
+                    </Button>
+                    <TextBlock Classes="formtitle" Text="Model Preview"/>
+                    <Separator Classes="formtitle"/>
+                    <views:GFDRenderingPanel DataContext="{Binding WaitingAnimationPreviewVM}" Width="800" Height="600"/>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+              <PathIcon Data="{StaticResource eye_show_regular}" />
+            </Button>
+          </StackPanel>
+          <ContentControl Content="{Binding WaitingAnimationInterpolatedFrames}"/>
+          <ContentControl Content="{Binding WaitingAnimationLoopBool}"/>
+          <ContentControl Content="{Binding WaitingAnimationPlaybackSpeed}"/>
+          <ContentControl Content="{Binding WaitingAnimationStartingFrame}"/>
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type cmds:MRgs}">
       <StackPanel Classes="form">
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
