@@ -152,7 +152,7 @@ public static class CPKExtract
 
             Parallel.For(0, files.Length, x =>
             {
-                string inCpkPath = Path.Combine(files[x].Directory ?? "", Path.Combine(files[x].FileName.Split(dirSeps)));
+                string inCpkPath = Path.Combine(Path.Combine(files[x].Directory.Split(dirSeps)) ?? "", files[x].FileName);
                 string outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
 
                 // hmmmokay right now the behavior is to skip extracting if it exists
