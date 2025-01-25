@@ -24,7 +24,8 @@ public class EventManager
     /////////////////////////////
     // *** PRIVATE MEMBERS *** //
     ///////////////./////////////
-    private EVT?   SerialEvent               = null;
+    //private EVT?   SerialEvent               = null;
+    public EVT?   SerialEvent               = null;
     private ECS?   SerialEventSounds         = null;
     private string CpkDecryptionFunctionName = null;
 
@@ -88,7 +89,7 @@ public class EventManager
     public void SaveEVT() { this.SerialEvent.Write(this.EvtPath); }
     public void SaveECS() { this.SerialEventSounds.Write(this.EcsPath); }
 
-    public int EventDuration { get { return this.SerialEvent.TotalFrame; } }
+    public int EventDuration { get { return this.SerialEvent.FrameCount; } }
     public SerialCommand[] EventCommands { get { return this.SerialEvent.Commands; } }
     public ArrayList EventCommandData { get { return this.SerialEvent.CommandData; } }
     public SerialCommand[] EventSoundCommands { get { return this.SerialEventSounds.Commands; } }
@@ -234,17 +235,19 @@ public class EventManager
 
     public enum ObjectTypes : int
     {
+        Null             = 0x00000000,
         Field            = 0x00000003,
         Env              = 0x00000004,
-        Image            = 0x00000005,
-        ParticlePak      = 0x00000007,
+        Texture          = 0x00000005,
+        Sprite           = 0x00000006,
+        Camera           = 0x00000007,
         Movie            = 0x00000008,
-        Camera           = 0x00000009,
+        EventCamera      = 0x00000009,
         Enemy            = 0x00000301,
         SymShadow        = 0x00000401,
         Item             = 0x00000601,
         ResourceTableNPC = 0x00020101,
-        Particle         = 0x01000002,
+        Effect           = 0x01000002,
         Character        = 0x01000101,
         FieldCharacter   = 0x02000101,
         FieldObject      = 0x02000701,

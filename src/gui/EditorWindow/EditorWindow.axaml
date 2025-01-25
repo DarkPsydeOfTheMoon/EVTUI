@@ -29,6 +29,12 @@
   <TabControl Margin="5" DockPanel.Dock="Bottom">
     <TabItem Header="Editors">
       <TabControl Margin="5">
+        <TabItem Header="Basics">
+          <views:BasicsPanel DataContext="{Binding basicsPanelVM}" Padding="10"/>
+        </TabItem>
+        <TabItem Header="Assets">
+          <views:AssetsPanel DataContext="{Binding assetsPanelVM}" Padding="10"/>
+        </TabItem>
         <TabItem Header="Timeline">
           <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
         </TabItem>
