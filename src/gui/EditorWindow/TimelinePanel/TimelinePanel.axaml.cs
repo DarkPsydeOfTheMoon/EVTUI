@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -214,7 +215,17 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
 
     public void JumpToFrame(object sender, NumericUpDownValueChangedEventArgs e)
     {
-        this.HPos = this.HPos.WithX(this.FramePositions[(int)e.NewValue]);
+        if (LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")).Count() != this.FramePositions.Count)
+        {
+    	    this.FramePositions = new List<double>();
+    	    foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
+    		    this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
+        }
+
+        double newValue = this.FramePositions[(int)e.NewValue];
+        if (newValue > this.Scrolly.Extent.Width - this.Scrolly.Bounds.Width)
+            newValue = this.Scrolly.Extent.Width - this.Scrolly.Bounds.Width;
+        this.HPos = this.HPos.WithX(newValue);
     }
 
     public void ShowAllCategories(object sender, RoutedEventArgs e)

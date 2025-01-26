@@ -104,9 +104,9 @@ public class BasicsPanelViewModel : ViewModelBase
         this.UnkFlag3 = new BoolChoiceField("Unknown Flag #3", this.Editable, (((evt.Flags >> 16) & 1) == 1));
 
         // frames
-        this.FrameCount = new NumEntryField("Frame Count", this.Editable, (int)evt.FrameCount, 0, 99999, 1);
-        this.FrameRate = new NumEntryField("Frame Rate", this.Editable, (int)evt.FrameRate, 1, 255, 1);
-        this.StartingFrame = new NumEntryField("Starting Frame", this.Editable, (int)evt.StartingFrame, 0, 9999, 1);
+        //this.FrameCount = new NumEntryField("Frame Count", this.Editable, (int)evt.FrameCount, 0, 99999, 1);
+        //this.FrameRate = new NumEntryField("Frame Rate", this.Editable, (int)evt.FrameRate, 1, 255, 1);
+        //this.StartingFrame = new NumEntryField("Starting Frame", this.Editable, (int)evt.StartingFrame, 0, 9999, 1);
         this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", this.Editable, (int)evt.CinemascopeStartingFrame, 0, 9999, 1);
 
         // indices

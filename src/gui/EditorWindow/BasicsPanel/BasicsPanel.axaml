@@ -248,29 +248,29 @@
         <ContentControl Content="{Binding Rank}"/>
         <ContentControl Content="{Binding Level}"/>
 
-        <TextBlock Classes="formtitle" Text="Flags"/>
+        <TextBlock Classes="formtitle" Text="Scripts"/>
         <Separator Classes="formtitle"/>
-        <ContentControl Content="{Binding InitScriptEnabled}"/>
-        <ContentControl Content="{Binding CinemascopeEnabled}"/>
-        <ContentControl Content="{Binding CinemascopeAnimationEnabled}"/>
         <ContentControl Content="{Binding EmbedBMD}"/>
         <ContentControl Content="{Binding EmbedBF}"/>
+        <ContentControl Content="{Binding InitScriptEnabled}"/>
+        <ContentControl Content="{Binding InitScriptIndex}"/>
+
+        <TextBlock Classes="formtitle" Text="Cinemascope"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding CinemascopeEnabled}"/>
+        <ContentControl Content="{Binding CinemascopeAnimationEnabled}"/>
+        <ContentControl Content="{Binding CinemascopeStartingFrame}"/>
+
+        <TextBlock Classes="formtitle" Text="ENV"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding InitEnvAssetID}"/>
+        <ContentControl Content="{Binding DebugEnvAssetID}"/>
+
+        <TextBlock Classes="formtitle" Text="Other Flags"/>
+        <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding UnkFlag1}"/>
         <ContentControl Content="{Binding UnkFlag2}"/>
         <ContentControl Content="{Binding UnkFlag3}"/>
-
-        <TextBlock Classes="formtitle" Text="Frames"/>
-        <Separator Classes="formtitle"/>
-        <ContentControl Content="{Binding FrameRate}"/>
-        <ContentControl Content="{Binding FrameCount}"/>
-        <ContentControl Content="{Binding StartingFrame}"/>
-        <ContentControl Content="{Binding CinemascopeStartingFrame}"/>
-
-        <TextBlock Classes="formtitle" Text="Indices"/>
-        <Separator Classes="formtitle"/>
-        <ContentControl Content="{Binding InitScriptIndex}"/>
-        <ContentControl Content="{Binding InitEnvAssetID}"/>
-        <ContentControl Content="{Binding DebugEnvAssetID}"/>
 
       </StackPanel>
     </ScrollViewer>
