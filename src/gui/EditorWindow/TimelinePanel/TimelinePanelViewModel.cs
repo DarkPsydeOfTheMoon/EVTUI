@@ -12,10 +12,10 @@ namespace EVTUI.ViewModels;
 public class Timeline : ReactiveObject
 {
 
-    //public NumEntryField FrameCount               { get; set; }
     public NumEntryField FrameRate                { get; set; }
-    public NumEntryField FrameDuration               { get; set; }
-    //public NumEntryField StartingFrame            { get; set; }
+    //public NumEntryField FrameCount               { get; set; }
+    public NumEntryField FrameDuration            { get; set; }
+    public NumEntryField StartingFrameEntry       { get; set; }
     //public NumEntryField CinemascopeStartingFrame { get; set; }
 
     public Timeline(DataManager dataManager)
@@ -24,11 +24,14 @@ public class Timeline : ReactiveObject
         //this.FrameCount = new NumEntryField("Frame Count", !dataManager.ReadOnly, (int)evt.FrameCount, 0, 99999, 1);
         this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, (int)evt.FrameRate, 1, 255, 1);
         this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, (int)evt.FrameCount, 0, 99999, 1);
+        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, (int)evt.StartingFrame, 0, 9999, 1);
+
+        _frameCount = (int)this.FrameDuration.Value;
+        _startingFrame = (int)this.StartingFrameEntry.Value;
 
         this.Frames = new ObservableCollection<Frame>();
-        for (int i=0; i<dataManager.EventManager.EventDuration; i++)
-            this.Frames.Add(new Frame(i));
-        this.FrameCount = dataManager.EventManager.EventDuration;
+        for (int i=0; i<_frameCount; i++)
+            this.Frames.Add(new Frame(i, (i >= _startingFrame && i < _frameCount)));
         this.ActiveFrame = 0;
 
         this.Categories = new ObservableCollection<Category>();
@@ -50,31 +53,61 @@ public class Timeline : ReactiveObject
         this.Categories.Add(new Category("Hardware", 16, this.FrameCount));
         this.Categories.Add(new Category("Other",    17, this.FrameCount));
 
+        this.WhenAnyValue(x => x.FrameDuration.Value).Subscribe(x => 
+        {
+            evt.FrameCount = (int)this.FrameDuration.Value;
+            this.FrameCount = (int)this.FrameDuration.Value;
+
+            this.Frames.Clear();
+            for (int i=0; i<_frameCount; i++)
+                this.Frames.Add(new Frame(i, (i >= _startingFrame && i < _frameCount)));
+
+            foreach (Category _cat in this.Categories)
+            {
+                _cat.FrameCount = this.FrameCount;
+                foreach (CommandPointer _cmd in _cat.Commands)
+                    _cmd.IsInPlayRange = (_cmd.Frame >= _startingFrame && _cmd.Frame < _frameCount);
+            }
+        });
+
+        this.WhenAnyValue(x => x.StartingFrameEntry.Value).Subscribe(x => 
+        {
+            evt.StartingFrame = (short)this.StartingFrameEntry.Value;
+            this.StartingFrame = (int)this.StartingFrameEntry.Value;
+            foreach (Frame frame in this.Frames)
+                frame.IsInPlayRange = (frame.Index >= _startingFrame && frame.Index < _frameCount);
+            foreach (Category _cat in this.Categories)
+                foreach (CommandPointer _cmd in _cat.Commands)
+                    _cmd.IsInPlayRange = (_cmd.Frame >= _startingFrame && _cmd.Frame < _frameCount);
+        });
+
         for (int j=0; j<dataManager.EventManager.EventSoundCommands.Length; j++)
         {
             string code = dataManager.EventManager.EventSoundCommands[j].CommandCode;
             int i = dataManager.EventManager.EventSoundCommands[j].FrameStart;
             int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
-            if (i >= 0 && i < this.Frames.Count)
-            {
-                CommandPointer newCmd = new CommandPointer(code, true, j, i, len);
+            //if (i >= 0 && i < this.Frames.Count)
+            //{
+                CommandPointer newCmd = new CommandPointer(code, true, j, i, len, (i >= _startingFrame && i < _frameCount));
                 int catInd = Timeline.CodeToCategory(code, true);
-                if (catInd > -1)
-                    this.Categories[catInd].AddCommand(newCmd);
-            }
+                //if (catInd > -1)
+                this.Categories[catInd].AddCommand(newCmd);
+                this.Categories[catInd].IsOpen = true;
+            //}
         }
         for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
         {
             string code = dataManager.EventManager.EventCommands[j].CommandCode;
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
             int len = dataManager.EventManager.EventCommands[j].FrameDuration;
-            if (i >= 0 && i < this.Frames.Count)
-            {
-                CommandPointer newCmd = new CommandPointer(code, false, j, i, len);
+            //if (i >= 0 && i < this.Frames.Count)
+            //{
+                CommandPointer newCmd = new CommandPointer(code, false, j, i, len, (i >= _startingFrame && i < _frameCount));
                 int catInd = Timeline.CodeToCategory(code, false);
-                if (catInd > -1)
-                    this.Categories[catInd].AddCommand(newCmd);
-            }
+                //if (catInd > -1)
+                this.Categories[catInd].AddCommand(newCmd);
+                this.Categories[catInd].IsOpen = true;
+            //}
         }
     }
 
@@ -82,7 +115,7 @@ public class Timeline : ReactiveObject
     {
         if (isAudio)
             return 12;
-        int catInd = -1;
+        int catInd = 16;
         if (code == "FbEn" || code == "Flbk" || code.StartsWith("Im"))
             catInd = 6;
         else if (code == "Msg_" || code == "MsgR" || code == "Cht_")
@@ -117,8 +150,8 @@ public class Timeline : ReactiveObject
             catInd = 9;
         else if (code.StartsWith("P"))
             catInd = 11;
-        else
-            catInd = 16;
+        //else
+        //    catInd = 16;
         return catInd;
     }
 
@@ -131,7 +164,19 @@ public class Timeline : ReactiveObject
         cat.DeleteCommand(cmd);
     }
 
-    public int FrameCount { get; set; }
+    private int _frameCount;
+    public int FrameCount
+    {
+        get => _frameCount;
+        set => this.RaiseAndSetIfChanged(ref _frameCount, value);
+    }
+
+    private int _startingFrame;
+    public int StartingFrame
+    {
+        get => _startingFrame;
+        set => this.RaiseAndSetIfChanged(ref _startingFrame, value);
+    }
 
     public ObservableCollection<Frame>    Frames     { get; set; }
     public ObservableCollection<Category> Categories { get; set; }
@@ -146,27 +191,37 @@ public class Timeline : ReactiveObject
 
 public class Frame : ViewModelBase
 {
-    public Frame(int index)
+    public Frame(int index, bool isInPlayRange)
     {
         this.Index    = index;
-        this.Name     = (index+1).ToString();
+        this._isInPlayRange = isInPlayRange;
     }
 
-    public int                  Index    { get; set; }
-    public string               Name     { get; set; }
+    public int Index { get; set; }
+
+    private bool _isInPlayRange;
+    public bool IsInPlayRange
+    {
+        get => _isInPlayRange;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isInPlayRange, value);
+            OnPropertyChanged(nameof(IsInPlayRange));
+        }
+    }
 }
 
 public class Category : ViewModelBase
 {
     public Category(string name, int index, int frameCount)
     {
-        this.FrameCount = frameCount;
+        _frameCount = frameCount;
         this.Name  = name;
         this.Index = index;
         this.Commands = new ObservableCollection<CommandPointer>();
         this.MaxInOneFrame = 0;
         this.CommandsPerFrame = new Dictionary<int, int>();
-        this.IsOpen = true;
+        this.IsOpen = false;
     }
 
     private Dictionary<int, int> CommandsPerFrame;
@@ -196,13 +251,13 @@ public class Category : ViewModelBase
         // TODO: deal with it if nothing was removed somehow???
 
         // shrink the category height if necessary
-		if (this.CommandsPerFrame[cmd.Frame] + 1 == this.MaxInOneFrame)
-		{
-			this.MaxInOneFrame -= 1;
-			foreach (int frame in this.CommandsPerFrame.Keys)
-				if (this.CommandsPerFrame[frame] > this.MaxInOneFrame)
-					this.MaxInOneFrame = this.CommandsPerFrame[frame];
-		}
+        if (this.CommandsPerFrame[cmd.Frame] + 1 == this.MaxInOneFrame)
+        {
+            this.MaxInOneFrame -= 1;
+            foreach (int frame in this.CommandsPerFrame.Keys)
+                if (this.CommandsPerFrame[frame] > this.MaxInOneFrame)
+                    this.MaxInOneFrame = this.CommandsPerFrame[frame];
+        }
 
         // move up all subsequent commands in the same category + frame
         for (int i=this.Commands.Count-1; i>=0; i--)
@@ -210,7 +265,17 @@ public class Category : ViewModelBase
                 this.Commands[i].PositionWithinFrame -= 1;
     }
 
-    public int FrameCount    { get; set; }
+    private int _frameCount;
+    public int FrameCount
+    {
+        get => _frameCount;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _frameCount, value);
+            OnPropertyChanged(nameof(FrameCount));
+        }
+    }
+
 
     private int _maxInOneFrame;
     public int MaxInOneFrame
@@ -242,13 +307,14 @@ public class Category : ViewModelBase
 
 public class CommandPointer : ViewModelBase
 {
-    public CommandPointer(string code, bool isAudioCmd, int cmdIndex, int frame, int duration)
+    public CommandPointer(string code, bool isAudioCmd, int cmdIndex, int frame, int duration, bool isInPlayRange)
     {
         this.Code       = code;
         this.IsAudioCmd = isAudioCmd;
         this.CmdIndex   = cmdIndex;
         this.Frame      = frame;
         this.Duration   = duration;
+        this._isInPlayRange = isInPlayRange;
     }
 
     public string Code       { get; }
@@ -276,6 +342,17 @@ public class CommandPointer : ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _positionWithinFrame, value);
             OnPropertyChanged(nameof(PositionWithinFrame));
+        }
+    }
+
+    private bool _isInPlayRange;
+    public bool IsInPlayRange
+    {
+        get => _isInPlayRange;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isInPlayRange, value);
+            OnPropertyChanged(nameof(IsInPlayRange));
         }
     }
 }
@@ -353,7 +430,7 @@ public class TimelinePanelViewModel : ViewModelBase
         int newCmdIndex = this.Config.EventManager.CopyCommandToNewFrame(this.CopiedCommand.CmdIndex, this.CopiedCommand.IsAudioCmd, frame);
         if (newCmdIndex >= 0)
         {
-            CommandPointer newCmd = new CommandPointer(this.CopiedCommand.Code, this.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.CopiedCommand.Duration);
+            CommandPointer newCmd = new CommandPointer(this.CopiedCommand.Code, this.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.CopiedCommand.Duration, (frame >= TimelineContent.StartingFrame && frame < TimelineContent.FrameCount));
             this.CopiedCategory.AddCommand(newCmd);
             if (this.DeleteOriginal)
             {
@@ -370,7 +447,7 @@ public class TimelinePanelViewModel : ViewModelBase
         if (newCmdIndex >= 0)
         {
             int len = ((isAudio) ? this.Config.EventManager.EventSoundCommands : this.Config.EventManager.EventCommands)[newCmdIndex].FrameDuration;
-            CommandPointer newCmd = new CommandPointer(code, isAudio, newCmdIndex, frame, len);
+            CommandPointer newCmd = new CommandPointer(code, isAudio, newCmdIndex, frame, len, (frame >= TimelineContent.StartingFrame && frame < TimelineContent.FrameCount));
             this.TimelineContent.Categories[Timeline.CodeToCategory(code, isAudio)].AddCommand(newCmd);
         }
     }

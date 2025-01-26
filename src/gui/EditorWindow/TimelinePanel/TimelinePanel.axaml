@@ -84,6 +84,12 @@
       <Setter Property="FontWeight" Value="ExtraLight"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
+    <Style Selector="Border.inactive">
+      <Setter Property="Opacity" Value="0.5"/>
+    </Style>
+    <Style Selector="Button.inactive">
+      <Setter Property="Opacity" Value="0.5"/>
+    </Style>
   </UserControl.Styles>
 
   <UserControl.Resources>
@@ -95,7 +101,7 @@
     <!-- CONTAINER TYPES -->
 
     <DataTemplate DataType="{x:Type vm:Frame}">
-      <Border CornerRadius="5,5,0,0">
+      <Border CornerRadius="5,5,0,0" Classes.inactive="{Binding !IsInPlayRange}">
       <StackPanel Width="80" Orientation="Vertical">
         <TextBlock Text="{Binding Index}"
          FontSize="18"
@@ -931,6 +937,7 @@
                 <Separator Classes="formtitle"/>
                 <ContentControl Content="{Binding FrameRate}"/>
                 <ContentControl Content="{Binding FrameDuration}"/>
+                <ContentControl Content="{Binding StartingFrameEntry}"/>
               </StackPanel>
             </Flyout>
           </Button.Flyout>
@@ -1050,7 +1057,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </ScrollViewer>
-      <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="153,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
+      <ScrollViewer Name="Scrolly" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="153,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16" PointerPressed="LogPosition">
           <ScrollViewer.ContextMenu>
             <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
@@ -1071,7 +1078,7 @@
                  Classes.hide="{Binding !IsOpen}">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                      <Canvas MinHeight="40" Height="{c:Binding (IsOpen) ? 60*MaxInOneFrame + 20 : 40}" Width="{c:Binding 85*FrameCount - 5}" Classes.open="{Binding IsOpen}" Classes.closed="{Binding !IsOpen}"/>
+                      <Canvas MinHeight="40" Height="{c:Binding (IsOpen) ? 60*MaxInOneFrame + 20 : 40}" Width="{c:Binding 85*FrameCount - 5}" Classes.open="{Binding IsOpen}" Classes.closed="{Binding !IsOpen}" HorizontalAlignment="Left"/>
                     </ItemsPanelTemplate>
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.Styles>
@@ -1102,6 +1109,7 @@
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
                       <Button Flyout="{StaticResource CommandFlyout}"
+                       Classes.inactive="{Binding !IsInPlayRange}"
                        HorizontalAlignment="Center"
                        Width="{c:Binding 60 + 85*(Duration-1)}">
                         <Button.Styles>
