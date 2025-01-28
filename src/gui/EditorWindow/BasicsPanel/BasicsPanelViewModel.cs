@@ -93,26 +93,25 @@ public class BasicsPanelViewModel : ViewModelBase
         this.WhenAnyValue(x => x.Rank.Choice).Subscribe(x => evt.Rank = (byte)Enum.Parse(typeof(Ranks), x));
         this.WhenAnyValue(x => x.Level.Value).Subscribe(x => evt.Level = (byte)x);
 
-        // flags
-        this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, ((evt.Flags & 1) == 1));
-        this.InitScriptEnabled = new BoolChoiceField("Enable Init Script", this.Editable, (((evt.Flags >> 1) & 1) == 1));
-        this.UnkFlag2 = new BoolChoiceField("Unknown Flag #2", this.Editable, (((evt.Flags >> 6) & 1) == 1));
-        this.CinemascopeEnabled = new BoolChoiceField("Enable Cinemascope", this.Editable, (((evt.Flags >> 8) & 1) == 1));
-        this.CinemascopeAnimationEnabled = new BoolChoiceField("Enable Cinemascope Animation", this.Editable, (((evt.Flags >> 9) & 1) == 1));
+        // scripts
         this.EmbedBMD = new BoolChoiceField("Embed BMD in EVT", this.Editable, (((evt.Flags >> 12) & 1) == 1));
         this.EmbedBF = new BoolChoiceField("Embed BF in EVT", this.Editable, (((evt.Flags >> 14) & 1) == 1));
-        this.UnkFlag3 = new BoolChoiceField("Unknown Flag #3", this.Editable, (((evt.Flags >> 16) & 1) == 1));
+        this.InitScriptEnabled = new BoolChoiceField("Enable Init Script", this.Editable, (((evt.Flags >> 1) & 1) == 1));
+        this.InitScriptIndex = new NumEntryField("Init Script Index", this.Editable, (int)evt.InitScriptIndex, 0, 255, 1);
 
-        // frames
-        //this.FrameCount = new NumEntryField("Frame Count", this.Editable, (int)evt.FrameCount, 0, 99999, 1);
-        //this.FrameRate = new NumEntryField("Frame Rate", this.Editable, (int)evt.FrameRate, 1, 255, 1);
-        //this.StartingFrame = new NumEntryField("Starting Frame", this.Editable, (int)evt.StartingFrame, 0, 9999, 1);
+        // cinemascope
+        this.CinemascopeEnabled = new BoolChoiceField("Enable Cinemascope", this.Editable, (((evt.Flags >> 8) & 1) == 1));
+        this.CinemascopeAnimationEnabled = new BoolChoiceField("Enable Cinemascope Animation", this.Editable, (((evt.Flags >> 9) & 1) == 1));
         this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", this.Editable, (int)evt.CinemascopeStartingFrame, 0, 9999, 1);
 
-        // indices
-        this.InitScriptIndex = new NumEntryField("Init Script Index", this.Editable, (int)evt.InitScriptIndex, 0, 255, 1);
+        // env
         this.InitEnvAssetID = new NumEntryField("Init ENV ID", this.Editable, (int)evt.InitEnvAssetID, 0, 9999, 1);
         this.DebugEnvAssetID = new NumEntryField("Debug ENV ID", this.Editable, (int)evt.InitDebugEnvAssetID, 0, 9999, 1);
+
+        // other flags
+        this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, ((evt.Flags & 1) == 1));
+        this.UnkFlag2 = new BoolChoiceField("Unknown Flag #2", this.Editable, (((evt.Flags >> 6) & 1) == 1));
+        this.UnkFlag3 = new BoolChoiceField("Unknown Flag #3", this.Editable, (((evt.Flags >> 16) & 1) == 1));
 
     }
 
