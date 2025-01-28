@@ -270,7 +270,7 @@ public class SerialObject : ISerializable
     public Int32  BaseMotionNo     = -1;
     public Int32  ExtBaseMotionNo  = -1;
     public Int32  ExtAddMotionNo   = -1;
-    public Int32  Reserve28;
+    public Int32  UnkBool;
     public Int32  Reserve2C;
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
@@ -286,9 +286,8 @@ public class SerialObject : ISerializable
         rw.RwInt32(ref this.BaseMotionNo);
         rw.RwInt32(ref this.ExtBaseMotionNo);
         rw.RwInt32(ref this.ExtAddMotionNo);
+        rw.RwInt32(ref this.UnkBool);
 
-        rw.RwInt32(ref this.Reserve28);
-        Trace.Assert(this.Reserve28 == 0);
         rw.RwInt32(ref this.Reserve2C);
         Trace.Assert(this.Reserve2C == 0);
     }
