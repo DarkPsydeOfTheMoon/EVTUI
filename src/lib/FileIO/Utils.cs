@@ -23,7 +23,6 @@ public class AnimationStruct
     public bool IncludePlaybackSpeed = true;
     public bool IncludeWeight = true;
 
-    //public AnimationStruct(bool loopBool = true, bool startingFrame = true, bool endingFrame = true, bool interpolatedFrames = true, bool playbackSpeed = true, bool weight = false)
     public AnimationStruct
     (
         UInt32? index              = 0,
@@ -35,13 +34,6 @@ public class AnimationStruct
         float? weight              = null
     )
     {
-        /*this.IncludeLoopBool = loopBool;
-        this.IncludeStartingFrame = startingFrame;
-        this.IncludeEndingFrame = endingFrame;
-        this.IncludeInterpolatedFrames = interpolatedFrames;
-        this.IncludePlaybackSpeed = playbackSpeed;
-        this.IncludeWeight = weight;*/
-
         if (index is null)
             this.IncludeIndex = false;
         else

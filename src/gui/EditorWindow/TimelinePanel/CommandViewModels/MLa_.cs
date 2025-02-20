@@ -31,7 +31,7 @@ public class MLa_ : Generic
 
         // bone lookat
         this.TargetModelID = new NumEntryField("Target Model ID", this.Editable, this.CommandData.TargetModelID, 0, 999, 1);
-        this.TargetBoneID = new NumEntryField("Target Bone ID", this.Editable, this.CommandData.TargetBoneID, 0, 9999, 1);
+        this.TargetHelperID = new NumEntryField("Target Helper ID", this.Editable, this.CommandData.TargetHelperID, 0, 9999, 1);
 
         // unknown
         this.UnkBool = new BoolChoiceField("Unknown Bool", this.Editable, BitToBool(this.CommandData.Bitfield, 6));
@@ -58,7 +58,7 @@ public class MLa_ : Generic
 
     // bone lookat
     public NumEntryField TargetModelID { get; set; }
-    public NumEntryField TargetBoneID  { get; set; }
+    public NumEntryField TargetHelperID  { get; set; }
 
     // unknown
     public BoolChoiceField UnkBool { get; set; }
@@ -81,11 +81,11 @@ public class MLa_ : Generic
         this.CommandData.SpeedType  = this.SpeedTypes.Forward[this.SpeedType.Choice];
         this.CommandData.TargetType = this.TargetTypes.Forward[this.TargetType.Choice];
 
-        this.CommandData.Target[0]     = (float)this.X.Value;
-        this.CommandData.Target[1]     = (float)this.Y.Value;
-        this.CommandData.Target[2]     = (float)this.Z.Value;
-        this.CommandData.TargetModelID = (uint)this.TargetModelID.Value;
-        this.CommandData.TargetBoneID  = (uint)this.TargetBoneID.Value;
+        this.CommandData.Target[0]      = (float)this.X.Value;
+        this.CommandData.Target[1]      = (float)this.Y.Value;
+        this.CommandData.Target[2]      = (float)this.Z.Value;
+        this.CommandData.TargetModelID  = (uint)this.TargetModelID.Value;
+        this.CommandData.TargetHelperID = (uint)this.TargetHelperID.Value;
     }
 
     public BiDict<string, ushort> MotionTypes = new BiDict<string, ushort>

@@ -580,7 +580,7 @@
             <Expander Header="Target Model" IsVisible="{c:Binding 'TargetType.Choice == \'Model\''}">
               <StackPanel Classes="form">
                 <ContentControl Content="{Binding TargetModelID}"/>
-                <ContentControl Content="{Binding TargetBoneID}"/>
+                <ContentControl Content="{Binding TargetHelperID}"/>
               </StackPanel>
             </Expander>
           </StackPanel>

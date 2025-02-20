@@ -64,7 +64,6 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     {
         // Each model can have its own shaderprogram if we go that route,
         // meaning that we won't need to pass in a global shader here.
-        //foreach (var scenemodel in this.sceneManager.sceneModels)
         foreach (var scenemodel in this.sceneManager.sceneModels.Values)
             scenemodel.Draw(this.glShaderProgram, this.sceneManager.activeCamera);
     }

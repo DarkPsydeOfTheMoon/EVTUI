@@ -20,7 +20,7 @@ public partial class CommandTypes
         public UInt16 TargetType;
         public float[] Target = new float[3];
         public UInt32 TargetModelID;
-        public UInt32 TargetBoneID;
+        public UInt32 TargetHelperID;
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
@@ -35,7 +35,7 @@ public partial class CommandTypes
             rw.RwUInt16(ref this.TargetType);
             rw.RwFloat32s(ref this.Target, 3);
             rw.RwUInt32(ref this.TargetModelID);
-            rw.RwUInt32(ref this.TargetBoneID);
+            rw.RwUInt32(ref this.TargetHelperID);
         }
     }
 }
