@@ -1,58 +1,66 @@
 using System;
 using System.Collections.Generic;
 
+using static EVTUI.ViewModels.FieldUtils;
+
 namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MSD_ : Generic
 {
     public MSD_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
     {
-        this.LongName = "Model: Set Data";
+        this.LongName = "Model: Placement";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
-        this.X = new NumEntryField("X", this.Editable, this.CommandData.Position[0], null, null, 0.1);
-        this.Y = new NumEntryField("Y", this.Editable, this.CommandData.Position[1], null, null, 0.1);
-        this.Z = new NumEntryField("Z", this.Editable, this.CommandData.Position[2], null, null, 0.1);
-        this.AnimationID = new IntSelectionField("Animation ID", this.Editable, this.CommandData.AnimationIndex, new List<int>{this.CommandData.AnimationIndex});
-        this.AnimationSpeed = new NumEntryField("Animation Speed", this.Editable, this.CommandData.AnimationSpeed, 0.0, null, 0.1);
-        this.Loop = new BoolChoiceField("Looping?", this.Editable, this.CommandData.LoopBool != 0);
-        this.StartFrame = new NumEntryField("Start at Frame", this.Editable, this.CommandData.FirstFrameInd, 0, null, 1);
-        this.EndFrame = new NumEntryField("End at Frame", this.Editable, this.CommandData.LastFrameInd, 0, null, 1);
 
-        this.ModelPreviewVM = new GFDRenderingPanelViewModel();
-        List<string> assetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.VanillaExtractionPath);
-        if (assetPaths.Count > 0)
-        {
-            List<string> animPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, true, false, config.CpkList, config.VanillaExtractionPath);
-            if (animPaths.Count > 0)
-                this.ModelPreviewVM.sceneManager.QueuedLoads.Enqueue((assetPaths[0], animPaths[0], this.CommandData.AnimationIndex, false));
-            else
-                this.ModelPreviewVM.sceneManager.QueuedLoads.Enqueue((assetPaths[0], null, null, false));
-        }
+        this.ModelPreviewVM = new ModelPreviewWidget(config, this.AssetID);
+
+        // position
+        this.X = new NumRangeField("X", this.Editable, this.CommandData.Position[0], -99999, 99999, 1);
+        this.Y = new NumRangeField("Y", this.Editable, this.CommandData.Position[1], -99999, 99999, 1);
+        this.Z = new NumRangeField("Z", this.Editable, this.CommandData.Position[2], -99999, 99999, 1);
+
+        // rotation
+        this.RotationEnabled = new BoolChoiceField("Enabled?", this.Editable, !this.CommandData.Flags[1]);
+        this.PitchDegrees = new NumRangeField("Pitch", this.Editable, this.CommandData.Rotation[0], -180, 180, 1);
+        this.YawDegrees = new NumRangeField("Yaw", this.Editable, this.CommandData.Rotation[1], -180, 180, 1);
+        this.RollDegrees = new NumRangeField("Roll", this.Editable, this.CommandData.Rotation[2], -180, 180, 1);
+
+        // waiting animation
+        this.WaitingAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.WaitingAnimation, this.CommandData.Flags, $"Idle Animation", enabledInd:0, extInd:2, enabledFlip:true);
     }
 
-    public GFDRenderingPanelViewModel ModelPreviewVM { get; set; }
+    public IntSelectionField AssetID { get; set; }
+    public ModelPreviewWidget ModelPreviewVM { get; set; }
 
-    public IntSelectionField AssetID        { get; set; }
-    public IntSelectionField AnimationID    { get; set; }
-    public NumEntryField     X              { get; set; }
-    public NumEntryField     Y              { get; set; }
-    public NumEntryField     Z              { get; set; }
-    public NumEntryField     AnimationSpeed { get; set; }
-    public BoolChoiceField   Loop           { get; set; }
-    public NumEntryField     StartFrame     { get; set; }
-    public NumEntryField     EndFrame       { get; set; }
+    // position
+    public NumRangeField X { get; set; }
+    public NumRangeField Y { get; set; }
+    public NumRangeField Z { get; set; }
+
+    // rotation
+    public BoolChoiceField RotationEnabled { get; set; }
+    public NumRangeField   PitchDegrees    { get; set; }
+    public NumRangeField   YawDegrees      { get; set; }
+    public NumRangeField   RollDegrees     { get; set; }
+
+    // waiting animation
+    public AnimationWidget WaitingAnimation { get; set; }
 
     public new void SaveChanges()
     {
         base.SaveChanges();
-        this.Command.ObjectId           = this.AssetID.Choice;
-        this.CommandData.Position[0]    = (float)this.X.Value;
-        this.CommandData.Position[1]    = (float)this.Y.Value;
-        this.CommandData.Position[2]    = (float)this.Z.Value;
-        this.CommandData.AnimationIndex = this.AnimationID.Choice;
-        this.CommandData.AnimationSpeed = (float)this.AnimationSpeed.Value;
-        this.CommandData.LoopBool       = Convert.ToInt32(this.Loop.Value);
-        this.CommandData.FirstFrameInd  = (int)this.StartFrame.Value;
-        this.CommandData.LastFrameInd   = (int)this.EndFrame.Value;
+        this.Command.ObjectId = this.AssetID.Choice;
+
+        this.CommandData.Position[0] = (float)this.X.Value;
+        this.CommandData.Position[1] = (float)this.Y.Value;
+        this.CommandData.Position[2] = (float)this.Z.Value;
+
+        this.CommandData.Rotation[0] = (float)this.PitchDegrees.Value;
+        this.CommandData.Rotation[1] = (float)this.YawDegrees.Value;
+        this.CommandData.Rotation[2] = (float)this.RollDegrees.Value;
+
+        this.WaitingAnimation.SaveChanges();
+
+        this.CommandData.Flags[1] = !this.RotationEnabled.Value;
     }
 }

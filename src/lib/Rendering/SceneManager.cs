@@ -3,18 +3,29 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
+
 using GFDLibrary.Animations;
 using GFDLibrary.Common;
 using GFDLibrary.Rendering.OpenGL;
 using GFDLibrary.Textures;
+
 using OpenTK.Graphics.OpenGL;
 
+namespace EVTUI;
 
 public class SceneModel
 {
     protected GLModel model;
     protected AnimationPack GAP;
     protected Stopwatch animationStopwatch = new Stopwatch();  // I think we need one per currently-playing animation...
+
+    protected AnimationPack BaseAnimationPack;
+    protected AnimationPack ExtBaseAnimationPack;
+    protected AnimationPack AddAnimationPack;
+    protected AnimationPack ExtAddAnimationPack;
+
+    protected (bool IsExt, int Idx)? BaseAnimInfo;
+    protected (bool IsExt, int Idx)?[] AddAnimInfo = new (bool IsExt, int Idx)?[8];
 
     public SceneModel(GLModel model, AnimationPack GAP)
     {
@@ -24,9 +35,36 @@ public class SceneModel
         // the external GAPs here instead of having a global list.
     }
 
+    public SceneModel(DataManager config, SerialObject obj)
+    {
+        List<string> assetPaths = config.EventManager.GetAssetPaths(obj.Id, config.CpkList, config.VanillaExtractionPath);
+        if (assetPaths.Count > 0)
+        {
+            this.LoadModel(assetPaths[0]);
+
+            List<string> baseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, false, config.CpkList, config.VanillaExtractionPath);
+            if (baseAnimPaths.Count > 0)
+                this.BaseAnimationPack = this.TryLoadAnimationPack(baseAnimPaths[0]);
+
+            List<string> extBaseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, false, config.CpkList, config.VanillaExtractionPath);
+            if (extBaseAnimPaths.Count > 0)
+                this.ExtBaseAnimationPack = this.TryLoadAnimationPack(extBaseAnimPaths[0]);
+
+            List<string> addAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, true, config.CpkList, config.VanillaExtractionPath);
+            if (addAnimPaths.Count > 0)
+                this.AddAnimationPack = this.TryLoadAnimationPack(addAnimPaths[0]);
+
+            List<string> extAddAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, true, config.CpkList, config.VanillaExtractionPath);
+            if (extAddAnimPaths.Count > 0)
+                this.ExtAddAnimationPack = this.TryLoadAnimationPack(extAddAnimPaths[0]);
+        }
+    }
+
     public void Dispose()
     {
-        this.model.Dispose();
+        // can happen if EVT object isn't set up properly
+        if (!(this.model is null))
+            this.model.Dispose();
     }
 
     public void StartAnimTimer() { this.animationStopwatch.Start(); }
@@ -41,8 +79,12 @@ public class SceneModel
 
     public void Draw(GLShaderProgram shaderProgram, GLCamera camera, double animationTime)
     {
-        bool isAnimActive = this.model.Animation is null || this.model.Animation.Duration < 1;
-        double useAnimationTime = isAnimActive? 0 : (animationTime % this.model.Animation.Duration);
+        // can happen if EVT object isn't set up properly
+        if (this.model is null)
+            return;
+
+        bool isAnimActive = !(this.model.Animation is null || this.model.Animation.Duration < 1);
+        double useAnimationTime = isAnimActive ? (animationTime % this.model.Animation.Duration) : 0;
         
         this.model.Draw(shaderProgram, camera, useAnimationTime);
     }
@@ -51,12 +93,122 @@ public class SceneModel
     {
         this.Draw(shaderProgram, camera, (float)(this.animationStopwatch.ElapsedMilliseconds)/1000.0f);
     }
+
+    private void LoadModel(string filepath)
+    {
+        if (!File.Exists(filepath))
+            throw new FileNotFoundException($"Model file '{filepath}' does not exist.");
+        
+        var model = GFDLibrary.Api.FlatApi.LoadModel(filepath);
+        var glmodel = new GLModel(model, ( material, textureName ) =>
+        {
+            if ( model.Textures.TryGetTexture( textureName, out var texture ) )
+            {
+                return new GLTexture( texture );
+            }
+            else
+            {
+                Trace.TraceWarning( $"tTexture '{textureName}' used by material '{material.Name}' is missing" );
+                return new GLTexture(Texture.CreateDefaultTexture(textureName));
+            }
+        } );
+
+        ////////////////////////////
+        // TODO:
+        ////////////////////////////
+        // The below has been nicked from GFD Studio, which should correctly handle external texture bins.
+        // In order to implement this, we need to integrate the `mIsFieldModel` and `mFieldTextures`
+        // variables somehow into the scene management workflow.
+        // (This should be possible by relying on object/asset types to tell you whether something is a field model.)
+        // var glmodel = new GLModel(model, ( material, textureName ) =>
+        // {
+        //     if ( mIsFieldModel && mFieldTextures.TryOpenFile( textureName, out var textureStream ) )
+        //     {
+        //         using ( textureStream )
+        //         {
+        //             var texture = new FieldTexturePS3( textureStream );
+        //             return new GLTexture( texture );
+        //         }
+        //     }
+        //     else if ( model.Textures.TryGetTexture( textureName, out var texture ) )
+        //     {
+        //         return new GLTexture( texture );
+        //     }
+        //     else
+        //     {
+        //         Trace.TraceWarning( $"tTexture '{textureName}' used by material '{material.Name}' is missing" );
+        //     }
+
+        //     return null;
+        // } );
+        ////////////////////////////
+
+        this.model = glmodel;
+        this.GAP = model.AnimationPack;
+    }
+
+    public AnimationPack TryLoadAnimationPack(string filepath)
+    {
+        if (!File.Exists(filepath))
+            throw new FileNotFoundException($"GAP file '{filepath}' does not exist.");
+        return GFDLibrary.Api.FlatApi.LoadModel(filepath).AnimationPack;
+    }
+
+    public void LoadBaseAnimation(bool isExt, int idx)
+    {
+        (bool IsExt, int Idx) newInfo = (isExt, idx);
+        if (this.BaseAnimInfo != newInfo)
+        {
+            this.BaseAnimInfo = newInfo;
+            if (isExt && !(this.ExtBaseAnimationPack is null) && idx < this.ExtBaseAnimationPack.Animations.Count)
+            {
+                this.LoadAnimation(this.ExtBaseAnimationPack.Animations[idx]);
+                this.StartAnimTimer();
+            }
+            else if (!isExt && !(this.BaseAnimationPack is null) && idx < this.BaseAnimationPack.Animations.Count)
+            {
+                this.LoadAnimation(this.BaseAnimationPack.Animations[idx]);
+                this.StartAnimTimer();
+            }
+            else
+            {
+                this.StopAnimTimer();
+                this.UnloadAnimation();
+            }
+        }
+    }
+
+    public void LoadAddAnimationTrack(bool isExt, int idx, int track)
+    {
+        if (track >= this.AddAnimInfo.Length)
+            throw new Exception($"Track index must be 0-7 -- {track} is invalid.");
+        (bool IsExt, int Idx) newInfo = (isExt, idx);
+        if (this.AddAnimInfo[track] != newInfo)
+        {
+            this.AddAnimInfo[track] = newInfo;
+            if (isExt && !(this.ExtAddAnimationPack is null) && idx < this.ExtAddAnimationPack.BlendAnimations.Count)
+            {
+                this.LoadAnimation(this.ExtAddAnimationPack.BlendAnimations[idx]);
+                this.StartAnimTimer();
+            }
+            else if (!isExt && !(this.AddAnimationPack is null) && idx < this.AddAnimationPack.BlendAnimations.Count)
+            {
+                this.LoadAnimation(this.AddAnimationPack.BlendAnimations[idx]);
+                this.StartAnimTimer();
+            }
+            else
+            {
+                this.StopAnimTimer();
+                this.UnloadAnimation();
+            }
+        }
+    }
 }
 
 
 public class SceneManager
 {
-    public List<SceneModel>      sceneModels  = [];
+    public Dictionary<int, SceneModel> sceneModels = new Dictionary<int, SceneModel>();
     public List<AnimationPack>   externalGAPs = [];
     List<GLPerspectiveCamera>    cameras      = [];
     public List<GLShaderProgram> shaders      = [];
@@ -70,12 +222,9 @@ public class SceneManager
 
     public GLPerspectiveCamera activeCamera;
 
-    public Queue<(string ModelPath, string? AnimPackPath, int? AnimInd, bool IsBlendAnim)> QueuedLoads;
-
     public SceneManager()
     {
         this.activeCamera = fallbackCamera;
-        this.QueuedLoads = new Queue<(string ModelPath, string? AnimPackPath, int? AnimInd, bool IsBlendAnim)>();
     }
 
     ////////////////////////////////
@@ -108,12 +257,14 @@ public class SceneManager
     ///////////////////////////////
     public void teardown()
     {
-        for (int i=this.sceneModels.Count-1; i>=0; --i)
-            this.UnloadModel(i);
+        foreach (int objectID in this.sceneModels.Keys)
+            this.sceneModels[objectID].Dispose();
         this.sceneModels.Clear();
+
         for (int i=this.externalGAPs.Count-1; i>=0; --i)
             this.UnloadGAP(i);
         this.externalGAPs.Clear();
+
         for (int i=this.shaders.Count-1; i>=0; --i)
             this.UnloadShader(i);
         this.shaders.Clear();
@@ -122,74 +273,17 @@ public class SceneManager
     /////////////////////////////////////
     // *** Model Memory Management *** //
     /////////////////////////////////////
-    ////////////////////////////
-    // TODO: Implement external texture loading.
-    //       In the function below is a code snippet that should work (it's been nicked from
-    //       GFD Studio), but the texture-bin management systems need to be worked into the
-    //       SceneManager before it can be integrated.
-    ////////////////////////////
-    //public void LoadModel(string filepath)
-    public int LoadModel(string filepath)
+    public void LoadObjects(DataManager config, int[] objectIDs)
     {
-        if (!File.Exists(filepath))
-            throw new FileNotFoundException($"Model file '{filepath}' does not exist.");
-        
-        var model = GFDLibrary.Api.FlatApi.LoadModel(filepath);
-        var glmodel = new GLModel(model, ( material, textureName ) =>
-        {
-            if ( model.Textures.TryGetTexture( textureName, out var texture ) )
-            {
-                return new GLTexture( texture );
-            }
-            else
-            {
-                Trace.TraceWarning( $"tTexture '{textureName}' used by material '{material.Name}' is missing" );
-                return new GLTexture(Texture.CreateDefaultTexture(textureName));
-            }
-        } );
-
         ////////////////////////////
-        // TODO:
+        // TODO: Implement external texture loading.
+        //       In the function below is a code snippet that should work (it's been nicked from
+        //       GFD Studio), but the texture-bin management systems need to be worked into the
+        //       SceneManager before it can be integrated.
+        //       (IMO, we should handle the bins in here and pass them to the model initializers.)
         ////////////////////////////
-        // The below has been nicked from GFD Studio, which should correctly handle external texture bins.
-        // In order to implement this, we need to integrate the `mIsFieldModel` and `mFieldTextures`
-        // variables somehow into the scene management workflow.
-        // var glmodel = new GLModel(model, ( material, textureName ) =>
-        // {
-        //     if ( mIsFieldModel && mFieldTextures.TryOpenFile( textureName, out var textureStream ) )
-        //     {
-        //         using ( textureStream )
-        //         {
-        //             var texture = new FieldTexturePS3( textureStream );
-        //             return new GLTexture( texture );
-        //         }
-        //     }
-        //     else if ( model.Textures.TryGetTexture( textureName, out var texture ) )
-        //     {
-        //         return new GLTexture( texture );
-        //     }
-        //     else
-        //     {
-        //         Trace.TraceWarning( $"tTexture '{textureName}' used by material '{material.Name}' is missing" );
-        //     }
-
-        //     return null;
-        // } );
-        ////////////////////////////
-
-        sceneModels.Add(new SceneModel(glmodel, model.AnimationPack));
-        return sceneModels.Count-1;
-    }
-
-    public void UnloadModel(int index)
-    {
-        if (index >= this.sceneModels.Count)
-        {
-            Trace.TraceWarning($"Cannot unload model at index {index} because there are only {this.sceneModels.Count} models loaded");
-            return;
-        }
-        this.sceneModels[index].Dispose();
-        this.sceneModels.RemoveAt(index);
+        foreach (int objectID in objectIDs)
+            this.sceneModels[objectID] = new SceneModel(config, config.EventManager.ObjectsById[objectID]);
     }
 
     ///////////////////////////////////
@@ -263,6 +357,16 @@ public class SceneManager
         this.sceneModels[model_index].UnloadAnimation();
     }
 
+    public void LoadBaseAnimation(int model_index, bool isExt, int idx)
+    {
+        this.sceneModels[model_index].LoadBaseAnimation(isExt, idx);
+    }
+
+    public void LoadAddAnimationTrack(int model_index, bool isExt, int idx, int track)
+    {
+        this.sceneModels[model_index].LoadAddAnimationTrack(isExt, idx, track);
+    }
+
     /////////////////////////////////////
     // *** Camera State Management *** //
     /////////////////////////////////////
@@ -273,5 +377,4 @@ public class SceneManager
         else
             this.activeCamera = this.cameras[camera_index];
     }
-
 }

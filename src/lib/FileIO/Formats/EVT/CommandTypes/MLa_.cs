@@ -12,30 +12,30 @@ public partial class CommandTypes
     {
         public const int DataSize = 32;
 
-        public Int16 UnkBool;
-        public Int16 UnkIndex1;
-        public Int16 UnkEnum1;
-        public Int16 UnkEnum2;
-        public Int16 UNUSED;
-        public Int16 UnkEnum3;
+        public UInt16 ResetEyeWhenMoving;
+        public UInt16 Bitfield;
+        public UInt16 MotionType;
+        public UInt16 SpeedType = 2;
+        public UInt16 UNUSED;
+        public UInt16 TargetType;
         public float[] Target = new float[3];
-        public Int32 UnkIndex2;
-        public Int32 BoneId;
+        public UInt32 TargetModelID;
+        public UInt32 TargetBoneID;
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            rw.RwInt16(ref this.UnkBool);
-            rw.RwInt16(ref this.UnkIndex1);
-            rw.RwInt16(ref this.UnkEnum1);     // values: 0-4
-            rw.RwInt16(ref this.UnkEnum2);     // values: 0-3
+            rw.RwUInt16(ref this.ResetEyeWhenMoving);
+            rw.RwUInt16(ref this.Bitfield);
+            rw.RwUInt16(ref this.MotionType);
+            rw.RwUInt16(ref this.SpeedType);
 
-            rw.RwInt16(ref this.UNUSED);
+            rw.RwUInt16(ref this.UNUSED);
             Trace.Assert(this.UNUSED == 0, $"Unexpected nonzero value ({this.UNUSED}) in reserve variable.");
             
-            rw.RwInt16(ref this.UnkEnum3);     // values: 0-3
+            rw.RwUInt16(ref this.TargetType);
             rw.RwFloat32s(ref this.Target, 3);
-            rw.RwInt32(ref this.UnkIndex2);
-            rw.RwInt32(ref this.BoneId);
+            rw.RwUInt32(ref this.TargetModelID);
+            rw.RwUInt32(ref this.TargetBoneID);
         }
     }
 }

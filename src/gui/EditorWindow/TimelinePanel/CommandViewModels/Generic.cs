@@ -35,30 +35,24 @@ public class Basics : ReactiveObject
         this.Command = command;
         this.Editable = !config.ReadOnly;
 
-        this.ConditionalType = new StringSelectionField("Conditional Type", this.Editable, Enum.GetName(typeof(ConditionalTypes), this.Command.ConditionalType), new List<string>(Enum.GetNames(typeof(ConditionalTypes))));
+        this.ConditionalType = new StringSelectionField("Conditional Type", this.Editable, this.ConditionalTypes.Backward[this.Command.ConditionalType], this.ConditionalTypes.Keys);
+        this.ConditionalIndex = new NumEntryField("Conditional Index", this.Editable, (int)this.Command.ConditionalIndex, 0, null, 1);
+        this.ComparisonType = new StringSelectionField("Comparison Type", this.Editable, this.ComparisonTypes.Backward[this.Command.ConditionalComparisonType], this.ComparisonTypes.Keys);
+        this.ConditionalValue = new NumEntryField("Conditional Value", this.Editable, (int)this.Command.ConditionalValue, null, null, 1);
+
         this.WhenAnyValue(x => x.ConditionalType.Choice).Subscribe(x =>
         {
-            this.HasCondition = (x != "None");
-            this.UsesBitflag = (x == "Bitflag");
-            this.MaxIndex = null;
-            if (x == "Count")
-                this.MaxIndex = 382;
-            this.MaxValue = null;
-            if (x == "Bitflag")
-                this.MaxValue = 1;
+            this.ConditionalIndex.UpperLimit = null;
+            if (x == "Reference Global Count")
+                this.ConditionalIndex.UpperLimit = 382;
+            this.ConditionalValue.LowerLimit = null;
+            this.ConditionalValue.UpperLimit = null;
+            if (x == "Reference Global Bitflag")
+            {
+                this.ConditionalValue.LowerLimit = 0;
+                this.ConditionalValue.UpperLimit = 1;
+            }
         });
-
-        this.MaxIndex = null;
-        if (this.ConditionalType.Choice == "Count")
-            this.MaxIndex = 382;
-        this.ConditionalIndex = new NumEntryField("Conditional Index", this.Editable, (int)this.Command.ConditionalIndex, 0, this.MaxIndex, 1);
-
-        this.ComparisonType = new StringSelectionField("Comparison Type", this.Editable, Enum.GetName(typeof(ComparisonTypes), this.Command.ConditionalComparisonType), new List<string>(Enum.GetNames(typeof(ComparisonTypes))));
-
-        this.MaxValue = null;
-        if (this.ConditionalType.Choice == "Bitflag")
-            this.MaxValue = 1;
-        this.ConditionalValue = new NumEntryField("Conditional Value", this.Editable, (int)this.Command.ConditionalValue, 0, this.MaxValue, 1);
     }
 
     public StringSelectionField ConditionalType  { get; set; }
@@ -69,58 +63,37 @@ public class Basics : ReactiveObject
     protected SerialCommand Command;
     public    bool          Editable { get; set; }
 
-    private bool _hasCondition;
-    public bool HasCondition
-    {
-        get => _hasCondition;
-        set => this.RaiseAndSetIfChanged(ref _hasCondition, value);
-    }
-    //readonly ObservableAsPropertyHelper<bool> hasCondition;
-    //public bool HasCondition => hasCondition.Value;
-
-    private bool _usesBitflag;
-    public bool UsesBitflag
-    {
-        get => _usesBitflag;
-        set => this.RaiseAndSetIfChanged(ref _usesBitflag, value);
-    }
-
-    private decimal? _maxIndex;
-    public decimal? MaxIndex
-    {
-        get => _maxIndex;
-        set => this.RaiseAndSetIfChanged(ref _maxIndex, value);
-    }
-
-    private decimal? _maxValue;
-    public decimal? MaxValue
-    {
-        get => _maxValue;
-        set => this.RaiseAndSetIfChanged(ref _maxValue, value);
-    }
-
     public void SaveChanges()
     {
-        this.Command.ConditionalType  = (int)Enum.Parse(typeof(ConditionalTypes), this.ConditionalType.Choice);
+        this.Command.ConditionalType           = this.ConditionalTypes.Forward[this.ConditionalType.Choice];
+        this.Command.ConditionalIndex          = (uint)this.ConditionalIndex.Value;
+        this.Command.ConditionalValue          = (int)this.ConditionalValue.Value;
+        this.Command.ConditionalComparisonType = this.ComparisonTypes.Forward[this.ComparisonType.Choice];
     }
 
-    public enum ConditionalTypes : int
-    {
-        None         = 0,
-        False        = 1,
-        EvtLocalData = 2,
-        Bitflag      = 3,
-        Count        = 4,
-        EvtAnimData  = 5
-    }
+    public BiDict<string, uint> ConditionalTypes = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"Always Run",                  0},
+            {"Never Run",                   1},
+            {"Reference Local Data",        2},
+            {"Reference Global Bitflag",    3},
+            {"Reference Global Counter",    4},
+            {"Reference Animation Counter", 5},
+        }
+    );
 
-    public enum ComparisonTypes : int
-    {
-        EQ = 0,
-        NE = 1,
-        LT = 2,
-        GT = 3,
-        LE = 4,
-        GE = 5
-    }
+    public BiDict<string, uint> ComparisonTypes = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"==", 0},
+            {"!=", 1},
+            {"<",  2},
+            {">",  3},
+            {"<=", 4},
+            {">=", 5},
+        }
+    );
 }

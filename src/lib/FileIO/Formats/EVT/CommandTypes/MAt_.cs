@@ -12,8 +12,10 @@ public partial class CommandTypes
     {
         public const int DataSize = 48;
 
-        public Int32 FrameDelay;
-        public Int32 BoneId;
+        private UInt32 _bitfield;
+        public Bitfield Flags = new Bitfield(0);
+
+        public UInt32 HelperId;
         public Int32 ChildObjectId;
 
         public float[] RelativePosition = new float[3];
@@ -23,8 +25,12 @@ public partial class CommandTypes
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            rw.RwInt32(ref this.FrameDelay);
-            rw.RwInt32(ref this.BoneId);
+            if (rw.IsParselike())
+                this._bitfield = this.Flags.Compose();
+            rw.RwUInt32(ref this._bitfield);
+            this.Flags = new Bitfield(this._bitfield);
+
+            rw.RwUInt32(ref this.HelperId);
             rw.RwInt32(ref this.ChildObjectId);
 
             rw.RwUInt32(ref this.UNUSED_UINT32[0]);

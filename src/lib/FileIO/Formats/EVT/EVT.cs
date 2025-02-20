@@ -305,10 +305,10 @@ public class SerialCommand : ISerializable
     public Int32  FrameDuration = 1;
     public Int32  DataOffset;
     public Int32  DataSize;
-    public Int32  ConditionalType;
+    public UInt32 ConditionalType;
     public UInt32 ConditionalIndex;
     public Int32  ConditionalValue;
-    public Int32  ConditionalComparisonType;
+    public UInt32 ConditionalComparisonType;
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
@@ -321,10 +321,10 @@ public class SerialCommand : ISerializable
         rw.RwInt32(ref this.FrameDuration);
         rw.RwInt32(ref this.DataOffset);
         rw.RwInt32(ref this.DataSize);
-        rw.RwInt32(ref this.ConditionalType);
+        rw.RwUInt32(ref this.ConditionalType);
         rw.RwUInt32(ref this.ConditionalIndex);
         rw.RwInt32(ref this.ConditionalValue);
-        rw.RwInt32(ref this.ConditionalComparisonType);
+        rw.RwUInt32(ref this.ConditionalComparisonType);
     }
 }
 
