@@ -4,6 +4,8 @@ using System.Linq;
 using GFDLibrary.Rendering.OpenGL;
 using OpenTK.Graphics.OpenGL;
 
+using ReactiveUI;
+
 namespace EVTUI.ViewModels;
 
 public class GFDRenderingPanelViewModel : ViewModelBase
@@ -20,7 +22,13 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     public double height;
     public SceneManager sceneManager { get; set; } = new SceneManager();
     GLShaderProgram glShaderProgram;
-    bool testDataInitialised = false;
+
+    private bool _readyToRender = false;
+    public bool ReadyToRender
+    {
+        get => _readyToRender;
+        set => this.RaiseAndSetIfChanged(ref _readyToRender, value);
+    }
     
     public GFDRenderingPanelViewModel(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f)
     {
@@ -28,69 +36,21 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         this.g = g;
         this.b = b;
         this.a = a;
+
+        this.WhenAnyValue(x => x.ReadyToRender).Subscribe(x => 
+        {
+            if (x)
+            {
+                string vsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio", "app_data", "shaders", "default.glsl.vs");
+                string fsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio", "app_data", "shaders", "default.glsl.fs");
+                this.glShaderProgram = this.sceneManager.LoadShader(vsPath, fsPath);
+            }
+        });
     }
 
     ///////////////////////////////
     // *** Drawing Functions *** //
     ///////////////////////////////
-    public void InitTestData()
-    {
-        if (this.testDataInitialised)
-            return;
-        
-        this.testDataInitialised = true;
-
-        // TODO: i'm leaving this in for posterity & since it's unused but these paths are nooot Windows-safe
-        string modelPath = "./Assets/test_model.GMD";
-        string animPath  = "./Assets/test_gap.GAP";
-        string vsPath = "./Assets/shaders/default.glsl.vs";
-        string fsPath = "./Assets/shaders/default.glsl.fs";
-
-        if (!(File.Exists(modelPath) && File.Exists(vsPath) && File.Exists(fsPath)))
-            return;
-
-        this.sceneManager.LoadModel(modelPath);
-        this.glShaderProgram = this.sceneManager.LoadShader(vsPath, fsPath);
-
-        if (!File.Exists(animPath))
-            return;
-
-        this.sceneManager.LoadGAP(animPath);
-        this.sceneManager.ActivateAnimationOnModel(0, 0, 0);
-        this.sceneManager.sceneModels.Last().StartAnimTimer();
-    }
-
-    public void LoadQueuedItems()
-    {
-        string vsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio", "app_data", "shaders", "default.glsl.vs");
-        string fsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio", "app_data", "shaders", "default.glsl.fs");
-        if (!(File.Exists(vsPath) && File.Exists(fsPath)))
-            throw new FileNotFoundException($"Shader files ({vsPath} & {fsPath}) do not exist.");
-        while (this.sceneManager.QueuedLoads.Count > 0)
-        {
-            var item = this.sceneManager.QueuedLoads.Dequeue();
-            string modelPath = item.ModelPath;
-            string? animPath = item.AnimPackPath;
-            int? animInd = item.AnimInd;
-            bool isBlendAnim = item.IsBlendAnim;
-            if (!(File.Exists(modelPath)))
-                throw new FileNotFoundException($"Model file ({modelPath}) does not exist.");
-            this.sceneManager.LoadModel(modelPath);
-            this.glShaderProgram = this.sceneManager.LoadShader(vsPath, fsPath);
-            if (!(animPath is null) && !(animInd is null))
-            {
-                if (!(File.Exists(animPath)))
-                    throw new FileNotFoundException($"Animation file ({animPath}) does not exist.");
-                this.sceneManager.LoadGAP((string)animPath);
-                if (isBlendAnim)
-                    this.sceneManager.ActivateBlendAnimationOnModel(0, 0, (int)animInd);
-                else
-                    this.sceneManager.ActivateAnimationOnModel(0, 0, (int)animInd);
-                this.sceneManager.sceneModels.Last().StartAnimTimer();
-            }
-        }
-    }
-
     public void RefreshSceneState()
     {
         GL.ClearColor(this.r, this.g, this.b, this.a);
@@ -104,7 +64,7 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     {
         // Each model can have its own shaderprogram if we go that route,
         // meaning that we won't need to pass in a global shader here.
-        foreach (var scenemodel in this.sceneManager.sceneModels)
+        foreach (var scenemodel in this.sceneManager.sceneModels.Values)
             scenemodel.Draw(this.glShaderProgram, this.sceneManager.activeCamera);
     }
 }

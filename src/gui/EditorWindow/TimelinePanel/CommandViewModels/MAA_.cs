@@ -6,37 +6,27 @@ public class MAA_ : Generic
 {
     public MAA_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
     {
-        this.LongName = "Model: Blend Animation";
+        this.LongName = "Model: Additive Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
-        this.PrimaryAnimationID = new IntSelectionField("Animation ID", this.Editable, this.CommandData.PrimaryAnimationIndex, new List<int>{this.CommandData.PrimaryAnimationIndex});
-        this.SecondaryAnimationID = new IntSelectionField("Animation ID", this.Editable, this.CommandData.SecondaryAnimationIndex, new List<int>{this.CommandData.SecondaryAnimationIndex});
 
-        this.PrimaryAnimPreviewVM = new GFDRenderingPanelViewModel();
-        this.SecondaryAnimPreviewVM = new GFDRenderingPanelViewModel();
-        List<string> assetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.VanillaExtractionPath);
-        if (assetPaths.Count > 0)
-        {
-            List<string> animPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, true, true, config.CpkList, config.VanillaExtractionPath);
-            if (animPaths.Count > 0)
-            {
-                this.PrimaryAnimPreviewVM.sceneManager.QueuedLoads.Enqueue((assetPaths[0], animPaths[0], this.CommandData.PrimaryAnimationIndex, true));
-                this.SecondaryAnimPreviewVM.sceneManager.QueuedLoads.Enqueue((assetPaths[0], animPaths[0], this.CommandData.SecondaryAnimationIndex, true));
-            }
-        }
+        this.TrackNumber = new IntSelectionField("Track Number", this.Editable, this.CommandData.TrackNumber+1, new List<int> {1, 2, 3, 4, 5, 6, 7, 8});
+        this.AddAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.AddAnimation, this.CommandData.Flags, $"Animation", extInd:0, trackNum:this.TrackNumber.Choice);
+        this.DebugFrameForward = new BoolChoiceField("Frame Forward", this.Editable, this.CommandData.Flags[31]);
+
     }
 
-    public GFDRenderingPanelViewModel PrimaryAnimPreviewVM   { get; set; }
-    public GFDRenderingPanelViewModel SecondaryAnimPreviewVM { get; set; }
-
-    public IntSelectionField AssetID              { get; set; }
-    public IntSelectionField PrimaryAnimationID   { get; set; }
-    public IntSelectionField SecondaryAnimationID { get; set; }
+    public IntSelectionField AssetID           { get; set; }
+    public IntSelectionField TrackNumber       { get; set; }
+    public AnimationWidget   AddAnimation      { get; set; }
+    public BoolChoiceField   DebugFrameForward { get; set; }
 
     public new void SaveChanges()
     {
         base.SaveChanges();
-        this.Command.ObjectId                    = this.AssetID.Choice;
-        this.CommandData.PrimaryAnimationIndex   = this.PrimaryAnimationID.Choice;
-        this.CommandData.SecondaryAnimationIndex = this.SecondaryAnimationID.Choice;
+        this.Command.ObjectId = this.AssetID.Choice;
+
+        this.CommandData.TrackNumber = this.TrackNumber.Choice-1;
+        this.AddAnimation.SaveChanges();
+        this.CommandData.Flags[31] = this.DebugFrameForward.Value;
     }
 }

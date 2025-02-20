@@ -12,63 +12,76 @@ public partial class CommandTypes
     {
         public const int DataSize = 384;
 
-        public Int32 UnkBool1;
-        public Int32 UnkEnum;
-        public float[][] Targets = new float[24][];
-        public Int32 UnkIndex1;
-        public float UnkFloat1;
-        public Int32 UnkIndex2;
-        public Int32 UnkBitflag;
-        public Int32 UnkIndex3;
-        public Int32 UnkIndex4;
-        public Int32 UnkBool2;
-        public float UnkFloat2;
-        public Int32 UnkIndex5;
+        public UInt32 InterpolationType;
+        public UInt32 NumControlGroups = 1;
+        public float[,] Targets = new float[24,3];
 
-        public Int32 UnkIndex6;
-        public Int32 UnkIndex7;
-        public Int32 UnkBool3;
-        public float UnkFloat3;
-        public Int32 UnkIndex8;
+        private UInt32 _bitfield;
+        public Bitfield Flags = new Bitfield(0);
 
-        public Int32[] UNUSED = new Int32[8];
+        public float MovementSpeed = 1.0F;
+        public UInt32 UNK;
+
+        public byte StartSpeedType;
+        public byte FinalSpeedType;
+
+        public AnimationStruct MovingAnimation = new AnimationStruct(loopBool:1);
+        public AnimationStruct WaitingAnimation = new AnimationStruct(loopBool:1);
+
+        public UInt16   UNUSED_UINT16;
+        public UInt32[] UNUSED_UINT32 = new UInt32[8];
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            rw.RwInt32(ref this.UnkBool1);
-            rw.RwInt32(ref this.UnkEnum);      // values: 1-6
+            Trace.Assert((int)args["dataSize"] == 96 || (int)args["dataSize"] == 384);
 
-            for (int i=0; i<24; i++)
-                rw.RwFloat32s(ref this.Targets[i], 3);
+            rw.RwUInt32(ref this.InterpolationType);
+            rw.RwUInt32(ref this.NumControlGroups);
 
-            rw.RwInt32(ref this.UnkIndex1);
-            rw.RwFloat32(ref this.UnkFloat1);  // mode: ~4.5
-            rw.RwInt32(ref this.UnkIndex2);
-            rw.RwInt32(ref this.UnkBitflag);
-            rw.RwInt32(ref this.UnkIndex3);
-            rw.RwInt32(ref this.UnkIndex4);
-            rw.RwInt32(ref this.UnkBool2);
-            rw.RwFloat32(ref this.UnkFloat2);  // mode: 1.0
-            rw.RwInt32(ref this.UnkIndex5);
+            // where does the position get stored if not here, you ask? lmao idk. ancient evts...
+            if ((int)args["dataSize"] == 384)
+                for (int i=0; i<24; i++)
+                    for (int j=0; j<3; j++)
+                        rw.RwFloat32(ref this.Targets[i,j]);
 
-            rw.RwInt32(ref this.UNUSED[0]);
-            rw.RwInt32(ref this.UNUSED[1]);
-            rw.RwInt32(ref this.UNUSED[2]);
+            if (rw.IsParselike())
+                this._bitfield = this.Flags.Compose();
+            rw.RwUInt32(ref this._bitfield);
+            this.Flags = new Bitfield(this._bitfield);
 
-            rw.RwInt32(ref this.UnkIndex6);
-            rw.RwInt32(ref this.UnkIndex7);
-            rw.RwInt32(ref this.UnkBool3);
-            rw.RwFloat32(ref this.UnkFloat3);  // mode: 1.0
-            rw.RwInt32(ref this.UnkIndex8);
+            rw.RwFloat32(ref this.MovementSpeed);
+            rw.RwUInt32(ref this.UNK);
 
-            rw.RwInt32(ref this.UNUSED[3]);
-            rw.RwInt32(ref this.UNUSED[4]);
-            rw.RwInt32(ref this.UNUSED[5]);
-            rw.RwInt32(ref this.UNUSED[6]);
-            rw.RwInt32(ref this.UNUSED[7]);
+            rw.RwUInt8(ref this.StartSpeedType);
+            rw.RwUInt8(ref this.FinalSpeedType);
 
-            for (int i=0; i<this.UNUSED.Length; i++)
-                Trace.Assert(this.UNUSED[i] == 0, $"Unexpected nonzero value ({this.UNUSED[i]}) in reserve variable.");
+            rw.RwUInt16(ref this.UNUSED_UINT16);
+            Trace.Assert(this.UNUSED_UINT16 == 0, $"Unexpected nonzero value ({this.UNUSED_UINT16}) in reserve variable.");
+
+            rw.RwUInt32(ref this.MovingAnimation.Index);
+            rw.RwUInt32(ref this.MovingAnimation.InterpolatedFrames);
+            rw.RwUInt32(ref this.MovingAnimation.LoopBool);
+            rw.RwFloat32(ref this.MovingAnimation.PlaybackSpeed);
+            rw.RwUInt32(ref this.MovingAnimation.StartingFrame);
+
+            rw.RwUInt32(ref this.UNUSED_UINT32[0]);
+            rw.RwUInt32(ref this.UNUSED_UINT32[1]);
+            rw.RwUInt32(ref this.UNUSED_UINT32[2]);
+
+            rw.RwUInt32(ref this.WaitingAnimation.Index);
+            rw.RwUInt32(ref this.WaitingAnimation.InterpolatedFrames);
+            rw.RwUInt32(ref this.WaitingAnimation.LoopBool);
+            rw.RwFloat32(ref this.WaitingAnimation.PlaybackSpeed);
+            rw.RwUInt32(ref this.WaitingAnimation.StartingFrame);
+
+            rw.RwUInt32(ref this.UNUSED_UINT32[3]);
+            rw.RwUInt32(ref this.UNUSED_UINT32[4]);
+            rw.RwUInt32(ref this.UNUSED_UINT32[5]);
+            rw.RwUInt32(ref this.UNUSED_UINT32[6]);
+            rw.RwUInt32(ref this.UNUSED_UINT32[7]);
+
+            for (int i=0; i<this.UNUSED_UINT32.Length; i++)
+                Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[i]}) in reserve variable.");
         }
     }
 }

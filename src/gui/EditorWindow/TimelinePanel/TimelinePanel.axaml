@@ -17,15 +17,9 @@
       <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
       <Setter Property="Height" Value="2"/>
       <Setter Property="Margin" Value="20,5,20,15"/>
-      <!--Setter Property="MaxWidth" Value="300"/-->
     </Style>
     <Style Selector="Separator.formsubtitle">
       <Setter Property="Margin" Value="40,5,40,15"/>
-      <!--Setter Property="MaxWidth" Value="300"/-->
-    </Style>
-    <Style Selector="FlyoutPresenter">
-      <Setter Property="MaxHeight" Value="700"/>
-      <Setter Property="MaxWidth" Value="900"/>
     </Style>
     <Style Selector="Button.selected">
       <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
@@ -38,9 +32,6 @@
       <Setter Property="FontSize" Value="20"/>
       <Setter Property="FontWeight" Value="Light"/>
     </Style>
-    <!--Style Selector="Expander StackPanel">
-      <Setter Property="Spacing" Value="10"/>
-    </Style-->
     <Style Selector="StackPanel.preview">
       <Setter Property="HorizontalAlignment" Value="Right"/>
       <Setter Property="Orientation" Value="Horizontal"/>
@@ -50,20 +41,16 @@
       <Setter Property="HorizontalAlignment" Value="Right"/>
       <Setter Property="Margin" Value="0"/>
       <Setter Property="Width" Value="20"/>
-      <Setter Property="Height" Value="20"/>                                                                                                                                                    
+      <Setter Property="Height" Value="20"/>
     </Style>
     <Style Selector="Button.popupclose > PathIcon">
       <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
-      <!--Setter Property="Padding" Value="10"/-->
       <Setter Property="Width" Value="10"/>
-      <Setter Property="Height" Value="10"/>                                                                                                                                                    
+      <Setter Property="Height" Value="10"/>
     </Style>
     <Style Selector="Button.popupclose:pointerover > PathIcon">
       <Setter Property="Foreground" Value="White"/>
     </Style>
-    <!--Style Selector="StackPanel.preview > Button">
-      <Setter Property="Margin" Value="10"/>
-    </Style-->
     <Style Selector="Button.preview">
       <Setter Property="Height" Value="32"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -71,41 +58,8 @@
       <Setter Property="ToolTip.Tip" Value="Preview"/>
       <Setter Property="Width" Value="32"/>
     </Style>
-    <!--Style Selector="Button.space">
-      <Setter Property="Height" Value="20"/>
-      <Setter Property="HorizontalAlignment" Value="Center"/>
-      <Setter Property="Opacity" Value="0"/>
-      <Setter Property="ToolTip.Tip" Value="Add new node"/>
-      <Setter Property="Width" Value="60"/>
-    </Style>
-    <Style Selector="Button.space:pointerover">
-      <Setter Property="Height" Value="60"/>
-      <Setter Property="Opacity" Value="1"/>
-    </Style>
-    <Style Selector="Button.space:nth-last-child(1)">
-      <Setter Property="Height" Value="60"/>
-      <Setter Property="Margin" Value="0 20"/>
-      <Setter Property="Opacity" Value="0.33"/>
-    </Style>
-    <Style Selector="Button.space:nth-last-child(1):pointerover">
-      <Setter Property="Opacity" Value="1"/>
-    </Style>
-    <Style Selector="Button.space > PathIcon">
-      <Setter Property="Data" Value="{StaticResource add_square_regular}"/>
-      <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"></Setter>
-      <Setter Property="HorizontalAlignment" Value="Center"/>
-      <Setter Property="IsVisible" Value="False"/>
-      <Setter Property="VerticalAlignment" Value="Center"/>
-    </Style>
-    <Style Selector="Button.space:pointerover > PathIcon">
-      <Setter Property="IsVisible" Value="True"/>
-    </Style>
-    <Style Selector="Button.space:nth-last-child(1) > PathIcon">
-      <Setter Property="IsVisible" Value="True"/>
-    </Style-->
     <Style Selector="StackPanel.form">
       <Setter Property="Orientation" Value="Vertical"/>
-      <Setter Property="Margin" Value="5"/>
       <Setter Property="Spacing" Value="10"/>
     </Style>
     <Style Selector="TextBlock.formtitle">
@@ -232,14 +186,103 @@
       </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:ColorSelectionField}">
+      <StackPanel Classes="field">
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <ColorPicker Color="{Binding SelectedColor}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:AnimationWidget}">
+      <StackPanel Classes="form" Margin="0 10 0 0">
+        <Expander Header="{Binding Name}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding AnimationEnabled}"/>
+            <StackPanel Classes="form" IsVisible="{Binding AnimationEnabled.Value}">
+              <Button
+               Height="32"
+               HorizontalAlignment="Right"
+               Margin="5"
+               ToolTip.Tip="Preview + Edit"
+               Width="64">
+                <Button.Styles>
+                  <Style Selector="FlyoutPresenter">
+                    <Setter Property="MaxHeight" Value="800"/>
+                    <Setter Property="MaxWidth" Value="1200"/>
+                  </Style>
+                </Button.Styles>
+                <Button.Flyout>
+                  <Flyout>
+                    <StackPanel>
+                      <Button Classes="popupclose" Click="CloseMe">
+                        <PathIcon Data="{StaticResource dismiss_regular}" />
+                      </Button>
+                      <TextBlock Classes="formtitle" Text="Model Preview"/>
+                      <Separator Classes="formtitle"/>
+                      <StackPanel Orientation="Horizontal">
+                        <StackPanel Classes="form">
+                          <StackPanel Orientation="Horizontal" Spacing="30" HorizontalAlignment="Center">
+                            <ContentControl Content="{Binding AnimationID}"/>
+                            <ContentControl Content="{Binding AnimationFromExt}"/>
+                          </StackPanel>
+                          <views:GFDRenderingPanel DataContext="{Binding AnimationPreviewVM}" Width="800" Height="600"/>
+                        </StackPanel>
+                        <StackPanel Classes="form">
+                          <ContentControl Content="{Binding AnimationLoopBool}"/>
+                          <ContentControl Content="{Binding AnimationFrameBlendingEnabled}"/>
+                          <ContentControl Content="{Binding AnimationStartingFrame}"/>
+                          <ContentControl Content="{Binding AnimationEndingFrame}"/>
+                          <ContentControl Content="{Binding AnimationInterpolatedFrames}"/>
+                          <ContentControl Content="{Binding AnimationPlaybackSpeed}"/>
+                          <ContentControl Content="{Binding AnimationWeight}"/>
+                        </StackPanel>
+                      </StackPanel>
+                    </StackPanel>
+                  </Flyout>
+                </Button.Flyout>
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                  <PathIcon Data="{StaticResource eye_show_regular}" />
+                  <PathIcon Data="{StaticResource edit_regular}" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ModelPreviewWidget}">
+      <Button Classes="preview">
+        <Button.Styles>
+          <Style Selector="FlyoutPresenter">
+            <Setter Property="MaxHeight" Value="800"/>
+            <Setter Property="MaxWidth" Value="1200"/>
+          </Style>
+        </Button.Styles>
+        <Button.Flyout>
+          <Flyout>
+            <StackPanel>
+              <Button Classes="popupclose" Click="CloseMe">
+                <PathIcon Data="{StaticResource dismiss_regular}" />
+              </Button>
+              <TextBlock Classes="formtitle" Text="Model Preview"/>
+              <Separator Classes="formtitle"/>
+              <views:GFDRenderingPanel DataContext="{Binding ModelPreviewVM}" Width="800" Height="600"/>
+            </StackPanel>
+          </Flyout>
+        </Button.Flyout>
+        <PathIcon Data="{StaticResource eye_show_regular}" />
+      </Button>
+    </DataTemplate>
+
     <!-- COMMAND TYPES -->
 
     <DataTemplate DataType="{x:Type cmds:Basics}">
       <StackPanel Classes="form">
-        <Expander Header="Conditions" IsExpanded="{Binding HasCondition}">
+        <Expander Header="Conditions" IsExpanded="{c:Binding 'ConditionalType.Choice != \'Always Run\'', Mode=OneTime}">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding ConditionalType}"/>
-            <StackPanel Classes="form" IsVisible="{Binding HasCondition}">
+            <StackPanel Classes="form" IsVisible="{c:Binding '(ConditionalType.Choice != \'Always Run\') and (ConditionalType.Choice != \'Never Run\')', Mode=OneWay}">
               <ContentControl Content="{Binding ConditionalIndex}"/>
               <ContentControl Content="{Binding ComparisonType}"/>
               <ContentControl Content="{Binding ConditionalValue}"/>
@@ -265,52 +308,25 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <StackPanel>
-          <TextBlock Classes="formsubtitle" Text="Primary Animation"/>
-          <Separator Classes="formsubtitle"/>
-          <StackPanel Classes="preview">
-            <ContentControl Content="{Binding PrimaryAnimationID}"/>
-            <Button Classes="preview">
-              <Button.Flyout>
-                <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                  <StackPanel>
-                    <Button Classes="popupclose" Click="CloseMe">
-                      <PathIcon Data="{StaticResource dismiss_regular}" />
-                    </Button>
-                    <TextBlock Classes="formtitle" Text="Model Preview"/>
-                    <Separator Classes="formtitle"/>
-                    <views:GFDRenderingPanel DataContext="{Binding PrimaryAnimPreviewVM}" Width="800" Height="600"/>
-                  </StackPanel>
-                </Flyout>
-              </Button.Flyout>
-              <PathIcon Data="{StaticResource eye_show_regular}" />
-            </Button>
+        <ContentControl Content="{Binding TrackNumber}"/>
+        <ContentControl Content="{Binding AddAnimation}"/>
+        <Expander Header="Debug">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding DebugFrameForward}"/>
           </StackPanel>
-          <!--ContentControl Content="{Binding PrimaryAnimationSpeed}"/-->
-        </StackPanel>
-        <StackPanel>
-          <TextBlock Classes="formsubtitle" Text="Secondary Animation"/>
-          <Separator Classes="formsubtitle"/>
-          <StackPanel Classes="preview">
-            <ContentControl Content="{Binding SecondaryAnimationID}"/>
-            <Button Classes="preview">
-              <Button.Flyout>
-                <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                  <StackPanel>
-                    <Button Classes="popupclose" Click="CloseMe">
-                      <PathIcon Data="{StaticResource dismiss_regular}" />
-                    </Button>
-                    <TextBlock Classes="formtitle" Text="Model Preview"/>
-                    <Separator Classes="formtitle"/>
-                    <views:GFDRenderingPanel DataContext="{Binding SecondaryAnimPreviewVM}" Width="800" Height="600"/>
-                  </StackPanel>
-                </Flyout>
-              </Button.Flyout>
-              <PathIcon Data="{StaticResource eye_show_regular}" />
-            </Button>
-          </StackPanel>
-          <!--ContentControl Content="{Binding SecondaryAnimationSpeed}"/-->
-        </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MAAB}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding ChildAssetID}"/>
+        <ContentControl Content="{Binding FirstAnimation}"/>
+        <ContentControl Content="{Binding SecondAnimation}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -320,56 +336,39 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <StackPanel> <!--IsVisible="{Binding HasPrimaryAnimation.Value}"-->
-          <TextBlock Classes="formsubtitle" Text="Primary Animation"/>
-          <Separator Classes="formsubtitle"/>
-          <StackPanel Classes="preview">
-            <ContentControl Content="{Binding PrimaryAnimationID}"/>
-            <Button Classes="preview">
-              <Button.Flyout>
-                <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                  <StackPanel>
-                    <Button Classes="popupclose" Click="CloseMe">
-                      <PathIcon Data="{StaticResource dismiss_regular}" />
-                    </Button>
-                    <TextBlock Classes="formtitle" Text="Model Preview"/>
-                    <Separator Classes="formtitle"/>
-                    <views:GFDRenderingPanel DataContext="{Binding PrimaryAnimPreviewVM}" Width="800" Height="600"/>
-                  </StackPanel>
-                </Flyout>
-              </Button.Flyout>
-              <PathIcon Data="{StaticResource eye_show_regular}" />
-            </Button>
+        <ContentControl Content="{Binding StartWaitingFrames}"/>
+        <ContentControl Content="{Binding FirstAnimation}"/>
+        <ContentControl Content="{Binding SecondAnimation}"/>
+        <Expander Header="Debug">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding DebugUnkBool}"/>
+            <ContentControl Content="{Binding DebugFrameForward}"/>
           </StackPanel>
-          <ContentControl Content="{Binding PrimaryAnimationFromSecondaryFile}"/>
-          <!--ContentControl Content="{Binding HasPrimaryAnimation}"/-->
-          <ContentControl Content="{Binding PrimaryAnimationSpeed}"/>
-        </StackPanel>
-        <StackPanel> <!--IsVisible="{Binding HasSecondaryAnimation.Value}"-->
-          <TextBlock Classes="formsubtitle" Text="Secondary Animation"/>
-          <Separator Classes="formsubtitle"/>
-          <StackPanel Classes="preview">
-            <ContentControl Content="{Binding SecondaryAnimationID}"/>
-            <Button Classes="preview">
-              <Button.Flyout>
-                <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                  <StackPanel>
-                    <Button Classes="popupclose" Click="CloseMe">
-                      <PathIcon Data="{StaticResource dismiss_regular}" />
-                    </Button>
-                    <TextBlock Classes="formtitle" Text="Model Preview"/>
-                    <Separator Classes="formtitle"/>
-                    <views:GFDRenderingPanel DataContext="{Binding SecondaryAnimPreviewVM}" Width="800" Height="600"/>
-                  </StackPanel>
-                </Flyout>
-              </Button.Flyout>
-              <PathIcon Data="{StaticResource eye_show_regular}" />
-            </Button>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding FirstAnimationUnk}"/>
+            <ContentControl Content="{Binding SecondAnimationUnk}"/>
+            <ContentControl Content="{Binding UnkBool1}"/>
+            <ContentControl Content="{Binding UnkBool2}"/>
+            <ContentControl Content="{Binding UnkBool3}"/>
+            <ContentControl Content="{Binding UnkBool4}"/>
+            <ContentControl Content="{Binding UnkBool5}"/>
+            <ContentControl Content="{Binding UnkBool6}"/>
+            <ContentControl Content="{Binding UnkBool7}"/>
           </StackPanel>
-          <ContentControl Content="{Binding SecondaryAnimationFromSecondaryFile}"/>
-          <!--ContentControl Content="{Binding HasSecondaryAnimation}"/-->
-          <ContentControl Content="{Binding SecondaryAnimationSpeed}"/>
-        </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MAI_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ItemsControl ItemsSource="{Binding Animations}">
+        </ItemsControl>
       </StackPanel>
     </DataTemplate>
 
@@ -380,6 +379,14 @@
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
         <ContentControl Content="{Binding AlphaLevel}"/>
+        <ContentControl Content="{Binding TranslucentMode}"/>
+        <Expander Header="Interpolation">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding InterpolationType}"/>
+            <ContentControl Content="{Binding SlopeInType}" IsVisible="{c:Binding 'InterpolationType.Choice == \'Hermite\''}"/>
+            <ContentControl Content="{Binding SlopeOutType}" IsVisible="{c:Binding 'InterpolationType.Choice == \'Hermite\''}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 
@@ -390,52 +397,32 @@
         <ContentControl Content="{Binding Basics}"/>
         <StackPanel Classes="preview">
           <ContentControl Content="{Binding AssetID}"/>
-          <Button Classes="preview">
-            <Button.Flyout>
-              <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                <StackPanel>
-                  <Button Classes="popupclose" Click="CloseMe">
-                    <PathIcon Data="{StaticResource dismiss_regular}" />
-                  </Button>
-                  <TextBlock Classes="formtitle" Text="Model Preview"/>
-                  <Separator Classes="formtitle"/>
-                  <views:GFDRenderingPanel DataContext="{Binding ParentModelPreviewVM}" Width="800" Height="600"/>
-                </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource eye_show_regular}" />
-          </Button>
+          <ContentControl Content="{Binding ParentModelPreviewVM}"/>
         </StackPanel>
-        <ContentControl Content="{Binding BoneID}"/>
+        <ContentControl Content="{Binding HelperID}"/>
         <StackPanel Classes="preview">
           <ContentControl Content="{Binding ChildAssetID}"/>
-          <Button Classes="preview">
-            <Button.Flyout>
-              <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                <StackPanel>
-                  <Button Classes="popupclose" Click="CloseMe">
-                    <PathIcon Data="{StaticResource dismiss_regular}" />
-                  </Button>
-                  <TextBlock Classes="formtitle" Text="Model Preview"/>
-                  <Separator Classes="formtitle"/>
-                  <views:GFDRenderingPanel DataContext="{Binding ChildModelPreviewVM}" Width="800" Height="600"/>
-                </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource eye_show_regular}" />
-          </Button>
+          <ContentControl Content="{Binding ChildModelPreviewVM}"/>
         </StackPanel>
-        <ContentControl Content="{Binding FrameDelay}"/>
-        <TextBlock Classes="formsubtitle" Text="Relative Position"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding RelativeXPosition}"/>
-        <ContentControl Content="{Binding RelativeYPosition}"/>
-        <ContentControl Content="{Binding RelativeZPosition}"/>
-        <TextBlock Classes="formsubtitle" Text="Rotation (in degrees)"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding XRotation}"/>
-        <ContentControl Content="{Binding YRotation}"/>
-        <ContentControl Content="{Binding ZRotation}"/>
+        <Expander Header="Offset (From Attachment Point)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding XOffset}"/>
+            <ContentControl Content="{Binding YOffset}"/>
+            <ContentControl Content="{Binding ZOffset}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Rotation (Degrees)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Yaw}"/>
+            <ContentControl Content="{Binding Pitch}"/>
+            <ContentControl Content="{Binding Roll}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkBool}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 
@@ -446,51 +433,41 @@
         <ContentControl Content="{Binding Basics}"/>
         <StackPanel Classes="preview">
           <ContentControl Content="{Binding AssetID}"/>
-          <Button Classes="preview">
-            <Button.Flyout>
-              <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                <StackPanel>
-                  <Button Classes="popupclose" Click="CloseMe">
-                    <PathIcon Data="{StaticResource dismiss_regular}" />
-                  </Button>
-                  <TextBlock Classes="formtitle" Text="Model Preview"/>
-                  <Separator Classes="formtitle"/>
-                  <views:GFDRenderingPanel DataContext="{Binding ParentModelPreviewVM}" Width="800" Height="600"/>
-                </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource eye_show_regular}" />
-          </Button>
+          <ContentControl Content="{Binding ParentModelPreviewVM}"/>
         </StackPanel>
         <StackPanel Classes="preview">
           <ContentControl Content="{Binding ChildAssetID}"/>
-          <Button Classes="preview">
-            <Button.Flyout>
-              <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                <StackPanel>
-                  <Button Classes="popupclose" Click="CloseMe">
-                    <PathIcon Data="{StaticResource dismiss_regular}" />
-                  </Button>
-                  <TextBlock Classes="formtitle" Text="Model Preview"/>
-                  <Separator Classes="formtitle"/>
-                  <views:GFDRenderingPanel DataContext="{Binding ChildModelPreviewVM}" Width="800" Height="600"/>
-                </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource eye_show_regular}" />
-          </Button>
+          <ContentControl Content="{Binding ChildModelPreviewVM}"/>
         </StackPanel>
-        <ContentControl Content="{Binding FrameDelay}"/>
-        <TextBlock Classes="formsubtitle" Text="Relative Position"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding RelativeXPosition}"/>
-        <ContentControl Content="{Binding RelativeYPosition}"/>
-        <ContentControl Content="{Binding RelativeZPosition}"/>
-        <TextBlock Classes="formsubtitle" Text="Rotation (in degrees)"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding XRotation}"/>
-        <ContentControl Content="{Binding YRotation}"/>
-        <ContentControl Content="{Binding ZRotation}"/>
+        <ContentControl Content="{Binding InterpolationType}"/>
+        <Expander Header="Offset (From Attachment Point)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding XOffset}"/>
+            <ContentControl Content="{Binding YOffset}"/>
+            <ContentControl Content="{Binding ZOffset}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Rotation (Degrees)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Yaw}"/>
+            <ContentControl Content="{Binding Pitch}"/>
+            <ContentControl Content="{Binding Roll}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MCSd}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding UnkEnum}"/>
+        <ContentControl Content="{Binding UnkColor1}"/>
+        <ContentControl Content="{Binding UnkColor2}"/>
+        <ContentControl Content="{Binding UnkInd1}"/>
+        <ContentControl Content="{Binding UnkInd2}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -501,52 +478,45 @@
         <ContentControl Content="{Binding Basics}"/>
         <StackPanel Classes="preview">
           <ContentControl Content="{Binding AssetID}"/>
-          <Button Classes="preview">
-            <Button.Flyout>
-              <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                <StackPanel>
-                  <Button Classes="popupclose" Click="CloseMe">
-                    <PathIcon Data="{StaticResource dismiss_regular}" />
-                  </Button>
-                  <TextBlock Classes="formtitle" Text="Model Preview"/>
-                  <Separator Classes="formtitle"/>
-                  <views:GFDRenderingPanel DataContext="{Binding ParentModelPreviewVM}" Width="800" Height="600"/>
-                </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource eye_show_regular}" />
-          </Button>
+          <ContentControl Content="{Binding ParentModelPreviewVM}"/>
         </StackPanel>
-        <ContentControl Content="{Binding BoneID}"/>
+        <ContentControl Content="{Binding HelperID}"/>
         <StackPanel Classes="preview">
           <ContentControl Content="{Binding ChildAssetID}"/>
-          <Button Classes="preview">
-            <Button.Flyout>
-              <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                <StackPanel>
-                  <Button Classes="popupclose" Click="CloseMe">
-                    <PathIcon Data="{StaticResource dismiss_regular}" />
-                  </Button>
-                  <TextBlock Classes="formtitle" Text="Model Preview"/>
-                  <Separator Classes="formtitle"/>
-                  <views:GFDRenderingPanel DataContext="{Binding ChildModelPreviewVM}" Width="800" Height="600"/>
-                </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource eye_show_regular}" />
-          </Button>
+          <ContentControl Content="{Binding ChildModelPreviewVM}"/>
         </StackPanel>
-        <ContentControl Content="{Binding FrameDelay}"/>
-        <TextBlock Classes="formsubtitle" Text="Relative Position"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding RelativeXPosition}"/>
-        <ContentControl Content="{Binding RelativeYPosition}"/>
-        <ContentControl Content="{Binding RelativeZPosition}"/>
-        <TextBlock Classes="formsubtitle" Text="Rotation (in degrees)"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding XRotation}"/>
-        <ContentControl Content="{Binding YRotation}"/>
-        <ContentControl Content="{Binding ZRotation}"/>
+        <ContentControl Content="{Binding RemainInScene}"/>
+        <Expander Header="Detached Position" IsVisible="{Binding RemainInScene.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding X}"/>
+            <ContentControl Content="{Binding Y}"/>
+            <ContentControl Content="{Binding Z}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Detached Rotation (Degrees)" IsVisible="{Binding RemainInScene.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Yaw}"/>
+            <ContentControl Content="{Binding Pitch}"/>
+            <ContentControl Content="{Binding Roll}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkBool}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MFts}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding Enable}"/>
+        <ContentControl Content="{Binding AreaDistortion}" IsVisible="{Binding Enable.Value}"/>
+        <ContentControl Content="{Binding PuddleEffect}" IsVisible="{Binding Enable.Value}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -556,10 +526,31 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <TextBlock Classes="formsubtitle" Text="Icon"/>
-        <Separator Classes="formsubtitle"/>
         <ContentControl Content="{Binding IconType}"/>
         <ContentControl Content="{Binding IconSize}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:ML__}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding Enabled}"/>
+        <Expander Header="Color" IsVisible="{Binding Enabled.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding AmbientColor}"/>
+            <ContentControl Content="{Binding DiffuseColor}"/>
+            <ContentControl Content="{Binding SpecularColor}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Direction (Degrees)" IsVisible="{Binding Enabled.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding AzimuthDegrees}"/>
+            <ContentControl Content="{Binding ElevationDegrees}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 
@@ -569,11 +560,111 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <TextBlock Classes="formsubtitle" Text="Target Position"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding X}"/>
-        <ContentControl Content="{Binding Y}"/>
-        <ContentControl Content="{Binding Z}"/>
+        <ContentControl Content="{Binding ResetEyes}"/>
+        <ContentControl Content="{Binding MotionType}"/>
+        <ContentControl Content="{Binding SpeedType}"/>
+        <Expander Header="Look-At Motion" IsVisible="{c:Binding 'MotionType.Choice == \'Look-At\''}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EyeMovementEnabled}"/>
+            <ContentControl Content="{Binding HeadMovementEnabled}"/>
+            <ContentControl Content="{Binding TorsoMovementEnabled}"/>
+            <ContentControl Content="{Binding SlowTorsoMovement}" IsVisible="{Binding TorsoMovementEnabled.Value}"/>
+            <ContentControl Content="{Binding TargetType}"/>
+            <Expander Header="Target Coordinates" IsVisible="{c:Binding 'TargetType.Choice == \'Coordinates\''}">
+              <StackPanel Classes="form">
+                <ContentControl Content="{Binding X}"/>
+                <ContentControl Content="{Binding Y}"/>
+                <ContentControl Content="{Binding Z}"/>
+              </StackPanel>
+            </Expander>
+            <Expander Header="Target Model" IsVisible="{c:Binding 'TargetType.Choice == \'Model\''}">
+              <StackPanel Classes="form">
+                <ContentControl Content="{Binding TargetModelID}"/>
+                <ContentControl Content="{Binding TargetHelperID}"/>
+              </StackPanel>
+            </Expander>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkBool}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MLd_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MLw_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding EnableUpperBodyRotation}"/>
+        <Expander Header="Limit Angles (Degrees)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding TopLimitDegrees}"/>
+            <ContentControl Content="{Binding BottomLimitDegrees}"/>
+            <ContentControl Content="{Binding LeftLimitDegrees}"/>
+            <ContentControl Content="{Binding RightLimitDegrees}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Update Interval">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UpdateIntervalMinimumFrames}"/>
+            <ContentControl Content="{Binding UpdateIntervalRandomFrames}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MMD_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <Expander Header="Movement">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding DisableOrientationChange}"/>
+            <ContentControl Content="{Binding MovementLoopBool}"/>
+            <ContentControl Content="{Binding InterpolationType}"/>
+            <ContentControl Content="{Binding StartSpeedType}"/>
+            <ContentControl Content="{Binding FinalSpeedType}"/>
+            <ContentControl Content="{Binding MovementSpeed}"/>
+            <ContentControl Content="{Binding NumControlGroups}"/>
+            <ItemsControl ItemsSource="{Binding Targets}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Classes="form" IsVisible="{Binding IsActive}" Margin="0 10 0 0">
+                    <Expander Header="{Binding Name}">
+                      <StackPanel Classes="form">
+                        <ContentControl Content="{Binding X}"/>
+                        <ContentControl Content="{Binding Y}"/>
+                        <ContentControl Content="{Binding Z}"/>
+                      </StackPanel>
+                    </Expander>
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Expander>
+        <ContentControl Content="{Binding MovingAnimation}"/>
+        <ContentControl Content="{Binding WaitingAnimation}"/>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Unk}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 
@@ -583,7 +674,8 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <ContentControl Content="{Binding Action}"/>
+        <ContentControl Content="{Binding Display}"/>
+        <ContentControl Content="{Binding Scene}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -593,23 +685,35 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <ContentControl Content="{Binding FrameDelay}"/>
-        <ContentControl Content="{Binding FrameDuration}"/>
-        <TextBlock Classes="formsubtitle" Text="Rotation (in degrees)"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding X}"/>
-        <ContentControl Content="{Binding Y}"/>
-        <ContentControl Content="{Binding Z}"/>
-        <TextBlock Classes="formsubtitle" Text="Animation #1"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding Animation1ID}"/>
-        <ContentControl Content="{Binding Animation1Speed}"/>
-        <ContentControl Content="{Binding Animation1Loop}"/>
-        <TextBlock Classes="formsubtitle" Text="Animation #2"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding Animation2ID}"/>
-        <ContentControl Content="{Binding Animation2Speed}"/>
-        <ContentControl Content="{Binding Animation2Loop}"/>
+        <Expander Header="Rotation (Degrees)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding InterpolationType}"/>
+            <ContentControl Content="{Binding YawEnabled}"/>
+            <ContentControl Content="{Binding YawDegrees}" IsVisible="{Binding YawEnabled.Value}"/>
+            <ContentControl Content="{Binding PitchEnabled}"/>
+            <ContentControl Content="{Binding PitchDegrees}" IsVisible="{Binding PitchEnabled.Value}"/>
+            <ContentControl Content="{Binding RollEnabled}"/>
+            <ContentControl Content="{Binding RollDegrees}" IsVisible="{Binding RollEnabled.Value}"/>
+            <ContentControl Content="{Binding CustomRotationAnimationsEnabled}"/>
+          </StackPanel>
+        </Expander>
+        <ContentControl Content="{Binding RotatingAnimation}" IsVisible="{Binding CustomRotationAnimationsEnabled.Value}"/>
+        <ContentControl Content="{Binding WaitingAnimation}" IsVisible="{Binding CustomRotationAnimationsEnabled.Value}"/>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Unk}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MScl}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding Scale}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -620,21 +724,7 @@
         <ContentControl Content="{Binding Basics}"/>
         <StackPanel Classes="preview">
           <ContentControl Content="{Binding AssetID}"/>
-          <Button Classes="preview">
-            <Button.Flyout>
-              <Flyout Opening="LoadModelInScene" Closed="ClearScene">
-                <StackPanel>
-                  <Button Classes="popupclose" Click="CloseMe">
-                    <PathIcon Data="{StaticResource dismiss_regular}" />
-                  </Button>
-                  <TextBlock Classes="formtitle" Text="Model Preview"/>
-                  <Separator Classes="formtitle"/>
-                  <views:GFDRenderingPanel DataContext="{Binding ModelPreviewVM}" Width="800" Height="600"/>
-                </StackPanel>
-              </Flyout>
-            </Button.Flyout>
-            <PathIcon Data="{StaticResource eye_show_regular}" />
-          </Button>
+          <ContentControl Content="{Binding ModelPreviewVM}"/>
         </StackPanel>
         <Expander Header="Position">
           <StackPanel Classes="form">
@@ -643,13 +733,27 @@
             <ContentControl Content="{Binding Z}"/>
           </StackPanel>
         </Expander>
-        <TextBlock Classes="formsubtitle" Text="Animation"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding AnimationID}"/>
-        <ContentControl Content="{Binding AnimationSpeed}"/>
-        <ContentControl Content="{Binding Loop}"/>
-        <ContentControl Content="{Binding StartFrame}"/>
-        <ContentControl Content="{Binding EndFrame}"/>
+        <Expander Header="Rotation (Degrees)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding RotationEnabled}"/>
+            <StackPanel Classes="form" IsVisible="{Binding RotationEnabled.Value}">
+              <ContentControl Content="{Binding YawDegrees}"/>
+              <ContentControl Content="{Binding PitchDegrees}"/>
+              <ContentControl Content="{Binding RollDegrees}"/>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+        <ContentControl Content="{Binding WaitingAnimation}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:MSSs}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding ShoeLayer}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -924,7 +1028,6 @@
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16" PointerPressed="LogPosition">
           <ScrollViewer.ContextMenu>
             <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
-              <!--MenuItem Header="New" Click="NewCommand" /-->
               <MenuItem Header="New" Click="OpenModal" />
               <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).HasCopiedCommand}" />
             </ContextMenu>
@@ -975,6 +1078,12 @@
                       <Button Flyout="{StaticResource CommandFlyout}"
                        HorizontalAlignment="Center"
                        Width="{c:Binding 60 + 85*(Duration-1)}">
+                        <Button.Styles>
+                          <Style Selector="FlyoutPresenter">
+                            <Setter Property="MaxHeight" Value="700"/>
+                            <Setter Property="MaxWidth" Value="900"/>
+                          </Style>
+                        </Button.Styles>
                         <Button.ContextMenu>
                           <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
                             <MenuItem Header="Cut"    Click="CutCommand"    />

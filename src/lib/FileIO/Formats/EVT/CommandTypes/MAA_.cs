@@ -11,25 +11,28 @@ public partial class CommandTypes
     {
         public const int DataSize = 32;
 
-        public Int32 UnkEnum;
-        public Int32 PrimaryAnimationIndex;
-        public Int32 SecondaryAnimationIndex;
-        public float PrimaryAnimationSpeed;
-        public Int32 LoopBool;
-        public float SecondaryAnimationSpeed;
-        public Int32 UnkIndex;
-        public Int32 UnkBitfield;
+        public Int32 TrackNumber;
+
+        public AnimationStruct AddAnimation = new AnimationStruct(loopBool:0, weight:1.0F);
+
+        private UInt32 _bitfield;
+        public Bitfield Flags = new Bitfield(0);
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            rw.RwInt32(ref this.UnkEnum);                   // observed values: 0-7
-            rw.RwInt32(ref this.PrimaryAnimationIndex);
-            rw.RwInt32(ref this.SecondaryAnimationIndex);
-            rw.RwFloat32(ref this.PrimaryAnimationSpeed);
-            rw.RwInt32(ref this.LoopBool);                  // observed values: 0, 1
-            rw.RwFloat32(ref this.SecondaryAnimationSpeed);
-            rw.RwInt32(ref this.UnkIndex);
-            rw.RwInt32(ref this.UnkBitfield);
+            rw.RwInt32(ref this.TrackNumber);
+
+            rw.RwUInt32(ref this.AddAnimation.Index);
+            rw.RwUInt32(ref this.AddAnimation.InterpolatedFrames);
+            rw.RwFloat32(ref this.AddAnimation.Weight);
+            rw.RwUInt32(ref this.AddAnimation.LoopBool);
+            rw.RwFloat32(ref this.AddAnimation.PlaybackSpeed);
+            rw.RwUInt32(ref this.AddAnimation.StartingFrame);
+
+            if (rw.IsParselike())
+                this._bitfield = this.Flags.Compose();
+            rw.RwUInt32(ref this._bitfield);
+            this.Flags = new Bitfield(this._bitfield);
         }
     }
 }

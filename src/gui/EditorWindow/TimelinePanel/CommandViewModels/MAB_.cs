@@ -6,60 +6,74 @@ public class MAB_ : Generic
 {
     public MAB_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
     {
-        this.LongName = "Model: Armature Animation";
+        this.LongName = "Model: Base Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
-        //if (((this.CommandData.AnimationMode >> 1) & 1) == 1)
-        this.PrimaryAnimationID = new IntSelectionField("Animation ID", this.Editable, this.CommandData.PrimaryAnimationIndex, new List<int>{this.CommandData.PrimaryAnimationIndex});
-        //if ((this.CommandData.AnimationMode & 1) != 1)
-        this.SecondaryAnimationID = new IntSelectionField("Animation ID", this.Editable, this.CommandData.SecondaryAnimationIndex, new List<int>{this.CommandData.SecondaryAnimationIndex});
-        this.HasPrimaryAnimation = new BoolChoiceField("Skip to final frame?", this.Editable, ((this.CommandData.AnimationMode >> 1) & 1) != 0);
-        this.HasSecondaryAnimation = new BoolChoiceField("Skip to final frame?", this.Editable, (this.CommandData.AnimationMode & 1) == 0);
-        this.PrimaryAnimationFromSecondaryFile = new BoolChoiceField("From Secondary File?", this.Editable, ((this.CommandData.AnimationMode >> 4) & 1) != 0);
-        this.SecondaryAnimationFromSecondaryFile = new BoolChoiceField("From Secondary File?", this.Editable, ((this.CommandData.AnimationMode >> 5) & 1) != 0);
-        this.PrimaryAnimationSpeed = new NumEntryField("Animation Speed", this.Editable, this.CommandData.PrimaryAnimationSpeed, 0.0, null, 0.1);
-        this.SecondaryAnimationSpeed = new NumEntryField("Animation Speed", this.Editable, this.CommandData.SecondaryAnimationSpeed, 0.0, null, 0.1);
 
-        this.PrimaryAnimPreviewVM = new GFDRenderingPanelViewModel();
-        this.SecondaryAnimPreviewVM = new GFDRenderingPanelViewModel();
-        List<string> assetPaths = config.EventManager.GetAssetPaths(this.Command.ObjectId, config.CpkList, config.VanillaExtractionPath);
-        if (assetPaths.Count > 0)
-        {
-            if (this.HasPrimaryAnimation.Value)
-            {
-                List<string> primaryAnimPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, !this.PrimaryAnimationFromSecondaryFile.Value, false, config.CpkList, config.VanillaExtractionPath);
-                if (primaryAnimPaths.Count > 0)
-                    this.PrimaryAnimPreviewVM.sceneManager.QueuedLoads.Enqueue((assetPaths[0], primaryAnimPaths[0], this.CommandData.PrimaryAnimationIndex, false));
-            }
-            if (this.HasSecondaryAnimation.Value)
-            {
-                List<string> secondaryAnimPaths = config.EventManager.GetAnimPaths(this.Command.ObjectId, !this.SecondaryAnimationFromSecondaryFile.Value, false, config.CpkList, config.VanillaExtractionPath);
-                if (secondaryAnimPaths.Count > 0)
-                    this.SecondaryAnimPreviewVM.sceneManager.QueuedLoads.Enqueue((assetPaths[0], secondaryAnimPaths[0], this.CommandData.SecondaryAnimationIndex, false));
-            }
-        }
+        this.StartWaitingFrames = new NumEntryField("Frame Delay", this.Editable, this.CommandData.StartWaitingFrames, 0, 20, 1);
+
+        // animations
+        this.FirstAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.FirstAnimation, this.CommandData.Flags, $"First Animation", extInd:4);
+        this.SecondAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.SecondAnimation, this.CommandData.Flags, $"Second Animation", enabledInd:0, extInd:5, frameBlendingInd:1, enabledFlip:true);
+
+        // debug
+        this.DebugUnkBool = new BoolChoiceField("Unknown (Debug)", this.Editable, this.CommandData.Flags[30]);
+        this.DebugFrameForward = new BoolChoiceField("Frame Forward", this.Editable, this.CommandData.Flags[31]);
+
+        // unknown
+        this.FirstAnimationUnk = new NumEntryField("Unknown (First Animation)", this.Editable, this.CommandData.FirstAnimationUnkFrames, 0, 100, 1);
+        this.SecondAnimationUnk = new NumEntryField("Unknown (Second Animation)", this.Editable, this.CommandData.SecondAnimationUnkFrames, 0, 100, 1);
+        this.UnkBool1 = new BoolChoiceField("Unknown #1", this.Editable, this.CommandData.Flags[6]);
+        this.UnkBool2 = new BoolChoiceField("Unknown #2", this.Editable, this.CommandData.Flags[7]);
+        this.UnkBool3 = new BoolChoiceField("Unknown #3", this.Editable, this.CommandData.Flags[8]);
+        this.UnkBool4 = new BoolChoiceField("Unknown #4", this.Editable, this.CommandData.Flags[9]);
+        this.UnkBool5 = new BoolChoiceField("Unknown #5", this.Editable, this.CommandData.Flags[10]);
+        this.UnkBool6 = new BoolChoiceField("Unknown #6", this.Editable, this.CommandData.Flags[11]);
+        this.UnkBool7 = new BoolChoiceField("Unknown #7", this.Editable, this.CommandData.Flags[12]);
     }
 
-    public GFDRenderingPanelViewModel PrimaryAnimPreviewVM   { get; set; }
-    public GFDRenderingPanelViewModel SecondaryAnimPreviewVM { get; set; }
+    public IntSelectionField AssetID { get; set; }
 
-    public IntSelectionField AssetID                             { get; set; }
-    public IntSelectionField PrimaryAnimationID                  { get; set; }
-    public IntSelectionField SecondaryAnimationID                { get; set; }
-    public BoolChoiceField   HasSecondaryAnimation               { get; set; }
-    public BoolChoiceField   HasPrimaryAnimation                 { get; set; }
-    public BoolChoiceField   PrimaryAnimationFromSecondaryFile   { get; set; }
-    public BoolChoiceField   SecondaryAnimationFromSecondaryFile { get; set; }
-    public NumEntryField   PrimaryAnimationSpeed               { get; set; }
-    public NumEntryField   SecondaryAnimationSpeed             { get; set; }
+    public NumEntryField StartWaitingFrames { get; set; }
+
+    // animations
+    public AnimationWidget FirstAnimation  { get; set; }
+    public AnimationWidget SecondAnimation { get; set; }
+
+    // debug
+    public BoolChoiceField DebugUnkBool      { get; set; }
+    public BoolChoiceField DebugFrameForward { get; set; }
+
+    // unknown
+    public NumEntryField FirstAnimationUnk  { get; set; }
+    public NumEntryField SecondAnimationUnk { get; set; }
+    public BoolChoiceField UnkBool1 { get; set; }
+    public BoolChoiceField UnkBool2 { get; set; }
+    public BoolChoiceField UnkBool3 { get; set; }
+    public BoolChoiceField UnkBool4 { get; set; }
+    public BoolChoiceField UnkBool5 { get; set; }
+    public BoolChoiceField UnkBool6 { get; set; }
+    public BoolChoiceField UnkBool7 { get; set; }
 
     public new void SaveChanges()
     {
         base.SaveChanges();
-        this.Command.ObjectId                    = this.AssetID.Choice;
-        this.CommandData.PrimaryAnimationIndex   = this.PrimaryAnimationID.Choice;
-        this.CommandData.SecondaryAnimationIndex = this.SecondaryAnimationID.Choice;
-        // TODO: recompose the bitflags... maybe make a helper function for that
-        this.CommandData.PrimaryAnimationSpeed   = (float)this.PrimaryAnimationSpeed.Value;
-        this.CommandData.SecondaryAnimationSpeed = (float)this.SecondaryAnimationSpeed.Value;
+        this.Command.ObjectId = this.AssetID.Choice;
+
+        this.FirstAnimation.SaveChanges();
+        this.CommandData.FirstAnimationUnkFrames = (ushort)this.FirstAnimationUnk.Value;
+        this.SecondAnimation.SaveChanges();
+        this.CommandData.SecondAnimationUnkFrames = (ushort)this.SecondAnimationUnk.Value;
+
+        this.CommandData.Flags[6]  = this.UnkBool1.Value;
+        this.CommandData.Flags[7]  = this.UnkBool2.Value;
+        this.CommandData.Flags[8]  = this.UnkBool3.Value;
+        this.CommandData.Flags[9]  = this.UnkBool4.Value;
+        this.CommandData.Flags[10] = this.UnkBool5.Value;
+        this.CommandData.Flags[11] = this.UnkBool6.Value;
+        this.CommandData.Flags[12] = this.UnkBool7.Value;
+        this.CommandData.Flags[30] = this.DebugUnkBool.Value;
+        this.CommandData.Flags[31] = this.DebugFrameForward.Value;
+
+        this.CommandData.StartWaitingFrames = (uint)this.StartWaitingFrames.Value;
     }
 }

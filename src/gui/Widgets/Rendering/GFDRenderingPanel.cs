@@ -73,13 +73,15 @@ namespace EVTUI.Views
             // Init test data if it exists and has not already been
             // initialised (should be removed when real hooks exist).
             var ctx = getVM();
-            //ctx.InitTestData();
-            ctx.LoadQueuedItems();
+            ctx.ReadyToRender = true;
         }
 
         protected override void OnOpenGlDeinit(GlInterface GL)
         {
-            
+            redrawTimer.Stop();
+            this.avaloniaTkContext = null;
+            var ctx = getVM();
+            ctx.ReadyToRender = false;
         }
 
         protected override unsafe void OnOpenGlRender(GlInterface gl, int framebuffer)
@@ -96,8 +98,6 @@ namespace EVTUI.Views
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
         {
-            // if (change.Property == ...)
-            //     RequestNextFrameRendering();
             base.OnPropertyChanged(change);
         }
     }

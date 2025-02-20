@@ -203,16 +203,6 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
             ViewModel!.PlayCueFromSource((string)page.Source, (int)page.CueID, 1);
     }
 
-    public void LoadModelInScene(object sender, EventArgs e)
-    {
-        //Console.WriteLine("Load!");
-    }
-
-    public void ClearScene(object sender, EventArgs e)
-    {
-        //Console.WriteLine("Clear!");
-    }
-
     public void CloseMe(object sender, RoutedEventArgs e)
     {
         Popup flyout = (Popup)LogicalExtensions.GetLogicalParent(
