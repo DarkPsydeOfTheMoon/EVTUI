@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+
+using Avalonia.Media;
 
 using ReactiveUI;
 
