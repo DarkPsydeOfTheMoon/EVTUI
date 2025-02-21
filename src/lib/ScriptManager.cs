@@ -311,20 +311,21 @@ public class ScriptManager
     {
         // TODO: this is dumb, fix this with the file management PR
         foreach (List<string> pathList in new[] { bmdPaths, bfPaths })
-            for (int i = 0; i < pathList.Count; i++)
-            {
-                string workingPath = null;
-                if (pathList[i].StartsWith(baseDir))
-                    workingPath = Path.Combine(workingDir, this.RemovePrefix(baseDir, pathList[i]));
-                else if (pathList[i].StartsWith(modDir))
-                    workingPath = Path.Combine(workingDir, this.RemovePrefix(modDir, pathList[i]));
-                // copy BFs/BMDs to working dir
-                if (!Directory.Exists(Path.GetDirectoryName(workingPath)))
-                    Directory.CreateDirectory(Path.GetDirectoryName(workingPath));
-                File.Copy(pathList[i], workingPath, true);
-                // make sure those are the ref paths
-                pathList[i] = workingPath;
-            }
+            if (!(pathList is null))
+                for (int i = 0; i < pathList.Count; i++)
+                {
+                    string workingPath = null;
+                    if (pathList[i].StartsWith(baseDir))
+                        workingPath = Path.Combine(workingDir, this.RemovePrefix(baseDir, pathList[i]));
+                    else if (pathList[i].StartsWith(modDir))
+                        workingPath = Path.Combine(workingDir, this.RemovePrefix(modDir, pathList[i]));
+                    // copy BFs/BMDs to working dir
+                    if (!Directory.Exists(Path.GetDirectoryName(workingPath)))
+                        Directory.CreateDirectory(Path.GetDirectoryName(workingPath));
+                    File.Copy(pathList[i], workingPath, true);
+                    // make sure those are the ref paths
+                    pathList[i] = workingPath;
+                }
 
         this.UpdateScripts(bmdPaths, bfPaths, workingDir, gameType);
 
