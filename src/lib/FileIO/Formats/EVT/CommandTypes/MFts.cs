@@ -12,14 +12,20 @@ public partial class CommandTypes
     {
         public const int DataSize = 16;
 
-        public UInt32 Bitfield;
+        private UInt32 _bitfield;
+        public Bitfield Flags = new Bitfield(0);
+
         public float Strength;
 
         public UInt32[] UNUSED_UINT32 = new UInt32[2];
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            rw.RwUInt32(ref this.Bitfield);
+            if (rw.IsParselike())
+                this._bitfield = this.Flags.Compose();
+            rw.RwUInt32(ref this._bitfield);
+            this.Flags = new Bitfield(this._bitfield);
+
             rw.RwFloat32(ref this.Strength);
 
             rw.RwUInt32(ref this.UNUSED_UINT32[0]);

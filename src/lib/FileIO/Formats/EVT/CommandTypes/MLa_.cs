@@ -13,7 +13,10 @@ public partial class CommandTypes
         public const int DataSize = 32;
 
         public UInt16 ResetEyeWhenMoving;
-        public UInt16 Bitfield;
+
+        private UInt16 _bitfield;
+        public Bitfield Flags = new Bitfield(0);
+
         public UInt16 MotionType;
         public UInt16 SpeedType = 2;
         public UInt16 UNUSED;
@@ -25,7 +28,12 @@ public partial class CommandTypes
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
             rw.RwUInt16(ref this.ResetEyeWhenMoving);
-            rw.RwUInt16(ref this.Bitfield);
+
+            if (rw.IsParselike())
+                this._bitfield = (UInt16)this.Flags.Compose();
+            rw.RwUInt16(ref this._bitfield);
+            this.Flags = new Bitfield((UInt32)this._bitfield);
+
             rw.RwUInt16(ref this.MotionType);
             rw.RwUInt16(ref this.SpeedType);
 
