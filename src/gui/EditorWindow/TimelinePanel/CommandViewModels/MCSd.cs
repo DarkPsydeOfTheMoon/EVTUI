@@ -7,22 +7,30 @@ public class MCSd : Generic
         this.LongName = "Model: Shadow Color";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
 
+        // inner circle
+        this.InnerCircleColor = new ColorSelectionField("Color", this.Editable, this.CommandData.InnerCircleRGBA);
+        this.InnerCircleDiameter = new NumEntryField("Diameter", this.Editable, this.CommandData.InnerCircleDiameter, 0, 99, 1);
+
+        // outer circle
+        this.OuterCircleColor = new ColorSelectionField("Color", this.Editable, this.CommandData.OuterCircleRGBA);
+        this.OuterCircleDiameter = new NumEntryField("Diameter", this.Editable, this.CommandData.OuterCircleDiameter, 0, 99, 1);
+
         // unknown :')
-        this.UnkEnum = new NumEntryField("Unknown #1", this.Editable, this.CommandData.UnkEnum, 0, 3, 1);
-        this.UnkColor1 = new ColorSelectionField("Unknown #2", this.Editable, this.CommandData.RGBA1);
-        this.UnkColor2 = new ColorSelectionField("Unknown #3", this.Editable, this.CommandData.RGBA2);
-        this.UnkInd1 = new NumEntryField("Unknown #4", this.Editable, this.CommandData.UnkInd1, 0, 99, 1);
-        this.UnkInd2 = new NumEntryField("Unknown #5", this.Editable, this.CommandData.UnkInd2, 0, 99, 1);
+        this.UnkEnum = new NumEntryField("Unknown", this.Editable, this.CommandData.UnkEnum, 0, 3, 1);
     }
 
     public IntSelectionField AssetID { get; set; }
 
+    // inner circle
+    public ColorSelectionField InnerCircleColor    { get; set; }
+    public NumEntryField       InnerCircleDiameter { get; set; }
+
+    // outer circle
+    public ColorSelectionField OuterCircleColor    { get; set; }
+    public NumEntryField       OuterCircleDiameter { get; set; }
+
     // unknown :')
     public NumEntryField       UnkEnum   { get; set; }
-    public ColorSelectionField UnkColor1 { get; set; }
-    public ColorSelectionField UnkColor2 { get; set; }
-    public NumEntryField       UnkInd1   { get; set; }
-    public NumEntryField       UnkInd2   { get; set; }
 
     public new void SaveChanges()
     {
@@ -31,17 +39,10 @@ public class MCSd : Generic
 
         this.CommandData.UnkEnum = (uint)this.UnkEnum.Value;
 
-        this.CommandData.RGBA1[0] = this.UnkColor1.SelectedColor.R;
-        this.CommandData.RGBA1[1] = this.UnkColor1.SelectedColor.G;
-        this.CommandData.RGBA1[2] = this.UnkColor1.SelectedColor.B;
-        this.CommandData.RGBA1[3] = this.UnkColor1.SelectedColor.A;
+        this.CommandData.InnerCircleRGBA = this.InnerCircleColor.ToUInt32();
+        this.CommandData.OuterCircleRGBA = this.OuterCircleColor.ToUInt32();
 
-        this.CommandData.RGBA2[0] = this.UnkColor2.SelectedColor.R;
-        this.CommandData.RGBA2[1] = this.UnkColor2.SelectedColor.G;
-        this.CommandData.RGBA2[2] = this.UnkColor2.SelectedColor.B;
-        this.CommandData.RGBA2[3] = this.UnkColor2.SelectedColor.A;
-
-        this.CommandData.UnkInd1 = (ushort)this.UnkInd1.Value;
-        this.CommandData.UnkInd2 = (ushort)this.UnkInd2.Value;
+        this.CommandData.InnerCircleDiameter = (ushort)this.InnerCircleDiameter.Value;
+        this.CommandData.OuterCircleDiameter = (ushort)this.OuterCircleDiameter.Value;
     }
 }

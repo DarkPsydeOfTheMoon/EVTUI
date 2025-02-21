@@ -463,11 +463,23 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <ContentControl Content="{Binding UnkEnum}"/>
-        <ContentControl Content="{Binding UnkColor1}"/>
-        <ContentControl Content="{Binding UnkColor2}"/>
-        <ContentControl Content="{Binding UnkInd1}"/>
-        <ContentControl Content="{Binding UnkInd2}"/>
+        <Expander Header="Inner Circle">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding InnerCircleColor}"/>
+            <ContentControl Content="{Binding InnerCircleDiameter}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Outer Circle">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding OuterCircleColor}"/>
+            <ContentControl Content="{Binding OuterCircleDiameter}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkEnum}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 

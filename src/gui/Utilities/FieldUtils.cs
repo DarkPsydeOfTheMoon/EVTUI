@@ -32,7 +32,9 @@ public static class FieldUtils
             return Enum.Parse(_enum.GetType(), name);
     }*/
 
-    public static bool BitToBool(uint field, int pos)
+    // also deprecated because i moved bitfield stuff into the view and not the viewmodel......
+    // well.... i will still leave this here for a bit just in case
+    /*public static bool BitToBool(uint field, int pos)
     {
         return (((field >> pos) & 1) != 0);
     }
@@ -47,7 +49,7 @@ public static class FieldUtils
     public static int BoolToBit(bool val, int pos)
     {
         return Convert.ToInt32(val) << pos;
-    }
+    }*/
 
 }
 

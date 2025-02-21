@@ -15,9 +15,9 @@ public partial class CommandTypes
         public UInt32 Enable;
         public UInt32 UNK = 4354;
 
-        public byte[] AmbientRGBA = new byte[] {191, 191, 191, 255};
-        public byte[] DiffuseRGBA = new byte[] {229, 229, 229, 255};
-        public byte[] SpecularRGBA = new byte[] {255, 255, 255, 255};
+        public UInt32 AmbientRGBA = 0xBFBFBFFF;
+        public UInt32 DiffuseRGBA = 0xE5E5E5FF;
+        public UInt32 SpecularRGBA = 0xFFFFFFFF;
 
         public float[] Direction = new float[] {0.0F, 0.5299989581108093F, 0.847998321056366F};
 
@@ -33,9 +33,9 @@ public partial class CommandTypes
             rw.RwUInt32(ref this.UNUSED_UINT32[0]);
             rw.RwUInt32(ref this.UNUSED_UINT32[1]);
 
-            rw.RwUInt8s(ref this.AmbientRGBA, 4);
-            rw.RwUInt8s(ref this.DiffuseRGBA, 4);
-            rw.RwUInt8s(ref this.SpecularRGBA, 4);
+            rw.RwUInt32(ref this.AmbientRGBA);
+            rw.RwUInt32(ref this.DiffuseRGBA);
+            rw.RwUInt32(ref this.SpecularRGBA);
 
             rw.RwFloat32s(ref this.Direction, 3);
 

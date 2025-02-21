@@ -18,10 +18,10 @@ public class MLa_ : Generic
         this.SpeedType = new StringSelectionField("Speed Type", this.Editable, this.SpeedTypes.Backward[this.CommandData.SpeedType], this.SpeedTypes.Keys);
 
         // lookat basics
-        this.EyeMovementEnabled = new BoolChoiceField("Enable Eye Movement?", this.Editable, BitToBool(this.CommandData.Bitfield, 0));
-        this.HeadMovementEnabled = new BoolChoiceField("Enable Head Movement?", this.Editable, BitToBool(this.CommandData.Bitfield, 1));
-        this.TorsoMovementEnabled = new BoolChoiceField("Enable Torso Movement?", this.Editable, BitToBool(this.CommandData.Bitfield, 2));
-        this.SlowTorsoMovement = new BoolChoiceField("Slow Torso Movement?", this.Editable, BitToBool(this.CommandData.Bitfield, 5));
+        this.EyeMovementEnabled = new BoolChoiceField("Enable Eye Movement?", this.Editable, this.CommandData.Flags[0]);
+        this.HeadMovementEnabled = new BoolChoiceField("Enable Head Movement?", this.Editable, this.CommandData.Flags[1]);
+        this.TorsoMovementEnabled = new BoolChoiceField("Enable Torso Movement?", this.Editable, this.CommandData.Flags[2]);
+        this.SlowTorsoMovement = new BoolChoiceField("Slow Torso Movement?", this.Editable, this.CommandData.Flags[5]);
         this.TargetType = new StringSelectionField("Target Type", this.Editable, this.TargetTypes.Backward[this.CommandData.TargetType], this.TargetTypes.Keys);
 
         // coordinate lookat
@@ -34,7 +34,7 @@ public class MLa_ : Generic
         this.TargetHelperID = new NumEntryField("Target Helper ID", this.Editable, this.CommandData.TargetHelperID, 0, 9999, 1);
 
         // unknown
-        this.UnkBool = new BoolChoiceField("Unknown Bool", this.Editable, BitToBool(this.CommandData.Bitfield, 6));
+        this.UnkBool = new BoolChoiceField("Unknown Bool", this.Editable, this.CommandData.Flags[6]);
     }
 
     public IntSelectionField AssetID   { get; set; }
@@ -70,12 +70,11 @@ public class MLa_ : Generic
 
         this.CommandData.ResetEyeWhenMoving = Convert.ToUInt16(this.ResetEyes.Value);
 
-        this.CommandData.Bitfield = 0;
-        this.CommandData.Bitfield |= BoolToBit(this.EyeMovementEnabled.Value,   0);
-        this.CommandData.Bitfield |= BoolToBit(this.HeadMovementEnabled.Value,  1);
-        this.CommandData.Bitfield |= BoolToBit(this.TorsoMovementEnabled.Value, 2);
-        this.CommandData.Bitfield |= BoolToBit(this.SlowTorsoMovement.Value,    5);
-        this.CommandData.Bitfield |= BoolToBit(this.UnkBool.Value,              6);
+        this.CommandData.Flags[0] = this.EyeMovementEnabled.Value;
+        this.CommandData.Flags[1] = this.HeadMovementEnabled.Value;
+        this.CommandData.Flags[2] = this.TorsoMovementEnabled.Value;
+        this.CommandData.Flags[5] = this.SlowTorsoMovement.Value;
+        this.CommandData.Flags[6] = this.UnkBool.Value;
 
         this.CommandData.MotionType = this.MotionTypes.Forward[this.MotionType.Choice];
         this.CommandData.SpeedType  = this.SpeedTypes.Forward[this.SpeedType.Choice];
@@ -92,11 +91,11 @@ public class MLa_ : Generic
     (
         new Dictionary<string, ushort>
         {
-            {"Look-At", 0},
-            {"Reset",   1},
-            {"Nodding", 2},
-            {"Shaking", 3},
-            {"UNKNOWN", 4},
+            {"Look-At",     0},
+            {"Reset",       1},
+            {"Nodding",     2},
+            {"Shaking",     3},
+            {"Look-Around", 4},
         }
     );
 
@@ -105,9 +104,9 @@ public class MLa_ : Generic
         new Dictionary<string, ushort>
         {
             {"Direct", 0},
-            {"Slow",   1},
-            {"Middle", 2},
             {"Fast",   3},
+            {"Middle", 2},
+            {"Slow",   1},
         }
     );
 

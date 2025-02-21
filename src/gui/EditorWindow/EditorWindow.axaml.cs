@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 
@@ -26,6 +27,10 @@ public partial class EditorWindow : Window
         {
             ((EditorWindowViewModel)DataContext).SaveMod(((MenuItem)sender).Name);
             await Utils.RaiseModal(this, "Saved successfully!");
+        }
+        catch (IOException)
+        {
+            await Utils.RaiseModal(this, "Failed to save because the game files are in use.\nIf the game is currently open, close it before trying again.");
         }
         catch (Exception ex)
         {
