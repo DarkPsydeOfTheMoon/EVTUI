@@ -27,17 +27,21 @@ public class NumEntryField : FieldBase
 {
     public NumEntryField(string name, bool editable, dynamic val, dynamic? lowerLimit, dynamic? upperLimit, dynamic increment) : base(name, editable)
     {
-        _value          = (decimal)val;
+        _value          = (decimal?)val;
         this.LowerLimit = (decimal?)lowerLimit;
         this.UpperLimit = (decimal?)upperLimit;
         this.Increment  = (decimal)increment;
     }
 
-    private decimal _value;
-    public decimal Value
+    private decimal? _value;
+    public decimal? Value
     {
         get => _value;
-        set => this.RaiseAndSetIfChanged(ref _value, value);
+        set
+        {
+            if (!(value is null))
+                this.RaiseAndSetIfChanged(ref _value, value);
+        }
     }
 
     private decimal? _lowerLimit;
@@ -87,20 +91,21 @@ public class NumRangeField : FieldBase
 {
     public NumRangeField(string name, bool editable, dynamic val, dynamic lowerLimit, dynamic upperLimit, dynamic? increment) : base(name, editable)
     {
-        _value          = (decimal)val;
+        _value          = (decimal?)val;
         this.LowerLimit = (decimal)lowerLimit;
         this.UpperLimit = (decimal)upperLimit;
         this.Increment  = (decimal?)increment;
     }
 
-    private decimal _value;
-    public decimal Value
+    private decimal? _value;
+    public decimal? Value
     {
         get => _value;
         set
         {
-            this.RaiseAndSetIfChanged(ref _value, value);
-            OnPropertyChanged(nameof(Value));
+            if (!(value is null))
+                this.RaiseAndSetIfChanged(ref _value, value);
+                OnPropertyChanged(nameof(Value));
         }
     }
 
