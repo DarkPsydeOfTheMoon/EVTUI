@@ -26,13 +26,13 @@ public class EVT : ISerializable
     public Int32 FileSize;
     public Int32 FileHeaderSize;
     public UInt32 Flags;
-    public Int32 TotalFrame;
-    public byte FrameRate;
+    public Int32 FrameCount;
+    public byte FrameRate = 30;
     public byte InitScriptIndex;
-    public Int16 StartFrame;
-    public Int16 LetterBoxInFrame;
+    public Int16 StartingFrame;
+    public Int16 CinemascopeStartingFrame;
     public Int32 InitEnvAssetID;
-    public Int32 InitEnvAssetIDDbg;
+    public Int32 InitDebugEnvAssetID;
     public Int32 ObjectCount;
     public Int32 ObjectOffset;
     public Int32 ObjectSize;
@@ -80,15 +80,15 @@ public class EVT : ISerializable
         rw.RwInt32(ref this.FileSize);
         rw.RwInt32(ref this.FileHeaderSize);
         rw.RwUInt32(ref this.Flags);
-        rw.RwInt32(ref this.TotalFrame);
+        rw.RwInt32(ref this.FrameCount);
         rw.RwUInt8(ref this.FrameRate);
         rw.RwUInt8(ref this.InitScriptIndex);
-        rw.RwInt16(ref this.StartFrame);
-        rw.RwInt16(ref this.LetterBoxInFrame);
+        rw.RwInt16(ref this.StartingFrame);
+        rw.RwInt16(ref this.CinemascopeStartingFrame);
         rw.RwInt16(ref this.DUMMY_INT16[1]);
         Trace.Assert(this.DUMMY_INT16[1] == 0);
         rw.RwInt32(ref this.InitEnvAssetID);
-        rw.RwInt32(ref this.InitEnvAssetIDDbg);
+        rw.RwInt32(ref this.InitDebugEnvAssetID);
 
         rw.RwInt32(ref this.ObjectCount);
         rw.RwInt32(ref this.ObjectOffset);
@@ -270,7 +270,7 @@ public class SerialObject : ISerializable
     public Int32  BaseMotionNo     = -1;
     public Int32  ExtBaseMotionNo  = -1;
     public Int32  ExtAddMotionNo   = -1;
-    public Int32  Reserve28;
+    public Int32  UnkBool;
     public Int32  Reserve2C;
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
@@ -286,9 +286,8 @@ public class SerialObject : ISerializable
         rw.RwInt32(ref this.BaseMotionNo);
         rw.RwInt32(ref this.ExtBaseMotionNo);
         rw.RwInt32(ref this.ExtAddMotionNo);
+        rw.RwInt32(ref this.UnkBool);
 
-        rw.RwInt32(ref this.Reserve28);
-        Trace.Assert(this.Reserve28 == 0);
         rw.RwInt32(ref this.Reserve2C);
         Trace.Assert(this.Reserve2C == 0);
     }
