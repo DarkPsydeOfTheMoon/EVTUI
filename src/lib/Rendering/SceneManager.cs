@@ -73,9 +73,19 @@ public class SceneModel
 
     public void ResetAnimTimer() { this.animationStopwatch.Restart(); }
 
-    public void LoadAnimation(Animation animation) { this.model.LoadAnimation(animation); }
+    public void LoadAnimation(Animation animation)
+    {
+        // can maybe get rid of this check once asset management is more robust
+        if (!(this.model is null))
+            this.model.LoadAnimation(animation);
+    }
 
-    public void UnloadAnimation() { this.model.UnloadAnimation(); }
+    public void UnloadAnimation()
+    {
+        // can maybe get rid of this check once asset management is more robust
+        if (!(this.model is null))
+            this.model.UnloadAnimation();
+    }
 
     public void Draw(GLShaderProgram shaderProgram, GLCamera camera, double animationTime)
     {
@@ -343,28 +353,43 @@ public class SceneManager
     public void ActivateAnimationOnModel(int model_index, int gap_index, int animation_index)
     {
         var animation = this.externalGAPs[gap_index].Animations[animation_index];
-        this.sceneModels[model_index].LoadAnimation(animation);
+        if (this.sceneModels.ContainsKey(model_index))
+            this.sceneModels[model_index].LoadAnimation(animation);
+        else
+            Trace.TraceWarning($"Tried to load animation for asset #{model_index}, which hasn't been loaded.");
     }
 
     public void ActivateBlendAnimationOnModel(int model_index, int gap_index, int animation_index)
     {
         var animation = this.externalGAPs[gap_index].BlendAnimations[animation_index];
-        this.sceneModels[model_index].LoadAnimation(animation);
+        if (this.sceneModels.ContainsKey(model_index))
+            this.sceneModels[model_index].LoadAnimation(animation);
+        else
+            Trace.TraceWarning($"Tried to load animation for asset #{model_index}, which hasn't been loaded.");
     }
 
     public void DeactivateModelAnimations(int model_index)
     {
-        this.sceneModels[model_index].UnloadAnimation();
+        if (this.sceneModels.ContainsKey(model_index))
+            this.sceneModels[model_index].UnloadAnimation();
+        else
+            Trace.TraceWarning($"Tried to unload animations for asset #{model_index}, which hasn't been loaded.");
     }
 
     public void LoadBaseAnimation(int model_index, bool isExt, int idx)
     {
-        this.sceneModels[model_index].LoadBaseAnimation(isExt, idx);
+        if (this.sceneModels.ContainsKey(model_index))
+            this.sceneModels[model_index].LoadBaseAnimation(isExt, idx);
+        else
+            Trace.TraceWarning($"Tried to load animation for asset #{model_index}, which hasn't been loaded.");
     }
 
     public void LoadAddAnimationTrack(int model_index, bool isExt, int idx, int track)
     {
-        this.sceneModels[model_index].LoadAddAnimationTrack(isExt, idx, track);
+        if (this.sceneModels.ContainsKey(model_index))
+            this.sceneModels[model_index].LoadAddAnimationTrack(isExt, idx, track);
+        else
+            Trace.TraceWarning($"Tried to load animation for asset #{model_index}, which hasn't been loaded.");
     }
 
     /////////////////////////////////////

@@ -74,20 +74,9 @@ public class ML__ : Generic
 
         this.CommandData.Enable = Convert.ToUInt32(this.Enabled.Value);
 
-        this.CommandData.AmbientRGBA[0] = this.AmbientColor.SelectedColor.R;
-        this.CommandData.AmbientRGBA[1] = this.AmbientColor.SelectedColor.G;
-        this.CommandData.AmbientRGBA[2] = this.AmbientColor.SelectedColor.B;
-        this.CommandData.AmbientRGBA[3] = this.AmbientColor.SelectedColor.A;
-
-        this.CommandData.DiffuseRGBA[0] = this.DiffuseColor.SelectedColor.R;
-        this.CommandData.DiffuseRGBA[1] = this.DiffuseColor.SelectedColor.G;
-        this.CommandData.DiffuseRGBA[2] = this.DiffuseColor.SelectedColor.B;
-        this.CommandData.DiffuseRGBA[3] = this.DiffuseColor.SelectedColor.A;
-
-        this.CommandData.SpecularRGBA[0] = this.SpecularColor.SelectedColor.R;
-        this.CommandData.SpecularRGBA[1] = this.SpecularColor.SelectedColor.G;
-        this.CommandData.SpecularRGBA[2] = this.SpecularColor.SelectedColor.B;
-        this.CommandData.SpecularRGBA[3] = this.SpecularColor.SelectedColor.A;
+        this.CommandData.AmbientRGBA = this.AmbientColor.ToUInt32();
+        this.CommandData.DiffuseRGBA = this.DiffuseColor.ToUInt32();
+        this.CommandData.SpecularRGBA = this.SpecularColor.ToUInt32();
 
         //this.CommandData.Direction[0] = (float)this.LeftToRight.Value;
         //this.CommandData.Direction[1] = (float)this.BottomToTop.Value;

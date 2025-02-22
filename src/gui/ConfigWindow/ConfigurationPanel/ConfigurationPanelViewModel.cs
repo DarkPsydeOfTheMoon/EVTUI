@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 
 using ReactiveUI;
@@ -443,6 +444,10 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 return (1, "Must have a loaded project or be in read-only mode to load an event.");
             else if (!this.Config.EventLoaded)
                 return (1, $"Event E{this.EventMajorId:000}_{this.EventMinorId:000} does not exist and could not be loaded.");
+        }
+        catch (IOException)
+        {
+            return (1, "Failed to save because the game files are in use.\nIf the game is currently open, close it before trying again.");
         }
         catch (Exception ex)
         {
