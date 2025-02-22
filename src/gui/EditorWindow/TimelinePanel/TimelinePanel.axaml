@@ -463,13 +463,14 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <Expander Header="Inner Circle">
+        <ContentControl Content="{Binding Enabled}"/>
+        <Expander Header="Inner Circle" IsVisible="{Binding Enabled.Value}">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding InnerCircleColor}"/>
             <ContentControl Content="{Binding InnerCircleDiameter}"/>
           </StackPanel>
         </Expander>
-        <Expander Header="Outer Circle">
+        <Expander Header="Outer Circle" IsVisible="{Binding Enabled.Value}">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding OuterCircleColor}"/>
             <ContentControl Content="{Binding OuterCircleDiameter}"/>
@@ -477,7 +478,7 @@
         </Expander>
         <Expander Header="Unknown">
           <StackPanel Classes="form">
-            <ContentControl Content="{Binding UnkEnum}"/>
+            <ContentControl Content="{Binding UnkBool}"/>
           </StackPanel>
         </Expander>
       </StackPanel>
