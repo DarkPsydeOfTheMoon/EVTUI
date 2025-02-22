@@ -26,17 +26,21 @@ public class NumEntryField : FieldBase
 {
     public NumEntryField(string name, bool editable, dynamic val, dynamic? lowerLimit, dynamic? upperLimit, dynamic increment) : base(name, editable)
     {
-        _value          = (decimal)val;
+        _value          = (decimal?)val;
         this.LowerLimit = (decimal?)lowerLimit;
         this.UpperLimit = (decimal?)upperLimit;
         this.Increment  = (decimal)increment;
     }
 
-    private decimal _value;
-    public decimal Value
+    private decimal? _value;
+    public decimal? Value
     {
         get => _value;
-        set => this.RaiseAndSetIfChanged(ref _value, value);
+        set
+        {
+            if (!(value is null))
+                this.RaiseAndSetIfChanged(ref _value, value);
+        }
     }
 
     private decimal? _lowerLimit;
@@ -86,20 +90,21 @@ public class NumRangeField : FieldBase
 {
     public NumRangeField(string name, bool editable, dynamic val, dynamic lowerLimit, dynamic upperLimit, dynamic? increment) : base(name, editable)
     {
-        _value          = (decimal)val;
+        _value          = (decimal?)val;
         this.LowerLimit = (decimal)lowerLimit;
         this.UpperLimit = (decimal)upperLimit;
         this.Increment  = (decimal?)increment;
     }
 
-    private decimal _value;
-    public decimal Value
+    private decimal? _value;
+    public decimal? Value
     {
         get => _value;
         set
         {
-            this.RaiseAndSetIfChanged(ref _value, value);
-            OnPropertyChanged(nameof(Value));
+            if (!(value is null))
+                this.RaiseAndSetIfChanged(ref _value, value);
+                OnPropertyChanged(nameof(Value));
         }
     }
 
@@ -184,9 +189,24 @@ public class BoolChoiceField : FieldBase
 
 public class ColorSelectionField : FieldBase
 {
-    public ColorSelectionField(string name, bool editable, byte[] rgba) : base(name, editable)
+    public ColorSelectionField(string name, bool editable, UInt32 rgba) : base(name, editable)
     {
-        _selectedColor = new Color(rgba[3], rgba[0], rgba[1], rgba[2]);
+        _selectedColor = new Color(
+            (byte)(rgba & 0xFF),
+            (byte)((rgba >> 24) & 0xFF),
+            (byte)((rgba >> 16) & 0xFF),
+            (byte)((rgba >> 8) & 0xFF)
+        );
+    }
+
+    public UInt32 ToUInt32()
+    {
+        UInt32 ret = 0;
+        ret |= (uint)_selectedColor.R << 24;
+        ret |= (uint)_selectedColor.G << 16;
+        ret |= (uint)_selectedColor.B << 8;
+        ret |= (uint)_selectedColor.A;
+        return ret;
     }
 
     private Color _selectedColor;
