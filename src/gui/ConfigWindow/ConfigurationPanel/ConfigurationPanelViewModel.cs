@@ -447,7 +447,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
         }
         catch (IOException)
         {
-            return (1, "Failed to save because the game files are in use.\nIf the game is currently open, close it before trying again.");
+            return (1, "Failed to load event because the game files are in use.\nIf the game is currently open, close it before trying again.");
         }
         catch (Exception ex)
         {
