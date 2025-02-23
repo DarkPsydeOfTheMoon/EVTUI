@@ -21,8 +21,9 @@ public partial class App : Application
             // TODO: if dataManager.ProjectManager.UserData is null...
             // ...then the formatting is bad and we should check
             // if the user want to start fresh or exit the program
-            DataManager         dataManager     = new DataManager();
-            MainWindowViewModel mainWindowVM    = new MainWindowViewModel(dataManager);
+            //DataManager         dataManager     = new DataManager();
+            //MainWindowViewModel mainWindowVM    = new MainWindowViewModel(dataManager);
+            MainWindowViewModel mainWindowVM    = new MainWindowViewModel();
             MainWindow          mainWindow      = new MainWindow { DataContext = mainWindowVM };
 
             desktop.MainWindow = (Window)mainWindow;

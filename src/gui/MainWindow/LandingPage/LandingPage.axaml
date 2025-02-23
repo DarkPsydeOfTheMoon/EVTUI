@@ -24,7 +24,7 @@
     </Style>
   </UserControl.Styles>
 
-  <StackPanel Background="Black">
+  <StackPanel Background="Black" PointerPressed="StartDragLauncher" PointerMoved="DragLauncher" PointerReleased="StopDragLauncher">
     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
       <Panel Classes="config" PointerReleased="NewProjectClicked">
         <PathIcon Data="{StaticResource folder_add_regular}" ToolTip.Tip="Create New Project"/>

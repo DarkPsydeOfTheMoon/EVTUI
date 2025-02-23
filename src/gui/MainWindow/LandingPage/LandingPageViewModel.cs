@@ -8,14 +8,15 @@ public class LandingPageViewModel : ViewModelBase
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public DataManager Config;
+    //public DataManager Config;
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public LandingPageViewModel(DataManager dataManager)
+    //public LandingPageViewModel(DataManager dataManager)
+    public LandingPageViewModel()
     {
-        this.Config = dataManager;
+        //this.Config = dataManager;
     }
 
 }

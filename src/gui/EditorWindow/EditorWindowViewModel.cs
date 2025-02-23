@@ -26,10 +26,10 @@ public class EditorWindowViewModel : ViewModelBase
         this.scriptPanelVM   = new ScriptPanelViewModel(this.Config);
     }
 
-    public void ClearCache()
+    /*public void ClearCache()
     {
         this.Config.ClearCache();
-    }
+    }*/
 
     public void SaveMod(string which)
     {
