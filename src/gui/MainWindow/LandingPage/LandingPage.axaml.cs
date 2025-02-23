@@ -66,24 +66,18 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
         int? res = await ((Window)configWindowView).ShowDialog<int?>(this.topLevel);
         if (res is null)
         {
-            config.Reset();
+            //config.Reset();
             return 1;
         }
 
         (string GamePath, string? ModPath, int MajorId, int MinorId) newOpenThing = (config.ProjectManager.ActiveGame.Path, config.ModPath, config.ProjectManager.ActiveEvent.MajorId, config.ProjectManager.ActiveEvent.MinorId);
-        Console.WriteLine("##########");
-        Console.WriteLine(newOpenThing.GamePath);
-        Console.WriteLine(config.ProjectManager.ActiveGame.Path);
-        Console.WriteLine(newOpenThing.MajorId);
-        Console.WriteLine(newOpenThing.MinorId);
-        Console.WriteLine("##########");
         if (this.openStuff.Contains(newOpenThing))
         {
             if (configtype == "read-only")
                 await Utils.RaiseModal(this.topLevel, $"{config.ActiveEventId} is already open for this copy of {config.ProjectManager.ActiveGame.Type}.");
             else
                 await Utils.RaiseModal(this.topLevel, $"{config.ActiveEventId} is already open for project \"{config.ProjectManager.ActiveProject.Name}.\"");
-            config.Reset();
+            //config.Reset();
             return 1;
         }
 
@@ -118,7 +112,10 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
     private void CloseAll(object? sender, CancelEventArgs e)
     {
         foreach (EditorWindow window in this.editorWindows.Keys)
+        {
             window.Close();
+            ((EditorWindowViewModel)(window.DataContext)).Config.Reset();
+        }
         this.openStuff.Clear();
         this.editorWindows.Clear();
     }
@@ -130,7 +127,7 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
         this.openStuff.Remove(thingToClose);
         this.editorWindows.Remove((EditorWindow)sender);
         if (this.editorWindows.Count == 0)
-            ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Config.ClearCache();
+            ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Config.Reset();
     }
 
     private async void NewProjectClicked(object? sender, PointerReleasedEventArgs e)
