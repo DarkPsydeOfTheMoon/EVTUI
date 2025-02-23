@@ -266,7 +266,10 @@ public class SerialObject : ISerializable
     public Int32  ResourceMajorId;
     public Int16  ResourceSubId;
     public Int16  ResourceMinorId;
-    public UInt32 Flags;
+
+    private UInt32 _bitfield;
+    public Bitfield Flags = new Bitfield(0);
+
     public Int32  BaseMotionNo     = -1;
     public Int32  ExtBaseMotionNo  = -1;
     public Int32  ExtAddMotionNo   = -1;
@@ -282,7 +285,12 @@ public class SerialObject : ISerializable
         rw.RwInt32(ref this.ResourceMajorId);
         rw.RwInt16(ref this.ResourceSubId);
         rw.RwInt16(ref this.ResourceMinorId);
-        rw.RwUInt32(ref this.Flags);
+
+        if (rw.IsParselike())
+            this._bitfield = this.Flags.Compose();
+        rw.RwUInt32(ref this._bitfield);
+        this.Flags = new Bitfield(this._bitfield);
+
         rw.RwInt32(ref this.BaseMotionNo);
         rw.RwInt32(ref this.ExtBaseMotionNo);
         rw.RwInt32(ref this.ExtAddMotionNo);

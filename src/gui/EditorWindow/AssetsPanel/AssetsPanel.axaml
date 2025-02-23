@@ -277,7 +277,7 @@
               <StackPanel DockPanel.Dock="Right" Spacing="5" Margin="5">
                 <Button Classes="action" ToolTip.Tip="Edit">
                   <Button.Flyout>
-                    <Flyout>
+                    <Flyout Closed="SaveChanges">
                       <StackPanel Classes="form">
 
                         <TextBlock Classes="formtitle" Text="Asset"/>

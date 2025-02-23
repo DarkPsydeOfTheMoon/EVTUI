@@ -1,5 +1,9 @@
+using System;
 using System.ComponentModel;
 
+using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
+using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
 
 using EVTUI.ViewModels;
@@ -20,6 +24,16 @@ public partial class AssetsPanel : ReactiveUserControl<AssetsPanelViewModel>, IN
     public AssetsPanel()
     {
         InitializeComponent();
+    }
+
+    public void SaveChanges(object sender, EventArgs e)
+    {
+        Asset asset = (Asset)(((ContentPresenter)LogicalExtensions.GetLogicalParent(
+            (Border)LogicalExtensions.GetLogicalParent(
+                (DockPanel)LogicalExtensions.GetLogicalParent(
+                    (StackPanel)LogicalExtensions.GetLogicalParent(
+                        ((Flyout)sender).Target))))).Content);
+        asset.SaveChanges();
     }
 
 }
