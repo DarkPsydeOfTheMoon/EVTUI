@@ -29,6 +29,8 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
     private Dictionary<EditorWindow, (string GamePath, string? ModPath, int MajorId, int MinorId)> editorWindows;
     private HashSet<(string GamePath, string? ModPath, int MajorId, int MinorId)> openStuff;
 
+    private Clipboard SharedClipboard;
+
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
@@ -46,6 +48,8 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             //this.editorWindows = new List<EditorWindow>();
             this.editorWindows = new Dictionary<EditorWindow, (string GamePath, string? ModPath, int MajorId, int MinorId)>();
             this.openStuff = new HashSet<(string GamePath, string? ModPath, int MajorId, int MinorId)>();
+
+            this.SharedClipboard = new Clipboard();
         });
     }
 
@@ -82,7 +86,7 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
         }
 
         EditorWindowViewModel editorWindowVM   = new EditorWindowViewModel(
-            config);
+            config, this.SharedClipboard);
         EditorWindow          editorWindowView = new EditorWindow
             { DataContext = editorWindowVM };
 
