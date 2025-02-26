@@ -13,11 +13,11 @@ public class MainWindowViewModel : ViewModelBase
     // *** PUBLIC METHODS *** //
     ////////////////////////////
     //public MainWindowViewModel(DataManager dataManager)
-    public MainWindowViewModel()
+    public MainWindowViewModel(User userData)
     {
         //this.Config        = dataManager;
         //this.LandingPageVM = new LandingPageViewModel(this.Config);
-        this.LandingPageVM = new LandingPageViewModel();
+        this.LandingPageVM = new LandingPageViewModel(userData);
     }
 
 }

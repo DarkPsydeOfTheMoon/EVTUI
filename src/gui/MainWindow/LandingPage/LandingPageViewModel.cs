@@ -45,14 +45,16 @@ public class LandingPageViewModel : ViewModelBase
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
     //public DataManager Config;
+    public User UserData;
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
     //public LandingPageViewModel(DataManager dataManager)
-    public LandingPageViewModel()
+    public LandingPageViewModel(User userData)
     {
         //this.Config = dataManager;
+        this.UserData = userData;
     }
 
 }

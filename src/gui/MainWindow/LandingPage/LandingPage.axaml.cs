@@ -58,7 +58,8 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
     public async Task<int> RaiseConfigModal(string configtype)
     {
         //DataManager config = ((LandingPageViewModel)DataContext).Config;
-        DataManager config = new DataManager();
+        User userData = ((LandingPageViewModel)DataContext).UserData;
+        DataManager config = new DataManager(userData);
 
         ConfigWindowViewModel configWindowVM   = new ConfigWindowViewModel(
             config, configtype);

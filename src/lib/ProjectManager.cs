@@ -76,9 +76,10 @@ public class ProjectManager
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public ProjectManager()
+    public ProjectManager(User userData)
     {
-        this.UserData = UserCache.InitializeOrLoadUser();
+        //this.UserData = UserCache.InitializeOrLoadUser();
+        this.UserData = userData;
     }
 
     private void SaveUserCache()
@@ -88,273 +89,327 @@ public class ProjectManager
 
     public bool HasFramework(string name)
     {
-        return this.ActiveProject.Frameworks.ContainsKey(name) && this.ActiveProject.Frameworks[name];
+        lock (this.UserData)
+        {
+            return this.ActiveProject.Frameworks.ContainsKey(name) && this.ActiveProject.Frameworks[name];
+        }
     }
 
     public bool ModPathAlreadyUsed(string modPath)
     {
-        foreach (Project oldProject in this.UserData.Projects)
-            if (oldProject.Mod.Path == modPath)
-                return true;
-        return false;
+        lock (this.UserData)
+        {
+            foreach (Project oldProject in this.UserData.Projects)
+                if (oldProject.Mod.Path == modPath)
+                    return true;
+            return false;
+        }
     }
 
     public bool TryUpdateProjects(NewProjectConfig config)
     {
-        // create the game object if it doesn't already exist
-        if (!(this.UserData.Games).Exists(game => game.Path == config.GamePath))
+        lock (this.UserData)
         {
-            GameSettings newGame = new GameSettings();
-            newGame.Path = config.GamePath;
-            newGame.Type = config.GameType;
-            newGame.Notes = "";
-            newGame.Events = new EventCollections();
-            this.UserData.Games.Insert(0, newGame);
+            // create the game object if it doesn't already exist
+            if (!(this.UserData.Games).Exists(game => game.Path == config.GamePath))
+            {
+                GameSettings newGame = new GameSettings();
+                newGame.Path = config.GamePath;
+                newGame.Type = config.GameType;
+                newGame.Notes = "";
+                newGame.Events = new EventCollections();
+                this.UserData.Games.Insert(0, newGame);
+            }
+
+            // just gonna treat these as one for error catching purposes... sure hope i don't regret this later when debugging
+            if (this.ModPathAlreadyUsed(config.ModPath) || !Directory.Exists(config.GamePath))
+                return false;
+
+            ModSettings mod = new ModSettings();
+            mod.Path = config.ModPath;
+            mod.Type = config.ModType;
+
+            Dictionary<string, bool> frameworks = new Dictionary<string, bool>();
+            foreach (Framework framework in config.Frameworks)
+                frameworks[framework.Name] = framework.Used;
+
+            Project project    = new Project();
+            project.Name       = config.Name;
+            project.Game       = config.GamePath;
+            project.Mod        = mod;
+            project.Frameworks = frameworks;
+            project.LoadOrder  = config.LoadOrder;
+            project.Events     = new EventCollections();
+
+            this.UserData.Projects.Insert(0, project);
+            this.SaveUserCache();
+
+            return true;
         }
-
-        // just gonna treat these as one for error catching purposes... sure hope i don't regret this later when debugging
-        if (this.ModPathAlreadyUsed(config.ModPath) || !Directory.Exists(config.GamePath))
-            return false;
-
-        ModSettings mod = new ModSettings();
-        mod.Path = config.ModPath;
-        mod.Type = config.ModType;
-
-        Dictionary<string, bool> frameworks = new Dictionary<string, bool>();
-        foreach (Framework framework in config.Frameworks)
-            frameworks[framework.Name] = framework.Used;
-
-        Project project    = new Project();
-        project.Name       = config.Name;
-        project.Game       = config.GamePath;
-        project.Mod        = mod;
-        project.Frameworks = frameworks;
-        project.LoadOrder  = config.LoadOrder;
-        project.Events     = new EventCollections();
-
-        this.UserData.Projects.Insert(0, project);
-        this.SaveUserCache();
-
-        return true;
     }
 
     // there's probably a better way to handle these errors...
     public void LoadProject(int projInd)
     {
-        Trace.Assert(projInd >= 0 && projInd < this.UserData.Projects.Count && this.UserData.Projects.Count > 0, "User project data is corrupted.");
-
-        if (projInd > 0)
+        lock (this.UserData)
         {
-            Project project = this.UserData.Projects[projInd];
-            this.UserData.Projects.RemoveAt(projInd);
-            this.UserData.Projects.Insert(0, project);
-        }
+            Trace.Assert(projInd >= 0 && projInd < this.UserData.Projects.Count && this.UserData.Projects.Count > 0, "User project data is corrupted.");
 
-        this.ActiveGame = null;
-        for (int gameInd=0; gameInd<this.UserData.Games.Count; gameInd++)
-            if (this.UserData.Games[gameInd].Path == this.UserData.Projects[0].Game)
+            if (projInd > 0)
             {
-                if (gameInd > 0)
-                {
-                    GameSettings game = this.UserData.Games[gameInd];
-                    this.UserData.Games.RemoveAt(gameInd);
-                    this.UserData.Games.Insert(0, game);
-                }
-                this.ActiveGame = this.UserData.Games[0];
-                this.ActiveProject = this.UserData.Projects[0];
-                break;
+                Project project = this.UserData.Projects[projInd];
+                this.UserData.Projects.RemoveAt(projInd);
+                this.UserData.Projects.Insert(0, project);
             }
 
-        Trace.Assert(!(this.ActiveGame is null) && !(this.ActiveProject is null), "Game specified for project doesn't exist.");
+            this.ActiveGame = null;
+            for (int gameInd=0; gameInd<this.UserData.Games.Count; gameInd++)
+                if (this.UserData.Games[gameInd].Path == this.UserData.Projects[0].Game)
+                {
+                    if (gameInd > 0)
+                    {
+                        GameSettings game = this.UserData.Games[gameInd];
+                        this.UserData.Games.RemoveAt(gameInd);
+                        this.UserData.Games.Insert(0, game);
+                    }
+                    this.ActiveGame = this.UserData.Games[0];
+                    this.ActiveProject = this.UserData.Projects[0];
+                    break;
+                }
 
-        this.ModdedFileDir = this.ActiveProject.Mod.Path;
-        if (this.HasFramework("P5REssentials"))
-            this.ModdedFileDir = Path.Combine(this.ModdedFileDir, "P5REssentials", "CPK");
-        if (!Directory.Exists(this.ModdedFileDir))
-            Directory.CreateDirectory(this.ModdedFileDir);
+            Trace.Assert(!(this.ActiveGame is null) && !(this.ActiveProject is null), "Game specified for project doesn't exist.");
 
-        if (this.HasFramework("BFEmulator") || this.HasFramework("BMDEmulator"))
-        {
-            this.EmulatedFileDir = Path.Combine(this.ActiveProject.Mod.Path, "FEmulator");
-            if (!Directory.Exists(this.EmulatedFileDir))
-                Directory.CreateDirectory(this.EmulatedFileDir);
-            if (this.HasFramework("BFEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BF")))
-                Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BF"));
-            if (this.HasFramework("BMDEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BMD")))
-                Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BMD"));
+            this.ModdedFileDir = this.ActiveProject.Mod.Path;
+            if (this.HasFramework("P5REssentials"))
+                this.ModdedFileDir = Path.Combine(this.ModdedFileDir, "P5REssentials", "CPK");
+            if (!Directory.Exists(this.ModdedFileDir))
+                Directory.CreateDirectory(this.ModdedFileDir);
+
+            if (this.HasFramework("BFEmulator") || this.HasFramework("BMDEmulator"))
+            {
+                this.EmulatedFileDir = Path.Combine(this.ActiveProject.Mod.Path, "FEmulator");
+                if (!Directory.Exists(this.EmulatedFileDir))
+                    Directory.CreateDirectory(this.EmulatedFileDir);
+                if (this.HasFramework("BFEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BF")))
+                    Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BF"));
+                if (this.HasFramework("BMDEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BMD")))
+                    Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BMD"));
+            }
+            else
+                this.EmulatedFileDir = null;
+
+            this.SaveUserCache();
         }
-        else
-            this.EmulatedFileDir = null;
-
-        this.SaveUserCache();
     }
 
     public void LoadGameReadOnly(int gameInd)
     {
-        Trace.Assert(gameInd >= 0 && gameInd < this.UserData.Games.Count && this.UserData.Games.Count > 0, "User game path data is corrupted.");
-
-        if (gameInd > 0)
+        lock (this.UserData)
         {
-            GameSettings game = this.UserData.Games[gameInd];
-            this.UserData.Games.RemoveAt(gameInd);
-            this.UserData.Games.Insert(0, game);
-            this.SaveUserCache();
-        }
+            Trace.Assert(gameInd >= 0 && gameInd < this.UserData.Games.Count && this.UserData.Games.Count > 0, "User game path data is corrupted.");
 
-        this.ActiveGame      = this.UserData.Games[0];
-        this.ActiveProject   = null;
-        this.ModdedFileDir   = null;
-        this.EmulatedFileDir = null;
+            if (gameInd > 0)
+            {
+                GameSettings game = this.UserData.Games[gameInd];
+                this.UserData.Games.RemoveAt(gameInd);
+                this.UserData.Games.Insert(0, game);
+                this.SaveUserCache();
+            }
+
+            this.ActiveGame      = this.UserData.Games[0];
+            this.ActiveProject   = null;
+            this.ModdedFileDir   = null;
+            this.EmulatedFileDir = null;
+        }
     }
 
     public void LoadEvent(int majorId, int minorId)
     {
-        if (!(this.ActiveProject is null))
+        lock (this.UserData)
         {
-            (this.ActiveProject.Events.Recent).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-            SimpleEvent newEvent = new SimpleEvent();
-            newEvent.MajorId = majorId;
-            newEvent.MinorId = minorId;
-            this.ActiveProject.Events.Recent.Insert(0, newEvent);
-            this.ActiveEvent = newEvent;
-            this.SaveUserCache();
-        }
+            if (!(this.ActiveProject is null))
+            {
+                (this.ActiveProject.Events.Recent).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+                SimpleEvent newEvent = new SimpleEvent();
+                newEvent.MajorId = majorId;
+                newEvent.MinorId = minorId;
+                this.ActiveProject.Events.Recent.Insert(0, newEvent);
+                this.ActiveEvent = newEvent;
+                this.SaveUserCache();
+            }
 
-        if (!(this.ActiveGame is null))
-        {
-            (this.ActiveGame.Events.Recent).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-            SimpleEvent newEvent = new SimpleEvent();
-            newEvent.MajorId = majorId;
-            newEvent.MinorId = minorId;
-            this.ActiveGame.Events.Recent.Insert(0, newEvent);
-            this.ActiveEvent = newEvent;
-            this.SaveUserCache();
+            if (!(this.ActiveGame is null))
+            {
+                (this.ActiveGame.Events.Recent).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+                SimpleEvent newEvent = new SimpleEvent();
+                newEvent.MajorId = majorId;
+                newEvent.MinorId = minorId;
+                this.ActiveGame.Events.Recent.Insert(0, newEvent);
+                this.ActiveEvent = newEvent;
+                this.SaveUserCache();
+            }
         }
     }
 
     public void SetProjectName(int ind, string name)
     {
-        this.UserData.Projects[ind].Name = name;
-        this.SaveUserCache();
+        lock (this.UserData)
+        {
+            this.UserData.Projects[ind].Name = name;
+            this.SaveUserCache();
+        }
     }
 
     public void SetProjectNotes(int ind, string notes)
     {
-        this.UserData.Projects[ind].Notes = notes;
-        this.SaveUserCache();
+        lock (this.UserData)
+        {
+            this.UserData.Projects[ind].Notes = notes;
+            this.SaveUserCache();
+        }
     }
 
     public void SetProjectFramework(int ind, string key, bool val)
     {
-        this.UserData.Projects[ind].Frameworks[key] = val;
-        this.SaveUserCache();
+        lock (this.UserData)
+        {
+            this.UserData.Projects[ind].Frameworks[key] = val;
+            this.SaveUserCache();
+        }
     }
 
     public void SetProjectLoadOrder(int ind, List<string> loadOrder)
     {
-        this.UserData.Projects[ind].LoadOrder = loadOrder;
-        this.SaveUserCache();
+        lock (this.UserData)
+        {
+            this.UserData.Projects[ind].LoadOrder = loadOrder;
+            this.SaveUserCache();
+        }
     }
 
     public void SetProjectPin(Project project, int majorId, int minorId, bool hasPin)
     {
-        (project.Events.Pinned).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-        if (hasPin)
+        lock (this.UserData)
         {
-            SimpleEvent newEvent = new SimpleEvent();
-            newEvent.MajorId = majorId;
-            newEvent.MinorId = minorId;
-            project.Events.Pinned.Insert(0, newEvent);
-            this.SaveUserCache();
+            (project.Events.Pinned).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+            if (hasPin)
+            {
+                SimpleEvent newEvent = new SimpleEvent();
+                newEvent.MajorId = majorId;
+                newEvent.MinorId = minorId;
+                project.Events.Pinned.Insert(0, newEvent);
+                this.SaveUserCache();
+            }
         }
     }
 
     public void SetGamePin(GameSettings game, int majorId, int minorId, bool hasPin)
     {
-        (game.Events.Pinned).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-        if (hasPin)
+        lock (this.UserData)
         {
-            SimpleEvent newEvent = new SimpleEvent();
-            newEvent.MajorId = majorId;
-            newEvent.MinorId = minorId;
-            game.Events.Pinned.Insert(0, newEvent);
-            this.SaveUserCache();
+            (game.Events.Pinned).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+            if (hasPin)
+            {
+                SimpleEvent newEvent = new SimpleEvent();
+                newEvent.MajorId = majorId;
+                newEvent.MinorId = minorId;
+                game.Events.Pinned.Insert(0, newEvent);
+                this.SaveUserCache();
+            }
         }
     }
 
     public void SetProjectEventNotes(int ind, int majorId, int minorId, string notes)
     {
-        (this.UserData.Projects[ind].Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-        if (notes != "")
+        lock (this.UserData)
         {
-            ExpandedEvent updatedEvent = new ExpandedEvent();
-            updatedEvent.MajorId = majorId;
-            updatedEvent.MinorId = minorId;
-            updatedEvent.Text    = notes;
-            this.UserData.Projects[ind].Events.Notes.Insert(0, updatedEvent);
+            (this.UserData.Projects[ind].Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+            if (notes != "")
+            {
+                ExpandedEvent updatedEvent = new ExpandedEvent();
+                updatedEvent.MajorId = majorId;
+                updatedEvent.MinorId = minorId;
+                updatedEvent.Text    = notes;
+                this.UserData.Projects[ind].Events.Notes.Insert(0, updatedEvent);
+            }
+            this.SaveUserCache();
         }
-        this.SaveUserCache();
     }
 
     public void SetProjectEventNotes(Project project, int majorId, int minorId, string notes)
     {
-        (project.Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-        if (notes != "")
+        lock (this.UserData)
         {
-            ExpandedEvent updatedEvent = new ExpandedEvent();
-            updatedEvent.MajorId = majorId;
-            updatedEvent.MinorId = minorId;
-            updatedEvent.Text    = notes;
-            project.Events.Notes.Insert(0, updatedEvent);
+            (project.Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+            if (notes != "")
+            {
+                ExpandedEvent updatedEvent = new ExpandedEvent();
+                updatedEvent.MajorId = majorId;
+                updatedEvent.MinorId = minorId;
+                updatedEvent.Text    = notes;
+                project.Events.Notes.Insert(0, updatedEvent);
+            }
+            this.SaveUserCache();
         }
-        this.SaveUserCache();
     }
 
     public void SetGameNotes(int ind, string notes)
     {
-        this.UserData.Games[ind].Notes = notes;
-        this.SaveUserCache();
+        lock (this.UserData)
+        {
+            this.UserData.Games[ind].Notes = notes;
+            this.SaveUserCache();
+        }
     }
 
     public void SetGameEventNotes(int ind, int majorId, int minorId, string notes)
     {
-        (this.UserData.Games[ind].Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-        if (notes != "")
+        lock (this.UserData)
         {
-            ExpandedEvent updatedEvent = new ExpandedEvent();
-            updatedEvent.MajorId = majorId;
-            updatedEvent.MinorId = minorId;
-            updatedEvent.Text    = notes;
-            this.UserData.Games[ind].Events.Notes.Insert(0, updatedEvent);
+            (this.UserData.Games[ind].Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+            if (notes != "")
+            {
+                ExpandedEvent updatedEvent = new ExpandedEvent();
+                updatedEvent.MajorId = majorId;
+                updatedEvent.MinorId = minorId;
+                updatedEvent.Text    = notes;
+                this.UserData.Games[ind].Events.Notes.Insert(0, updatedEvent);
+            }
+            this.SaveUserCache();
         }
-        this.SaveUserCache();
     }
 
     public void SetGameEventNotes(GameSettings game, int majorId, int minorId, string notes)
     {
-        (game.Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
-        if (notes != "")
+        lock (this.UserData)
         {
-            ExpandedEvent updatedEvent = new ExpandedEvent();
-            updatedEvent.MajorId = majorId;
-            updatedEvent.MinorId = minorId;
-            updatedEvent.Text    = notes;
-            game.Events.Notes.Insert(0, updatedEvent);
+            (game.Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
+            if (notes != "")
+            {
+                ExpandedEvent updatedEvent = new ExpandedEvent();
+                updatedEvent.MajorId = majorId;
+                updatedEvent.MinorId = minorId;
+                updatedEvent.Text    = notes;
+                game.Events.Notes.Insert(0, updatedEvent);
+            }
+            this.SaveUserCache();
         }
-        this.SaveUserCache();
     }
 
     public void UpdateReadOnlyCPKs(string path, string type, string notes)
     {
-        (this.UserData.Games).RemoveAll(game => game.Path == path && game.Type == type);
-        GameSettings newGame = new GameSettings();
-        newGame.Path = path;
-        newGame.Type = type;
-        newGame.Notes = notes;
-        newGame.Events = new EventCollections();
-        this.UserData.Games.Insert(0, newGame);
-        this.SaveUserCache();
-        this.ActiveGame = newGame;
+        lock (this.UserData)
+        {
+            (this.UserData.Games).RemoveAll(game => game.Path == path && game.Type == type);
+            GameSettings newGame = new GameSettings();
+            newGame.Path = path;
+            newGame.Type = type;
+            newGame.Notes = notes;
+            newGame.Events = new EventCollections();
+            this.UserData.Games.Insert(0, newGame);
+            this.SaveUserCache();
+            this.ActiveGame = newGame;
+        }
     }
 
 }

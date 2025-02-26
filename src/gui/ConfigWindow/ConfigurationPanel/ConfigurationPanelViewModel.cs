@@ -335,7 +335,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
             if (!this.TrySetCPKs(this.GameSelection.Path))
                 return (1, "No CPKs in selected folder.");
             if (this.Config.ReadOnly)
-                this.Config.ProjectManager.LoadGameReadOnly(this.GameSelection.Ind);
+                this.Config.LoadGameReadOnly(this.GameSelection.Ind);
         }
         else
         {

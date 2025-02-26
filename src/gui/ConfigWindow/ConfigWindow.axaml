@@ -11,8 +11,11 @@
         Width="800" Height="800" WindowStartupLocation="CenterScreen"
         Title="EVTUI">
 
-  <Panel>
-    <views:ConfigurationPanel DataContext="{Binding ConfigPanelVM}" Padding="10"/>
-  </Panel>
+  <DockPanel>
+    <Button DockPanel.Dock="Top" HorizontalAlignment="Right" Click="ToggleTheme">
+      <PathIcon Data="{StaticResource dark_theme_regular}" />
+    </Button>
+    <views:ConfigurationPanel DataContext="{Binding ConfigPanelVM}" Padding="10" DockPanel.Dock="Bottom"/>
+  </DockPanel>
 
 </Window>

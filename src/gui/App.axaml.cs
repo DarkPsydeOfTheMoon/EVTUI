@@ -23,7 +23,8 @@ public partial class App : Application
             // if the user want to start fresh or exit the program
             //DataManager         dataManager     = new DataManager();
             //MainWindowViewModel mainWindowVM    = new MainWindowViewModel(dataManager);
-            MainWindowViewModel mainWindowVM    = new MainWindowViewModel();
+            ////MainWindowViewModel mainWindowVM    = new MainWindowViewModel();
+            MainWindowViewModel mainWindowVM    = new MainWindowViewModel(UserCache.InitializeOrLoadUser());
             MainWindow          mainWindow      = new MainWindow { DataContext = mainWindowVM };
 
             desktop.MainWindow = (Window)mainWindow;

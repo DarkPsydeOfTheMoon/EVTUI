@@ -43,14 +43,14 @@ public class DataManager
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public DataManager()
+    public DataManager(User userData)
     {
         if (!Directory.Exists(this.VanillaExtractionPath))
             Directory.CreateDirectory(this.VanillaExtractionPath);
         //if (!Directory.Exists(this.WorkingPathBase))
         //    Directory.CreateDirectory(this.WorkingPathBase);
 
-        this.ProjectManager = new ProjectManager();
+        this.ProjectManager = new ProjectManager(userData);
         this.EventManager   = new EventManager();
         this.ScriptManager  = new ScriptManager();
         this.AudioManager   = new AudioManager();
@@ -93,6 +93,12 @@ public class DataManager
         this.CpkPath = this.ProjectManager.ActiveGame.Path;
         this.ReadOnly = true;
         this.ProjectLoaded = false;
+
+        this.WorkingPath = Path.Combine(this.WorkingPathBase, Hashify(this.CpkPath));
+        if (!Directory.Exists(this.WorkingPath))
+            Directory.CreateDirectory(this.WorkingPath);
+
+        Console.WriteLine("#######################################");
     }
 
     public bool LoadEvent(int majorId, int minorId)
