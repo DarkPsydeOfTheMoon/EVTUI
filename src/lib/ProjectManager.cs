@@ -78,7 +78,6 @@ public class ProjectManager
     ////////////////////////////
     public ProjectManager(User userData)
     {
-        //this.UserData = UserCache.InitializeOrLoadUser();
         this.UserData = userData;
     }
 

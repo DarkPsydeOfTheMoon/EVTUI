@@ -47,16 +47,12 @@ public class DataManager
     {
         if (!Directory.Exists(this.VanillaExtractionPath))
             Directory.CreateDirectory(this.VanillaExtractionPath);
-        //if (!Directory.Exists(this.WorkingPathBase))
-        //    Directory.CreateDirectory(this.WorkingPathBase);
 
         this.ProjectManager = new ProjectManager(userData);
         this.EventManager   = new EventManager();
         this.ScriptManager  = new ScriptManager();
         this.AudioManager   = new AudioManager();
         this.CpkList        = new List<string>();
-        //this.Reset();
-
     }
 
     public void Reset()
@@ -111,9 +107,6 @@ public class DataManager
         if (success)
             this.ProjectManager.LoadEvent(majorId, minorId);
         this.EventLoaded = success;
-
-        //if (!Directory.Exists(this.WorkingPath))
-        //    Directory.CreateDirectory(this.WorkingPath);
 
         this.ScriptManager.PopulateWorkingDir(this.WorkingPath, this.VanillaExtractionPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.EmulatedFileDir, this.EventManager.BmdPaths, this.EventManager.BfPaths, this.ProjectManager.ActiveGame.Type);
 

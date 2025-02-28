@@ -104,13 +104,8 @@ public class ECS : ISerializable
 
     // TODO: AddObject
 
-    //public int CopyCommandToNewFrame(int index, int frame)
     public int CopyCommandToNewFrame(SerialCommand cmd, dynamic cmdData, int frame)
     {
-        //if (index < 0 || index >= this.CommandCount)
-        //    return -1;
-
-        //SerialCommand newCmd = DeepCopier.Copy(this.Commands[index]);
         SerialCommand newCmd = DeepCopier.Copy(cmd);
         newCmd.FrameStart = frame;
 
@@ -118,7 +113,6 @@ public class ECS : ISerializable
         cmdList.Add(newCmd);
         this.Commands = cmdList.ToArray();
 
-        //this.CommandData.Add(DeepCopier.Copy(this.CommandData[index]));
         this.CommandData.Add(DeepCopier.Copy(cmdData));
 
         this.CommandCount += 1;

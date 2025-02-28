@@ -21,11 +21,13 @@ namespace EVTUI.Views;
 public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
 {
 
+    ////////////////////////////
+    // *** PUBLIC MEMBERS *** //
+    ////////////////////////////
     private Window topLevel;
     private bool _mouseDownForWindowMoving = false;
     private PointerPoint _originalPoint;
 
-    //private List<EditorWindow> editorWindows;
     private Dictionary<EditorWindow, (string GamePath, string? ModPath, int MajorId, int MinorId)> editorWindows;
     private HashSet<(string GamePath, string? ModPath, int MajorId, int MinorId)> openStuff;
 
@@ -45,7 +47,6 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             this.topLevel = (Window)tl;
             this.topLevel.Closing += CloseAll;
 
-            //this.editorWindows = new List<EditorWindow>();
             this.editorWindows = new Dictionary<EditorWindow, (string GamePath, string? ModPath, int MajorId, int MinorId)>();
             this.openStuff = new HashSet<(string GamePath, string? ModPath, int MajorId, int MinorId)>();
 
@@ -57,57 +58,50 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
     // a View base class or something.
     public async Task<int> RaiseConfigModal(string configtype)
     {
-        //DataManager config = ((LandingPageViewModel)DataContext).Config;
-        User userData = ((LandingPageViewModel)DataContext).UserData;
-        DataManager config = new DataManager(userData);
-
-        ConfigWindowViewModel configWindowVM   = new ConfigWindowViewModel(
-            config, configtype);
-        ConfigWindow          configWindowView = new ConfigWindow
-            { DataContext = configWindowVM };
-
-        // Launch window and get a return code to distinguish how the window
-        // was closed.
-        int? res = await ((Window)configWindowView).ShowDialog<int?>(this.topLevel);
-        if (res is null)
+        while (true)
         {
-            //config.Reset();
-            return 1;
-        }
+            User userData = ((LandingPageViewModel)DataContext).UserData;
+            DataManager config = new DataManager(userData);
 
-        (string GamePath, string? ModPath, int MajorId, int MinorId) newOpenThing = (config.ProjectManager.ActiveGame.Path, config.ModPath, config.ProjectManager.ActiveEvent.MajorId, config.ProjectManager.ActiveEvent.MinorId);
-        if (this.openStuff.Contains(newOpenThing))
-        {
-            if (configtype == "read-only")
-                await Utils.RaiseModal(this.topLevel, $"{config.ActiveEventId} is already open for this copy of {config.ProjectManager.ActiveGame.Type}.");
+            ConfigWindowViewModel configWindowVM   = new ConfigWindowViewModel(
+                config, configtype);
+            ConfigWindow          configWindowView = new ConfigWindow
+                { DataContext = configWindowVM };
+
+            // Launch window and get a return code to distinguish how the window
+            // was closed.
+            int? res = await ((Window)configWindowView).ShowDialog<int?>(this.topLevel);
+            if (res is null)
+                return 1;
+
+            (string GamePath, string? ModPath, int MajorId, int MinorId) newOpenThing = (config.ProjectManager.ActiveGame.Path, config.ModPath, config.ProjectManager.ActiveEvent.MajorId, config.ProjectManager.ActiveEvent.MinorId);
+            if (this.openStuff.Contains(newOpenThing))
+            {
+                // TODO: do this check earlier, actually
+                if (configtype == "read-only")
+                    await Utils.RaiseModal(this.topLevel, $"{config.ActiveEventId} is already open for this copy of {config.ProjectManager.ActiveGame.Type}.");
+                else
+                    await Utils.RaiseModal(this.topLevel, $"{config.ActiveEventId} is already open for project \"{config.ProjectManager.ActiveProject.Name}.\"");
+            }
             else
-                await Utils.RaiseModal(this.topLevel, $"{config.ActiveEventId} is already open for project \"{config.ProjectManager.ActiveProject.Name}.\"");
-            //config.Reset();
-            return 1;
+            {
+                EditorWindowViewModel editorWindowVM   = new EditorWindowViewModel(
+                    config, this.SharedClipboard);
+                EditorWindow          editorWindowView = new EditorWindow
+                    { DataContext = editorWindowVM };
+
+                if (configtype == "read-only")
+                    editorWindowView.Title = $"EVTUI: {config.ActiveEventId} (read-only)";
+                else
+                    editorWindowView.Title = $"EVTUI: {config.ActiveEventId} ({config.ProjectManager.ActiveProject.Name})";
+
+                editorWindowView.Closing += this.EditorClosed;
+                editorWindowView.Show();
+                this.editorWindows[editorWindowView] = newOpenThing;
+                this.openStuff.Add(newOpenThing);
+                return 1;
+            }
         }
-
-        EditorWindowViewModel editorWindowVM   = new EditorWindowViewModel(
-            config, this.SharedClipboard);
-        EditorWindow          editorWindowView = new EditorWindow
-            { DataContext = editorWindowVM };
-
-        if (configtype == "read-only")
-            editorWindowView.Title = $"EVTUI: {config.ActiveEventId} (read-only)";
-        else
-            editorWindowView.Title = $"EVTUI: {config.ActiveEventId} ({config.ProjectManager.ActiveProject.Name})";
-
-        /*res = await ((Window)editorWindowView).ShowDialog<int?>(this.topLevel);
-        config.Reset();
-        if (res is null)
-            return 1;
-        else
-            return (int)res;*/
-
-        editorWindowView.Closing += this.EditorClosed;
-        editorWindowView.Show();
-        this.editorWindows[editorWindowView] = newOpenThing;
-        this.openStuff.Add(newOpenThing);
-        return 1;
     }
 
     /////////////////////////////
@@ -128,7 +122,6 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
     private void EditorClosed(object? sender, CancelEventArgs e)
     {
         (string GamePath, string? ModPath, int MajorId, int MinorId) thingToClose = this.editorWindows[(EditorWindow)sender];
-        //if (!(thingToClose is null))
         this.openStuff.Remove(thingToClose);
         this.editorWindows.Remove((EditorWindow)sender);
         if (this.editorWindows.Count == 0)

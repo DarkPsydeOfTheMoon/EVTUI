@@ -445,13 +445,7 @@ public class Timeline : ReactiveObject
             int i = dataManager.EventManager.EventSoundCommands[j].FrameStart;
             int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
             if (i >= 0 && i < this.Frames.Count)
-            {
-                //CommandPointer newCmd = new CommandPointer(code, true, j, i, len, dataManager);
-                //int catInd = Timeline.CodeToCategory(code, true);
-                //if (catInd > -1)
-                //    this.Categories[catInd].AddCommand(newCmd);
                 this.AddCommand(new CommandPointer(code, true, j, i, len, dataManager));
-            }
         }
         for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
         {
@@ -459,13 +453,7 @@ public class Timeline : ReactiveObject
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
             int len = dataManager.EventManager.EventCommands[j].FrameDuration;
             if (i >= 0 && i < this.Frames.Count)
-            {
-                //CommandPointer newCmd = new CommandPointer(code, false, j, i, len, dataManager);
-                //int catInd = Timeline.CodeToCategory(code, false);
-                //if (catInd > -1)
-                //    this.Categories[catInd].AddCommand(newCmd);
                 this.AddCommand(new CommandPointer(code, false, j, i, len, dataManager));
-            }
         }
     }
 
@@ -520,20 +508,17 @@ public class Timeline : ReactiveObject
             this.Categories[catInd].AddCommand(newCmd);
     }
 
-    //public void DeleteCommand(Category cat, CommandPointer cmd)
     public void DeleteCommand(CommandPointer cmd)
     {
         int catInd = Timeline.CodeToCategory(cmd.Code, cmd.IsAudioCmd);
         if (catInd > -1)
         {
-            //foreach (CommandPointer _cmd in this.Categories[catInd].Commands)
             foreach (Category _cat in this.Categories)
                 foreach (CommandPointer _cmd in _cat.Commands)
                     if (_cmd.IsAudioCmd == cmd.IsAudioCmd && _cmd.CmdIndex > cmd.CmdIndex)
                         _cmd.CmdIndex -= 1;
             this.Categories[catInd].DeleteCommand(cmd);
         }
-        //cat.DeleteCommand(cmd);
     }
 
     public int FrameCount { get; set; }
@@ -696,23 +681,14 @@ public class CommandPointer : ViewModelBase
 public class TimelinePanelViewModel : ViewModelBase
 {
 
-    /////////////////////////////
-    // *** PRIVATE MEMBERS *** //
-    /////////////////////////////
-    //private Category       CopiedCategory;
-    //private CommandPointer CopiedCommand;
-    //private bool           DeleteOriginal;
-    public Clipboard SharedClipboard { get; }
-
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
     public DataManager Config { get; }
+    public Clipboard SharedClipboard { get; }
 
     public Timeline TimelineContent { get; set; }
     public dynamic ActiveCommand { get; set; }
-
-    //public bool HasCopiedCommand { get; set; } = false;
 
     public List<string> AddableCodes { get => this.Config.EventManager.AddableCodes; }
 
@@ -728,9 +704,6 @@ public class TimelinePanelViewModel : ViewModelBase
 
     public void SetActiveCommand(CommandPointer cmd)
     {
-        //SerialCommand command     = ((cmd.IsAudioCmd) ? this.Config.EventManager.EventSoundCommands : this.Config.EventManager.EventCommands)[cmd.CmdIndex];
-        //dynamic       commandData = ((cmd.IsAudioCmd) ? this.Config.EventManager.EventSoundCommandData : this.Config.EventManager.EventCommandData)[cmd.CmdIndex];
-        //Type          commandType = Type.GetType($"EVTUI.ViewModels.TimelineCommands.{cmd.Code}");
         if (cmd.CommandType is null)
             this.ActiveCommand = new TimelineCommands.Generic(this.Config, cmd.Command, cmd.CommandData);
         else
@@ -744,25 +717,16 @@ public class TimelinePanelViewModel : ViewModelBase
         this.ActiveCommand = null;
     }
 
-    //public void DeleteCommand(Category cat, CommandPointer cmd)
-    //public bool DeleteCommand(Category cat, CommandPointer cmd)
     public bool DeleteCommand(CommandPointer cmd)
     {
         bool success = this.Config.EventManager.DeleteCommand(cmd.CmdIndex, cmd.IsAudioCmd);
         if (success)
-        {
-            //this.TimelineContent.DeleteCommand(cat, cmd);
             this.TimelineContent.DeleteCommand(cmd);
-            // if something gets deleted between cut and paste
-            //this.DeleteOriginal = false;
-        }
         return success;
     }
 
-    //public void CopyCommand(Category cat, CommandPointer cmd, bool deleteOriginal)
     public void CopyCommand(CommandPointer cmd, bool deleteOriginal)
     {
-        //this.SharedClipboard.CopyCommand(this, cat, cmd, deleteOriginal);
         this.SharedClipboard.CopyCommand(this, cmd, deleteOriginal);
     }
 
@@ -772,19 +736,13 @@ public class TimelinePanelViewModel : ViewModelBase
         if (this.SharedClipboard.CopiedCommand is null)
             return;
 
-        //int newCmdIndex = this.Config.EventManager.CopyCommandToNewFrame(this.SharedClipboard.CopiedCommand.CmdIndex, this.SharedClipboard.CopiedCommand.IsAudioCmd, frame);
         int newCmdIndex = this.Config.EventManager.CopyCommandToNewFrame(this.SharedClipboard.CopiedCommand.Command, this.SharedClipboard.CopiedCommand.CommandData, this.SharedClipboard.CopiedCommand.IsAudioCmd, frame);
         if (newCmdIndex >= 0)
         {
             CommandPointer newCmd = new CommandPointer(this.SharedClipboard.CopiedCommand.Code, this.SharedClipboard.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.SharedClipboard.CopiedCommand.Duration, this.Config);
-            //this.SharedClipboard.CopiedCategory.AddCommand(newCmd);
             this.TimelineContent.AddCommand(newCmd);
             if (this.SharedClipboard.DeleteOriginal)
-            {
-                //this.DeleteCommand(this.CopiedCategory, this.CopiedCommand);
-                //this.DeleteOriginal = false;
                 this.SharedClipboard.DeleteCommand();
-            }
         }
     }
 

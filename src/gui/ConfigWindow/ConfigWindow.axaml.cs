@@ -5,7 +5,6 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Styling;
 
-
 namespace EVTUI.Views;
 
 public partial class ConfigWindow : Window

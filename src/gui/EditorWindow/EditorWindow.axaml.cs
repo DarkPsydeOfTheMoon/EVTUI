@@ -16,13 +16,7 @@ public partial class EditorWindow : Window
     public EditorWindow()
     {
         InitializeComponent();
-        //this.Closing += this.ClearCache;
     }
-
-    /*public void ClearCache(object? sender, CancelEventArgs args)
-    {
-        ((EditorWindowViewModel)DataContext).ClearCache();
-    }*/
 
     public async void SaveMod(object? sender, RoutedEventArgs args)
     {

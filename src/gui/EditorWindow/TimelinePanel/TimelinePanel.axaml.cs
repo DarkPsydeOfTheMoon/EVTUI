@@ -100,11 +100,6 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                 (ContextMenu)LogicalExtensions.GetLogicalParent(
                     (MenuItem)sender))).PlacementTarget));
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-        /*Category cat = (Category)((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (ItemsControl)LogicalExtensions.GetLogicalParent(
-                (ContentPresenter)LogicalExtensions.GetLogicalParent(
-                    target)))).Content;
-        ViewModel!.DeleteCommand(cat, cmd);*/
         ViewModel!.DeleteCommand(cmd);
     }
 
@@ -115,11 +110,6 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                 (ContextMenu)LogicalExtensions.GetLogicalParent(
                     (MenuItem)sender))).PlacementTarget));
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-        /*Category cat = (Category)((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (ItemsControl)LogicalExtensions.GetLogicalParent(
-                (ContentPresenter)LogicalExtensions.GetLogicalParent(
-                    target)))).Content;
-        ViewModel!.CopyCommand(cat, cmd, false);*/
         ViewModel!.CopyCommand(cmd, false);
     }
 
@@ -130,11 +120,6 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                 (ContextMenu)LogicalExtensions.GetLogicalParent(
                     (MenuItem)sender))).PlacementTarget));
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-        /*Category cat = (Category)((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (ItemsControl)LogicalExtensions.GetLogicalParent(
-                (ContentPresenter)LogicalExtensions.GetLogicalParent(
-                    target)))).Content;
-        ViewModel!.CopyCommand(cat, cmd, true);*/
         ViewModel!.CopyCommand(cmd, true);
     }
 
