@@ -8,9 +8,9 @@ public class MSSs : Generic
 {
     public MSSs(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
     {
-        this.LongName = "Model: \"Shoe\" Meshes";
+        this.LongName = "Model: \"Shoe\" Visibility";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
-        this.ShoeLayer = new StringSelectionField("Active \"Shoe\" Mesh Name Prefix", this.Editable, this.ShoeLayers.Backward[this.CommandData.ShoeLayerIndex], this.ShoeLayers.Keys);
+        this.ShoeLayer = new StringSelectionField("Active \"Shoe\" Node Name Prefix", this.Editable, this.ShoeLayers.Backward[this.CommandData.ShoeLayerIndex], this.ShoeLayers.Keys);
     }
 
     public IntSelectionField AssetID { get; set; }

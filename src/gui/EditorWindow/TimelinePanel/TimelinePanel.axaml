@@ -1062,7 +1062,7 @@
           <ScrollViewer.ContextMenu>
             <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
               <MenuItem Header="New" Click="OpenModal" />
-              <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).HasCopiedCommand}" />
+              <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).SharedClipboard.HasCopiedCommand}" />
             </ContextMenu>
           </ScrollViewer.ContextMenu> 
           <ItemsControl ItemsSource="{Binding Categories}" VerticalAlignment="Stretch">

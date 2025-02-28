@@ -1,8 +1,11 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Styling;
 
 using EVTUI.ViewModels;
 
@@ -13,12 +16,6 @@ public partial class EditorWindow : Window
     public EditorWindow()
     {
         InitializeComponent();
-        this.Closing += this.ClearCache;
-    }
-
-    public void ClearCache(object? sender, CancelEventArgs args)
-    {
-        ((EditorWindowViewModel)DataContext).ClearCache();
     }
 
     public async void SaveMod(object? sender, RoutedEventArgs args)
@@ -36,5 +33,13 @@ public partial class EditorWindow : Window
         {
             await Utils.RaiseModal(this, "Failed to save due to unhandled exception: '" + ex.ToString() + "'");
         }
+    }
+
+    private void ToggleTheme(object? sender, RoutedEventArgs e)
+    {
+        if (Application.Current!.RequestedThemeVariant == ThemeVariant.Dark)
+            Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
+        else
+            Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
     }
 }

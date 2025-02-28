@@ -101,11 +101,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                 (ContextMenu)LogicalExtensions.GetLogicalParent(
                     (MenuItem)sender))).PlacementTarget));
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-        Category cat = (Category)((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (ItemsControl)LogicalExtensions.GetLogicalParent(
-                (ContentPresenter)LogicalExtensions.GetLogicalParent(
-                    target)))).Content;
-        ViewModel!.DeleteCommand(cat, cmd);
+        ViewModel!.DeleteCommand(cmd);
     }
 
     public void CopyCommand(object sender, RoutedEventArgs e)
@@ -115,11 +111,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                 (ContextMenu)LogicalExtensions.GetLogicalParent(
                     (MenuItem)sender))).PlacementTarget));
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-        Category cat = (Category)((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (ItemsControl)LogicalExtensions.GetLogicalParent(
-                (ContentPresenter)LogicalExtensions.GetLogicalParent(
-                    target)))).Content;
-        ViewModel!.CopyCommand(cat, cmd, false);
+        ViewModel!.CopyCommand(cmd, false);
     }
 
     public void CutCommand(object sender, RoutedEventArgs e)
@@ -129,11 +121,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                 (ContextMenu)LogicalExtensions.GetLogicalParent(
                     (MenuItem)sender))).PlacementTarget));
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-        Category cat = (Category)((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (ItemsControl)LogicalExtensions.GetLogicalParent(
-                (ContentPresenter)LogicalExtensions.GetLogicalParent(
-                    target)))).Content;
-        ViewModel!.CopyCommand(cat, cmd, true);
+        ViewModel!.CopyCommand(cmd, true);
     }
 
     private void LogPosition(object? sender, PointerPressedEventArgs e)

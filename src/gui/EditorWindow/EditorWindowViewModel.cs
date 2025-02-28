@@ -20,19 +20,14 @@ public class EditorWindowViewModel : ViewModelBase
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public EditorWindowViewModel(DataManager dataManager)
+    public EditorWindowViewModel(DataManager dataManager, Clipboard clipboard)
     {
         this.Config          = dataManager;
         this.basicsPanelVM   = new BasicsPanelViewModel(this.Config);
         this.assetsPanelVM   = new AssetsPanelViewModel(this.Config);
-        this.timelinePanelVM = new TimelinePanelViewModel(this.Config);
+        this.timelinePanelVM = new TimelinePanelViewModel(this.Config, clipboard);
         this.scriptPanelVM   = new ScriptPanelViewModel(this.Config);
         this.audioPanelVM    = new AudioPanelViewModel(this.Config);
-    }
-
-    public void ClearCache()
-    {
-        this.Config.ClearCache();
     }
 
     public void SaveMod(string which)

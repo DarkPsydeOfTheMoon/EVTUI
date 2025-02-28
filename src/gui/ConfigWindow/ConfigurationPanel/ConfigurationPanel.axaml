@@ -35,7 +35,6 @@
       <Setter Property="FontSize" Value="28"/>
       <Setter Property="FontWeight" Value="Light"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
-      <Setter Property="Margin" Value="20"/>
     </Style>
     <Style Selector="TextBlock.sectiontitle">
       <Setter Property="FontSize" Value="24"/>

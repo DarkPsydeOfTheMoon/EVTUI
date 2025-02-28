@@ -103,12 +103,12 @@ public class EventManager
             return this.SerialEvent.DeleteCommand(index);
     }
 
-    public int CopyCommandToNewFrame(int index, bool isAudio, int frame)
+    public int CopyCommandToNewFrame(SerialCommand cmd, dynamic cmdData, bool isAudio, int frame)
     {
         if (isAudio)
-            return this.SerialEventSounds.CopyCommandToNewFrame(index, frame);
+            return this.SerialEventSounds.CopyCommandToNewFrame(cmd, cmdData, frame);
         else
-            return this.SerialEvent.CopyCommandToNewFrame(index, frame);
+            return this.SerialEvent.CopyCommandToNewFrame(cmd, cmdData, frame);
     }
 
     public int NewCommand(string commandCode, int frameStart)
