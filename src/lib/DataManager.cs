@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 
+using static EVTUI.Utils;
+
 namespace EVTUI;
 
 public class DataManager
@@ -30,7 +32,8 @@ public class DataManager
     public string? CpkPath;
     public string? ModPath;
     public string VanillaExtractionPath = Path.Combine(UserCache.LocalDir, "Extracted");
-    public string WorkingPath = Path.Combine(UserCache.LocalDir, "Working");
+    private string WorkingPathBase = Path.Combine(UserCache.LocalDir, "Working");
+    public string WorkingPath;
 
     public string? ActiveEventId { get => (this.ProjectManager.ActiveEvent is null) ? null : $"E{this.ProjectManager.ActiveEvent.MajorId:000}_{this.ProjectManager.ActiveEvent.MinorId:000}"; }
 
@@ -40,20 +43,16 @@ public class DataManager
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public DataManager()
+    public DataManager(User userData)
     {
         if (!Directory.Exists(this.VanillaExtractionPath))
             Directory.CreateDirectory(this.VanillaExtractionPath);
-        if (!Directory.Exists(this.WorkingPath))
-            Directory.CreateDirectory(this.WorkingPath);
 
-        this.ProjectManager = new ProjectManager();
+        this.ProjectManager = new ProjectManager(userData);
         this.EventManager   = new EventManager();
         this.ScriptManager  = new ScriptManager();
         this.AudioManager   = new AudioManager();
         this.CpkList        = new List<string>();
-        this.Reset();
-
     }
 
     public void Reset()
@@ -76,6 +75,10 @@ public class DataManager
         this.CpkPath = this.ProjectManager.ActiveGame.Path;
         this.ReadOnly = false;
         this.ProjectLoaded = true;
+
+        this.WorkingPath = Path.Combine(this.WorkingPathBase, Hashify(this.ModPath));
+        if (!Directory.Exists(this.WorkingPath))
+            Directory.CreateDirectory(this.WorkingPath);
     }
 
     public void LoadGameReadOnly(int ind)
@@ -86,6 +89,12 @@ public class DataManager
         this.CpkPath = this.ProjectManager.ActiveGame.Path;
         this.ReadOnly = true;
         this.ProjectLoaded = false;
+
+        this.WorkingPath = Path.Combine(this.WorkingPathBase, Hashify(this.CpkPath));
+        if (!Directory.Exists(this.WorkingPath))
+            Directory.CreateDirectory(this.WorkingPath);
+
+        Console.WriteLine("#######################################");
     }
 
     public bool LoadEvent(int majorId, int minorId)
@@ -144,7 +153,7 @@ public class DataManager
     public void ClearCache()
     {
         CPKExtract.ClearDirectory(this.VanillaExtractionPath);
-        CPKExtract.ClearDirectory(this.WorkingPath);
+        CPKExtract.ClearDirectory(this.WorkingPathBase);
     }
 
     public void SaveBF()
