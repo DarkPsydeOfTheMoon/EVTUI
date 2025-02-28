@@ -435,7 +435,7 @@ public class TimelinePanelViewModel : ViewModelBase
         int newCmdIndex = this.Config.EventManager.CopyCommandToNewFrame(this.SharedClipboard.CopiedCommand.Command, this.SharedClipboard.CopiedCommand.CommandData, this.SharedClipboard.CopiedCommand.IsAudioCmd, frame);
         if (newCmdIndex >= 0)
         {
-            CommandPointer newCmd = new CommandPointer(this.Config, this.CopiedCommand.Code, this.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.CopiedCommand.Duration, (frame >= TimelineContent.StartingFrame && frame < TimelineContent.FrameCount));
+            CommandPointer newCmd = new CommandPointer(this.Config, this.SharedClipboard.CopiedCommand.Code, this.SharedClipboard.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.SharedClipboard.CopiedCommand.Duration, (frame >= TimelineContent.StartingFrame && frame < TimelineContent.FrameCount));
             this.TimelineContent.AddCommand(newCmd);
             if (this.SharedClipboard.DeleteOriginal)
                 this.SharedClipboard.DeleteCommand();
