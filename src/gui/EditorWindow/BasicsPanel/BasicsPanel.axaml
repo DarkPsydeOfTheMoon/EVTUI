@@ -270,7 +270,6 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding UnkFlag1}"/>
         <ContentControl Content="{Binding UnkFlag2}"/>
-        <ContentControl Content="{Binding UnkFlag3}"/>
 
       </StackPanel>
     </ScrollViewer>

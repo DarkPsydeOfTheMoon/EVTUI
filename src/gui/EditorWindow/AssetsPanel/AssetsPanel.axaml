@@ -280,30 +280,38 @@
                     <Flyout Closed="SaveChanges">
                       <StackPanel Classes="form">
 
-                        <TextBlock Classes="formtitle" Text="Asset"/>
-                        <Separator Classes="formtitle"/>
-                        <ContentControl Content="{Binding ObjectID}"/>
-                        <ContentControl Content="{Binding UniqueID}"/>
+                        <Expander Header="Asset">
+                          <StackPanel Classes="form">
+                            <ContentControl Content="{Binding ObjectID}"/>
+                            <ContentControl Content="{Binding UniqueID}"/>
+                          </StackPanel>
+                        </Expander>
 
-                        <TextBlock Classes="formsubtitle" Text="Resource"/>
-                        <Separator Classes="formsubtitle"/>
-                        <ContentControl Content="{Binding ObjectType}"/>
-                        <ContentControl Content="{Binding Category}"/>
-                        <ContentControl Content="{Binding MajorID}"/>
-                        <ContentControl Content="{Binding MinorID}"/>
-                        <ContentControl Content="{Binding SubID}"/>
+                        <Expander Header="Resource">
+                          <StackPanel Classes="form">
+                            <ContentControl Content="{Binding ObjectType}"/>
+                            <ContentControl Content="{Binding Category}"/>
+                            <ContentControl Content="{Binding MajorID}"/>
+                            <ContentControl Content="{Binding MinorID}"/>
+                            <ContentControl Content="{Binding SubID}"/>
+                          </StackPanel>
+                        </Expander>
 
-                        <TextBlock Classes="formsubtitle" Text="Animations"/>
-                        <Separator Classes="formsubtitle"/>
-                        <ContentControl Content="{Binding IsCommon}"/>
-                        <ContentControl Content="{Binding BaseAnimID}"/>
-                        <ContentControl Content="{Binding ExtBaseAnimID}"/>
-                        <ContentControl Content="{Binding ExtAddAnimID}"/>
+                        <Expander Header="Animations">
+                          <StackPanel Classes="form">
+                            <ContentControl Content="{Binding IsCommon}"/>
+                            <ContentControl Content="{Binding BaseAnimID}"/>
+                            <ContentControl Content="{Binding ExtBaseAnimID}"/>
+                            <ContentControl Content="{Binding ExtAddAnimID}"/>
+                          </StackPanel>
+                        </Expander>
 
-                        <TextBlock Classes="formsubtitle" Text="Other Flags"/>
-                        <Separator Classes="formsubtitle"/>
-                        <ContentControl Content="{Binding UnkFlag1}"/>
-                        <ContentControl Content="{Binding UnkFlag2}"/>
+                        <Expander Header="Other Flags">
+                          <StackPanel Classes="form">
+                            <ContentControl Content="{Binding UnkFlag1}"/>
+                            <ContentControl Content="{Binding UnkFlag2}"/>
+                          </StackPanel>
+                        </Expander>
 
                       </StackPanel>
                     </Flyout>

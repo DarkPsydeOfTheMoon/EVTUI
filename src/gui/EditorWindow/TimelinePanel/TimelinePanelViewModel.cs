@@ -13,6 +13,7 @@ public class Timeline : ReactiveObject
     public NumEntryField FrameRate                { get; set; }
     //public NumEntryField FrameCount               { get; set; }
     public NumEntryField FrameDuration            { get; set; }
+    public BoolChoiceField StartingFrameEnabled   { get; set; }
     public NumEntryField StartingFrameEntry       { get; set; }
     //public NumEntryField CinemascopeStartingFrame { get; set; }
 
@@ -22,14 +23,32 @@ public class Timeline : ReactiveObject
         //this.FrameCount = new NumEntryField("Frame Count", !dataManager.ReadOnly, (int)evt.FrameCount, 0, 99999, 1);
         this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, (int)evt.FrameRate, 1, 255, 1);
         this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, (int)evt.FrameCount, 0, 99999, 1);
+        this.StartingFrameEnabled = new BoolChoiceField("Set Delayed Starting Frame?", !dataManager.ReadOnly, evt.Flags[0]);
         this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, (int)evt.StartingFrame, 0, 9999, 1);
 
         _frameCount = (int)this.FrameDuration.Value;
         _startingFrame = (int)this.StartingFrameEntry.Value;
 
+        _maxMarks = evt.MarkerFrameCount;
+        this.MarkedFrames = new ObservableCollection<int>();
+        foreach (int frameInd in evt.MarkerFrame)
+            if (frameInd > -1 && !(this.MarkedFrames.Contains(frameInd)))
+                this.MarkedFrames.Add(frameInd);
+        //this.WhenAnyValue(x => x.MarkedFrames).Subscribe(x => 
+        //this.MarkedFrames.ToObservableChangeSet(x => 
+        this.MarkedFrames.CollectionChanged += (sender, e) =>
+        {
+            evt.MarkerFrame = new int[evt.MarkerFrameCount];
+            for (int i=0; i<evt.MarkerFrameCount; i++)
+                evt.MarkerFrame[i] = -1;
+            for (int i=0; i<this.MarkedFrames.Count; i++)
+                if (i < evt.MarkerFrameCount)
+                    evt.MarkerFrame[i] = this.MarkedFrames[i];
+        }; //);
+
         this.Frames = new ObservableCollection<Frame>();
         for (int i=0; i<_frameCount; i++)
-            this.Frames.Add(new Frame(i, (i >= _startingFrame && i < _frameCount)));
+            this.Frames.Add(new Frame(i, (i >= _startingFrame && i < _frameCount), this.MarkedFrames.Contains(i)));
         this.ActiveFrame = 0;
 
         this.Categories = new ObservableCollection<Category>();
@@ -58,7 +77,7 @@ public class Timeline : ReactiveObject
 
             this.Frames.Clear();
             for (int i=0; i<_frameCount; i++)
-                this.Frames.Add(new Frame(i, (i >= _startingFrame && i < _frameCount)));
+                this.Frames.Add(new Frame(i, (i >= _startingFrame && i < _frameCount), this.MarkedFrames.Contains(i)));
 
             foreach (Category _cat in this.Categories)
             {
@@ -68,10 +87,11 @@ public class Timeline : ReactiveObject
             }
         });
 
-        this.WhenAnyValue(x => x.StartingFrameEntry.Value).Subscribe(x => 
+        this.WhenAnyValue(x => x.StartingFrameEnabled.Value, x => x.StartingFrameEntry.Value).Subscribe(x => 
         {
+            evt.Flags[0] = this.StartingFrameEnabled.Value;
             evt.StartingFrame = (short)this.StartingFrameEntry.Value;
-            this.StartingFrame = (int)this.StartingFrameEntry.Value;
+            this.StartingFrame = (this.StartingFrameEnabled.Value) ? (int)this.StartingFrameEntry.Value : 0;
             foreach (Frame frame in this.Frames)
                 frame.IsInPlayRange = (frame.Index >= _startingFrame && frame.Index < _frameCount);
             foreach (Category _cat in this.Categories)
@@ -153,6 +173,23 @@ public class Timeline : ReactiveObject
         return catInd;
     }
 
+    public void TryToggleFrameMarker(int frameInd)
+    {
+        if (frameInd < 0 || frameInd >= this.Frames.Count)
+            return;
+
+        if (this.Frames[frameInd].IsMarked)
+        {
+            this.MarkedFrames.Remove(frameInd);
+            this.Frames[frameInd].IsMarked = false;
+        }
+        else if (this.MarkedFrames.Count < _maxMarks)
+        {
+            this.MarkedFrames.Add(frameInd);
+            this.Frames[frameInd].IsMarked = true;
+        }
+    }
+
     public void AddCommand(CommandPointer newCmd)
     {
         int catInd = Timeline.CodeToCategory(newCmd.Code, newCmd.IsAudioCmd);
@@ -187,6 +224,9 @@ public class Timeline : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _startingFrame, value);
     }
 
+    private int                       _maxMarks;
+    public ObservableCollection<int> MarkedFrames;
+
     public ObservableCollection<Frame>    Frames     { get; set; }
     public ObservableCollection<Category> Categories { get; set; }
 
@@ -200,10 +240,11 @@ public class Timeline : ReactiveObject
 
 public class Frame : ViewModelBase
 {
-    public Frame(int index, bool isInPlayRange)
+    public Frame(int index, bool isInPlayRange, bool isMarked)
     {
         this.Index    = index;
         this._isInPlayRange = isInPlayRange;
+        this._isMarked = isMarked;
     }
 
     public int Index { get; set; }
@@ -216,6 +257,17 @@ public class Frame : ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _isInPlayRange, value);
             OnPropertyChanged(nameof(IsInPlayRange));
+        }
+    }
+
+    private bool _isMarked;
+    public bool IsMarked
+    {
+        get => _isMarked;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isMarked, value);
+            OnPropertyChanged(nameof(IsMarked));
         }
     }
 }

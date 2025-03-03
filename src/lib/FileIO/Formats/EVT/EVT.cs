@@ -25,7 +25,11 @@ public class EVT : ISerializable
     public byte Level;
     public Int32 FileSize;
     public Int32 FileHeaderSize;
-    public UInt32 Flags;
+
+    //public UInt32 Flags;
+    private UInt32 _bitfield;
+    public Bitfield Flags = new Bitfield(0);
+
     public Int32 FrameCount;
     public byte FrameRate = 30;
     public byte InitScriptIndex;
@@ -79,7 +83,13 @@ public class EVT : ISerializable
         Trace.Assert(this.DUMMY_INT16[0] == 0);
         rw.RwInt32(ref this.FileSize);
         rw.RwInt32(ref this.FileHeaderSize);
-        rw.RwUInt32(ref this.Flags);
+
+        //rw.RwUInt32(ref this.Flags);
+        if (rw.IsParselike())
+            this._bitfield = this.Flags.Compose();
+        rw.RwUInt32(ref this._bitfield);
+        this.Flags = new Bitfield(this._bitfield);
+
         rw.RwInt32(ref this.FrameCount);
         rw.RwUInt8(ref this.FrameRate);
         rw.RwUInt8(ref this.InitScriptIndex);

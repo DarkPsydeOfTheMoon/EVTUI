@@ -7,23 +7,6 @@ using EVTUI;
 
 namespace EVTUI.ViewModels;
 
-/*public class Basics : ReactiveObject
-
-    private decimal? _maxValue;
-    public decimal? MaxValue
-    {
-        get => _maxValue;
-        set => this.RaiseAndSetIfChanged(ref _maxValue, value);
-    }
-
-    public void SaveChanges()
-    {
-        this.Command.ConditionalType  = (int)Enum.Parse(typeof(ConditionalTypes), this.ConditionalType.Choice);
-    }
-
-}*/
-
-
 public class BasicsPanelViewModel : ViewModelBase
 {
 
@@ -39,14 +22,14 @@ public class BasicsPanelViewModel : ViewModelBase
     public NumEntryField        Level   { get; set; }
 
     // flags
-    public BoolChoiceField UnkFlag1                    { get; set; }
+    //public BoolChoiceField UnkFlag1                    { get; set; }
     public BoolChoiceField InitScriptEnabled           { get; set; }
-    public BoolChoiceField UnkFlag2                    { get; set; }
+    public BoolChoiceField UnkFlag1                    { get; set; }
     public BoolChoiceField CinemascopeEnabled          { get; set; }
     public BoolChoiceField CinemascopeAnimationEnabled { get; set; }
     public BoolChoiceField EmbedBMD                    { get; set; }
     public BoolChoiceField EmbedBF                     { get; set; }
-    public BoolChoiceField UnkFlag3                    { get; set; }
+    public BoolChoiceField UnkFlag2                    { get; set; }
 
     // frames
     public NumEntryField FrameCount               { get; set; }
@@ -94,14 +77,14 @@ public class BasicsPanelViewModel : ViewModelBase
         this.WhenAnyValue(x => x.Level.Value).Subscribe(x => evt.Level = (byte)x);
 
         // scripts
-        this.EmbedBMD = new BoolChoiceField("Embed BMD in EVT", this.Editable, (((evt.Flags >> 12) & 1) == 1));
-        this.EmbedBF = new BoolChoiceField("Embed BF in EVT", this.Editable, (((evt.Flags >> 14) & 1) == 1));
-        this.InitScriptEnabled = new BoolChoiceField("Enable Init Script", this.Editable, (((evt.Flags >> 1) & 1) == 1));
+        this.EmbedBMD = new BoolChoiceField("Embed BMD in EVT", this.Editable, evt.Flags[12]);
+        this.EmbedBF = new BoolChoiceField("Embed BF in EVT", this.Editable, evt.Flags[14]);
+        this.InitScriptEnabled = new BoolChoiceField("Enable Init Script", this.Editable, evt.Flags[1]);
         this.InitScriptIndex = new NumEntryField("Init Script Index", this.Editable, (int)evt.InitScriptIndex, 0, 255, 1);
 
         // cinemascope
-        this.CinemascopeEnabled = new BoolChoiceField("Enable Cinemascope", this.Editable, (((evt.Flags >> 8) & 1) == 1));
-        this.CinemascopeAnimationEnabled = new BoolChoiceField("Enable Cinemascope Animation", this.Editable, (((evt.Flags >> 9) & 1) == 1));
+        this.CinemascopeEnabled = new BoolChoiceField("Enable Cinemascope", this.Editable, evt.Flags[8]);
+        this.CinemascopeAnimationEnabled = new BoolChoiceField("Enable Cinemascope Animation", this.Editable, evt.Flags[9]);
         this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", this.Editable, (int)evt.CinemascopeStartingFrame, 0, 9999, 1);
 
         // env
@@ -109,9 +92,9 @@ public class BasicsPanelViewModel : ViewModelBase
         this.DebugEnvAssetID = new NumEntryField("Debug ENV ID", this.Editable, (int)evt.InitDebugEnvAssetID, 0, 9999, 1);
 
         // other flags
-        this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, ((evt.Flags & 1) == 1));
-        this.UnkFlag2 = new BoolChoiceField("Unknown Flag #2", this.Editable, (((evt.Flags >> 6) & 1) == 1));
-        this.UnkFlag3 = new BoolChoiceField("Unknown Flag #3", this.Editable, (((evt.Flags >> 16) & 1) == 1));
+        //this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, evt.Flags[0]);
+        this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, evt.Flags[6]);
+        this.UnkFlag2 = new BoolChoiceField("Unknown Flag #2", this.Editable, evt.Flags[16]);
 
     }
 

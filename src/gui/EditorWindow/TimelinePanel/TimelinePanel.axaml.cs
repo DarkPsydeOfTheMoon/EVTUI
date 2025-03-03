@@ -94,6 +94,19 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         });
     }
 
+    public void ToggleMarker(object sender, PointerReleasedEventArgs e)
+    {
+        Frame frame = (Frame)((ContentPresenter)LogicalExtensions.GetLogicalParent(
+            (Border)sender)).Content;
+        /*Timeline timeline = (Timeline)(((DockPanel)LogicalExtensions.GetLogicalParent(
+            (Grid)LogicalExtensions.GetLogicalParent(
+                (ScrollViewer)LogicalExtensions.GetLogicalParent(
+                    (ItemsControl)LogicalExtensions.GetLogicalParent(
+                        (ContentPresenter)LogicalExtensions.GetLogicalParent(
+                            (Border)sender)))))).DataContext);*/
+        ViewModel!.TimelineContent.TryToggleFrameMarker(frame.Index);
+    }
+
     public void DeleteCommand(object sender, RoutedEventArgs e)
     {
         Button target = (Button)LogicalExtensions.GetLogicalParent(

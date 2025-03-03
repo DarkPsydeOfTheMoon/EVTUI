@@ -173,6 +173,15 @@ public class EventManager
                         pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]C{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}_{obj.ResourceSubId:00}\\.GMD";
                 }
                 break;
+            case ObjectTypes.Enemy:
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EM{obj.ResourceMajorId:0000}\\.GMD";
+                break;
+            case ObjectTypes.SymShadow:
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]SYMBOL[\\\\/]SYM{obj.ResourceMajorId:000}\\.GMD";
+                break;
+            case ObjectTypes.Persona:
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]PERSONA[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]PS{obj.ResourceMajorId:0000}\\.GMD";
+                break;
             case ObjectTypes.Item:
                 pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GMD";
                 break;
@@ -192,6 +201,7 @@ public class EventManager
             return CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir, this.CpkDecryptionFunctionName);
     }
 
+    // TODO: needs ResourceType
     public List<string> GetAnimPaths(int assetId, bool fromBaseAnims, bool blendAnims, List<string> cpkList, string targetdir)
     {
         SerialObject obj = this.ObjectsById[assetId];
@@ -203,6 +213,7 @@ public class EventManager
             case ObjectTypes.Character:
                 if (blendAnims)
                     pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EMT{obj.ResourceMajorId:0000}\\.GAP";
+                    //pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EVENT[\\\\/]{animType}E{obj.ResourceMajorId:0000}_{animId:000}A\\.GAP";
                 else
                     pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EVENT[\\\\/]{animType}E{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
                 break;
@@ -215,6 +226,10 @@ public class EventManager
             case ObjectTypes.Item:
                 // yes, it's the GMD itself. for items, that's where animations are also stored
                 pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GMD";
+                break;
+            case ObjectTypes.SymShadow:
+                // I suspect it's the same for Overworld Shadows, but I cannot confirm yet
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]SYMBOL[\\\\/]SYM{obj.ResourceMajorId:000}\\.GMD";
                 break;
             default:
                 break;
