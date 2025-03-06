@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -37,6 +38,27 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         {
             _hPos = value;
             OnPropertyChanged(nameof(HPos));
+            // SIGH... because of binding/event shenanigans, this can't actually work
+            // (not without double-scrolling when scrolling left and going back to zero sooo fast)
+            // but i love this little binary search and want it to work so bad......
+            /*int low = 0;
+            int high = this.FramePositions.Count;
+            int mid = 0;
+            while (low <= high)
+            {
+                mid = (high + low) / 2;
+                // if we're currently looking at a frame that starts prior to the scroll position
+                if (this.FramePositions[mid] < _hPos.X)
+                    if (mid >= this.FramePositions.Count-1 || this.FramePositions[mid+1] > _hPos.X)
+                        break;
+                    else
+                        low = mid + 1;
+                else if (this.FramePositions[mid] > _hPos.X)
+                    high = mid - 1;
+                else
+                    break;
+            }
+            ViewModel!.TimelineContent.ActiveFrame = mid;*/
         }
     }
 
@@ -91,6 +113,13 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
             foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
                 this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
         });
+    }
+
+    public void ToggleMarker(object sender, PointerReleasedEventArgs e)
+    {
+        Frame frame = (Frame)((ContentPresenter)LogicalExtensions.GetLogicalParent(
+            (Border)sender)).Content;
+        ViewModel!.TimelineContent.TryToggleFrameMarker(frame.Index);
     }
 
     public void DeleteCommand(object sender, RoutedEventArgs e)
@@ -202,7 +231,17 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
 
     public void JumpToFrame(object sender, NumericUpDownValueChangedEventArgs e)
     {
-        this.HPos = this.HPos.WithX(this.FramePositions[(int)e.NewValue]);
+        if (LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")).Count() != this.FramePositions.Count)
+        {
+    	    this.FramePositions = new List<double>();
+    	    foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
+    		    this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
+        }
+
+        double newValue = this.FramePositions[(int)e.NewValue];
+        if (newValue > this.Scrolly.Extent.Width - this.Scrolly.Bounds.Width)
+            newValue = this.Scrolly.Extent.Width - this.Scrolly.Bounds.Width;
+        this.HPos = this.HPos.WithX(newValue);
     }
 
     public void ShowAllCategories(object sender, RoutedEventArgs e)

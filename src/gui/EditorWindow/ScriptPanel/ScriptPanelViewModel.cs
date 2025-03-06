@@ -112,8 +112,11 @@ public class ScriptPanelViewModel : ViewModelBase
                 this._scriptNames.Add(script);
                 this.IsMsg[script] = (scriptType == "BMD");
             }
-        this.SelectedCompiledScriptName = this.ScriptNames[0];
-        this.UpdateSubfiles();
+        if (this.ScriptNames.Count > 0)
+        {
+            this.SelectedCompiledScriptName = this.ScriptNames[0];
+            this.UpdateSubfiles();
+        }
     }
 
     public void UpdateSubfiles()

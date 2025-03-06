@@ -24,7 +24,7 @@ public class EventManager
     /////////////////////////////
     // *** PRIVATE MEMBERS *** //
     ///////////////./////////////
-    private EVT?   SerialEvent               = null;
+    //private EVT?   SerialEvent               = null;
     private ECS?   SerialEventSounds         = null;
     private string CpkDecryptionFunctionName = null;
 
@@ -36,6 +36,10 @@ public class EventManager
     public List<(string ACB, string? AWB)> AcwbPaths;
     public List<string> BfPaths;
     public List<string> BmdPaths;
+
+    // TODO: re-privatize this...? the Basics and Assets tabs use it...
+    // is there a nicer way than having it just be public?
+    public EVT?   SerialEvent               = null;
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -88,7 +92,7 @@ public class EventManager
     public void SaveEVT() { this.SerialEvent.Write(this.EvtPath); }
     public void SaveECS() { this.SerialEventSounds.Write(this.EcsPath); }
 
-    public int EventDuration { get { return this.SerialEvent.TotalFrame; } }
+    public int EventDuration { get { return this.SerialEvent.FrameCount; } }
     public SerialCommand[] EventCommands { get { return this.SerialEvent.Commands; } }
     public ArrayList EventCommandData { get { return this.SerialEvent.CommandData; } }
     public SerialCommand[] EventSoundCommands { get { return this.SerialEventSounds.Commands; } }
@@ -172,6 +176,15 @@ public class EventManager
                         pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]C{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}_{obj.ResourceSubId:00}\\.GMD";
                 }
                 break;
+            case ObjectTypes.Enemy:
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EM{obj.ResourceMajorId:0000}\\.GMD";
+                break;
+            case ObjectTypes.SymShadow:
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]SYMBOL[\\\\/]SYM{obj.ResourceMajorId:000}\\.GMD";
+                break;
+            case ObjectTypes.Persona:
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]PERSONA[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]PS{obj.ResourceMajorId:0000}\\.GMD";
+                break;
             case ObjectTypes.Item:
                 pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GMD";
                 break;
@@ -191,6 +204,7 @@ public class EventManager
             return CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir, this.CpkDecryptionFunctionName);
     }
 
+    // TODO: needs ResourceType
     public List<string> GetAnimPaths(int assetId, bool fromBaseAnims, bool blendAnims, List<string> cpkList, string targetdir)
     {
         SerialObject obj = this.ObjectsById[assetId];
@@ -202,6 +216,7 @@ public class EventManager
             case ObjectTypes.Character:
                 if (blendAnims)
                     pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EMT{obj.ResourceMajorId:0000}\\.GAP";
+                    //pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EVENT[\\\\/]{animType}E{obj.ResourceMajorId:0000}_{animId:000}A\\.GAP";
                 else
                     pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EVENT[\\\\/]{animType}E{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
                 break;
@@ -214,6 +229,10 @@ public class EventManager
             case ObjectTypes.Item:
                 // yes, it's the GMD itself. for items, that's where animations are also stored
                 pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GMD";
+                break;
+            case ObjectTypes.SymShadow:
+                // I suspect it's the same for Overworld Shadows, but I cannot confirm yet
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]SYMBOL[\\\\/]SYM{obj.ResourceMajorId:000}\\.GMD";
                 break;
             default:
                 break;
@@ -234,17 +253,19 @@ public class EventManager
 
     public enum ObjectTypes : int
     {
+        Null             = 0x00000000,
         Field            = 0x00000003,
         Env              = 0x00000004,
-        Image            = 0x00000005,
-        ParticlePak      = 0x00000007,
+        Texture          = 0x00000005,
+        Sprite           = 0x00000006,
+        Camera           = 0x00000007,
         Movie            = 0x00000008,
-        Camera           = 0x00000009,
+        EventCamera      = 0x00000009,
         Enemy            = 0x00000301,
         SymShadow        = 0x00000401,
         Item             = 0x00000601,
         ResourceTableNPC = 0x00020101,
-        Particle         = 0x01000002,
+        Effect           = 0x01000002,
         Character        = 0x01000101,
         FieldCharacter   = 0x02000101,
         FieldObject      = 0x02000701,

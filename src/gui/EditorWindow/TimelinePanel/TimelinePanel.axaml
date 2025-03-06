@@ -12,6 +12,21 @@
              x:Class="EVTUI.Views.TimelinePanel"
              x:TypeArguments="vm:TimelinePanelViewModel">
 
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key='Light'>
+          <SolidColorBrush x:Key='SystemAccentColorTheme1' Color="{DynamicResource SystemAccentColorLight1}"/>
+          <SolidColorBrush x:Key='SystemAccentColorTheme2' Color="{DynamicResource SystemAccentColorLight2}"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key='Dark'>
+          <SolidColorBrush x:Key='SystemAccentColorTheme1' Color="{DynamicResource SystemAccentColorDark1}"/>
+          <SolidColorBrush x:Key='SystemAccentColorTheme2' Color="{DynamicResource SystemAccentColorDark2}"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
   <UserControl.Styles>
     <Style Selector="Separator.formtitle">
       <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
@@ -84,6 +99,12 @@
       <Setter Property="FontWeight" Value="ExtraLight"/>
       <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
+    <Style Selector="Border.inactive">
+      <Setter Property="Opacity" Value="0.5"/>
+    </Style>
+    <Style Selector="Button.inactive">
+      <Setter Property="Opacity" Value="0.5"/>
+    </Style>
   </UserControl.Styles>
 
   <UserControl.Resources>
@@ -95,7 +116,7 @@
     <!-- CONTAINER TYPES -->
 
     <DataTemplate DataType="{x:Type vm:Frame}">
-      <Border CornerRadius="5,5,0,0">
+      <Border CornerRadius="5,5,0,0" Classes.inactive="{Binding !IsInPlayRange}" Classes.marked="{Binding IsMarked}" PointerReleased="ToggleMarker" IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
       <StackPanel Width="80" Orientation="Vertical">
         <TextBlock Text="{Binding Index}"
          FontSize="18"
@@ -912,10 +933,10 @@
   <DockPanel DataContext="{Binding TimelineContent}">
     <DockPanel DockPanel.Dock="Top">
       <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-        <Button Name="ShowCategories" Click="ShowAllCategories" CornerRadius="5,0,0,5" Background="{DynamicResource SystemAccentColor}">
+        <Button Name="ShowCategories" Click="ShowAllCategories" CornerRadius="5,0,0,5" Background="{DynamicResource SystemAccentColorTheme1}">
           <Button.Styles>
             <Style Selector="Button#ShowCategories:pointerover ContentPresenter">
-              <Setter Property="Background" Value="{DynamicResource SystemAccentColorDark1}"/>
+              <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme2}"/>
             </Style>
           </Button.Styles>
           Show All
@@ -923,6 +944,25 @@
         <Button Click="HideAllCategories" CornerRadius="0,5,5,0">Hide All</Button>
       </StackPanel>
       <StackPanel Classes="field" DockPanel.Dock="Right">
+        <Button ToolTip.Tip="Frame Settings">
+          <Button.Flyout>
+            <Flyout>
+              <StackPanel Classes="form">
+	            <TextBlock Classes="formtitle" Text="Frame Settings"/>
+                <Separator Classes="formtitle"/>
+                <ContentControl Content="{Binding FrameRate}"/>
+                <ContentControl Content="{Binding FrameDuration}"/>
+                <Expander Header="In-Editor Playback">
+                  <StackPanel Classes="form">
+                    <ContentControl Content="{Binding StartingFrameEnabled}"/>
+                    <ContentControl Content="{Binding StartingFrameEntry}" IsVisible="{Binding StartingFrameEnabled.Value}"/>
+                  </StackPanel>
+                </Expander>
+              </StackPanel>
+            </Flyout>
+          </Button.Flyout>
+          <PathIcon Data="{StaticResource settings_regular}" />
+        </Button>
         <Slider
          Minimum="0"
          Maximum="{c:Binding FrameCount-1}"
@@ -950,6 +990,12 @@
             </Style>
             <Style Selector="ItemsControl > ContentPresenter:pointerover > Border">
               <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
+            </Style>
+            <Style Selector="ItemsControl > ContentPresenter > Border.marked">
+              <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme1}"/>
+            </Style>
+            <Style Selector="ItemsControl > ContentPresenter:pointerover > Border.marked">
+              <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme2}"/>
             </Style>
             <Style Selector="ItemsControl > ContentPresenter:pointerover > Border > StackPanel > TextBlock">
               <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
@@ -1037,7 +1083,7 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </ScrollViewer>
-      <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="153,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
+      <ScrollViewer Name="Scrolly" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="153,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16" PointerPressed="LogPosition">
           <ScrollViewer.ContextMenu>
             <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
@@ -1058,7 +1104,7 @@
                  Classes.hide="{Binding !IsOpen}">
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                      <Canvas MinHeight="40" Height="{c:Binding (IsOpen) ? 60*MaxInOneFrame + 20 : 40}" Width="{c:Binding 85*FrameCount - 5}" Classes.open="{Binding IsOpen}" Classes.closed="{Binding !IsOpen}"/>
+                      <Canvas MinHeight="40" Height="{c:Binding (IsOpen) ? 60*MaxInOneFrame + 20 : 40}" Width="{c:Binding 85*FrameCount - 5}" Classes.open="{Binding IsOpen}" Classes.closed="{Binding !IsOpen}" HorizontalAlignment="Left"/>
                     </ItemsPanelTemplate>
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.Styles>
@@ -1089,6 +1135,7 @@
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
                       <Button Flyout="{StaticResource CommandFlyout}"
+                       Classes.inactive="{Binding !IsInPlayRange}"
                        HorizontalAlignment="Center"
                        Width="{c:Binding 60 + 85*(Duration-1)}">
                         <Button.Styles>
@@ -1098,10 +1145,10 @@
                           </Style>
                         </Button.Styles>
                         <Button.ContextMenu>
-                          <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
-                            <MenuItem Header="Cut"    Click="CutCommand"    />
-                            <MenuItem Header="Copy"   Click="CopyCommand"   />
-                            <MenuItem Header="Delete" Click="DeleteCommand" />
+                          <ContextMenu>
+                            <MenuItem Header="Cut" Click="CutCommand" IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}"/>
+                            <MenuItem Header="Copy" Click="CopyCommand"/>
+                            <MenuItem Header="Delete" Click="DeleteCommand" IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}"/>
                           </ContextMenu>
                         </Button.ContextMenu> 
                         <TextBlock Text="{Binding Code}"

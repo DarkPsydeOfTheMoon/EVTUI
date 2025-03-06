@@ -11,9 +11,11 @@ public class EditorWindowViewModel : ViewModelBase
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
     public DataManager            Config          { get; }
-    public AudioPanelViewModel    audioPanelVM    { get; }
+    public BasicsPanelViewModel   basicsPanelVM   { get; }
+    public AssetsPanelViewModel   assetsPanelVM   { get; }
     public TimelinePanelViewModel timelinePanelVM { get; }
     public ScriptPanelViewModel   scriptPanelVM   { get; }
+    public AudioPanelViewModel    audioPanelVM    { get; }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -21,9 +23,11 @@ public class EditorWindowViewModel : ViewModelBase
     public EditorWindowViewModel(DataManager dataManager, Clipboard clipboard)
     {
         this.Config          = dataManager;
-        this.audioPanelVM    = new AudioPanelViewModel(this.Config);
+        this.basicsPanelVM   = new BasicsPanelViewModel(this.Config);
+        this.assetsPanelVM   = new AssetsPanelViewModel(this.Config);
         this.timelinePanelVM = new TimelinePanelViewModel(this.Config, clipboard);
         this.scriptPanelVM   = new ScriptPanelViewModel(this.Config);
+        this.audioPanelVM    = new AudioPanelViewModel(this.Config);
     }
 
     public void SaveMod(string which)

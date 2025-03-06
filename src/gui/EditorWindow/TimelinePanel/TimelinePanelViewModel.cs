@@ -2,422 +2,56 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
-using Avalonia.Media;
-
 using ReactiveUI;
 //using ReactiveUI.Fody.Helpers;
 
 namespace EVTUI.ViewModels;
 
-public class FieldBase : ViewModelBase
-{
-    public FieldBase(string name, bool editable)
-    {
-        this.Name     = name;
-        this.Editable = editable;
-    }
-
-    public string Name     { get; }
-    public bool   Editable { get; }
-}
-
-// ints/floats with open ranges
-// (to be numerical entry)
-public class NumEntryField : FieldBase
-{
-    public NumEntryField(string name, bool editable, dynamic val, dynamic? lowerLimit, dynamic? upperLimit, dynamic increment) : base(name, editable)
-    {
-        _value          = (decimal?)val;
-        this.LowerLimit = (decimal?)lowerLimit;
-        this.UpperLimit = (decimal?)upperLimit;
-        this.Increment  = (decimal)increment;
-    }
-
-    private decimal? _value;
-    public decimal? Value
-    {
-        get => _value;
-        set
-        {
-            if (!(value is null))
-                this.RaiseAndSetIfChanged(ref _value, value);
-        }
-    }
-
-    private decimal? _lowerLimit;
-    public decimal? LowerLimit
-    {
-        get => _lowerLimit;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _lowerLimit, value);
-            OnPropertyChanged(nameof(LowerLimit));
-        }
-    }
-
-    private decimal? _upperLimit;
-    public decimal? UpperLimit
-    {
-        get => _upperLimit;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _upperLimit, value);
-            OnPropertyChanged(nameof(UpperLimit));
-        }
-    }
-
-    public decimal  Increment  { get; set; }
-}
-
-// TODO: enable inline non-string elements...?
-public class StringEntryField : FieldBase
-{
-    public StringEntryField(string name, bool editable, string text) : base(name, editable)
-    {
-        _text = text;
-    }
-
-    private string _text;
-    public string Text
-    {
-        get => _text;
-        set => this.RaiseAndSetIfChanged(ref _text, value);
-    }
-}
-
-// ints/floats with definite ranges
-// (to be sliders)
-public class NumRangeField : FieldBase
-{
-    public NumRangeField(string name, bool editable, dynamic val, dynamic lowerLimit, dynamic upperLimit, dynamic? increment) : base(name, editable)
-    {
-        _value          = (decimal?)val;
-        this.LowerLimit = (decimal)lowerLimit;
-        this.UpperLimit = (decimal)upperLimit;
-        this.Increment  = (decimal?)increment;
-    }
-
-    private decimal? _value;
-    public decimal? Value
-    {
-        get => _value;
-        set
-        {
-            if (!(value is null))
-                this.RaiseAndSetIfChanged(ref _value, value);
-                OnPropertyChanged(nameof(Value));
-        }
-    }
-
-    public decimal  LowerLimit { get; set; }
-    public decimal  UpperLimit { get; set; }
-    public decimal? Increment  { get; set; }
-}
-
-// indices, maybe unknown enums
-// (to be dropdowns)
-public class IntSelectionField : FieldBase
-{
-    public IntSelectionField(string name, bool editable, int choiceIndex, List<int> choices) : base(name, editable)
-    {
-        _choice = choiceIndex;
-        _choices = new ObservableCollection<int>(choices);
-    }
-
-    private int _choice;
-    public int Choice
-    {
-        get => _choice;
-        set => this.RaiseAndSetIfChanged(ref _choice, value);
-    }
-
-    private ObservableCollection<int> _choices;
-    public ObservableCollection<int> Choices
-    {
-        get => _choices;
-        set => this.RaiseAndSetIfChanged(ref _choices, value);
-    }
-}
-
-// known enums
-// (to be dropdowns)
-public class StringSelectionField : FieldBase
-{
-    public StringSelectionField(string name, bool editable, string choiceIndex, List<string> choices) : base(name, editable)
-    {
-        _choice = choiceIndex;
-        _choices = new ObservableCollection<string>(choices);
-    }
-
-    private string _choice;
-    public string Choice
-    {
-        get => _choice;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _choice, value);
-            OnPropertyChanged(nameof(Choice));
-        }
-    }
-
-    private ObservableCollection<string> _choices;
-    public ObservableCollection<string> Choices
-    {
-        get => _choices;
-        set => this.RaiseAndSetIfChanged(ref _choices, value);
-    }
-}
-
-// (to be checkboxes)
-public class BoolChoiceField : FieldBase
-{
-    public BoolChoiceField(string name, bool editable, bool val) : base(name, editable)
-    {
-        _value = val;
-    }
-
-    private bool _value;
-    public bool Value
-    {
-        get => _value;
-        set
-        {
-            this.RaiseAndSetIfChanged(ref _value, value);
-            OnPropertyChanged(nameof(Value));
-        }
-    }
-}
-
-public class ColorSelectionField : FieldBase
-{
-    public ColorSelectionField(string name, bool editable, byte[] rgba) : base(name, editable)
-    {
-        _selectedColor = new Color(rgba[3], rgba[0], rgba[1], rgba[2]);
-    }
-
-    public ColorSelectionField(string name, bool editable, UInt32 rgba) : base(name, editable)
-    {
-        //_selectedColor = Color.FromUInt32(rgba);
-        _selectedColor = new Color(
-            (byte)(rgba & 0xFF),
-            (byte)((rgba >> 24) & 0xFF),
-            (byte)((rgba >> 16) & 0xFF),
-            (byte)((rgba >> 8) & 0xFF)
-        );
-    }
-
-    public UInt32 ToUInt32()
-    {
-        UInt32 ret = 0;
-        ret |= (uint)_selectedColor.R << 24;
-        ret |= (uint)_selectedColor.G << 16;
-        ret |= (uint)_selectedColor.B << 8;
-        ret |= (uint)_selectedColor.A;
-        return ret;
-    }
-
-    private Color _selectedColor;
-    public Color SelectedColor
-    {
-        get => _selectedColor;
-        set => this.RaiseAndSetIfChanged(ref _selectedColor, value);
-    }
-}
-
-public class AnimationWidget : ViewModelBase
-{
-    public AnimationWidget(DataManager config, IntSelectionField modelID, AnimationStruct animation, Bitfield bitfield, string name, int? enabledInd = null, int? extInd = null, int? frameBlendingInd = null, bool enabledFlip = false, bool extFlip = false, bool frameBlendingFlip = false, bool loopFlip = false, int? trackNum = null)
-    {
-        _config = config;
-        _modelID = modelID;
-        _bitfield = bitfield;
-        _animation = animation;
-
-        _enabledInd = enabledInd;
-        _extInd = extInd;
-        _frameBlendingInd = frameBlendingInd;
-
-        _enabledFlip = enabledFlip;
-        _extFlip = extFlip;
-        _frameBlendingFlip = frameBlendingFlip;
-        _loopFlip = loopFlip;
-
-        this.Name = name;
-        this.Editable = !config.ReadOnly;
-
-        if (!(_enabledInd is null))
-            if (_enabledFlip)
-                this.AnimationEnabled = new BoolChoiceField("Enabled?", this.Editable, !_bitfield[(int)_enabledInd]);
-            else
-                this.AnimationEnabled = new BoolChoiceField("Enabled?", this.Editable, _bitfield[(int)_enabledInd]);
-
-        if (!(_extInd is null))
-            if (_extFlip)
-                this.AnimationFromExt = new BoolChoiceField("From ext?", this.Editable, !_bitfield[(int)_extInd]);
-            else
-                this.AnimationFromExt = new BoolChoiceField("From ext?", this.Editable, _bitfield[(int)_extInd]);
-
-        if (!(_frameBlendingInd is null))
-            if (_frameBlendingFlip)
-                this.AnimationFrameBlendingEnabled = new BoolChoiceField("Frame Blending Enabled?", this.Editable, !_bitfield[(int)_frameBlendingInd]);
-            else
-                this.AnimationFrameBlendingEnabled = new BoolChoiceField("Frame Blending Enabled?", this.Editable, _bitfield[(int)_frameBlendingInd]);
-
-        if (_animation.IncludeLoopBool)
-            if (_loopFlip)
-                this.AnimationLoopBool = new BoolChoiceField("Loop Playback?", this.Editable, (_animation.LoopBool == 0));
-            else
-                this.AnimationLoopBool = new BoolChoiceField("Loop Playback?", this.Editable, (_animation.LoopBool != 0));
-
-        if (_animation.IncludeIndex)
-            this.AnimationID = new NumEntryField("Animation ID", this.Editable, _animation.Index, 0, 59, 1);
-
-        if (_animation.IncludeStartingFrame)
-            this.AnimationStartingFrame = new NumEntryField("Starting Frame", this.Editable, _animation.StartingFrame, 0, 99999, 1);
-        if (_animation.IncludeEndingFrame)
-            this.AnimationEndingFrame = new NumEntryField("Ending Frame", this.Editable, _animation.EndingFrame, 0, 99999, 1);
-        if (_animation.IncludeInterpolatedFrames)
-            this.AnimationInterpolatedFrames = new NumEntryField("Interpolated Frames", this.Editable, _animation.InterpolatedFrames, 0, 100, 1);
-        if (_animation.IncludePlaybackSpeed)
-            this.AnimationPlaybackSpeed = new NumEntryField("Playback Speed", this.Editable, _animation.PlaybackSpeed, 0, 10, 0.1);
-        if (_animation.IncludeWeight)
-            this.AnimationWeight = new NumEntryField("Weight", this.Editable, _animation.Weight, 0, 1, 0.01);
-
-        this.AnimationPreviewVM = new GFDRenderingPanelViewModel();
-
-        this.WhenAnyValue(x => x.AnimationPreviewVM.ReadyToRender).Subscribe(x =>
-        {
-            if (x)
-            {
-                this.AnimationPreviewVM.sceneManager.LoadObjects(_config, new int[] {_objectID});
-                if (trackNum is null)
-                    this.AnimationPreviewVM.sceneManager.LoadBaseAnimation(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value);
-                else
-                    this.AnimationPreviewVM.sceneManager.LoadAddAnimationTrack(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value, (int)trackNum);
-            }
-            else 
-                this.AnimationPreviewVM.sceneManager.teardown();
-        });
-
-        this.WhenAnyValue(y => y.AnimationID.Value, y => y.AnimationFromExt.Value).Subscribe(y =>
-        {
-            if (this.AnimationPreviewVM.ReadyToRender)
-                if (trackNum is null)
-                    this.AnimationPreviewVM.sceneManager.LoadBaseAnimation(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value);
-                else
-                    this.AnimationPreviewVM.sceneManager.LoadAddAnimationTrack(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value, (int)trackNum);
-        });
-    }
-
-    public GFDRenderingPanelViewModel AnimationPreviewVM { get; set; }
-
-    public BoolChoiceField  AnimationEnabled              { get; set; }
-    public BoolChoiceField  AnimationFromExt              { get; set; }
-    public BoolChoiceField  AnimationLoopBool             { get; set; }
-    public BoolChoiceField  AnimationFrameBlendingEnabled { get; set; }
-
-    public NumEntryField    AnimationID                   { get; set; }
-
-    public NumEntryField    AnimationStartingFrame        { get; set; }
-    public NumEntryField    AnimationEndingFrame          { get; set; }
-    public NumEntryField    AnimationInterpolatedFrames   { get; set; }
-    public NumEntryField    AnimationPlaybackSpeed        { get; set; }
-    public NumEntryField    AnimationWeight               { get; set; }
-
-    public bool   Editable { get; }
-    public string Name     { get; }
-
-    protected IntSelectionField _modelID;
-    private int _objectID { get => (int)_modelID.Choice; }
-
-    protected DataManager _config;
-    protected Bitfield _bitfield;
-    public AnimationStruct _animation;
-    protected int? _enabledInd;
-    protected int? _extInd;
-    protected int? _frameBlendingInd;
-    protected bool _enabledFlip;
-    protected bool _extFlip;
-    protected bool _frameBlendingFlip;
-    protected bool _loopFlip;
-
-    public void SaveChanges()
-    {
-        if (!(_enabledInd is null))
-            if (_enabledFlip)
-                _bitfield[(int)_enabledInd] = !this.AnimationEnabled.Value;
-            else
-                _bitfield[(int)_enabledInd] = this.AnimationEnabled.Value;
-
-        if (!(_extInd is null))
-            if (_extFlip)
-                _bitfield[(int)_extInd] = !this.AnimationFromExt.Value;
-            else
-                _bitfield[(int)_extInd] = this.AnimationFromExt.Value;
-
-        if (!(_frameBlendingInd is null))
-            if (_frameBlendingFlip)
-                _bitfield[(int)_frameBlendingInd] = !this.AnimationFrameBlendingEnabled.Value;
-            else
-                _bitfield[(int)_frameBlendingInd] = this.AnimationFrameBlendingEnabled.Value;
-
-        if (_animation.IncludeLoopBool)
-            if (_loopFlip)
-                _animation.LoopBool = Convert.ToUInt32(!this.AnimationLoopBool.Value);
-            else
-                _animation.LoopBool = Convert.ToUInt32(this.AnimationLoopBool.Value);
-
-        if (_animation.IncludeIndex)
-            _animation.Index              = (uint)this.AnimationID.Value;
-
-        if (_animation.IncludeStartingFrame)
-            _animation.StartingFrame      = (uint)this.AnimationStartingFrame.Value;
-        if (_animation.IncludeEndingFrame)
-            _animation.EndingFrame        = (uint)this.AnimationEndingFrame.Value;
-        if (_animation.IncludeInterpolatedFrames)
-            _animation.InterpolatedFrames = (uint)this.AnimationInterpolatedFrames.Value;
-        if (_animation.IncludePlaybackSpeed)
-            _animation.PlaybackSpeed      = (float)this.AnimationPlaybackSpeed.Value;
-        if (_animation.IncludeWeight)
-            _animation.Weight             = (float)this.AnimationWeight.Value;
-    }
-}
-
-public class ModelPreviewWidget : ViewModelBase
-{
-    public ModelPreviewWidget(DataManager config, IntSelectionField modelID)
-    {
-        _config = config;
-        _modelID = modelID;
-
-        this.ModelPreviewVM = new GFDRenderingPanelViewModel();
-
-        this.WhenAnyValue(x => x.ModelPreviewVM.ReadyToRender).Subscribe(x =>
-        {
-            if (x)
-                this.ModelPreviewVM.sceneManager.LoadObjects(_config, new int[] {_objectID});
-            else
-                this.ModelPreviewVM.sceneManager.teardown();
-        });
-    }
-
-    public GFDRenderingPanelViewModel ModelPreviewVM { get; set; }
-
-    protected IntSelectionField _modelID;
-    private int _objectID { get => (int)_modelID.Choice; }
-
-    protected DataManager _config;
-}
-
 public class Timeline : ReactiveObject
 {
 
+    public NumEntryField FrameRate                { get; set; }
+    //public NumEntryField FrameCount               { get; set; }
+    public NumEntryField FrameDuration            { get; set; }
+    public BoolChoiceField StartingFrameEnabled   { get; set; }
+    public NumEntryField StartingFrameEntry       { get; set; }
+    //public NumEntryField CinemascopeStartingFrame { get; set; }
+
     public Timeline(DataManager dataManager)
     {
+        EVT evt = (EVT)dataManager.EventManager.SerialEvent;
+        //this.FrameCount = new NumEntryField("Frame Count", !dataManager.ReadOnly, (int)evt.FrameCount, 0, 99999, 1);
+        this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, (int)evt.FrameRate, 1, 255, 1);
+        this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, (int)evt.FrameCount, 0, 99999, 1);
+        this.StartingFrameEnabled = new BoolChoiceField("Set Delayed Starting Frame?", !dataManager.ReadOnly, evt.Flags[0]);
+        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, (int)evt.StartingFrame, 0, 9999, 1);
+
+        _frameCount = (int)this.FrameDuration.Value;
+        _startingFrame = (int)this.StartingFrameEntry.Value;
+
+        _maxMarks = evt.MarkerFrameCount;
+        this.MarkedFrames = new ObservableCollection<int>();
+        foreach (int frameInd in evt.MarkerFrame)
+            if (frameInd > -1 && !(this.MarkedFrames.Contains(frameInd)))
+                this.MarkedFrames.Add(frameInd);
+        //this.WhenAnyValue(x => x.MarkedFrames).Subscribe(x => 
+        //this.MarkedFrames.ToObservableChangeSet(x => 
+        this.MarkedFrames.CollectionChanged += (sender, e) =>
+        {
+            if (!dataManager.ReadOnly)
+            {
+                evt.MarkerFrame = new int[evt.MarkerFrameCount];
+                for (int i=0; i<evt.MarkerFrameCount; i++)
+                    evt.MarkerFrame[i] = -1;
+                for (int i=0; i<this.MarkedFrames.Count; i++)
+                    if (i < evt.MarkerFrameCount)
+                        evt.MarkerFrame[i] = this.MarkedFrames[i];
+            }
+        }; //);
+
         this.Frames = new ObservableCollection<Frame>();
-        for (int i=0; i<dataManager.EventManager.EventDuration; i++)
-            this.Frames.Add(new Frame(i));
-        this.FrameCount = dataManager.EventManager.EventDuration;
+        for (int i=0; i<_frameCount; i++)
+            this.Frames.Add(new Frame(i, (i >= _startingFrame && i < _frameCount), this.MarkedFrames.Contains(i)));
         this.ActiveFrame = 0;
 
         this.Categories = new ObservableCollection<Category>();
@@ -439,21 +73,62 @@ public class Timeline : ReactiveObject
         this.Categories.Add(new Category("Hardware", 16, this.FrameCount));
         this.Categories.Add(new Category("Other",    17, this.FrameCount));
 
+        this.WhenAnyValue(x => x.FrameDuration.Value).Subscribe(x => 
+        {
+            evt.FrameCount = (int)this.FrameDuration.Value;
+            this.FrameCount = (int)this.FrameDuration.Value;
+
+            this.Frames.Clear();
+            for (int i=0; i<_frameCount; i++)
+                this.Frames.Add(new Frame(i, (i >= _startingFrame && i < _frameCount), this.MarkedFrames.Contains(i)));
+
+            foreach (Category _cat in this.Categories)
+            {
+                _cat.FrameCount = this.FrameCount;
+                foreach (CommandPointer _cmd in _cat.Commands)
+                    _cmd.IsInPlayRange = (_cmd.Frame >= _startingFrame && _cmd.Frame < _frameCount);
+            }
+        });
+
+        this.WhenAnyValue(x => x.StartingFrameEnabled.Value, x => x.StartingFrameEntry.Value).Subscribe(x => 
+        {
+            evt.Flags[0] = this.StartingFrameEnabled.Value;
+            evt.StartingFrame = (short)this.StartingFrameEntry.Value;
+            this.StartingFrame = (this.StartingFrameEnabled.Value) ? (int)this.StartingFrameEntry.Value : 0;
+            foreach (Frame frame in this.Frames)
+                frame.IsInPlayRange = (frame.Index >= _startingFrame && frame.Index < _frameCount);
+            foreach (Category _cat in this.Categories)
+                foreach (CommandPointer _cmd in _cat.Commands)
+                    _cmd.IsInPlayRange = (_cmd.Frame >= _startingFrame && _cmd.Frame < _frameCount);
+        });
+
         for (int j=0; j<dataManager.EventManager.EventSoundCommands.Length; j++)
         {
             string code = dataManager.EventManager.EventSoundCommands[j].CommandCode;
             int i = dataManager.EventManager.EventSoundCommands[j].FrameStart;
             int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
-            if (i >= 0 && i < this.Frames.Count)
-                this.AddCommand(new CommandPointer(code, true, j, i, len, dataManager));
+            //if (i >= 0 && i < this.Frames.Count)
+            //{
+                CommandPointer newCmd = new CommandPointer(dataManager, code, true, j, i, len, (i >= _startingFrame && i < _frameCount));
+                int catInd = Timeline.CodeToCategory(code, true);
+                //if (catInd > -1)
+                this.Categories[catInd].AddCommand(newCmd);
+                this.Categories[catInd].IsOpen = true;
+            //}
         }
         for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
         {
             string code = dataManager.EventManager.EventCommands[j].CommandCode;
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
             int len = dataManager.EventManager.EventCommands[j].FrameDuration;
-            if (i >= 0 && i < this.Frames.Count)
-                this.AddCommand(new CommandPointer(code, false, j, i, len, dataManager));
+            //if (i >= 0 && i < this.Frames.Count)
+            //{
+                CommandPointer newCmd = new CommandPointer(dataManager, code, false, j, i, len, (i >= _startingFrame && i < _frameCount));
+                int catInd = Timeline.CodeToCategory(code, false);
+                //if (catInd > -1)
+                this.Categories[catInd].AddCommand(newCmd);
+                this.Categories[catInd].IsOpen = true;
+            //}
         }
     }
 
@@ -461,7 +136,7 @@ public class Timeline : ReactiveObject
     {
         if (isAudio)
             return 12;
-        int catInd = -1;
+        int catInd = 16;
         if (code == "FbEn" || code == "Flbk" || code.StartsWith("Im"))
             catInd = 6;
         else if (code == "Msg_" || code == "MsgR" || code == "Cht_")
@@ -496,9 +171,26 @@ public class Timeline : ReactiveObject
             catInd = 9;
         else if (code.StartsWith("P"))
             catInd = 11;
-        else
-            catInd = 16;
+        //else
+        //    catInd = 16;
         return catInd;
+    }
+
+    public void TryToggleFrameMarker(int frameInd)
+    {
+        if (frameInd < 0 || frameInd >= this.Frames.Count)
+            return;
+
+        if (this.Frames[frameInd].IsMarked)
+        {
+            this.MarkedFrames.Remove(frameInd);
+            this.Frames[frameInd].IsMarked = false;
+        }
+        else if (this.MarkedFrames.Count < _maxMarks)
+        {
+            this.MarkedFrames.Add(frameInd);
+            this.Frames[frameInd].IsMarked = true;
+        }
     }
 
     public void AddCommand(CommandPointer newCmd)
@@ -521,7 +213,22 @@ public class Timeline : ReactiveObject
         }
     }
 
-    public int FrameCount { get; set; }
+    private int _frameCount;
+    public int FrameCount
+    {
+        get => _frameCount;
+        set => this.RaiseAndSetIfChanged(ref _frameCount, value);
+    }
+
+    private int _startingFrame;
+    public int StartingFrame
+    {
+        get => _startingFrame;
+        set => this.RaiseAndSetIfChanged(ref _startingFrame, value);
+    }
+
+    private int                       _maxMarks;
+    public ObservableCollection<int> MarkedFrames;
 
     public ObservableCollection<Frame>    Frames     { get; set; }
     public ObservableCollection<Category> Categories { get; set; }
@@ -536,39 +243,61 @@ public class Timeline : ReactiveObject
 
 public class Frame : ViewModelBase
 {
-    public Frame(int index)
+    public Frame(int index, bool isInPlayRange, bool isMarked)
     {
         this.Index    = index;
-        this.Name     = (index+1).ToString();
+        this._isInPlayRange = isInPlayRange;
+        this._isMarked = isMarked;
     }
 
-    public int                  Index    { get; set; }
-    public string               Name     { get; set; }
+    public int Index { get; set; }
+
+    private bool _isInPlayRange;
+    public bool IsInPlayRange
+    {
+        get => _isInPlayRange;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isInPlayRange, value);
+            OnPropertyChanged(nameof(IsInPlayRange));
+        }
+    }
+
+    private bool _isMarked;
+    public bool IsMarked
+    {
+        get => _isMarked;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isMarked, value);
+            OnPropertyChanged(nameof(IsMarked));
+        }
+    }
 }
 
 public class Category : ViewModelBase
 {
     public Category(string name, int index, int frameCount)
     {
-        this.FrameCount = frameCount;
+        _frameCount = frameCount;
         this.Name  = name;
         this.Index = index;
         this.Commands = new ObservableCollection<CommandPointer>();
         this.MaxInOneFrame = 0;
-        this.FrameCounts = new Dictionary<int, int>();
-        this.IsOpen = true;
+        this.CommandsPerFrame = new Dictionary<int, int>();
+        this.IsOpen = false;
     }
 
-    private Dictionary<int, int> FrameCounts;
+    private Dictionary<int, int> CommandsPerFrame;
 
     public void AddCommand(CommandPointer newCmd)
     {
-        if (!(this.FrameCounts.ContainsKey(newCmd.Frame)))
-            this.FrameCounts[newCmd.Frame] = 0;
-        newCmd.PositionWithinFrame = this.FrameCounts[newCmd.Frame];
-        this.FrameCounts[newCmd.Frame] += 1;
-        if (this.FrameCounts[newCmd.Frame] > this.MaxInOneFrame)
-            this.MaxInOneFrame = this.FrameCounts[newCmd.Frame];
+        if (!(this.CommandsPerFrame.ContainsKey(newCmd.Frame)))
+            this.CommandsPerFrame[newCmd.Frame] = 0;
+        newCmd.PositionWithinFrame = this.CommandsPerFrame[newCmd.Frame];
+        this.CommandsPerFrame[newCmd.Frame] += 1;
+        if (this.CommandsPerFrame[newCmd.Frame] > this.MaxInOneFrame)
+            this.MaxInOneFrame = this.CommandsPerFrame[newCmd.Frame];
         this.Commands.Add(newCmd);
     }
 
@@ -578,7 +307,7 @@ public class Category : ViewModelBase
         for (int i=this.Commands.Count-1; i>=0; i--)
             if (this.Commands[i] == cmd)
             {
-                this.FrameCounts[cmd.Frame] -= 1;
+                this.CommandsPerFrame[cmd.Frame] -= 1;
                 this.Commands.RemoveAt(i);
                 break;
             }
@@ -586,12 +315,12 @@ public class Category : ViewModelBase
         // TODO: deal with it if nothing was removed somehow???
 
         // shrink the category height if necessary
-        if (this.FrameCounts[cmd.Frame] + 1 == this.MaxInOneFrame)
+        if (this.CommandsPerFrame[cmd.Frame] + 1 == this.MaxInOneFrame)
         {
             this.MaxInOneFrame -= 1;
-            foreach (int frame in this.FrameCounts.Keys)
-                if (this.FrameCounts[frame] > this.MaxInOneFrame)
-                    this.MaxInOneFrame = this.FrameCounts[frame];
+            foreach (int frame in this.CommandsPerFrame.Keys)
+                if (this.CommandsPerFrame[frame] > this.MaxInOneFrame)
+                    this.MaxInOneFrame = this.CommandsPerFrame[frame];
         }
 
         // move up all subsequent commands in the same category + frame
@@ -600,7 +329,17 @@ public class Category : ViewModelBase
                 this.Commands[i].PositionWithinFrame -= 1;
     }
 
-    public int FrameCount    { get; set; }
+    private int _frameCount;
+    public int FrameCount
+    {
+        get => _frameCount;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _frameCount, value);
+            OnPropertyChanged(nameof(FrameCount));
+        }
+    }
+
 
     private int _maxInOneFrame;
     public int MaxInOneFrame
@@ -632,13 +371,14 @@ public class Category : ViewModelBase
 
 public class CommandPointer : ViewModelBase
 {
-    public CommandPointer(string code, bool isAudioCmd, int cmdIndex, int frame, int duration, DataManager config)
+    public CommandPointer(DataManager config, string code, bool isAudioCmd, int cmdIndex, int frame, int duration, bool isInPlayRange)
     {
         this.Code       = code;
         this.IsAudioCmd = isAudioCmd;
         this.CmdIndex   = cmdIndex;
         this.Frame      = frame;
         this.Duration   = duration;
+        this._isInPlayRange = isInPlayRange;
 
         this.Command     = ((isAudioCmd) ? config.EventManager.EventSoundCommands : config.EventManager.EventCommands)[cmdIndex];
         this.CommandData = ((isAudioCmd) ? config.EventManager.EventSoundCommandData : config.EventManager.EventCommandData)[cmdIndex];
@@ -674,6 +414,17 @@ public class CommandPointer : ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _positionWithinFrame, value);
             OnPropertyChanged(nameof(PositionWithinFrame));
+        }
+    }
+
+    private bool _isInPlayRange;
+    public bool IsInPlayRange
+    {
+        get => _isInPlayRange;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isInPlayRange, value);
+            OnPropertyChanged(nameof(IsInPlayRange));
         }
     }
 }
@@ -739,7 +490,7 @@ public class TimelinePanelViewModel : ViewModelBase
         int newCmdIndex = this.Config.EventManager.CopyCommandToNewFrame(this.SharedClipboard.CopiedCommand.Command, this.SharedClipboard.CopiedCommand.CommandData, this.SharedClipboard.CopiedCommand.IsAudioCmd, frame);
         if (newCmdIndex >= 0)
         {
-            CommandPointer newCmd = new CommandPointer(this.SharedClipboard.CopiedCommand.Code, this.SharedClipboard.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.SharedClipboard.CopiedCommand.Duration, this.Config);
+            CommandPointer newCmd = new CommandPointer(this.Config, this.SharedClipboard.CopiedCommand.Code, this.SharedClipboard.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.SharedClipboard.CopiedCommand.Duration, (frame >= TimelineContent.StartingFrame && frame < TimelineContent.FrameCount));
             this.TimelineContent.AddCommand(newCmd);
             if (this.SharedClipboard.DeleteOriginal)
                 this.SharedClipboard.DeleteCommand();
@@ -753,7 +504,7 @@ public class TimelinePanelViewModel : ViewModelBase
         if (newCmdIndex >= 0)
         {
             int len = ((isAudio) ? this.Config.EventManager.EventSoundCommands : this.Config.EventManager.EventCommands)[newCmdIndex].FrameDuration;
-            CommandPointer newCmd = new CommandPointer(code, isAudio, newCmdIndex, frame, len, this.Config);
+            CommandPointer newCmd = new CommandPointer(this.Config, code, isAudio, newCmdIndex, frame, len, (frame >= TimelineContent.StartingFrame && frame < TimelineContent.FrameCount));
             this.TimelineContent.Categories[Timeline.CodeToCategory(code, isAudio)].AddCommand(newCmd);
         }
     }
