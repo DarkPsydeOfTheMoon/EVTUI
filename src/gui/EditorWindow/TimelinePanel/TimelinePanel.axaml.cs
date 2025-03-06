@@ -38,6 +38,27 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         {
             _hPos = value;
             OnPropertyChanged(nameof(HPos));
+            // SIGH... because of binding/event shenanigans, this can't actually work
+            // (not without double-scrolling when scrolling left and going back to zero sooo fast)
+            // but i love this little binary search and want it to work so bad......
+            /*int low = 0;
+            int high = this.FramePositions.Count;
+            int mid = 0;
+            while (low <= high)
+            {
+                mid = (high + low) / 2;
+                // if we're currently looking at a frame that starts prior to the scroll position
+                if (this.FramePositions[mid] < _hPos.X)
+                    if (mid >= this.FramePositions.Count-1 || this.FramePositions[mid+1] > _hPos.X)
+                        break;
+                    else
+                        low = mid + 1;
+                else if (this.FramePositions[mid] > _hPos.X)
+                    high = mid - 1;
+                else
+                    break;
+            }
+            ViewModel!.TimelineContent.ActiveFrame = mid;*/
         }
     }
 
@@ -98,12 +119,6 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     {
         Frame frame = (Frame)((ContentPresenter)LogicalExtensions.GetLogicalParent(
             (Border)sender)).Content;
-        /*Timeline timeline = (Timeline)(((DockPanel)LogicalExtensions.GetLogicalParent(
-            (Grid)LogicalExtensions.GetLogicalParent(
-                (ScrollViewer)LogicalExtensions.GetLogicalParent(
-                    (ItemsControl)LogicalExtensions.GetLogicalParent(
-                        (ContentPresenter)LogicalExtensions.GetLogicalParent(
-                            (Border)sender)))))).DataContext);*/
         ViewModel!.TimelineContent.TryToggleFrameMarker(frame.Index);
     }
 

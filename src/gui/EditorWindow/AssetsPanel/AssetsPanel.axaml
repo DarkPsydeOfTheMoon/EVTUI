@@ -280,6 +280,9 @@
                     <Flyout Closed="SaveChanges">
                       <StackPanel Classes="form">
 
+                        <TextBlock Classes="formtitle" Text="{Binding ObjectType.Choice}"/>
+                        <Separator Classes="formtitle"/>
+
                         <Expander Header="Asset">
                           <StackPanel Classes="form">
                             <ContentControl Content="{Binding ObjectID}"/>
@@ -287,7 +290,7 @@
                           </StackPanel>
                         </Expander>
 
-                        <Expander Header="Resource">
+                        <Expander Header="Primary Resource">
                           <StackPanel Classes="form">
                             <ContentControl Content="{Binding ObjectType}"/>
                             <ContentControl Content="{Binding Category}"/>
@@ -297,7 +300,7 @@
                           </StackPanel>
                         </Expander>
 
-                        <Expander Header="Animations">
+                        <Expander Header="Subordinate Resource(s)" IsVisible="{Binding IncludeSubordinateResources}">
                           <StackPanel Classes="form">
                             <ContentControl Content="{Binding IsCommon}"/>
                             <ContentControl Content="{Binding BaseAnimID}"/>

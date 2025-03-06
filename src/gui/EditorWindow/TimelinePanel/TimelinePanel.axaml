@@ -116,7 +116,7 @@
     <!-- CONTAINER TYPES -->
 
     <DataTemplate DataType="{x:Type vm:Frame}">
-      <Border CornerRadius="5,5,0,0" Classes.inactive="{Binding !IsInPlayRange}" Classes.marked="{Binding IsMarked}" PointerReleased="ToggleMarker">
+      <Border CornerRadius="5,5,0,0" Classes.inactive="{Binding !IsInPlayRange}" Classes.marked="{Binding IsMarked}" PointerReleased="ToggleMarker" IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
       <StackPanel Width="80" Orientation="Vertical">
         <TextBlock Text="{Binding Index}"
          FontSize="18"

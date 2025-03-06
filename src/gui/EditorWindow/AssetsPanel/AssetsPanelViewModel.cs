@@ -37,66 +37,131 @@ public class Asset : ViewModelBase
             case "Null":
                 break;
             case "Field":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Major ID";
                 minorIdTitle  = "Minor ID";
                 subIdTitle    = "Sub ID";
                 isCommonTitle = "Use Field's Generic Resources?";
                 extId1Title   = "Player Field Animations ID";
+                // TODO: if isCommon is false, these should be hidden
                 extId2Title   = "Crowd Major ID";
                 extId3Title   = "Crowd Minor ID";
                 break;
             case "Env":
-                categoryTitle = "Category";
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Major ID";
                 minorIdTitle  = "Minor ID";
                 subIdTitle    = "Sub ID";
                 isCommonTitle = "Use Non-Field-Specific Env?";
+                extId1Title   = "Unused #1";
+                extId2Title   = "Unused #2";
+                extId3Title   = "Unused #3";
                 break;
             case "Texture":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Major ID";
                 minorIdTitle  = "Minor ID";
                 subIdTitle    = "Sub ID";
+                isCommonTitle = "Unused #1";
+                extId1Title   = "Unused #2";
+                extId2Title   = "Unused #3";
+                extId3Title   = "Unused #4";
                 break;
             case "Sprite":
                 break;
             case "Camera":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Major ID";
                 minorIdTitle  = "Minor ID";
                 subIdTitle    = "Sub ID";
                 isCommonTitle = "Use Default Field Camera?";
+                extId1Title   = "Unused #1";
+                extId2Title   = "Unused #2";
+                extId3Title   = "Unused #3";
                 break;
             case "Movie":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Movie ID";
+                minorIdTitle  = "Unused #1";
+                subIdTitle    = "Unused #2";
                 isCommonTitle = "Unknown #1";
                 extId1Title   = "Unknown #2";
+                extId2Title   = "Unused #3";
+                extId3Title   = "Unused #4";
                 break;
             case "EventCamera":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Major ID";
                 minorIdTitle  = "Minor ID";
                 subIdTitle    = "Sub ID";
+                isCommonTitle = "Unused #1";
+                extId1Title   = "Unused #2";
+                extId2Title   = "Unused #3";
+                extId3Title   = "Unused #4";
                 break;
             case "Enemy":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Enemy ID";
+                minorIdTitle  = "Unused #1";
+                subIdTitle    = "Unused #2";
+                // hm, doesn't actually get used... but could it? i mean, why not?
                 isCommonTitle = "Use Common Animations?";
                 extId1Title   = "Base Animations ID";
+                extId2Title   = "Unused #3";
+                extId3Title   = "Unused #4";
                 break;
             case "SymShadow":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Overworld Shadow ID";
+                minorIdTitle  = "Unused #1";
+                subIdTitle    = "Unused #2";
+                isCommonTitle = "Unused #3";
+                extId1Title   = "Unused #4";
+                extId2Title   = "Unused #5";
+                extId3Title   = "Unused #6";
                 break;
             case "Item":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Major ID";
                 minorIdTitle  = "Minor ID";
                 // subId, isCommon, extId1, & extId2 CAN vary, but...
-                // ...it happens so rarely and idk what it means so i'm gonna say. eh.
+                // ...it happens so rarely... what does it meannn
+                // this gets used in e.g. the jazz cloughb, but like... i'm not convinced
+                // (that any anims actually come from it)
+                //extId1Title   = "Base Animations ID";
+                subIdTitle    = "Possibly Unused #1";
+                isCommonTitle = "Possibly Unused #2";
+                extId1Title   = "Possibly Unused #3";
+                extId2Title   = "Possibly Unused #4";
+                extId3Title   = "Unused #1";
                 break;
             case "ResourceTableNPC":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle = "Resource Table Entry Number";
-                // minorId, isCommon, & extId1 CAN vary, but...
-                // ...it happens so rarely and idk what it means so i'm gonna say. eh.
+                minorIdTitle  = "Unused #1";
+                subIdTitle    = "Unused #2";
+                // minorId, isCommon, & extId1 CAN vary, but... rarely...
+                isCommonTitle = "Possibly Unused #1";
+                // used only in beta
+                extId1Title   = "Possibly Unused #2";
+                // used only in royal
+                extId2Title   = "Possibly Unused #3";
+                extId3Title   = "Unused #3";
                 break;
             case "Effect":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle = "Effect Major ID";
                 minorIdTitle = "Effect Minor ID";
+                // subId varies, but i just don't know what it could accomplish
+                subIdTitle    = "Possibly Unused #1";
+                // isCommon CAN happen... uses field EPL, maybe? or something with the PAKs?
+                // .....doesn't seem to be......
+                isCommonTitle = "Possibly Unused #2";
+                // baseAnim is 0 once......
+                // but howwww.
+                extId1Title   = "Possibly Unused #3";
+                extId2Title   = "Unused #1";
+                extId3Title   = "Unused #2";
                 break;
             case "Character":
                 categoryTitle = "Category";
@@ -109,6 +174,7 @@ public class Asset : ViewModelBase
                 extId3Title   = "Extra Additive Animations ID";
                 break;
             case "FieldCharacter":
+                categoryTitle = "Category (Unused)";
                 // why does this need to exist when there's a Field "Category"??? idfk man
                 majorIdTitle  = "Character ID";
                 minorIdTitle  = "Outfit ID";
@@ -120,14 +186,27 @@ public class Asset : ViewModelBase
                 extId3Title   = "Extra Additive Animations ID";
                 break;
             case "FieldObject":
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Major ID";
                 minorIdTitle  = "Minor ID";
+                subIdTitle    = "Unused #1";
+                isCommonTitle = "Unused #2";
+                extId1Title   = "Unused #3";
+                extId2Title   = "Unused #4";
+                extId3Title   = "Unused #5";
                 break;
             case "Persona":
                 // only varies in beta P5
                 //categoryTitle = "Category";
+                categoryTitle = "Category (Unused)";
                 majorIdTitle  = "Persona ID";
+                //minorId can be 1 in royal but what does that mean...
+                minorIdTitle  = "Possibly Unused #1";
+                subIdTitle    = "Unused #1";
+                isCommonTitle = "Unused #2";
                 extId1Title   = "Base Animations ID";
+                extId2Title   = "Unused #3";
+                extId3Title   = "Unused #4";
                 break;
             default:
                 break;
@@ -176,6 +255,8 @@ public class Asset : ViewModelBase
     public BoolChoiceField      IsCommon      { get; set; }
     public BoolChoiceField      UnkFlag1      { get; set; }
     public BoolChoiceField      UnkFlag2      { get; set; }
+
+    public bool IncludeSubordinateResources { get => !(this.BaseAnimID is null) || !(this.ExtBaseAnimID is null) || !(this.ExtAddAnimID is null) || !(this.IsCommon is null); }
 
     //public AnimationWidget BaseAnimPreview { get; set; }
 

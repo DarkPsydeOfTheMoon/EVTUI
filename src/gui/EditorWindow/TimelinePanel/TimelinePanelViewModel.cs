@@ -38,12 +38,15 @@ public class Timeline : ReactiveObject
         //this.MarkedFrames.ToObservableChangeSet(x => 
         this.MarkedFrames.CollectionChanged += (sender, e) =>
         {
-            evt.MarkerFrame = new int[evt.MarkerFrameCount];
-            for (int i=0; i<evt.MarkerFrameCount; i++)
-                evt.MarkerFrame[i] = -1;
-            for (int i=0; i<this.MarkedFrames.Count; i++)
-                if (i < evt.MarkerFrameCount)
-                    evt.MarkerFrame[i] = this.MarkedFrames[i];
+            if (!dataManager.ReadOnly)
+            {
+                evt.MarkerFrame = new int[evt.MarkerFrameCount];
+                for (int i=0; i<evt.MarkerFrameCount; i++)
+                    evt.MarkerFrame[i] = -1;
+                for (int i=0; i<this.MarkedFrames.Count; i++)
+                    if (i < evt.MarkerFrameCount)
+                        evt.MarkerFrame[i] = this.MarkedFrames[i];
+            }
         }; //);
 
         this.Frames = new ObservableCollection<Frame>();
