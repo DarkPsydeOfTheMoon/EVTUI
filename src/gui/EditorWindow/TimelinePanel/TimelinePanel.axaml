@@ -946,7 +946,7 @@
       <StackPanel Classes="field" DockPanel.Dock="Right">
         <Button ToolTip.Tip="Frame Settings">
           <Button.Flyout>
-            <Flyout> <!--Opening="LoadModelInScene" Closed="ClearScene"-->
+            <Flyout>
               <StackPanel Classes="form">
 	            <TextBlock Classes="formtitle" Text="Frame Settings"/>
                 <Separator Classes="formtitle"/>
@@ -1145,9 +1145,9 @@
                           </Style>
                         </Button.Styles>
                         <Button.ContextMenu>
-                          <ContextMenu> <!--IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}"-->
-                            <MenuItem Header="Cut" Click="CutCommand"/>
-                            <MenuItem Header="Copy" Click="CopyCommand" IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}"/>
+                          <ContextMenu>
+                            <MenuItem Header="Cut" Click="CutCommand" IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}"/>
+                            <MenuItem Header="Copy" Click="CopyCommand"/>
                             <MenuItem Header="Delete" Click="DeleteCommand" IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}"/>
                           </ContextMenu>
                         </Button.ContextMenu> 

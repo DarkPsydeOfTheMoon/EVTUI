@@ -236,6 +236,8 @@ public class Asset : ViewModelBase
         if (!(extId3Title is null))
             this.ExtAddAnimID = new NumEntryField(extId3Title, this.Editable, obj.ExtAddMotionNo, -1, 9999, 1);
 
+        // TODO: add this in only for applicable asset types
+        // i don't feel like doing it now lol
         //this.BaseAnimPreview = new AnimationWidget(config, new IntSelectionField("Asset ID", false, obj.Id, new List<int>(){obj.Id}), new AnimationStruct(startingFrame:null, interpolatedFrames:null), new Bitfield(1), null, enabledInd:0, extInd:1);
 
     }

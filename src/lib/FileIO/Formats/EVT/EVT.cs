@@ -26,7 +26,6 @@ public class EVT : ISerializable
     public Int32 FileSize;
     public Int32 FileHeaderSize;
 
-    //public UInt32 Flags;
     private UInt32 _bitfield;
     public Bitfield Flags = new Bitfield(0);
 
@@ -84,7 +83,6 @@ public class EVT : ISerializable
         rw.RwInt32(ref this.FileSize);
         rw.RwInt32(ref this.FileHeaderSize);
 
-        //rw.RwUInt32(ref this.Flags);
         if (rw.IsParselike())
             this._bitfield = this.Flags.Compose();
         rw.RwUInt32(ref this._bitfield);

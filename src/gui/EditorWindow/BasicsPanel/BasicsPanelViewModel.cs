@@ -22,7 +22,6 @@ public class BasicsPanelViewModel : ViewModelBase
     public NumEntryField        Level   { get; set; }
 
     // flags
-    //public BoolChoiceField UnkFlag1                    { get; set; }
     public BoolChoiceField InitScriptEnabled           { get; set; }
     public BoolChoiceField UnkFlag1                    { get; set; }
     public BoolChoiceField CinemascopeEnabled          { get; set; }
@@ -92,7 +91,6 @@ public class BasicsPanelViewModel : ViewModelBase
         this.DebugEnvAssetID = new NumEntryField("Debug ENV ID", this.Editable, (int)evt.InitDebugEnvAssetID, 0, 9999, 1);
 
         // other flags
-        //this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, evt.Flags[0]);
         this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, evt.Flags[6]);
         this.UnkFlag2 = new BoolChoiceField("Unknown Flag #2", this.Editable, evt.Flags[16]);
 

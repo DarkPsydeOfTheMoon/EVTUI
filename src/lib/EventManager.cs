@@ -25,7 +25,6 @@ public class EventManager
     // *** PRIVATE MEMBERS *** //
     ///////////////./////////////
     //private EVT?   SerialEvent               = null;
-    public EVT?   SerialEvent               = null;
     private ECS?   SerialEventSounds         = null;
     private string CpkDecryptionFunctionName = null;
 
@@ -37,6 +36,10 @@ public class EventManager
     public List<(string ACB, string? AWB)> AcwbPaths;
     public List<string> BfPaths;
     public List<string> BmdPaths;
+
+    // TODO: re-privatize this...? the Basics and Assets tabs use it...
+    // is there a nicer way than having it just be public?
+    public EVT?   SerialEvent               = null;
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
