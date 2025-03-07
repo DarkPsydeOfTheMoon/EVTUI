@@ -172,13 +172,11 @@ public class EVT : ISerializable
                 { ["dataSize"] = this.Commands[i].DataSize });
         }
 
-        //if (this.PointerToEventBmdPath != 0)
         if (this.Flags[12])
         {
             if (rw.IsParselike())
             {
                 this.PointerToEventBmdPath = (int)rw.RelativeTell();
-                //this.EventBmdPathLength = this.EventBmdPath.Length;
                 this.EventBmdPathLength = 48;
                 this.EventBmdPath = this.EventBmdPath.PadRight(48, '\0').Substring(0, 48);
             }
@@ -191,13 +189,11 @@ public class EVT : ISerializable
             this.EventBmdPathLength = 0;
         }
 
-        //if (this.PointerToEventBfPath != 0)
         if (this.Flags[14])
         {
             if (rw.IsParselike())
             {
                 this.PointerToEventBfPath = (int)rw.RelativeTell();
-                //this.EventBfPathLength = this.EventBmdPath.Length;
                 this.EventBfPathLength = 48;
                 this.EventBfPath = this.EventBfPath.PadRight(48, '\0').Substring(0, 48);
             }
