@@ -116,13 +116,19 @@ public class EVT : ISerializable
 
         rw.RwInt32(ref this.PointerToEventBmdPath);
         rw.RwInt32(ref this.EventBmdPathLength);
+        Trace.Assert(this.EventBmdPathLength == 0 || this.EventBmdPathLength == 48);
         rw.RwInt32(ref this.EmbedMsgFileOfs);
+        Trace.Assert(this.EmbedMsgFileOfs == 0);
         rw.RwInt32(ref this.EmbedMsgFileSize);
+        Trace.Assert(this.EmbedMsgFileSize == 0);
 
         rw.RwInt32(ref this.PointerToEventBfPath);
         rw.RwInt32(ref this.EventBfPathLength);
+        Trace.Assert(this.EventBfPathLength == 0 || this.EventBfPathLength == 48);
         rw.RwInt32(ref this.EmbedBfFileOfs);
+        Trace.Assert(this.EmbedBfFileOfs == 0);
         rw.RwInt32(ref this.EmbedBfFileSize);
+        Trace.Assert(this.EmbedBfFileSize == 0);
 
         this.MarkerFrameCount = (this.FileHeaderSize - (int)rw.RelativeTell()) / 4;
         if (rw.IsConstructlike())
@@ -166,18 +172,42 @@ public class EVT : ISerializable
                 { ["dataSize"] = this.Commands[i].DataSize });
         }
 
-        if (this.PointerToEventBmdPath != 0) {
+        //if (this.PointerToEventBmdPath != 0)
+        if (this.Flags[12])
+        {
             if (rw.IsParselike())
+            {
                 this.PointerToEventBmdPath = (int)rw.RelativeTell();
+                //this.EventBmdPathLength = this.EventBmdPath.Length;
+                this.EventBmdPathLength = 48;
+                this.EventBmdPath = this.EventBmdPath.PadRight(48, '\0').Substring(0, 48);
+            }
             Trace.Assert(this.PointerToEventBmdPath == rw.RelativeTell());
             rw.RwString(ref this.EventBmdPath, this.EventBmdPathLength, Encoding.ASCII);
         }
+        else
+        {
+            this.PointerToEventBmdPath = 0;
+            this.EventBmdPathLength = 0;
+        }
 
-        if (this.PointerToEventBfPath != 0) {
+        //if (this.PointerToEventBfPath != 0)
+        if (this.Flags[14])
+        {
             if (rw.IsParselike())
+            {
                 this.PointerToEventBfPath = (int)rw.RelativeTell();
+                //this.EventBfPathLength = this.EventBmdPath.Length;
+                this.EventBfPathLength = 48;
+                this.EventBfPath = this.EventBfPath.PadRight(48, '\0').Substring(0, 48);
+            }
             Trace.Assert(this.PointerToEventBfPath == rw.RelativeTell());
             rw.RwString(ref this.EventBfPath, this.EventBfPathLength, Encoding.ASCII);
+        }
+        else
+        {
+            this.PointerToEventBfPath = 0;
+            this.EventBfPathLength = 0;
         }
 
         if (rw.IsParselike())

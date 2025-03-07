@@ -159,7 +159,7 @@ public class PagePreview : ReactiveObject
     {
         string text = config.ScriptManager.GetTurnText(turnIndex, pageIndex);
         (string Source, uint CueId)? voiceTuple = config.ScriptManager.GetTurnVoice(turnIndex, pageIndex);
-        this.Dialogue = new StringEntryField($"Page #{pageIndex+1}", this.Editable, text);
+        this.Dialogue = new StringEntryField($"Page #{pageIndex+1}", this.Editable, text, null);
         if (voiceTuple is null)
         {
             this.Source       = null;
@@ -228,7 +228,7 @@ public class OptionPreview : ReactiveObject
     public void Update(DataManager config, int turnIndex, int pageIndex)
     {
         string text = config.ScriptManager.GetTurnText(turnIndex, pageIndex);
-        this.Dialogue = new StringEntryField($"Option #{pageIndex+1}", this.Editable, text);
+        this.Dialogue = new StringEntryField($"Option #{pageIndex+1}", this.Editable, text, null);
     }
 
     public StringEntryField     Dialogue    { get; set; }

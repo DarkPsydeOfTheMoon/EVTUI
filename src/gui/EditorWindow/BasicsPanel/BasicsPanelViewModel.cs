@@ -41,6 +41,10 @@ public class BasicsPanelViewModel : ViewModelBase
     public NumEntryField InitEnvAssetID  { get; set; }
     public NumEntryField DebugEnvAssetID { get; set; }
 
+    // paths
+    public StringEntryField BMDPath { get; set; }
+    public StringEntryField BFPath  { get; set; }
+
     public bool Editable { get; set; }
 
     public enum Ranks : byte
@@ -76,23 +80,42 @@ public class BasicsPanelViewModel : ViewModelBase
         this.WhenAnyValue(x => x.Level.Value).Subscribe(x => evt.Level = (byte)x);
 
         // scripts
-        this.EmbedBMD = new BoolChoiceField("Embed BMD in EVT", this.Editable, evt.Flags[12]);
-        this.EmbedBF = new BoolChoiceField("Embed BF in EVT", this.Editable, evt.Flags[14]);
+        this.EmbedBMD = new BoolChoiceField("Use custom BMD path?", this.Editable, evt.Flags[12]);
+        this.BMDPath = new StringEntryField("Custom BMD path", this.Editable, (evt.EventBmdPath is null) ? $"event_data/message/e{(100*(evt.MajorId/100)):000}/e{evt.MajorId:000}_{evt.MinorId:000}.bmd" : evt.EventBmdPath.Replace("\0", ""), 48);
+        this.EmbedBF = new BoolChoiceField("Use custom BF path?", this.Editable, evt.Flags[14]);
+        this.BFPath = new StringEntryField("Custom BF path", this.Editable, (evt.EventBfPath is null) ? $"event_data/message/e{(100*(evt.MajorId/100)):000}/e{evt.MajorId:000}_{evt.MinorId:000}.bf" : evt.EventBfPath.Replace("\0", ""), 48);
         this.InitScriptEnabled = new BoolChoiceField("Enable Init Script", this.Editable, evt.Flags[1]);
         this.InitScriptIndex = new NumEntryField("Init Script Index", this.Editable, (int)evt.InitScriptIndex, 0, 255, 1);
+
+        this.WhenAnyValue(x => x.EmbedBMD.Value).Subscribe(x => evt.Flags[12] = this.EmbedBMD.Value);
+        this.WhenAnyValue(x => x.BMDPath.Text).Subscribe(x => evt.EventBmdPath = this.BMDPath.Text);
+        this.WhenAnyValue(x => x.EmbedBF.Value).Subscribe(x => evt.Flags[14] = this.EmbedBF.Value);
+        this.WhenAnyValue(x => x.BFPath.Text).Subscribe(x => evt.EventBfPath = this.BFPath.Text);
+        this.WhenAnyValue(x => x.InitScriptEnabled.Value).Subscribe(x => evt.Flags[1] = this.InitScriptEnabled.Value);
+        this.WhenAnyValue(x => x.InitScriptIndex.Value).Subscribe(x => evt.InitScriptIndex = (byte)x);
 
         // cinemascope
         this.CinemascopeEnabled = new BoolChoiceField("Enable Cinemascope", this.Editable, evt.Flags[8]);
         this.CinemascopeAnimationEnabled = new BoolChoiceField("Enable Cinemascope Animation", this.Editable, evt.Flags[9]);
         this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", this.Editable, (int)evt.CinemascopeStartingFrame, 0, 9999, 1);
 
+        this.WhenAnyValue(x => x.CinemascopeEnabled.Value).Subscribe(x => evt.Flags[8] = this.CinemascopeEnabled.Value);
+        this.WhenAnyValue(x => x.CinemascopeAnimationEnabled.Value).Subscribe(x => evt.Flags[9] = this.CinemascopeEnabled.Value);
+        this.WhenAnyValue(x => x.CinemascopeStartingFrame.Value).Subscribe(x => evt.CinemascopeStartingFrame = (short)x);
+
         // env
         this.InitEnvAssetID = new NumEntryField("Init ENV ID", this.Editable, (int)evt.InitEnvAssetID, 0, 9999, 1);
         this.DebugEnvAssetID = new NumEntryField("Debug ENV ID", this.Editable, (int)evt.InitDebugEnvAssetID, 0, 9999, 1);
 
+        this.WhenAnyValue(x => x.InitEnvAssetID.Value).Subscribe(x => evt.InitEnvAssetID = (int)x);
+        this.WhenAnyValue(x => x.DebugEnvAssetID.Value).Subscribe(x => evt.InitDebugEnvAssetID = (int)x);
+
         // other flags
         this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, evt.Flags[6]);
         this.UnkFlag2 = new BoolChoiceField("Unknown Flag #2", this.Editable, evt.Flags[16]);
+
+        this.WhenAnyValue(x => x.UnkFlag1.Value).Subscribe(x => evt.Flags[6] = this.UnkFlag1.Value);
+        this.WhenAnyValue(x => x.UnkFlag2.Value).Subscribe(x => evt.Flags[16] = this.UnkFlag2.Value);
 
     }
 

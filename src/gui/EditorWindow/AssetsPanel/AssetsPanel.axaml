@@ -166,6 +166,7 @@
         <TextBox
           AcceptsReturn="true"
           Text="{Binding Text}"
+          MaxLength="{Binding MaxLength}"
           IsEnabled="{Binding Editable}"/>
       </StackPanel>
     </DataTemplate>
