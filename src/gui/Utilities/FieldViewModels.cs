@@ -71,9 +71,10 @@ public class NumEntryField : FieldBase
 // TODO: enable inline non-string elements...?
 public class StringEntryField : FieldBase
 {
-    public StringEntryField(string name, bool editable, string text) : base(name, editable)
+    public StringEntryField(string name, bool editable, string text, int? maxLength) : base(name, editable)
     {
-        _text = text;
+        _text     = text;
+        MaxLength = maxLength;
     }
 
     private string _text;
@@ -82,6 +83,9 @@ public class StringEntryField : FieldBase
         get => _text;
         set => this.RaiseAndSetIfChanged(ref _text, value);
     }
+
+    // i THINK this should be readonly, but subject to change
+    public int? MaxLength { get; }
 }
 
 // ints/floats with definite ranges
