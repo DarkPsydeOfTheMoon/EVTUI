@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 using ReactiveUI;
 
@@ -17,7 +18,7 @@ public class Asset : ViewModelBase
         this.Editable = !readOnly;
 
         this.ObjectID = new NumEntryField("Asset ID", false, obj.Id, 0, 9999, 1);
-        this.ObjectType = new StringSelectionField("Type", false, this.ObjectTypes.Backward[obj.Type], this.ObjectTypes.Keys);
+        this.ObjectType = new StringSelectionField("Type", false, Asset.ObjectTypes.Backward[obj.Type], Asset.ObjectTypes.Keys);
 
         this.UniqueID = new NumEntryField("Unique ID", this.Editable, obj.ResourceUniqueId, 0, 9999, 1);
         this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, obj.Flags[31]);
@@ -264,11 +265,18 @@ public class Asset : ViewModelBase
 
     protected SerialObject _obj;
 
+    public bool DeleteObject(DataManager config)
+    {
+        bool success = config.EventManager.SerialEvent.DeleteObject(_obj);
+        _obj = null;
+        return success;
+    }
+
     public void SaveChanges()
     {
         _obj.Id = (int)this.ObjectID.Value;
 
-        _obj.Type = this.ObjectTypes.Forward[this.ObjectType.Choice];
+        _obj.Type = Asset.ObjectTypes.Forward[this.ObjectType.Choice];
         _obj.ResourceUniqueId = (int)this.UniqueID.Value;
 
         if (!(this.Category is null))
@@ -299,7 +307,7 @@ public class Asset : ViewModelBase
         _obj.UnkBool = Convert.ToInt32(this.UnkFlag2.Value);
     }
 
-    public BiDict<string, int> ObjectTypes = new BiDict<string, int>
+    public static BiDict<string, int> ObjectTypes = new BiDict<string, int>
     (
         new Dictionary<string, int>
         {
@@ -348,6 +356,8 @@ public class AssetsPanelViewModel : ViewModelBase
 
     public ObservableCollection<Asset> Assets { get; set; }
 
+    public List<string> AddableTypes { get => Asset.ObjectTypes.Keys.ToList(); }
+
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
@@ -359,6 +369,26 @@ public class AssetsPanelViewModel : ViewModelBase
         EVT evt = (EVT)dataManager.EventManager.SerialEvent;
         foreach (SerialObject obj in evt.Objects)
             this.Assets.Add(new Asset(obj, this.Config.ReadOnly));
+    }
+
+    public void AddAsset(string type)
+    {
+        SerialObject newObj = this.Config.EventManager.SerialEvent.NewObject(Asset.ObjectTypes.Forward[type]);
+        this.Assets.Add(new Asset(newObj, this.Config.ReadOnly));
+        OnPropertyChanged(nameof(Assets));
+    }
+
+    public bool DeleteAsset(Asset asset)
+    {
+        bool success = asset.DeleteObject(this.Config);
+        foreach (Asset candidate in this.Assets)
+            if (candidate == asset)
+            {
+                success = this.Assets.Remove(candidate);
+                break;
+            }
+        OnPropertyChanged(nameof(Assets));
+        return success;
     }
 
 }
