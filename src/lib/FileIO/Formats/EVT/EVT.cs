@@ -213,11 +213,17 @@ public class EVT : ISerializable
         rw.AssertEOF();
     }
 
-    public void DeleteObject(int index)
+    public bool DeleteObject(SerialObject obj)
     {
         List<SerialObject> objList = new List<SerialObject>(this.Objects);
-        objList.RemoveAt(index);
+        if (!objList.Contains(obj))
+            return false;
+        objList.Remove(obj);
         this.Objects = objList.ToArray();
+        Trace.Assert(this.Objects.Length == this.ObjectCount-1);
+
+        this.ObjectCount -= 1;
+        return true;
     }
 
     public bool DeleteCommand(int index)
@@ -237,7 +243,67 @@ public class EVT : ISerializable
         return true;
     }
 
-    // TODO: AddObject
+    public SerialObject NewObject(int type)
+    {
+        SerialObject newObj = new SerialObject();
+        newObj.Type = type;
+
+        // TODO: surely there's a better place to create this
+        HashSet<int> ids = new HashSet<int>();
+        foreach (SerialObject obj in this.Objects)
+            ids.Add(obj.Id);
+        // always pick the smallest unused (u)int
+        for (int i=1; i<=this.ObjectCount+1; i++)
+            if (!ids.Contains(i))
+            {
+                newObj.Id = i;
+                break;
+            }
+
+        List<SerialObject> objList = new List<SerialObject>(this.Objects);
+        objList.Add(newObj);
+        this.Objects = objList.ToArray();
+
+        this.ObjectCount += 1;
+        return newObj;
+    }
+
+    // TODO: consolidate code between this method and prev
+    public SerialObject DuplicateObject(SerialObject oldObj)
+    {
+        SerialObject newObj = DeepCopier.Copy(oldObj);
+
+        // TODO: surely there's a better place to create this
+        HashSet<int> ids = new HashSet<int>();
+        foreach (SerialObject obj in this.Objects)
+            ids.Add(obj.Id);
+        // always pick the smallest unused (u)int
+        for (int i=1; i<=this.ObjectCount+1; i++)
+            if (!ids.Contains(i))
+            {
+                newObj.Id = i;
+                break;
+            }
+
+        HashSet<int> dupes = new HashSet<int>();
+        foreach (SerialObject obj in this.Objects)
+            if (obj.Type == newObj.Type && obj.ResourceCategory == newObj.ResourceCategory && obj.ResourceMajorId == newObj.ResourceMajorId && obj.ResourceMinorId == newObj.ResourceMinorId && obj.ResourceSubId == newObj.ResourceSubId)
+                dupes.Add(obj.ResourceUniqueId);
+        // always pick the smallest unused (u)int
+        for (int i=0; i<=dupes.Count; i++)
+            if (!dupes.Contains(i))
+            {
+                newObj.ResourceUniqueId = i;
+                break;
+            }
+
+        List<SerialObject> objList = new List<SerialObject>(this.Objects);
+        objList.Add(newObj);
+        this.Objects = objList.ToArray();
+
+        this.ObjectCount += 1;
+        return newObj;
+    }
 
     public int CopyCommandToNewFrame(SerialCommand cmd, dynamic cmdData, int frame)
     {

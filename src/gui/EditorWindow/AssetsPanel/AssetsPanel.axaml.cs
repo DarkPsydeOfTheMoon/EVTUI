@@ -3,6 +3,7 @@ using System.ComponentModel;
 
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
+using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
 
@@ -21,18 +22,95 @@ public partial class AssetsPanel : ReactiveUserControl<AssetsPanelViewModel>, IN
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
+    private string _addType;
+    public string AddType
+    {
+        get => _addType;
+        set
+        {
+            _addType = value;
+            OnPropertyChanged(nameof(AddType));
+            OnPropertyChanged(nameof(AddTypeIsSelected));
+        }
+    }
+
+    public bool AddTypeIsSelected { get => !(this.AddType is null); }
+
+    private bool _modalIsOpen = false;
+    public bool ModalIsOpen
+    {
+        get => _modalIsOpen;
+        set
+        {
+            _modalIsOpen = value;
+            OnPropertyChanged(nameof(ModalIsOpen));
+        }
+    }
+
     public AssetsPanel()
     {
         InitializeComponent();
     }
 
+    public void Resort(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel! is null)
+            return;
+
+        switch (((RadioButton)sender).Content)
+        {
+            case "Sort by ID (Ascending)":
+                ViewModel!.SortMode = (true, true);
+                break;
+            case "Sort by ID (Descending)":
+                ViewModel!.SortMode = (true, false);
+                break;
+            case "Sort by Type (Ascending)":
+                ViewModel!.SortMode = (false, true);
+                break;
+            case "Sort by Type (Descending)":
+                ViewModel!.SortMode = (false, false);
+                break;
+            default:
+                break;
+        }
+    }
+
+    public void OpenModal(object sender, RoutedEventArgs e)
+    {
+        this.ModalIsOpen = true;
+    }
+
+    public void CloseModal(object sender, RoutedEventArgs e)
+    {
+        this.ModalIsOpen = false;
+    }
+
+    public void AddAsset(object sender, RoutedEventArgs e)
+    {
+        if (!(this.AddType is null))
+        {
+            ViewModel!.AddAsset(this.AddType);
+            this.ModalIsOpen = false;
+            this.AddType = null;
+        }
+    }
+
+    public void DuplicateAsset(object sender, RoutedEventArgs e)
+    {
+        Asset asset = (Asset)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>((MenuItem)sender).Content);
+        ViewModel!.DuplicateAsset(asset);
+    }
+
+    public void DeleteAsset(object sender, RoutedEventArgs e)
+    {
+        Asset asset = (Asset)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>((MenuItem)sender).Content);
+        ViewModel!.DeleteAsset(asset);
+    }
+
     public void SaveChanges(object sender, EventArgs e)
     {
-        Asset asset = (Asset)(((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (Border)LogicalExtensions.GetLogicalParent(
-                (DockPanel)LogicalExtensions.GetLogicalParent(
-                    (StackPanel)LogicalExtensions.GetLogicalParent(
-                        ((Flyout)sender).Target))))).Content);
+        Asset asset = (Asset)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>(((Flyout)sender).Target).Content);
         asset.SaveChanges();
     }
 

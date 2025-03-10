@@ -11,6 +11,21 @@
              x:Class="EVTUI.Views.AssetsPanel"
              x:TypeArguments="vm:AssetsPanelViewModel">
 
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key='Light'>
+          <SolidColorBrush x:Key='SystemAccentColorTheme1' Color="{DynamicResource SystemAccentColorLight1}"/>
+          <SolidColorBrush x:Key='SystemAccentColorTheme2' Color="{DynamicResource SystemAccentColorLight2}"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key='Dark'>
+          <SolidColorBrush x:Key='SystemAccentColorTheme1' Color="{DynamicResource SystemAccentColorDark1}"/>
+          <SolidColorBrush x:Key='SystemAccentColorTheme2' Color="{DynamicResource SystemAccentColorDark2}"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
   <UserControl.Styles>
     <Style Selector="Separator.formtitle">
       <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
@@ -44,12 +59,12 @@
       <Setter Property="HorizontalAlignment" Value="Right"/>
       <Setter Property="Margin" Value="0"/>
       <Setter Property="Width" Value="20"/>
-      <Setter Property="Height" Value="20"/>                                                                                                                                                    
+      <Setter Property="Height" Value="20"/>
     </Style>
     <Style Selector="Button.popupclose > PathIcon">
       <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
       <Setter Property="Width" Value="10"/>
-      <Setter Property="Height" Value="10"/>                                                                                                                                                    
+      <Setter Property="Height" Value="10"/>
     </Style>
     <Style Selector="Button.popupclose:pointerover > PathIcon">
       <Setter Property="Foreground" Value="White"/>
@@ -92,6 +107,15 @@
       <Setter Property="Height" Value="32"/>
       <Setter Property="HorizontalAlignment" Value="Center"/>
       <Setter Property="Width" Value="32"/>
+    </Style>
+    <Style Selector="Button.action:disabled">
+      <Setter Property="Opacity" Value="0.5"/>
+    </Style>
+    <Style Selector="Button.accented ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme1}"/>
+    </Style>
+    <Style Selector="Button.accented:pointerover ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme2}"/>
     </Style>
   </UserControl.Styles>
 
@@ -194,107 +218,189 @@
 
   </UserControl.DataTemplates>
 
-  <ScrollViewer>
+<Grid>
   <DockPanel>
-    <ItemsControl ItemsSource="{Binding Assets}">
-      <ItemsControl.Styles>
-        <Style Selector="ItemsControl > ContentPresenter:nth-child(even) > Border.asset">
-          <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
-        </Style>
-        <Style Selector="ItemsControl > ContentPresenter:nth-child(odd) > Border.asset">
-          <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
-        </Style>
-        <Style Selector="Border.asset:pointerover">
-          <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
-        </Style>
-        <Style Selector="Border.asset:pointerover TextBlock.assettitle">
-          <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
-        </Style>
-      </ItemsControl.Styles>
-      <ItemsControl.ItemsPanel>
-        <ItemsPanelTemplate>
-          <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,40,0"/>
-        </ItemsPanelTemplate> 
-      </ItemsControl.ItemsPanel>
-      <ItemsControl.ItemTemplate>
-        <DataTemplate>
-          <Border Classes="asset" CornerRadius="5">
-            <DockPanel>
-              <TextBlock Text="{Binding ObjectID.Value}"
-               Classes="assettitle"
-               FontSize="18"
-               Foreground="{DynamicResource SystemBaseMediumColor}"
-               HorizontalAlignment="Center"
-               VerticalAlignment="Center"
-               TextAlignment="Center"
-               DockPanel.Dock="Left"
-               Width="60"
-               Margin="10"/>
-              <Rectangle
-               Fill="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}"
-               Width="5"
-               VerticalAlignment="Stretch"/>
-              <StackPanel DockPanel.Dock="Right" Spacing="5" Margin="5">
-                <Button Classes="action" ToolTip.Tip="Edit">
-                  <Button.Flyout>
-                    <Flyout Closed="SaveChanges">
-                      <StackPanel Classes="form">
+    <DockPanel DockPanel.Dock="Top">
+      <Button DockPanel.Dock="Left" ToolTip.Tip="Sort" HorizontalAlignment="Left" Width="80">
+        <Button.Flyout>
+          <Flyout>
+            <StackPanel>
+              <RadioButton GroupName="sort" Content="Sort by ID (Ascending)" Checked="Resort" IsChecked="true"/>
+              <RadioButton GroupName="sort" Content="Sort by ID (Descending)" Checked="Resort"/>
+              <Separator Margin="10"/>
+              <RadioButton GroupName="sort" Content="Sort by Type (Ascending)" Checked="Resort"/>
+              <RadioButton GroupName="sort" Content="Sort by Type (Descending)" Checked="Resort"/>
+            </StackPanel>
+          </Flyout>
+        </Button.Flyout>
+        <PathIcon Data="{StaticResource arrow_sort_regular}" />
+      </Button>
+      <Button DockPanel.Dock="Right"
+       Classes="accented"
+       Click="OpenModal"
+       HorizontalAlignment="Right"
+       IsEnabled="{Binding !Config.ReadOnly}"
+       Margin="10">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+          <PathIcon Data="{StaticResource form_new_regular}" />
+          <TextBlock Text="Add New Asset"/>
+        </StackPanel>
+      </Button>
+    </DockPanel>
+    <ScrollViewer>
+      <ItemsControl ItemsSource="{Binding Assets}">
+        <ItemsControl.Styles>
+          <Style Selector="ItemsControl > ContentPresenter:nth-child(even) > Border.asset">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
+          </Style>
+          <Style Selector="ItemsControl > ContentPresenter:nth-child(odd) > Border.asset">
+            <Setter Property="Background" Value="{DynamicResource SystemListLowColor}"/>
+          </Style>
+          <Style Selector="Border.asset:pointerover">
+            <Setter Property="Background" Value="{DynamicResource SystemListMediumColor}"/>
+          </Style>
+          <Style Selector="Border.asset:pointerover TextBlock.assettitle">
+            <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+          </Style>
+        </ItemsControl.Styles>
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,20,0"/>
+          </ItemsPanelTemplate> 
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Classes="asset" CornerRadius="5">
+              <DockPanel>
+                <TextBlock Text="{Binding ObjectID.Value}"
+                 Classes="assettitle"
+                 FontSize="18"
+                 Foreground="{DynamicResource SystemBaseMediumColor}"
+                 HorizontalAlignment="Center"
+                 VerticalAlignment="Center"
+                 TextAlignment="Center"
+                 DockPanel.Dock="Left"
+                 Width="60"
+                 Margin="10"/>
+                <Rectangle
+                 Fill="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}"
+                 Width="5"
+                 VerticalAlignment="Stretch"/>
+                <ComboBox
+                 ItemsSource="{Binding ObjectType.Choices}"
+                 SelectedItem="{Binding ObjectType.Choice}"
+                 IsEnabled="{Binding Editable}"
+                 FontSize="16"
+                 HorizontalAlignment="Center"
+                 Margin="10"
+                 MaxDropDownHeight="300"
+                 VerticalAlignment="Center"/>
+                <StackPanel DockPanel.Dock="Right" Spacing="5" Margin="5">
+                  <Button Classes="action" ToolTip.Tip="Details">
+                    <Button.Flyout>
+                      <Flyout Closed="SaveChanges">
+                        <StackPanel Classes="form">
 
-                        <TextBlock Classes="formtitle" Text="{Binding ObjectType.Choice}"/>
-                        <Separator Classes="formtitle"/>
+                          <TextBlock Classes="formtitle" Text="{Binding ObjectType.Choice}"/>
+                          <Separator Classes="formtitle"/>
 
-                        <Expander Header="Asset">
-                          <StackPanel Classes="form">
-                            <ContentControl Content="{Binding ObjectID}"/>
-                            <ContentControl Content="{Binding UniqueID}"/>
-                          </StackPanel>
-                        </Expander>
+                          <Expander Header="Asset">
+                            <StackPanel Classes="form">
+                              <ContentControl Content="{Binding ObjectID}"/>
+                              <ContentControl Content="{Binding UniqueID}"/>
+                            </StackPanel>
+                          </Expander>
 
-                        <Expander Header="Primary Resource">
-                          <StackPanel Classes="form">
-                            <ContentControl Content="{Binding ObjectType}"/>
-                            <ContentControl Content="{Binding Category}"/>
-                            <ContentControl Content="{Binding MajorID}"/>
-                            <ContentControl Content="{Binding MinorID}"/>
-                            <ContentControl Content="{Binding SubID}"/>
-                          </StackPanel>
-                        </Expander>
+                          <Expander Header="Primary Resource">
+                            <StackPanel Classes="form">
+                              <ContentControl Content="{Binding ObjectType}"/>
+                              <ContentControl Content="{Binding Category}"/>
+                              <ContentControl Content="{Binding MajorID}"/>
+                              <ContentControl Content="{Binding MinorID}"/>
+                              <ContentControl Content="{Binding SubID}"/>
+                            </StackPanel>
+                          </Expander>
 
-                        <Expander Header="Subordinate Resource(s)" IsVisible="{Binding IncludeSubordinateResources}">
-                          <StackPanel Classes="form">
-                            <ContentControl Content="{Binding IsCommon}"/>
-                            <ContentControl Content="{Binding BaseAnimID}"/>
-                            <ContentControl Content="{Binding ExtBaseAnimID}"/>
-                            <ContentControl Content="{Binding ExtAddAnimID}"/>
-                          </StackPanel>
-                        </Expander>
+                          <Expander Header="Subordinate Resource(s)" IsVisible="{Binding IncludeSubordinateResources}">
+                            <StackPanel Classes="form">
+                              <ContentControl Content="{Binding IsCommon}"/>
+                              <ContentControl Content="{Binding BaseAnimID}"/>
+                              <ContentControl Content="{Binding ExtBaseAnimID}"/>
+                              <ContentControl Content="{Binding ExtAddAnimID}"/>
+                            </StackPanel>
+                          </Expander>
 
-                        <Expander Header="Other Flags">
-                          <StackPanel Classes="form">
-                            <ContentControl Content="{Binding UnkFlag1}"/>
-                            <ContentControl Content="{Binding UnkFlag2}"/>
-                          </StackPanel>
-                        </Expander>
+                          <Expander Header="Other Flags">
+                            <StackPanel Classes="form">
+                              <ContentControl Content="{Binding UnkFlag1}"/>
+                              <ContentControl Content="{Binding UnkFlag2}"/>
+                            </StackPanel>
+                          </Expander>
 
-                      </StackPanel>
-                    </Flyout>
-                  </Button.Flyout>
-                  <PathIcon Data="{StaticResource edit_regular}" />
-                </Button>
-                <Button Classes="action" ToolTip.Tip="Preview">
-                  <PathIcon Data="{StaticResource eye_show_regular}" />
-                </Button>
-                <Button Classes="action" ToolTip.Tip="Delete">
-                  <PathIcon Data="{StaticResource delete_regular}" />
-                </Button>
-              </StackPanel>
-              <Panel/>
-            </DockPanel>
-          </Border>
-        </DataTemplate>
-      </ItemsControl.ItemTemplate>
-    </ItemsControl>
+                        </StackPanel>
+                      </Flyout>
+                    </Button.Flyout>
+                    <PathIcon Data="{StaticResource edit_regular}" />
+                  </Button>
+                  <Button Classes="action" ToolTip.Tip="Preview" IsEnabled="false">
+                    <PathIcon Data="{StaticResource eye_show_regular}" />
+                  </Button>
+                  <Button Classes="action" ToolTip.Tip="Actions" IsEnabled="{Binding Editable}">
+                    <Button.Flyout>
+                      <MenuFlyout>
+                        <MenuItem Header="Duplicate" Click="DuplicateAsset" />
+                        <MenuItem Header="Delete">
+                          <MenuItem Header="Delete Asset &amp; Related Commands" IsEnabled="false" />
+                          <MenuItem Header="Delete Asset Only" Click="DeleteAsset" IsEnabled="{Binding Editable}" />
+                          <MenuItem Header="Delete Related Commands Only" IsEnabled="false" />
+                        </MenuItem>
+                      </MenuFlyout>
+                    </Button.Flyout>
+                    <PathIcon Data="{StaticResource more_regular}" />
+                  </Button>
+                </StackPanel>
+                <Panel/>
+              </DockPanel>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </ScrollViewer>
   </DockPanel>
-  </ScrollViewer>
+  <DockPanel Background="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}" IsVisible="{Binding $parent[views:AssetsPanel].ModalIsOpen}">
+    <Border
+     Background="{DynamicResource SystemChromeMediumLowColor}"
+     BorderThickness="5"
+     CornerRadius="5"
+     HorizontalAlignment="Center"
+     Padding="10"
+     VerticalAlignment="Center">
+    <StackPanel
+     HorizontalAlignment="Center"
+     Spacing="10"
+     VerticalAlignment="Center">
+      <Button Classes="popupclose" Click="CloseModal" HorizontalAlignment="Right">
+        <PathIcon Data="{StaticResource dismiss_regular}" />
+      </Button>
+      <TextBlock Classes="formtitle" Text="Add New Asset"/>
+      <Separator Classes="formtitle"/>
+      <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="5">
+      <ComboBox
+       HorizontalAlignment="Center"
+       ItemsSource="{Binding AddableTypes}"
+       SelectedItem="{Binding $parent[views:AssetsPanel].AddType}"
+       IsEnabled="{Binding !Config.ReadOnly}"
+       MinWidth="100"
+       MaxDropDownHeight="300"/>
+      <Button Click="AddAsset"
+       HorizontalAlignment="Center"
+       IsEnabled="{Binding $parent[views:AssetsPanel].AddTypeIsSelected}">
+        Add
+      </Button>
+      </StackPanel>
+    </StackPanel>
+    </Border>
+  </DockPanel>
+</Grid>
 
 </rxui:ReactiveUserControl>

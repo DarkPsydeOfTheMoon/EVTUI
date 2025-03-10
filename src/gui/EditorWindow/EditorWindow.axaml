@@ -21,10 +21,10 @@
           <MenuItem Header="Save BMD" Click="SaveMod" Name="BMD" />
           <MenuItem Header="Save BF"  Click="SaveMod" Name="BF" />
         </MenuItem>
-        <MenuItem Header="Reload">
-          <MenuItem Header="Reload all" />
-          <MenuItem Header="Reload EVT" />
-          <MenuItem Header="Reload ECS" />
+        <MenuItem Header="Reload" IsEnabled="false">
+          <MenuItem Header="Reload all" IsEnabled="false" />
+          <MenuItem Header="Reload EVT" IsEnabled="false"/>
+          <MenuItem Header="Reload ECS" IsEnabled="false"/>
         </MenuItem>
       </Menu>
       <Button Click="ToggleTheme">
@@ -32,37 +32,23 @@
       </Button>
     </StackPanel>
     <TabControl Margin="5" DockPanel.Dock="Bottom">
-      <TabItem Header="Editors">
-        <TabControl Margin="5">
-          <TabItem Header="Basics">
-            <views:BasicsPanel DataContext="{Binding basicsPanelVM}" Padding="10"/>
-          </TabItem>
-          <TabItem Header="Assets">
-            <views:AssetsPanel DataContext="{Binding assetsPanelVM}" Padding="10"/>
-          </TabItem>
-          <TabItem Header="Timeline">
-            <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
-          </TabItem>
-          <TabItem Header="Scripts">
-            <views:ScriptPanel DataContext="{Binding scriptPanelVM}" Padding="10"/>
-          </TabItem>
-        </TabControl>
+      <TabItem Header="Basics">
+        <views:BasicsPanel DataContext="{Binding basicsPanelVM}" Padding="10"/>
       </TabItem>
-      <TabItem Header="Previews">
-        <TabControl Margin="5">
-          <TabItem Header="Audio">
-            <views:AudioPanel DataContext="{Binding audioPanelVM}" Padding="10"/>
-          </TabItem>
-          <TabItem Header="Images">
-            <TextBlock Text="This is the Image Preview tab." />
-          </TabItem>
-          <TabItem Header="Models">
-            <TextBlock Text="This is the Model Preview tab." />
-          </TabItem>
-        </TabControl>
+      <TabItem Header="Assets">
+        <views:AssetsPanel DataContext="{Binding assetsPanelVM}" Padding="10"/>
+      </TabItem>
+      <TabItem Header="Audio">
+        <views:AudioPanel DataContext="{Binding audioPanelVM}" Padding="10"/>
+      </TabItem>
+      <TabItem Header="Scripts">
+        <views:ScriptPanel DataContext="{Binding scriptPanelVM}" Padding="10"/>
+      </TabItem>
+      <TabItem Header="Timeline">
+        <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
       </TabItem>
       <TabItem Header="Render" Margin="5">
-        <TextBlock Text="This is the Render tab." />
+        <TextBlock Text="Coming soon..." />
       </TabItem>
     </TabControl>
   </DockPanel>

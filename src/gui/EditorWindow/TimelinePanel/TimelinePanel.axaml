@@ -105,6 +105,12 @@
     <Style Selector="Button.inactive">
       <Setter Property="Opacity" Value="0.5"/>
     </Style>
+    <Style Selector="Button.accented ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme1}"/>
+    </Style>
+    <Style Selector="Button.accented:pointerover ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme2}"/>
+    </Style>
   </UserControl.Styles>
 
   <UserControl.Resources>
@@ -934,12 +940,7 @@
   <DockPanel DataContext="{Binding TimelineContent}">
     <DockPanel DockPanel.Dock="Top">
       <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-        <Button Name="ShowCategories" Click="ShowAllCategories" CornerRadius="5,0,0,5" Background="{DynamicResource SystemAccentColorTheme1}">
-          <Button.Styles>
-            <Style Selector="Button#ShowCategories:pointerover ContentPresenter">
-              <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme2}"/>
-            </Style>
-          </Button.Styles>
+        <Button Classes="accented" Click="ShowAllCategories" CornerRadius="5,0,0,5">
           Show All
         </Button>
         <Button Click="HideAllCategories" CornerRadius="0,5,5,0">Hide All</Button>
