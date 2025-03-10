@@ -52,6 +52,30 @@ public partial class AssetsPanel : ReactiveUserControl<AssetsPanelViewModel>, IN
         InitializeComponent();
     }
 
+    public void Resort(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel! is null)
+            return;
+
+        switch (((RadioButton)sender).Content)
+        {
+            case "Sort by ID (Ascending)":
+                ViewModel!.SortMode = (true, true);
+                break;
+            case "Sort by ID (Descending)":
+                ViewModel!.SortMode = (true, false);
+                break;
+            case "Sort by Type (Ascending)":
+                ViewModel!.SortMode = (false, true);
+                break;
+            case "Sort by Type (Descending)":
+                ViewModel!.SortMode = (false, false);
+                break;
+            default:
+                break;
+        }
+    }
+
     public void OpenModal(object sender, RoutedEventArgs e)
     {
         this.ModalIsOpen = true;
@@ -72,23 +96,21 @@ public partial class AssetsPanel : ReactiveUserControl<AssetsPanelViewModel>, IN
         }
     }
 
+    public void DuplicateAsset(object sender, RoutedEventArgs e)
+    {
+        Asset asset = (Asset)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>((MenuItem)sender).Content);
+        ViewModel!.DuplicateAsset(asset);
+    }
+
     public void DeleteAsset(object sender, RoutedEventArgs e)
     {
-        Asset asset = (Asset)(((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (Border)LogicalExtensions.GetLogicalParent(
-                (DockPanel)LogicalExtensions.GetLogicalParent(
-                    (StackPanel)LogicalExtensions.GetLogicalParent(
-                        (Button)sender))))).Content);
+        Asset asset = (Asset)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>((MenuItem)sender).Content);
         ViewModel!.DeleteAsset(asset);
     }
 
     public void SaveChanges(object sender, EventArgs e)
     {
-        Asset asset = (Asset)(((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (Border)LogicalExtensions.GetLogicalParent(
-                (DockPanel)LogicalExtensions.GetLogicalParent(
-                    (StackPanel)LogicalExtensions.GetLogicalParent(
-                        ((Flyout)sender).Target))))).Content);
+        Asset asset = (Asset)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>(((Flyout)sender).Target).Content);
         asset.SaveChanges();
     }
 

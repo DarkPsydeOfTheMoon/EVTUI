@@ -14,7 +14,7 @@ public class Asset : ViewModelBase
 
     public Asset(SerialObject obj, bool readOnly)
     {
-        _obj = obj;
+        this.Obj = obj;
         this.Editable = !readOnly;
 
         this.ObjectID = new NumEntryField("Asset ID", false, obj.Id, 0, 9999, 1);
@@ -263,48 +263,41 @@ public class Asset : ViewModelBase
 
     //public AnimationWidget BaseAnimPreview { get; set; }
 
-    protected SerialObject _obj;
-
-    public bool DeleteObject(DataManager config)
-    {
-        bool success = config.EventManager.SerialEvent.DeleteObject(_obj);
-        _obj = null;
-        return success;
-    }
+    public SerialObject Obj { get; set; }
 
     public void SaveChanges()
     {
-        _obj.Id = (int)this.ObjectID.Value;
+        this.Obj.Id = (int)this.ObjectID.Value;
 
-        _obj.Type = Asset.ObjectTypes.Forward[this.ObjectType.Choice];
-        _obj.ResourceUniqueId = (int)this.UniqueID.Value;
+        this.Obj.Type = Asset.ObjectTypes.Forward[this.ObjectType.Choice];
+        this.Obj.ResourceUniqueId = (int)this.UniqueID.Value;
 
         if (!(this.Category is null))
-            _obj.ResourceCategory = this.ObjectCategories.Forward[this.Category.Choice];
+            this.Obj.ResourceCategory = this.ObjectCategories.Forward[this.Category.Choice];
 
         if (!(this.MajorID is null))
-            _obj.ResourceMajorId = (int)this.MajorID.Value;
+            this.Obj.ResourceMajorId = (int)this.MajorID.Value;
 
         if (!(this.MinorID is null))
-            _obj.ResourceMinorId = (short)this.MinorID.Value;
+            this.Obj.ResourceMinorId = (short)this.MinorID.Value;
 
         if (!(this.SubID is null))
-            _obj.ResourceSubId = (short)this.SubID.Value;
+            this.Obj.ResourceSubId = (short)this.SubID.Value;
 
         if (!(this.BaseAnimID is null))
-            _obj.BaseMotionNo = (int)this.BaseAnimID.Value;
+            this.Obj.BaseMotionNo = (int)this.BaseAnimID.Value;
 
         if (!(this.ExtBaseAnimID is null))
-            _obj.ExtBaseMotionNo = (int)this.ExtBaseAnimID.Value;
+            this.Obj.ExtBaseMotionNo = (int)this.ExtBaseAnimID.Value;
 
         if (!(this.ExtAddAnimID is null))
-            _obj.ExtAddMotionNo = (int)this.ExtAddAnimID.Value;
+            this.Obj.ExtAddMotionNo = (int)this.ExtAddAnimID.Value;
  
         if (!(this.IsCommon is null))
-            _obj.Flags[0] = this.IsCommon.Value;
+            this.Obj.Flags[0] = this.IsCommon.Value;
 
-        _obj.Flags[31] = this.UnkFlag1.Value;
-        _obj.UnkBool = Convert.ToInt32(this.UnkFlag2.Value);
+        this.Obj.Flags[31] = this.UnkFlag1.Value;
+        this.Obj.UnkBool = Convert.ToInt32(this.UnkFlag2.Value);
     }
 
     public static BiDict<string, int> ObjectTypes = new BiDict<string, int>
@@ -349,6 +342,23 @@ public class Asset : ViewModelBase
 public class AssetsPanelViewModel : ViewModelBase
 {
 
+    //////////////////////////////
+    // *** REACTIVE MEMBERS *** //
+    //////////////////////////////
+    private (bool IsById, bool IsAscending) _sortMode = (true, true);
+    public (bool IsById, bool IsAscending) SortMode
+    {
+        get => _sortMode;
+        set
+        {
+            if (_sortMode != value)
+            {
+                _sortMode = value;
+                this.SortAssets();
+            }
+        }
+    }
+
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
@@ -369,18 +379,42 @@ public class AssetsPanelViewModel : ViewModelBase
         EVT evt = (EVT)dataManager.EventManager.SerialEvent;
         foreach (SerialObject obj in evt.Objects)
             this.Assets.Add(new Asset(obj, this.Config.ReadOnly));
+        this.SortAssets();
+    }
+
+    public void SortAssets()
+    {
+        if (this.SortMode.IsAscending)
+            if (this.SortMode.IsById)
+                this.Assets = new ObservableCollection<Asset>(this.Assets.OrderBy(a => a.ObjectID.Value));
+            else
+                this.Assets = new ObservableCollection<Asset>(this.Assets.OrderBy(a => a.ObjectType.Choice));
+        else
+            if (this.SortMode.IsById)
+                this.Assets = new ObservableCollection<Asset>(this.Assets.OrderByDescending(a => a.ObjectID.Value));
+            else
+                this.Assets = new ObservableCollection<Asset>(this.Assets.OrderByDescending(a => a.ObjectType.Choice));
+        OnPropertyChanged(nameof(Assets));
     }
 
     public void AddAsset(string type)
     {
         SerialObject newObj = this.Config.EventManager.SerialEvent.NewObject(Asset.ObjectTypes.Forward[type]);
         this.Assets.Add(new Asset(newObj, this.Config.ReadOnly));
-        OnPropertyChanged(nameof(Assets));
+        this.SortAssets();
+    }
+
+    public void DuplicateAsset(Asset asset)
+    {
+        SerialObject newObj = this.Config.EventManager.SerialEvent.DuplicateObject(asset.Obj);
+        this.Assets.Add(new Asset(newObj, this.Config.ReadOnly));
+        this.SortAssets();
     }
 
     public bool DeleteAsset(Asset asset)
     {
-        bool success = asset.DeleteObject(this.Config);
+        bool success = this.Config.EventManager.SerialEvent.DeleteObject(asset.Obj);
+        asset.Obj = null;
         foreach (Asset candidate in this.Assets)
             if (candidate == asset)
             {

@@ -268,6 +268,43 @@ public class EVT : ISerializable
         return newObj;
     }
 
+    // TODO: consolidate code between this method and prev
+    public SerialObject DuplicateObject(SerialObject oldObj)
+    {
+        SerialObject newObj = DeepCopier.Copy(oldObj);
+
+        // TODO: surely there's a better place to create this
+        HashSet<int> ids = new HashSet<int>();
+        foreach (SerialObject obj in this.Objects)
+            ids.Add(obj.Id);
+        // always pick the smallest unused (u)int
+        for (int i=1; i<=this.ObjectCount+1; i++)
+            if (!ids.Contains(i))
+            {
+                newObj.Id = i;
+                break;
+            }
+
+        HashSet<int> dupes = new HashSet<int>();
+        foreach (SerialObject obj in this.Objects)
+            if (obj.Type == newObj.Type && obj.ResourceCategory == newObj.ResourceCategory && obj.ResourceMajorId == newObj.ResourceMajorId && obj.ResourceMinorId == newObj.ResourceMinorId && obj.ResourceSubId == newObj.ResourceSubId)
+                dupes.Add(obj.ResourceUniqueId);
+        // always pick the smallest unused (u)int
+        for (int i=0; i<=dupes.Count; i++)
+            if (!dupes.Contains(i))
+            {
+                newObj.ResourceUniqueId = i;
+                break;
+            }
+
+        List<SerialObject> objList = new List<SerialObject>(this.Objects);
+        objList.Add(newObj);
+        this.Objects = objList.ToArray();
+
+        this.ObjectCount += 1;
+        return newObj;
+    }
+
     public int CopyCommandToNewFrame(SerialCommand cmd, dynamic cmdData, int frame)
     {
         SerialCommand newCmd = DeepCopier.Copy(cmd);

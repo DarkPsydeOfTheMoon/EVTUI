@@ -220,15 +220,33 @@
 
 <Grid>
   <DockPanel>
-    <Button DockPanel.Dock="Top"
-     Classes="accented"
-     Click="OpenModal"
-     FontSize="18"
-     HorizontalAlignment="Center"
-     IsEnabled="{Binding !Config.ReadOnly}"
-     Margin="10">
-       + Add new asset
-    </Button>
+    <DockPanel DockPanel.Dock="Top">
+      <Button DockPanel.Dock="Left" ToolTip.Tip="Sort" HorizontalAlignment="Left" Width="80">
+        <Button.Flyout>
+          <Flyout>
+            <StackPanel>
+              <RadioButton GroupName="sort" Content="Sort by ID (Ascending)" Checked="Resort" IsChecked="true"/>
+              <RadioButton GroupName="sort" Content="Sort by ID (Descending)" Checked="Resort"/>
+              <Separator Margin="10"/>
+              <RadioButton GroupName="sort" Content="Sort by Type (Ascending)" Checked="Resort"/>
+              <RadioButton GroupName="sort" Content="Sort by Type (Descending)" Checked="Resort"/>
+            </StackPanel>
+          </Flyout>
+        </Button.Flyout>
+        <PathIcon Data="{StaticResource arrow_sort_regular}" />
+      </Button>
+      <Button DockPanel.Dock="Right"
+       Classes="accented"
+       Click="OpenModal"
+       HorizontalAlignment="Right"
+       IsEnabled="{Binding !Config.ReadOnly}"
+       Margin="10">
+        <StackPanel Orientation="Horizontal" Spacing="5">
+          <PathIcon Data="{StaticResource form_new_regular}" />
+          <TextBlock Text="Add New Asset"/>
+        </StackPanel>
+      </Button>
+    </DockPanel>
     <ScrollViewer>
       <ItemsControl ItemsSource="{Binding Assets}">
         <ItemsControl.Styles>
@@ -247,7 +265,7 @@
         </ItemsControl.Styles>
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
-            <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,40,0"/>
+            <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,20,0"/>
           </ItemsPanelTemplate> 
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
@@ -278,7 +296,7 @@
                  MaxDropDownHeight="300"
                  VerticalAlignment="Center"/>
                 <StackPanel DockPanel.Dock="Right" Spacing="5" Margin="5">
-                  <Button Classes="action" ToolTip.Tip="Edit">
+                  <Button Classes="action" ToolTip.Tip="Details">
                     <Button.Flyout>
                       <Flyout Closed="SaveChanges">
                         <StackPanel Classes="form">
@@ -324,11 +342,21 @@
                     </Button.Flyout>
                     <PathIcon Data="{StaticResource edit_regular}" />
                   </Button>
-                  <Button Classes="action" ToolTip.Tip="Preview">
+                  <Button Classes="action" ToolTip.Tip="Preview" IsEnabled="false">
                     <PathIcon Data="{StaticResource eye_show_regular}" />
                   </Button>
-                  <Button Classes="action" ToolTip.Tip="Delete" Click="DeleteAsset" IsEnabled="{Binding Editable}">
-                    <PathIcon Data="{StaticResource delete_regular}" />
+                  <Button Classes="action" ToolTip.Tip="Actions" IsEnabled="{Binding Editable}">
+                    <Button.Flyout>
+                      <MenuFlyout>
+                        <MenuItem Header="Duplicate" Click="DuplicateAsset" />
+                        <MenuItem Header="Delete">
+                          <MenuItem Header="Delete Asset &amp; Related Commands" IsEnabled="false" />
+                          <MenuItem Header="Delete Asset Only" Click="DeleteAsset" IsEnabled="{Binding Editable}" />
+                          <MenuItem Header="Delete Related Commands Only" IsEnabled="false" />
+                        </MenuItem>
+                      </MenuFlyout>
+                    </Button.Flyout>
+                    <PathIcon Data="{StaticResource more_regular}" />
                   </Button>
                 </StackPanel>
                 <Panel/>

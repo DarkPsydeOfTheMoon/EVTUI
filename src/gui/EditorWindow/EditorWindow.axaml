@@ -21,10 +21,10 @@
           <MenuItem Header="Save BMD" Click="SaveMod" Name="BMD" />
           <MenuItem Header="Save BF"  Click="SaveMod" Name="BF" />
         </MenuItem>
-        <MenuItem Header="Reload">
-          <MenuItem Header="Reload all" />
-          <MenuItem Header="Reload EVT" />
-          <MenuItem Header="Reload ECS" />
+        <MenuItem Header="Reload" IsEnabled="false">
+          <MenuItem Header="Reload all" IsEnabled="false" />
+          <MenuItem Header="Reload EVT" IsEnabled="false"/>
+          <MenuItem Header="Reload ECS" IsEnabled="false"/>
         </MenuItem>
       </Menu>
       <Button Click="ToggleTheme">
