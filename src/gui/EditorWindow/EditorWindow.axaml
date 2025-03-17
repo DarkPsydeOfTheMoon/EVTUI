@@ -32,8 +32,8 @@
       </Button>
     </StackPanel>
     <TabControl Margin="5" DockPanel.Dock="Bottom">
-      <TabItem Header="Basics">
-        <views:BasicsPanel DataContext="{Binding basicsPanelVM}" Padding="10"/>
+      <TabItem Header="Timeline">
+        <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
       </TabItem>
       <TabItem Header="Assets">
         <views:AssetsPanel DataContext="{Binding assetsPanelVM}" Padding="10"/>
@@ -43,9 +43,6 @@
       </TabItem>
       <TabItem Header="Scripts">
         <views:ScriptPanel DataContext="{Binding scriptPanelVM}" Padding="10"/>
-      </TabItem>
-      <TabItem Header="Timeline">
-        <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
       </TabItem>
       <TabItem Header="Render" Margin="5">
         <TextBlock Text="Coming soon..." />

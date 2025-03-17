@@ -137,6 +137,46 @@
       </Border>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:BasicsPanelViewModel}">
+      <StackPanel Classes="form">
+
+        <TextBlock Classes="formtitle" Text="Other Settings"/>
+        <Separator Classes="formtitle"/>
+
+        <Expander Header="Labels">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding MajorID}"/>
+            <ContentControl Content="{Binding MinorID}"/>
+             <ContentControl Content="{Binding Rank}"/>
+            <ContentControl Content="{Binding Level}"/>
+          </StackPanel>
+        </Expander>
+
+        <Expander Header="Cinemascope">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding CinemascopeEnabled}"/>
+            <ContentControl Content="{Binding CinemascopeAnimationEnabled}" IsVisible="{Binding CinemascopeEnabled.Value}"/>
+            <ContentControl Content="{Binding CinemascopeStartingFrame}" IsVisible="{Binding CinemascopeEnabled.Value}"/>
+          </StackPanel>
+        </Expander>
+
+        <Expander Header="Environment">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding InitEnvAssetID}"/>
+            <ContentControl Content="{Binding DebugEnvAssetID}"/>
+          </StackPanel>
+        </Expander>
+
+        <Expander Header="Other Flags">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkFlag1}"/>
+            <ContentControl Content="{Binding UnkFlag2}"/>
+          </StackPanel>
+        </Expander>
+
+      </StackPanel>
+    </DataTemplate>
+
     <!-- FIELD TYPES -->
 
     <DataTemplate DataType="{x:Type vm:BoolChoiceField}">
@@ -945,25 +985,6 @@
         </Button>
         <Button Click="HideAllCategories" CornerRadius="0,5,5,0">Hide All</Button>
       </StackPanel>
-        <Button Classes="accented" ToolTip.Tip="Event Basics">
-          <Button.Flyout>
-            <Flyout>
-              <StackPanel Classes="form">
-	            <TextBlock Classes="formtitle" Text="Event Basics"/>
-                <Separator Classes="formtitle"/>
-                <ContentControl Content="{Binding FrameRate}"/>
-                <ContentControl Content="{Binding FrameDuration}"/>
-                <Expander Header="In-Editor Playback">
-                  <StackPanel Classes="form">
-                    <ContentControl Content="{Binding StartingFrameEnabled}"/>
-                    <ContentControl Content="{Binding StartingFrameEntry}" IsVisible="{Binding StartingFrameEnabled.Value}"/>
-                  </StackPanel>
-                </Expander>
-              </StackPanel>
-            </Flyout>
-          </Button.Flyout>
-          <PathIcon Data="{StaticResource more_regular}" />
-        </Button>
       <StackPanel Classes="field" DockPanel.Dock="Right">
         <Slider
          Minimum="0"
@@ -978,25 +999,35 @@
          Value="{Binding ActiveFrame}"
          AllowSpin="true"
          VerticalAlignment="Center"/>
-        <Button ToolTip.Tip="Frame Settings">
-          <Button.Flyout>
-            <Flyout>
-              <StackPanel Classes="form">
-	            <TextBlock Classes="formtitle" Text="Frame Settings"/>
-                <Separator Classes="formtitle"/>
-                <ContentControl Content="{Binding FrameRate}"/>
-                <ContentControl Content="{Binding FrameDuration}"/>
-                <Expander Header="In-Editor Playback">
-                  <StackPanel Classes="form">
-                    <ContentControl Content="{Binding StartingFrameEnabled}"/>
-                    <ContentControl Content="{Binding StartingFrameEntry}" IsVisible="{Binding StartingFrameEnabled.Value}"/>
-                  </StackPanel>
-                </Expander>
-              </StackPanel>
-            </Flyout>
-          </Button.Flyout>
-          <PathIcon Data="{StaticResource settings_regular}" />
-        </Button>
+        <StackPanel Orientation="Horizontal">
+          <Button ToolTip.Tip="Frame Settings" CornerRadius="5,0,0,5">
+            <Button.Flyout>
+              <Flyout>
+                <StackPanel Classes="form">
+  	            <TextBlock Classes="formtitle" Text="Frame Settings"/>
+                  <Separator Classes="formtitle"/>
+                  <ContentControl Content="{Binding FrameRate}"/>
+                  <ContentControl Content="{Binding FrameDuration}"/>
+                  <Expander Header="In-Editor Playback">
+                    <StackPanel Classes="form">
+                      <ContentControl Content="{Binding StartingFrameEnabled}"/>
+                      <ContentControl Content="{Binding StartingFrameEntry}" IsVisible="{Binding StartingFrameEnabled.Value}"/>
+                    </StackPanel>
+                  </Expander>
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+            <PathIcon Data="{StaticResource settings_regular}" />
+          </Button>
+          <Button ToolTip.Tip="Other Settings" CornerRadius="0,5,5,0">
+            <Button.Flyout>
+              <Flyout>
+                <ContentControl Content="{Binding EventBasics}"/>
+              </Flyout>
+            </Button.Flyout>
+            <PathIcon Data="{StaticResource more_regular}" />
+          </Button>
+        </StackPanel>
       </StackPanel>
     </DockPanel>
     <Grid>

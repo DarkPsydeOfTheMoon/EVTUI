@@ -10,6 +10,8 @@ namespace EVTUI.ViewModels;
 public class Timeline : ReactiveObject
 {
 
+    public BasicsPanelViewModel EventBasics { get; set; }
+
     public NumEntryField FrameRate                { get; set; }
     //public NumEntryField FrameCount               { get; set; }
     public NumEntryField FrameDuration            { get; set; }
@@ -19,6 +21,8 @@ public class Timeline : ReactiveObject
 
     public Timeline(DataManager dataManager)
     {
+        this.EventBasics = new BasicsPanelViewModel(dataManager);
+
         EVT evt = (EVT)dataManager.EventManager.SerialEvent;
         //this.FrameCount = new NumEntryField("Frame Count", !dataManager.ReadOnly, (int)evt.FrameCount, 0, 99999, 1);
         this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, (int)evt.FrameRate, 1, 255, 1);

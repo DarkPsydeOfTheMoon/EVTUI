@@ -16,8 +16,15 @@ public class ScriptPanelViewModel : ViewModelBase
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
     public DataManager Config;
-    // needed for calc binding, I guess......
-    public bool ReadOnly { get { return this.Config.ReadOnly; } }
+    public bool Editable { get; set; }
+
+    // from header
+    public BoolChoiceField InitScriptEnabled { get; set; }
+    public BoolChoiceField EmbedBMD          { get; set; }
+    public BoolChoiceField EmbedBF           { get; set; }
+    public NumEntryField InitScriptIndex     { get; set; }
+    public StringEntryField BMDPath          { get; set; }
+    public StringEntryField BFPath           { get; set; }
 
     private ObservableCollection<string> _scriptNames;
     public ObservableCollection<string> ScriptNames
@@ -103,6 +110,24 @@ public class ScriptPanelViewModel : ViewModelBase
     public ScriptPanelViewModel(DataManager Config)
     {
         this.Config = Config;
+        this.Editable = !this.Config.ReadOnly;
+
+        // from header
+        EVT evt = (EVT)this.Config.EventManager.SerialEvent;
+        this.EmbedBMD = new BoolChoiceField("Use custom BMD path?", this.Editable, evt.Flags[12]);
+        this.BMDPath = new StringEntryField("Custom BMD path", this.Editable, (evt.EventBmdPath is null) ? $"event_data/message/e{(100*(evt.MajorId/100)):000}/e{evt.MajorId:000}_{evt.MinorId:000}.bmd" : evt.EventBmdPath.Replace("\0", ""), 48);
+        this.EmbedBF = new BoolChoiceField("Use custom BF path?", this.Editable, evt.Flags[14]);
+        this.BFPath = new StringEntryField("Custom BF path", this.Editable, (evt.EventBfPath is null) ? $"event_data/message/e{(100*(evt.MajorId/100)):000}/e{evt.MajorId:000}_{evt.MinorId:000}.bf" : evt.EventBfPath.Replace("\0", ""), 48);
+        this.InitScriptEnabled = new BoolChoiceField("Enable Init Script", this.Editable, evt.Flags[1]);
+        this.InitScriptIndex = new NumEntryField("Init Script Index", this.Editable, (int)evt.InitScriptIndex, 0, 255, 1);
+
+        this.WhenAnyValue(x => x.EmbedBMD.Value).Subscribe(x => evt.Flags[12] = this.EmbedBMD.Value);
+        this.WhenAnyValue(x => x.BMDPath.Text).Subscribe(x => evt.EventBmdPath = this.BMDPath.Text);
+        this.WhenAnyValue(x => x.EmbedBF.Value).Subscribe(x => evt.Flags[14] = this.EmbedBF.Value);
+        this.WhenAnyValue(x => x.BFPath.Text).Subscribe(x => evt.EventBfPath = this.BFPath.Text);
+        this.WhenAnyValue(x => x.InitScriptEnabled.Value).Subscribe(x => evt.Flags[1] = this.InitScriptEnabled.Value);
+        this.WhenAnyValue(x => x.InitScriptIndex.Value).Subscribe(x => evt.InitScriptIndex = (byte)x);
+
         this._scriptNames = new ObservableCollection<string>();
         this._scriptExtNames = new ObservableCollection<string>();
         this.IsMsg = new Dictionary<string, bool>();
