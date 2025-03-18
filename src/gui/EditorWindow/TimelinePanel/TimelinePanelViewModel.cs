@@ -10,25 +10,85 @@ namespace EVTUI.ViewModels;
 public class Timeline : ReactiveObject
 {
 
-    public BasicsPanelViewModel EventBasics { get; set; }
-
-    public NumEntryField FrameRate                { get; set; }
-    //public NumEntryField FrameCount               { get; set; }
+    // from header
+    // labels
+    public NumEntryField        MajorID { get; set; }
+    public NumEntryField        MinorID { get; set; }
+    public StringSelectionField Rank    { get; set; }
+    public NumEntryField        Level   { get; set; }
+    // flags
+    public BoolChoiceField StartingFrameEnabled        { get; set; }
+    public BoolChoiceField UnkFlag1                    { get; set; }
+    public BoolChoiceField CinemascopeEnabled          { get; set; }
+    public BoolChoiceField CinemascopeAnimationEnabled { get; set; }
+    public BoolChoiceField UnkFlag2                    { get; set; }
+    // frames
     public NumEntryField FrameDuration            { get; set; }
-    public BoolChoiceField StartingFrameEnabled   { get; set; }
+    public NumEntryField FrameRate                { get; set; }
     public NumEntryField StartingFrameEntry       { get; set; }
-    //public NumEntryField CinemascopeStartingFrame { get; set; }
+    public NumEntryField CinemascopeStartingFrame { get; set; }
+    // indices
+    public NumEntryField InitEnvAssetID  { get; set; }
+    public NumEntryField DebugEnvAssetID { get; set; }
+
+    public enum Ranks : byte
+    {
+        None = 0,
+        S    = 1,
+        A    = 2,
+        B    = 3,
+        C    = 4,
+        D    = 5
+    }
 
     public Timeline(DataManager dataManager)
     {
-        this.EventBasics = new BasicsPanelViewModel(dataManager);
-
         EVT evt = (EVT)dataManager.EventManager.SerialEvent;
-        //this.FrameCount = new NumEntryField("Frame Count", !dataManager.ReadOnly, (int)evt.FrameCount, 0, 99999, 1);
-        this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, (int)evt.FrameRate, 1, 255, 1);
-        this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, (int)evt.FrameCount, 0, 99999, 1);
+
+        // from header
+
+        // labels
+        this.MajorID = new NumEntryField("Major ID", !dataManager.ReadOnly, evt.MajorId, 0, 999, 1);
+        this.MinorID = new NumEntryField("Minor ID", !dataManager.ReadOnly, evt.MinorId, 0, 999, 1);
+        this.Rank = new StringSelectionField("Rank", !dataManager.ReadOnly, Enum.GetName(typeof(Ranks), evt.Rank), new List<string>(Enum.GetNames(typeof(Ranks))));
+        this.Level = new NumEntryField("Level", !dataManager.ReadOnly, evt.Level, 0, 3, 1);
+
+        this.WhenAnyValue(x => x.MajorID.Value).Subscribe(x => evt.MajorId = (short)x);
+        this.WhenAnyValue(x => x.MinorID.Value).Subscribe(x => evt.MinorId = (short)x);
+        this.WhenAnyValue(x => x.Rank.Choice).Subscribe(x => evt.Rank = (byte)Enum.Parse(typeof(Ranks), x));
+        this.WhenAnyValue(x => x.Level.Value).Subscribe(x => evt.Level = (byte)x);
+
+        // cinemascope
+        this.CinemascopeEnabled = new BoolChoiceField("Enable Cinemascope", !dataManager.ReadOnly, evt.Flags[8]);
+        this.CinemascopeAnimationEnabled = new BoolChoiceField("Enable Cinemascope Animation", !dataManager.ReadOnly, evt.Flags[9]);
+        this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", !dataManager.ReadOnly, (int)evt.CinemascopeStartingFrame, 0, 9999, 1);
+
+        this.WhenAnyValue(x => x.CinemascopeEnabled.Value).Subscribe(x => evt.Flags[8] = this.CinemascopeEnabled.Value);
+        this.WhenAnyValue(x => x.CinemascopeAnimationEnabled.Value).Subscribe(x => evt.Flags[9] = this.CinemascopeEnabled.Value);
+        this.WhenAnyValue(x => x.CinemascopeStartingFrame.Value).Subscribe(x => evt.CinemascopeStartingFrame = (short)x);
+
+        // env
+        this.InitEnvAssetID = new NumEntryField("Init ENV ID", !dataManager.ReadOnly, (int)evt.InitEnvAssetID, 0, 9999, 1);
+        this.DebugEnvAssetID = new NumEntryField("Debug ENV ID", !dataManager.ReadOnly, (int)evt.InitDebugEnvAssetID, 0, 9999, 1);
+
+        this.WhenAnyValue(x => x.InitEnvAssetID.Value).Subscribe(x => evt.InitEnvAssetID = (int)x);
+        this.WhenAnyValue(x => x.DebugEnvAssetID.Value).Subscribe(x => evt.InitDebugEnvAssetID = (int)x);
+
+        // other flags
+        this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", !dataManager.ReadOnly, evt.Flags[6]);
+        this.UnkFlag2 = new BoolChoiceField("Unknown Flag #2", !dataManager.ReadOnly, evt.Flags[16]);
+
+        this.WhenAnyValue(x => x.UnkFlag1.Value).Subscribe(x => evt.Flags[6] = this.UnkFlag1.Value);
+        this.WhenAnyValue(x => x.UnkFlag2.Value).Subscribe(x => evt.Flags[16] = this.UnkFlag2.Value);
+
+        // frames
+        this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, evt.FrameRate, 1, 255, 1);
+        this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, evt.FrameCount, 0, 99999, 1);
         this.StartingFrameEnabled = new BoolChoiceField("Set Delayed Starting Frame?", !dataManager.ReadOnly, evt.Flags[0]);
-        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, (int)evt.StartingFrame, 0, 9999, 1);
+        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, evt.StartingFrame, 0, 9999, 1);
+
+        this.WhenAnyValue(x => x.FrameRate.Value).Subscribe(x => evt.FrameRate = (byte)this.FrameRate.Value);
+        // (the rest of the WhenAnyValues are below)
 
         _frameCount = (int)this.FrameDuration.Value;
         _startingFrame = (int)this.StartingFrameEntry.Value;

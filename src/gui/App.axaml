@@ -5,6 +5,21 @@
              RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key='Light'>
+          <SolidColorBrush x:Key='SystemAccentColorTheme1' Color="{DynamicResource SystemAccentColorLight1}"/>
+          <SolidColorBrush x:Key='SystemAccentColorTheme2' Color="{DynamicResource SystemAccentColorLight2}"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key='Dark'>
+          <SolidColorBrush x:Key='SystemAccentColorTheme1' Color="{DynamicResource SystemAccentColorDark1}"/>
+          <SolidColorBrush x:Key='SystemAccentColorTheme2' Color="{DynamicResource SystemAccentColorDark2}"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
+
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
