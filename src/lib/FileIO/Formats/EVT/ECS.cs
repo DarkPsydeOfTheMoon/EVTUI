@@ -102,8 +102,6 @@ public class ECS : ISerializable
         return true;
     }
 
-    // TODO: AddObject
-
     public int CopyCommandToNewFrame(SerialCommand cmd, dynamic cmdData, int frame)
     {
         SerialCommand newCmd = DeepCopier.Copy(cmd);
