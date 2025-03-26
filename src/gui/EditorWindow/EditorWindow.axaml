@@ -11,6 +11,163 @@
         Width="1200" Height="800" WindowStartupLocation="CenterScreen"
         Title="EVTUI">
 
+  <Window.Styles>
+    <Style Selector="Separator.formtitle">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColor}"/>
+      <Setter Property="Height" Value="2"/>
+      <Setter Property="Margin" Value="20,5,20,15"/>
+    </Style>
+    <Style Selector="Separator.formsubtitle">
+      <Setter Property="Margin" Value="40,5,40,15"/>
+    </Style>
+    <Style Selector="Expander">
+      <Setter Property="HorizontalAlignment" Value="Stretch"/>
+      <Setter Property="IsExpanded" Value="True"/>
+    </Style>
+    <Style Selector="Expander ToggleButton TextBlock">
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="FontWeight" Value="Light"/>
+    </Style>
+    <Style Selector="FlyoutPresenter">
+      <Setter Property="MaxHeight" Value="700"/>
+      <Setter Property="MaxWidth" Value="900"/>
+    </Style>
+    <Style Selector="Button.popupclose">
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+      <Setter Property="Margin" Value="0"/>
+      <Setter Property="Width" Value="20"/>
+      <Setter Property="Height" Value="20"/>
+    </Style>
+    <Style Selector="Button.popupclose > PathIcon">
+      <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
+      <Setter Property="Width" Value="10"/>
+      <Setter Property="Height" Value="10"/>
+    </Style>
+    <Style Selector="Button.popupclose:pointerover > PathIcon">
+      <Setter Property="Foreground" Value="White"/>
+    </Style>
+    <Style Selector="StackPanel.form">
+      <Setter Property="Orientation" Value="Vertical"/>
+      <Setter Property="Spacing" Value="10"/>
+    </Style>
+    <Style Selector="TextBlock.formtitle">
+      <Setter Property="FontSize" Value="24"/>
+      <Setter Property="FontWeight" Value="Normal"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBlock.formsubtitle">
+      <Setter Property="FontSize" Value="20"/>
+      <Setter Property="FontWeight" Value="Light"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Margin" Value="0,20,0,0"/>
+    </Style>
+    <Style Selector="StackPanel.field">
+      <Setter Property="HorizontalAlignment" Value="Right"/>
+      <Setter Property="Orientation" Value="Horizontal"/>
+      <Setter Property="Spacing" Value="20"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBlock.fieldtitle">
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="ExtraLight"/>
+      <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.accented ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme1}"/>
+    </Style>
+    <Style Selector="Button.accented:pointerover ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemAccentColorTheme2}"/>
+    </Style>
+  </Window.Styles>
+
+  <Window.DataTemplates>
+
+    <!-- FIELD TYPES -->
+
+    <DataTemplate DataType="{x:Type vm:BoolChoiceField}">
+      <StackPanel Classes="field">
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <CheckBox
+          IsChecked="{Binding Value}"
+          IsEnabled="{Binding Editable}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:StringSelectionField}">
+      <StackPanel Classes="field">
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <ComboBox
+          ItemsSource="{Binding Choices}"
+          SelectedItem="{Binding Choice}"
+          IsEnabled="{Binding Editable}"
+          MaxDropDownHeight="300"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:IntSelectionField}">
+      <StackPanel Classes="field">
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <ComboBox
+          ItemsSource="{Binding Choices}"
+          SelectedItem="{Binding Choice}"
+          IsEnabled="{Binding Editable}"
+          MaxDropDownHeight="300"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:NumEntryField}">
+      <StackPanel Classes="field">
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <NumericUpDown
+          Minimum="{Binding LowerLimit}"
+          Maximum="{Binding UpperLimit}"
+          Increment="{Binding Increment}"
+          Value="{Binding Value}"
+          IsEnabled="{Binding Editable}" AllowSpin="true"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:StringEntryField}">
+      <StackPanel Classes="field">
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <TextBox
+          AcceptsReturn="true"
+          Text="{Binding Text}"
+          MaxLength="{Binding MaxLength}"
+          IsEnabled="{Binding Editable}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:NumRangeField}">
+      <StackPanel Classes="field">
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <NumericUpDown
+          Minimum="{Binding LowerLimit}"
+          Maximum="{Binding UpperLimit}"
+          Increment="{Binding Increment}"
+          Value="{Binding Value}"
+          IsEnabled="{Binding Editable}"
+          AllowSpin="true"
+          VerticalAlignment="Center"/>
+        <Slider
+          Minimum="{Binding LowerLimit}"
+          Maximum="{Binding UpperLimit}"
+          TickFrequency="{Binding Increment}" IsSnapToTickEnabled="{Binding Increment}"
+          Value="{Binding Value}"
+          IsEnabled="{Binding Editable}"
+          Width="200"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:ColorSelectionField}">
+      <StackPanel Classes="field">
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <ColorPicker Color="{Binding SelectedColor}"/>
+      </StackPanel>
+    </DataTemplate>
+
+  </Window.DataTemplates>
+
   <DockPanel>
     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Right">
       <Menu>
@@ -21,10 +178,10 @@
           <MenuItem Header="Save BMD" Click="SaveMod" Name="BMD" />
           <MenuItem Header="Save BF"  Click="SaveMod" Name="BF" />
         </MenuItem>
-        <MenuItem Header="Reload">
-          <MenuItem Header="Reload all" />
-          <MenuItem Header="Reload EVT" />
-          <MenuItem Header="Reload ECS" />
+        <MenuItem Header="Reload" IsEnabled="false">
+          <MenuItem Header="Reload all" IsEnabled="false" />
+          <MenuItem Header="Reload EVT" IsEnabled="false"/>
+          <MenuItem Header="Reload ECS" IsEnabled="false"/>
         </MenuItem>
       </Menu>
       <Button Click="ToggleTheme">
@@ -32,37 +189,20 @@
       </Button>
     </StackPanel>
     <TabControl Margin="5" DockPanel.Dock="Bottom">
-      <TabItem Header="Editors">
-        <TabControl Margin="5">
-          <TabItem Header="Basics">
-            <views:BasicsPanel DataContext="{Binding basicsPanelVM}" Padding="10"/>
-          </TabItem>
-          <TabItem Header="Assets">
-            <views:AssetsPanel DataContext="{Binding assetsPanelVM}" Padding="10"/>
-          </TabItem>
-          <TabItem Header="Timeline">
-            <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
-          </TabItem>
-          <TabItem Header="Scripts">
-            <views:ScriptPanel DataContext="{Binding scriptPanelVM}" Padding="10"/>
-          </TabItem>
-        </TabControl>
+      <TabItem Header="Timeline">
+        <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
       </TabItem>
-      <TabItem Header="Previews">
-        <TabControl Margin="5">
-          <TabItem Header="Audio">
-            <views:AudioPanel DataContext="{Binding audioPanelVM}" Padding="10"/>
-          </TabItem>
-          <TabItem Header="Images">
-            <TextBlock Text="This is the Image Preview tab." />
-          </TabItem>
-          <TabItem Header="Models">
-            <TextBlock Text="This is the Model Preview tab." />
-          </TabItem>
-        </TabControl>
+      <TabItem Header="Assets">
+        <views:AssetsPanel DataContext="{Binding assetsPanelVM}" Padding="10"/>
+      </TabItem>
+      <TabItem Header="Audio">
+        <views:AudioPanel DataContext="{Binding audioPanelVM}" Padding="10"/>
+      </TabItem>
+      <TabItem Header="Scripts">
+        <views:ScriptPanel DataContext="{Binding scriptPanelVM}" Padding="10"/>
       </TabItem>
       <TabItem Header="Render" Margin="5">
-        <TextBlock Text="This is the Render tab." />
+        <TextBlock Text="Coming soon..." />
       </TabItem>
     </TabControl>
   </DockPanel>

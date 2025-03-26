@@ -11,7 +11,6 @@ public class EditorWindowViewModel : ViewModelBase
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
     public DataManager            Config          { get; }
-    public BasicsPanelViewModel   basicsPanelVM   { get; }
     public AssetsPanelViewModel   assetsPanelVM   { get; }
     public TimelinePanelViewModel timelinePanelVM { get; }
     public ScriptPanelViewModel   scriptPanelVM   { get; }
@@ -23,7 +22,6 @@ public class EditorWindowViewModel : ViewModelBase
     public EditorWindowViewModel(DataManager dataManager, Clipboard clipboard)
     {
         this.Config          = dataManager;
-        this.basicsPanelVM   = new BasicsPanelViewModel(this.Config);
         this.assetsPanelVM   = new AssetsPanelViewModel(this.Config);
         this.timelinePanelVM = new TimelinePanelViewModel(this.Config, clipboard);
         this.scriptPanelVM   = new ScriptPanelViewModel(this.Config);

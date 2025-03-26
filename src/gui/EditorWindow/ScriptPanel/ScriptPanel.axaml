@@ -17,7 +17,7 @@
       <Setter Property="FontFamily" Value="Monospace"/>
       <Setter Property="FontSize" Value="14"/>
       <Setter Property="FontWeight" Value="Light"/>
-      <Setter Property="Margin" Value="30"/>
+      <Setter Property="Margin" Value="0 20 0 20"/>
       <Setter Property="HorizontalAlignment" Value="Stretch"/>
       <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
       <Setter Property="ShowLineNumbers" Value="True"/>
@@ -27,10 +27,28 @@
     </Style>
   </UserControl.Styles>
 
-    <DockPanel VerticalAlignment="Top" Margin="20">
-      <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Center">
+  <DockPanel VerticalAlignment="Top">
+    <DockPanel DockPanel.Dock="Top">
+      <Button ToolTip.Tip="Script Settings" DockPanel.Dock="Right">
+        <Button.Flyout>
+          <Flyout>
+            <StackPanel Classes="form">
+              <TextBlock Classes="formtitle" Text="Script Settings"/>
+              <Separator Classes="formtitle"/>
+              <ContentControl Content="{Binding EmbedBMD}"/>
+              <ContentControl Content="{Binding BMDPath}" IsVisible="{Binding EmbedBMD.Value}"/>
+              <ContentControl Content="{Binding EmbedBF}"/>
+              <ContentControl Content="{Binding BFPath}" IsVisible="{Binding EmbedBF.Value}"/>
+              <ContentControl Content="{Binding InitScriptEnabled}"/>
+              <ContentControl Content="{Binding InitScriptIndex}" IsVisible="{Binding InitScriptEnabled.Value}"/>
+            </StackPanel>
+          </Flyout>
+        </Button.Flyout>
+        <PathIcon Data="{StaticResource settings_regular}" />
+      </Button>
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
         <Button Click="Compile"
-         IsEnabled="{c:Binding HasDecompiledFiles and !ReadOnly}"
+         IsEnabled="{c:Binding HasDecompiledFiles and Editable}"
          Margin="10"
          ToolTip.Tip="Compile Script">
           <PathIcon Data="{StaticResource wrench_regular}"/>
@@ -49,13 +67,14 @@
          MaxDropDownHeight="300"
          Width="NaN"/>
       </StackPanel>
-      <TextBox DockPanel.Dock="Bottom"
-       Height="200"
-       IsReadOnly="True"
-       TextWrapping="Wrap"
-       Text="{Binding CompilationLogs}"
-       CaretIndex="{Binding CompilationLogs.Length}"/>
-      <ContentControl Name="EditorContainer"/>
     </DockPanel>
+    <TextBox DockPanel.Dock="Bottom"
+     Height="200"
+     IsReadOnly="True"
+     TextWrapping="Wrap"
+     Text="{Binding CompilationLogs}"
+     CaretIndex="{Binding CompilationLogs.Length}"/>
+    <ContentControl Name="EditorContainer"/>
+  </DockPanel>
 
 </rxui:ReactiveUserControl>
