@@ -223,7 +223,7 @@ public class ColorSelectionField : FieldBase
 
 public class AnimationWidget : ViewModelBase
 {
-    public AnimationWidget(DataManager config, IntSelectionField modelID, AnimationStruct animation, Bitfield bitfield, string name, int? enabledInd = null, int? extInd = null, int? frameBlendingInd = null, bool enabledFlip = false, bool extFlip = false, bool frameBlendingFlip = false, bool loopFlip = false, int? trackNum = null)
+    public AnimationWidget(DataManager config, IntSelectionField modelID, AnimationStruct animation, BitfieldBase bitfield, string name, int? enabledInd = null, int? extInd = null, int? frameBlendingInd = null, bool enabledFlip = false, bool extFlip = false, bool frameBlendingFlip = false, bool loopFlip = false, int? trackNum = null)
     {
         _config = config;
         _modelID = modelID;
@@ -328,7 +328,7 @@ public class AnimationWidget : ViewModelBase
     private int _objectID { get => (int)_modelID.Choice; }
 
     protected DataManager _config;
-    protected Bitfield _bitfield;
+    protected BitfieldBase _bitfield;
     public AnimationStruct _animation;
     protected int? _enabledInd;
     protected int? _extInd;
