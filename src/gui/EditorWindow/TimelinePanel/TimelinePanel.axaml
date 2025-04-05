@@ -144,6 +144,18 @@
       </Button>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:InterpolationParameters}">
+      <StackPanel Classes="form">
+        <Expander Header="Interpolation">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding InterpolationType}"/>
+            <ContentControl Content="{Binding SlopeInType}" IsVisible="{c:Binding 'InterpolationType.Choice == \'Hermite\''}"/>
+            <ContentControl Content="{Binding SlopeOutType}" IsVisible="{c:Binding 'InterpolationType.Choice == \'Hermite\''}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
     <!-- COMMAND TYPES -->
 
     <DataTemplate DataType="{x:Type cmds:Basics}">
@@ -159,6 +171,340 @@
           </StackPanel>
         </Expander>
         <Separator Classes="formsubtitle"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CAA_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding LoopBool}"/>
+        <ContentControl Content="{Binding EnableViewAngleUpdate}"/>
+        <Expander Header="Animation Source">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding AssetID}"/>
+            <ContentControl Content="{Binding AnimationID}"/>
+            <ContentControl Content="{Binding PlaybackSpeed}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CAR_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding ResetCommand}"/>
+        <ContentControl Content="{Binding ResetParameters}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CClp}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding NearClip}"/>
+        <ContentControl Content="{Binding FarClip}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CMC_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding ShotType}"/>
+        <ContentControl Content="{Binding AngleType}"/>
+        <ContentControl Content="{Binding StartCorrectionFrame}"/>
+        <ContentControl Content="{Binding InterpolationSettings}"/>
+        <Expander Header="Focus &amp; Blur">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableDOF}"/>
+            <StackPanel Classes="form" IsVisible="{Binding EnableDOF.Value}">
+              <ContentControl Content="{Binding EnableCustomDOF}"/>
+              <StackPanel Classes="form" IsVisible="{Binding EnableCustomDOF.Value}">
+                <ContentControl Content="{Binding FocalDistance}"/>
+                <ContentControl Content="{Binding NearBlurDistance}"/>
+                <ContentControl Content="{Binding FarBlurDistance}"/>
+                <ContentControl Content="{Binding BlurStrength}"/>
+                <ContentControl Content="{Binding BlurType}" IsVisible="{c:Binding 'Size > 48'}"/>
+              </StackPanel>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Message Box Location" IsVisible="{c:Binding 'Size > 48'}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableMessageCoordinates}"/>
+            <ContentControl Content="{Binding MessageCoordinateType}" IsVisible="{Binding !EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageX}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageY}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CMCn}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding DirectionType}"/>
+        <ContentControl Content="{Binding Distance}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CMD_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AngleOfView}"/>
+        <Expander Header="Target Viewport Coordinates">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding ViewportX}"/>
+            <ContentControl Content="{Binding ViewportY}"/>
+            <ContentControl Content="{Binding ViewportZ}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Target Viewport Rotation">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding ViewportYaw}"/>
+            <ContentControl Content="{Binding ViewportPitch}"/>
+            <ContentControl Content="{Binding ViewportRoll}"/>
+          </StackPanel>
+        </Expander>
+        <ContentControl Content="{Binding InterpolationSettings}"/>
+        <Expander Header="Focus &amp; Blur">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableDOF}"/>
+            <StackPanel Classes="form" IsVisible="{Binding EnableDOF.Value}">
+              <ContentControl Content="{Binding FocalDistance}"/>
+              <ContentControl Content="{Binding NearBlurDistance}"/>
+              <ContentControl Content="{Binding FarBlurDistance}"/>
+              <ContentControl Content="{Binding BlurStrength}" IsVisible="{c:Binding 'Size > 48'}"/>
+              <ContentControl Content="{Binding BlurType}" IsVisible="{c:Binding 'Size > 48'}"/>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CQuk}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding StrengthOfShaking}"/>
+        <ContentControl Content="{Binding DegreeOfPitch}"/>
+        <ContentControl Content="{Binding FadeInFrames}"/>
+        <ContentControl Content="{Binding FadeOutFrames}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CSA_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding AnimationID}"/>
+        <ContentControl Content="{Binding PlaybackSpeed}"/>
+        <ContentControl Content="{Binding StartingFrame}"/>
+        <ContentControl Content="{Binding LoopBool}"/>
+        <ContentControl Content="{Binding EnableCorrectionParameters}"/>
+        <Expander Header="Target Viewport Coordinates" IsVisible="{Binding EnableCorrectionParameters.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding ViewportX}"/>
+            <ContentControl Content="{Binding ViewportY}"/>
+            <ContentControl Content="{Binding ViewportZ}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Target Viewport Rotation" IsVisible="{Binding EnableCorrectionParameters.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding ViewportYaw}"/>
+            <ContentControl Content="{Binding ViewportPitch}"/>
+            <ContentControl Content="{Binding ViewportRoll}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Focus &amp; Blur" IsVisible="{c:Binding 'Size > 48'}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableDOF}"/>
+            <StackPanel Classes="form" IsVisible="{Binding EnableDOF.Value}">
+              <ContentControl Content="{Binding FocalDistance}"/>
+              <ContentControl Content="{Binding NearBlurDistance}"/>
+              <ContentControl Content="{Binding FarBlurDistance}"/>
+              <ContentControl Content="{Binding BlurStrength}"/>
+              <ContentControl Content="{Binding BlurType}"/>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Message Box Location" IsVisible="{c:Binding 'Size > 48'}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableMessageCoordinates}"/>
+            <ContentControl Content="{Binding MessageCoordinateType}" IsVisible="{Binding !EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageX}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageY}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown" IsVisible="{c:Binding 'Size > 80'}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkBool}"/>
+            <ContentControl Content="{Binding UnkEnum}"/>
+            <ContentControl Content="{Binding UnkInd}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CSD_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AngleOfView}"/>
+        <Expander Header="Target Viewport Coordinates">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding ViewportX}"/>
+            <ContentControl Content="{Binding ViewportY}"/>
+            <ContentControl Content="{Binding ViewportZ}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Target Viewport Rotation">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding ViewportYaw}"/>
+            <ContentControl Content="{Binding ViewportPitch}"/>
+            <ContentControl Content="{Binding ViewportRoll}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Focus &amp; Blur" IsVisible="{c:Binding 'Size > 32'}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableDOF}"/>
+            <StackPanel Classes="form" IsVisible="{Binding EnableDOF.Value}">
+              <ContentControl Content="{Binding FocalDistance}"/>
+              <ContentControl Content="{Binding NearBlurDistance}"/>
+              <ContentControl Content="{Binding FarBlurDistance}"/>
+              <ContentControl Content="{Binding BlurStrength}"/>
+              <ContentControl Content="{Binding BlurType}" IsVisible="{c:Binding 'Size > 48'}"/>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Message Box Location" IsVisible="{c:Binding 'Size > 48'}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableMessageCoordinates}"/>
+            <ContentControl Content="{Binding MessageCoordinateType}" IsVisible="{Binding !EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageX}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageY}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown" IsVisible="{c:Binding 'Size > 64'}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkBool}"/>
+            <ContentControl Content="{Binding UnkEnum}"/>
+            <ContentControl Content="{Binding UnkInd}"/>
+            <ContentControl Content="{Binding SuperUnk1}"/>
+            <ContentControl Content="{Binding SuperUnk2}"/>
+            <ContentControl Content="{Binding UnkCoord1}"/>
+            <ContentControl Content="{Binding UnkCoord2}"/>
+            <ContentControl Content="{Binding UnkCoord3}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CSDD}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AngleOfView}"/>
+        <Expander Header="Target Viewport Coordinates">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding ViewportX}"/>
+            <ContentControl Content="{Binding ViewportY}"/>
+            <ContentControl Content="{Binding ViewportZ}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Target Viewport Rotation">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding ViewportYaw}"/>
+            <ContentControl Content="{Binding ViewportPitch}"/>
+            <ContentControl Content="{Binding ViewportRoll}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Focus &amp; Blur">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableDOF}"/>
+            <StackPanel Classes="form" IsVisible="{Binding EnableDOF.Value}">
+              <ContentControl Content="{Binding FocalDistance}"/>
+              <ContentControl Content="{Binding NearBlurDistance}"/>
+              <ContentControl Content="{Binding FarBlurDistance}"/>
+              <ContentControl Content="{Binding BlurStrength}"/>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkBool}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CSEc}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding EnableEditing}"/>
+        <Expander Header="Message Box Location" IsVisible="{Binding EnableEditing.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableMessageCoordinates}"/>
+            <StackPanel Classes="form" IsVisible="{Binding !EnableMessageCoordinates.Value}">
+              <ContentControl Content="{Binding EnableMessageTypes}"/>
+              <ContentControl Content="{Binding MessageCoordinateType}" IsVisible="{Binding EnableMessageTypes.Value}"/>
+            </StackPanel>
+            <StackPanel Classes="form" IsVisible="{Binding EnableMessageCoordinates.Value}">
+              <ContentControl Content="{Binding MessageX}"/>
+              <ContentControl Content="{Binding MessageY}"/>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkBool1}"/>
+            <ContentControl Content="{Binding UnkBool2}"/>
+            <ContentControl Content="{Binding UnkBool3}"/>
+            <ContentControl Content="{Binding UnkEnum}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CShk}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding ActionType}"/>
+        <StackPanel Classes="form" IsVisible="{c:Binding 'ActionType.Choice == \'Shaking On\''}">
+          <ContentControl Content="{Binding ShakingType}"/>
+          <ContentControl Content="{Binding Magnitude}"/>
+          <ContentControl Content="{Binding Speed}"/>
+        </StackPanel>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:CSk_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding VibrationType}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -249,13 +595,7 @@
         <ContentControl Content="{Binding AssetID}"/>
         <ContentControl Content="{Binding AlphaLevel}"/>
         <ContentControl Content="{Binding TranslucentMode}"/>
-        <Expander Header="Interpolation">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding InterpolationType}"/>
-            <ContentControl Content="{Binding SlopeInType}" IsVisible="{c:Binding 'InterpolationType.Choice == \'Hermite\''}"/>
-            <ContentControl Content="{Binding SlopeOutType}" IsVisible="{c:Binding 'InterpolationType.Choice == \'Hermite\''}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding InterpolationSettings}"/>
       </StackPanel>
     </DataTemplate>
 

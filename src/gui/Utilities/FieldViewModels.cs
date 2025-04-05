@@ -405,3 +405,52 @@ public class ModelPreviewWidget : ViewModelBase
 
     protected DataManager _config;
 }
+
+public class InterpolationParameters : ViewModelBase
+{
+    private uint Field;
+    private bool Editable;
+
+    public StringSelectionField InterpolationType { get; set; }
+    public StringSelectionField SlopeInType       { get; set; }
+    public StringSelectionField SlopeOutType      { get; set; }
+
+    public InterpolationParameters(uint field, bool editable)
+    {
+        this.Field = field;
+        this.Editable = editable;
+
+        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, this.InterpolationTypes.Backward[(this.Field & 0xFF)], this.InterpolationTypes.Keys);
+        this.SlopeInType = new StringSelectionField("Slope-In Type", this.Editable, this.SlopeTypes.Backward[((this.Field >> 8) & 0xF)], this.SlopeTypes.Keys);
+        this.SlopeOutType = new StringSelectionField("Slope-Out Type", this.Editable, this.SlopeTypes.Backward[((this.Field >> 12) & 0xF)], this.SlopeTypes.Keys);
+    }
+
+    public uint Compose()
+    {
+        this.Field = 0;
+        this.Field |= this.InterpolationTypes.Forward[this.InterpolationType.Choice];
+        this.Field |= (this.SlopeTypes.Forward[this.SlopeInType.Choice] << 8);
+        this.Field |= (this.SlopeTypes.Forward[this.SlopeOutType.Choice] << 12);
+        return this.Field;
+    }
+
+    public BiDict<string, uint> InterpolationTypes = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"Linear",   0},
+            {"Step",     1},
+            {"Hermite",  2},
+        }
+    );
+
+    public BiDict<string, uint> SlopeTypes = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"Normal", 0},
+            {"Slow",   1},
+            {"Fast",   2},
+        }
+    );
+}

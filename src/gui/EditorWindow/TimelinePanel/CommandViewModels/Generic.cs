@@ -14,6 +14,8 @@ public class Generic : ReactiveObject
         this.CommandData = commandData;
         this.Editable    = !config.ReadOnly;
         this.Basics      = new Basics(config, command);
+
+        this.Size = command.DataSize;
     }
 
     public string           LongName    { get; set; }
@@ -21,6 +23,8 @@ public class Generic : ReactiveObject
     protected dynamic       CommandData;
     public bool             Editable { get; }
     public Basics           Basics { get; set; }
+
+    public int Size { get; }
 
     public void SaveChanges()
     {
