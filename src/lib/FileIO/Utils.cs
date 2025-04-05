@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+
+using Serialization;
 
 namespace EVTUI;
 
@@ -71,12 +75,14 @@ public class AnimationStruct
     }
 }
 
-public class Bitfield
+public abstract class BitfieldBase : ISerializable
 {
-    private bool[] Bits = new bool[32];
+    private bool[] Bits;
 
-    public Bitfield(uint field)
+    protected void Init(int size, uint field)
     {
+        Trace.Assert(size == 8 || size == 16 || size == 32, $"Only bitfields of size 8, 16, and 32 are supported (input size: {size})");
+        this.Bits = new bool[size];
         for (int i=0; i<this.Bits.Length; i++)
             this.Bits[i] = (((field >> i) & 0x1) != 0);
     }
@@ -92,7 +98,69 @@ public class Bitfield
         uint field = 0;
         for (int i=0; i<this.Bits.Length; i++)
             field |= (uint)(((this.Bits[i]) ? 1 : 0) << i);
-        return field;
+            return field;
     }
 
+    public abstract void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget;
+}
+
+public class Bitfield32 : BitfieldBase
+{
+    //private UInt32 Field;
+    public UInt32 Field;
+
+    public Bitfield32(uint field = 0)
+    {
+        this.Field = field;
+        this.Init(32, this.Field);
+    }
+
+    //public override void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    public override void ExbipHook<T>(T rw, Dictionary<string, object> args)
+    {
+        if (rw.IsParselike())
+            this.Field = this.Compose();
+        rw.RwUInt32(ref this.Field);
+        this.Init(32, this.Field);
+    }
+}
+
+public class Bitfield16 : BitfieldBase
+{
+    private UInt16 Field;
+
+    public Bitfield16(ushort field = 0)
+    {
+        this.Field = field;
+        this.Init(16, (uint)this.Field);
+    }
+
+    //public override void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    public override void ExbipHook<T>(T rw, Dictionary<string, object> args)
+    {
+        if (rw.IsParselike())
+            this.Field = (ushort)this.Compose();
+        rw.RwUInt16(ref this.Field);
+        this.Init(16, (uint)this.Field);
+    }
+}
+
+public class Bitfield8 : BitfieldBase
+{
+    private byte Field;
+
+    public Bitfield8(byte field = 0)
+    {
+        this.Field = field;
+        this.Init(8, (uint)this.Field);
+    }
+
+    //public override void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    public override void ExbipHook<T>(T rw, Dictionary<string, object> args)
+    {
+        if (rw.IsParselike())
+            this.Field = (byte)this.Compose();
+        rw.RwUInt8(ref this.Field);
+        this.Init(8, (uint)this.Field);
+    }
 }

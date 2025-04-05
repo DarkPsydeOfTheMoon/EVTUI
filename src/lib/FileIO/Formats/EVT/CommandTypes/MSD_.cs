@@ -17,8 +17,7 @@ public partial class CommandTypes
 
         public AnimationStruct WaitingAnimation = new AnimationStruct(loopBool:1);
 
-        public UInt32 _bitfield;
-        public Bitfield Flags = new Bitfield(0);
+        public Bitfield32 Flags = new Bitfield32();
 
         public UInt32[] UNUSED_UINT32 = new UInt32[4];
 
@@ -34,10 +33,7 @@ public partial class CommandTypes
             rw.RwUInt32(ref this.WaitingAnimation.LoopBool);
             rw.RwFloat32(ref this.WaitingAnimation.PlaybackSpeed);
 
-            if (rw.IsParselike())
-                this._bitfield = this.Flags.Compose();
-            rw.RwUInt32(ref this._bitfield);
-            this.Flags = new Bitfield(this._bitfield);
+            rw.RwObj(ref this.Flags);
 
             rw.RwUInt32(ref this.WaitingAnimation.StartingFrame);
 

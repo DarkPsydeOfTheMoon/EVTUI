@@ -26,8 +26,7 @@ public class EVT : ISerializable
     public Int32 FileSize;
     public Int32 FileHeaderSize;
 
-    private UInt32 _bitfield;
-    public Bitfield Flags = new Bitfield(0);
+    public Bitfield32 Flags = new Bitfield32();
 
     public Int32 FrameCount;
     public byte FrameRate = 30;
@@ -82,12 +81,7 @@ public class EVT : ISerializable
         Trace.Assert(this.DUMMY_INT16[0] == 0);
         rw.RwInt32(ref this.FileSize);
         rw.RwInt32(ref this.FileHeaderSize);
-
-        if (rw.IsParselike())
-            this._bitfield = this.Flags.Compose();
-        rw.RwUInt32(ref this._bitfield);
-        this.Flags = new Bitfield(this._bitfield);
-
+        rw.RwObj(ref this.Flags);
         rw.RwInt32(ref this.FrameCount);
         rw.RwUInt8(ref this.FrameRate);
         rw.RwUInt8(ref this.InitScriptIndex);
@@ -356,22 +350,21 @@ public class EVT : ISerializable
 
 public class SerialObject : ISerializable
 {
-    public Int32  Id;
-    public Int32  Type;
-    public Int32  ResourceCategory = 1;
-    public Int32  ResourceUniqueId;
-    public Int32  ResourceMajorId;
-    public Int16  ResourceSubId;
-    public Int16  ResourceMinorId;
+    public Int32 Id;
+    public Int32 Type;
+    public Int32 ResourceCategory = 1;
+    public Int32 ResourceUniqueId;
+    public Int32 ResourceMajorId;
+    public Int16 ResourceSubId;
+    public Int16 ResourceMinorId;
 
-    private UInt32 _bitfield;
-    public Bitfield Flags = new Bitfield(0);
+    public Bitfield32 Flags = new Bitfield32();
 
-    public Int32  BaseMotionNo     = -1;
-    public Int32  ExtBaseMotionNo  = -1;
-    public Int32  ExtAddMotionNo   = -1;
-    public Int32  UnkBool;
-    public Int32  Reserve2C;
+    public Int32 BaseMotionNo     = -1;
+    public Int32 ExtBaseMotionNo  = -1;
+    public Int32 ExtAddMotionNo   = -1;
+    public Int32 UnkBool;
+    public Int32 Reserve2C;
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
@@ -382,12 +375,7 @@ public class SerialObject : ISerializable
         rw.RwInt32(ref this.ResourceMajorId);
         rw.RwInt16(ref this.ResourceSubId);
         rw.RwInt16(ref this.ResourceMinorId);
-
-        if (rw.IsParselike())
-            this._bitfield = this.Flags.Compose();
-        rw.RwUInt32(ref this._bitfield);
-        this.Flags = new Bitfield(this._bitfield);
-
+        rw.RwObj(ref this.Flags);
         rw.RwInt32(ref this.BaseMotionNo);
         rw.RwInt32(ref this.ExtBaseMotionNo);
         rw.RwInt32(ref this.ExtAddMotionNo);

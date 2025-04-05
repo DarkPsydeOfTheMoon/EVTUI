@@ -13,8 +13,7 @@ public partial class CommandTypes
     {
         public const int DataSize = 256;
 
-        private UInt32[] _bitfield = new UInt32[] {5, 4, 4, 4, 4, 4, 4, 4, 4, 4};
-        public Bitfield[] IdleAnimationBitfields = Enumerable.Range(0, 10).Select(i => new Bitfield((uint)((i == 0) ? 5 : 4))).ToArray();
+        public Bitfield32[] IdleAnimationBitfields = Enumerable.Range(0, 10).Select(i => new Bitfield32((uint)((i == 0) ? 5 : 4))).ToArray();
 
         public AnimationStruct[] IdleAnimations = Enumerable.Range(0, 10).Select(_ => new AnimationStruct(endingFrame:0)).ToArray();
 
@@ -26,10 +25,7 @@ public partial class CommandTypes
 
             for (int i=0; i<10; i++)
             {
-                if (rw.IsParselike())
-                    this._bitfield[i] = this.IdleAnimationBitfields[i].Compose();
-                rw.RwUInt32(ref this._bitfield[i]);
-                this.IdleAnimationBitfields[i] = new Bitfield(this._bitfield[i]);
+                rw.RwObj(ref this.IdleAnimationBitfields[i]);
                 rw.RwUInt32(ref this.IdleAnimations[i].Index);
                 rw.RwUInt32(ref this.IdleAnimations[i].StartingFrame);
                 rw.RwUInt32(ref this.IdleAnimations[i].EndingFrame);

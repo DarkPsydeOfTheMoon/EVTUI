@@ -20,8 +20,7 @@ public partial class CommandTypes
         public UInt16 SecondAnimationUnkFrames;
         public UInt16 SecondAnimationInterpolatedFrames;
 
-        private UInt32 _bitfield;
-        public Bitfield Flags = new Bitfield(0);
+        public Bitfield32 Flags = new Bitfield32();
 
         public UInt32 StartWaitingFrames;
 
@@ -53,10 +52,7 @@ public partial class CommandTypes
             rw.RwUInt32(ref this.SecondAnimation.LoopBool);
             rw.RwFloat32(ref this.SecondAnimation.PlaybackSpeed);
 
-            if (rw.IsParselike())
-                this._bitfield = this.Flags.Compose();
-            rw.RwUInt32(ref this._bitfield);
-            this.Flags = new Bitfield(this._bitfield);
+            rw.RwObj(ref this.Flags);
 
             rw.RwUInt32(ref this.FirstAnimation.StartingFrame);
             rw.RwUInt32(ref this.FirstAnimation.EndingFrame);

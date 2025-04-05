@@ -16,8 +16,7 @@ public partial class CommandTypes
         public UInt32 NumControlGroups = 1;
         public float[,] Targets = new float[24,3];
 
-        private UInt32 _bitfield;
-        public Bitfield Flags = new Bitfield(0);
+        public Bitfield32 Flags = new Bitfield32();
 
         public float MovementSpeed = 1.0F;
         public UInt32 UNK;
@@ -44,14 +43,9 @@ public partial class CommandTypes
                     for (int j=0; j<3; j++)
                         rw.RwFloat32(ref this.Targets[i,j]);
 
-            if (rw.IsParselike())
-                this._bitfield = this.Flags.Compose();
-            rw.RwUInt32(ref this._bitfield);
-            this.Flags = new Bitfield(this._bitfield);
-
+            rw.RwObj(ref this.Flags);
             rw.RwFloat32(ref this.MovementSpeed);
             rw.RwUInt32(ref this.UNK);
-
             rw.RwUInt8(ref this.StartSpeedType);
             rw.RwUInt8(ref this.FinalSpeedType);
 
