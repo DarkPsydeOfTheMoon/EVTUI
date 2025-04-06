@@ -1,15 +1,15 @@
 namespace EVTUI.ViewModels.TimelineCommands;
 
-public class FAA_ : Generic
+public class FAB_ : Generic
 {
-    public FAA_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public FAB_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
     {
-        this.LongName = "Field: Additive Animation";
+        this.LongName = "Field: Base Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x00000003));
 
         this.ObjectIndex = new NumEntryField("Field Object Index", this.Editable, this.CommandData.ObjectIndex, 0, 65535, 1);
-        this.FirstAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.FirstAnimation, this.CommandData.Flags, $"First Animation", frameBlendingInd:1, trackNum:0);
-        this.SecondAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.SecondAnimation, this.CommandData.Flags, $"Second Animation", enabledInd:0, frameBlendingInd:2, enabledFlip:true, trackNum:0);
+        this.FirstAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.FirstAnimation, this.CommandData.Flags, $"First Animation", frameBlendingInd:1);
+        this.SecondAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.SecondAnimation, this.CommandData.Flags, $"Second Animation", enabledInd:0, frameBlendingInd:2, enabledFlip:true);
         this.DebugFrameForward = new BoolChoiceField("Frame Forward", this.Editable, this.CommandData.Flags[31]);
 
     }
