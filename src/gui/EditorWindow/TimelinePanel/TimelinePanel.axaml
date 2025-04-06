@@ -160,14 +160,24 @@
 
     <DataTemplate DataType="{x:Type cmds:Basics}">
       <StackPanel Classes="form">
-        <Expander Header="Conditions" IsExpanded="{c:Binding 'ConditionalType.Choice != \'Always Run\'', Mode=OneTime}">
+        <Expander Header="Conditions" IsExpanded="{c:Binding 'ForceSkipCommand.Value || ConditionalType.Choice != \'Always Run\'', Mode=OneTime}">
           <StackPanel Classes="form">
-            <ContentControl Content="{Binding ConditionalType}"/>
-            <StackPanel Classes="form" IsVisible="{c:Binding '(ConditionalType.Choice != \'Always Run\') and (ConditionalType.Choice != \'Never Run\')', Mode=OneWay}">
-              <ContentControl Content="{Binding ConditionalIndex}"/>
-              <ContentControl Content="{Binding ComparisonType}"/>
-              <ContentControl Content="{Binding ConditionalValue}"/>
+            <ContentControl Content="{Binding ForceSkipCommand}"/>
+            <StackPanel Classes="form" IsVisible="{Binding !ForceSkipCommand.Value}">
+              <ContentControl Content="{Binding ConditionalType}"/>
+              <StackPanel Classes="form" IsVisible="{c:Binding '(ConditionalType.Choice != \'Always Run\') and (ConditionalType.Choice != \'Never Run\')', Mode=OneWay}">
+                <ContentControl Content="{Binding ConditionalIndex}"/>
+                <ContentControl Content="{Binding ComparisonType}"/>
+                <ContentControl Content="{Binding ConditionalValue}"/>
+              </StackPanel>
             </StackPanel>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Frame Settings" IsExpanded="false">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding WaitOnCommand}"/>
+            <ContentControl Content="{Binding StartingFrame}"/>
+            <ContentControl Content="{Binding FrameCount}"/>
           </StackPanel>
         </Expander>
         <Separator Classes="formsubtitle"/>

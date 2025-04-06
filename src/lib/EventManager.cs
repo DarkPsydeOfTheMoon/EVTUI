@@ -155,6 +155,15 @@ public class EventManager
         }
     }
 
+    public List<int> AssetIDsOfType(int type)
+    {
+        List<int> ids = new List<int>();
+        foreach (SerialObject obj in this.SerialEvent.Objects)
+            if (obj.Type == type)
+                ids.Add(obj.Id);
+        return ids;
+    }
+
     public List<string> GetAssetPaths(int assetId, List<string> cpkList, string targetdir)
     {
         if (!(this.ObjectsById.ContainsKey(assetId)))

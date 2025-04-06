@@ -392,7 +392,7 @@ public class SerialCommand : ISerializable
     public Int16  CommandVersion;
     public Int16  CommandType;
     public Int32  ObjectId;
-    public Int32  Flags;
+    public Bitfield32 Flags = new Bitfield32();
     public Int32  FrameStart;
     public Int32  FrameDuration = 1;
     public Int32  DataOffset;
@@ -408,7 +408,7 @@ public class SerialCommand : ISerializable
         rw.RwInt16(ref this.CommandVersion);
         rw.RwInt16(ref this.CommandType);
         rw.RwInt32(ref this.ObjectId);
-        rw.RwInt32(ref this.Flags);
+        rw.RwObj(ref this.Flags);
         rw.RwInt32(ref this.FrameStart);
         rw.RwInt32(ref this.FrameDuration);
         rw.RwInt32(ref this.DataOffset);

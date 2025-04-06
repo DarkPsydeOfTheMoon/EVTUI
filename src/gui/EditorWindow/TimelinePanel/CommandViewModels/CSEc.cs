@@ -11,7 +11,7 @@ public class CSEc : Generic
     {
         this.LongName = "Camera: Load From Asset";
 
-        this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
+        this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.CommandData.AssetId, config.EventManager.AssetIDsOfType(0x00000009));
         this.EnableEditing = new BoolChoiceField("Enable Editing?", this.Editable, this.CommandData.Flags[0]);
 
         // message
