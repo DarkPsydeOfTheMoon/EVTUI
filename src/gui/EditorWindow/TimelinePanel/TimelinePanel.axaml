@@ -518,6 +518,23 @@
       </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type cmds:FAA_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding ObjectIndex}"/>
+        <ContentControl Content="{Binding FirstAnimation}"/>
+        <ContentControl Content="{Binding SecondAnimation}"/>
+        <Expander Header="Debug">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding DebugFrameForward}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type cmds:FrJ_}">
       <StackPanel Classes="form">
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
