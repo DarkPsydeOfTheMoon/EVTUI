@@ -39,10 +39,16 @@ public class Basics : ReactiveObject
         this.Command = command;
         this.Editable = !config.ReadOnly;
 
+        this.WaitOnCommand = new BoolChoiceField("Wait while frame is stopped?", this.Editable, this.Command.Flags[1]);
+        // i don't feel like making this reactive lol that's annoying, woe readonly be upon you
+        this.StartingFrame = new NumEntryField("Starting Frame", false, this.Command.FrameStart, 0, 999999, 1);
+        this.FrameCount = new NumEntryField("Frame Duration", this.Editable, this.Command.FrameDuration, 0, 999999, 1);
+
+        this.ForceSkipCommand = new BoolChoiceField("Force-skip command?", this.Editable, this.Command.Flags[0]);
         this.ConditionalType = new StringSelectionField("Conditional Type", this.Editable, this.ConditionalTypes.Backward[this.Command.ConditionalType], this.ConditionalTypes.Keys);
-        this.ConditionalIndex = new NumEntryField("Conditional Index", this.Editable, (int)this.Command.ConditionalIndex, 0, null, 1);
+        this.ConditionalIndex = new NumEntryField("Conditional Index", this.Editable, this.Command.ConditionalIndex, 0, null, 1);
         this.ComparisonType = new StringSelectionField("Comparison Type", this.Editable, this.ComparisonTypes.Backward[this.Command.ConditionalComparisonType], this.ComparisonTypes.Keys);
-        this.ConditionalValue = new NumEntryField("Conditional Value", this.Editable, (int)this.Command.ConditionalValue, null, null, 1);
+        this.ConditionalValue = new NumEntryField("Conditional Value", this.Editable, this.Command.ConditionalValue, null, null, 1);
 
         this.WhenAnyValue(x => x.ConditionalType.Choice).Subscribe(x =>
         {
@@ -59,6 +65,11 @@ public class Basics : ReactiveObject
         });
     }
 
+    public BoolChoiceField      WaitOnCommand { get; set; }
+    public NumEntryField        StartingFrame { get; set; }
+    public NumEntryField        FrameCount    { get; set; }
+
+    public BoolChoiceField      ForceSkipCommand { get; set; }
     public StringSelectionField ConditionalType  { get; set; }
     public NumEntryField        ConditionalIndex { get; set; }
     public StringSelectionField ComparisonType   { get; set; }
@@ -69,6 +80,13 @@ public class Basics : ReactiveObject
 
     public void SaveChanges()
     {
+
+        this.Command.Flags[0] = this.ForceSkipCommand.Value;
+        this.Command.Flags[1] = this.WaitOnCommand.Value;
+
+        this.Command.FrameStart    = (int)this.StartingFrame.Value;
+        this.Command.FrameDuration = (int)this.FrameCount.Value;
+
         this.Command.ConditionalType           = this.ConditionalTypes.Forward[this.ConditionalType.Choice];
         this.Command.ConditionalIndex          = (uint)this.ConditionalIndex.Value;
         this.Command.ConditionalValue          = (int)this.ConditionalValue.Value;
