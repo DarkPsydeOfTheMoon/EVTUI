@@ -518,6 +518,237 @@
       </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type cmds:EnBc}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding BackgroundColor}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnCc}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding ActionType}"/>
+        <Expander Header="Corrections" IsVisible="{c:Binding 'ActionType.Choice == \'Enable\''}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Cyan}"/>
+            <ContentControl Content="{Binding Magenta}"/>
+            <ContentControl Content="{Binding Yellow}"/>
+            <ContentControl Content="{Binding Dodge}"/>
+            <ContentControl Content="{Binding Burn}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnDf}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding FocalDistance}"/>
+        <ContentControl Content="{Binding NearBlurDistance}"/>
+        <ContentControl Content="{Binding FarBlurDistance}"/>
+        <ContentControl Content="{Binding DistanceBlurLimit}"/>
+        <ContentControl Content="{Binding BlurStrength}"/>
+        <ContentControl Content="{Binding BlurType}"/>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Unk}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnFD}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding ScaleType}"/>
+        <ContentControl Content="{Binding FogColor}"/>
+        <Expander Header="Range (Distance)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding MatchWithCameraClip}"/>
+            <ContentControl Content="{Binding StartDistance}" IsVisible="{Binding !MatchWithCameraClip.Value}"/>
+            <ContentControl Content="{Binding EndDistance}" IsVisible="{Binding !MatchWithCameraClip.Value}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnFH}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding FogColor}"/>
+        <Expander Header="Range (Height)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding StartHeight}"/>
+            <ContentControl Content="{Binding EndHeight}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnHd}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <Expander Header="Tone Map">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableToneMap}"/>
+            <StackPanel Classes="form" IsVisible="{Binding EnableToneMap.Value}">
+              <ContentControl Content="{Binding ToneMapMediumBrightness}"/>
+              <ContentControl Content="{Binding ToneMapBloomStrength}"/>
+              <ContentControl Content="{Binding ToneMapAdaptiveBrightness}"/>
+              <ContentControl Content="{Binding ToneMapAdaptiveBloom}"/>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Star Filter">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EnableStarFilter}"/>
+            <StackPanel Classes="form" IsVisible="{Binding EnableStarFilter.Value}">
+              <ContentControl Content="{Binding StarFilterNumberOfLines}"/>
+              <ContentControl Content="{Binding StarFilterLength}"/>
+              <ContentControl Content="{Binding StarFilterStrength}"/>
+              <ContentControl Content="{Binding StarFilterGlareChromaticAberration}"/>
+              <ContentControl Content="{Binding StarFilterGlareTilt}"/>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkFloat1}"/>
+            <ContentControl Content="{Binding UnkFloat2}"/>
+            <ContentControl Content="{Binding UnkFloat3}"/>
+            <StackPanel Classes="form" IsVisible="{c:Binding 'Size > 64'}">
+              <ContentControl Content="{Binding UnkBool}"/>
+              <ContentControl Content="{Binding UnkEnum}"/>
+              <ContentControl Content="{Binding UnkColor1}"/>
+              <ContentControl Content="{Binding UnkColor2}"/>
+              <ContentControl Content="{Binding UnkColor3}"/>
+            </StackPanel>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnL0}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <Expander Header="Color">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding AmbientColor}"/>
+            <ContentControl Content="{Binding DiffuseColor}"/>
+            <ContentControl Content="{Binding SpecularColor}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Direction (Degrees)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding AzimuthDegrees}"/>
+            <ContentControl Content="{Binding ElevationDegrees}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnLI}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <Expander Header="Color">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding AmbientColor}"/>
+            <ContentControl Content="{Binding DiffuseColor}"/>
+            <ContentControl Content="{Binding SpecularColor}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Direction (Degrees)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding AzimuthDegrees}"/>
+            <ContentControl Content="{Binding ElevationDegrees}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnOl}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Unk1}"/>
+            <ContentControl Content="{Binding Unk2}"/>
+            <ContentControl Content="{Binding Unk3}"/>
+            <ContentControl Content="{Binding Unk4}"/>
+            <ContentControl Content="{Binding Unk5}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnPh}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding Enabled}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnSh}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding SetCameraClip}"/>
+        <ContentControl Content="{Binding BackSideDrawingEnabled}"/>
+        <ContentControl Content="{Binding DepthRange}"/>
+        <ContentControl Content="{Binding Bias}"/>
+        <ContentControl Content="{Binding Ambient}"/>
+        <ContentControl Content="{Binding Diffuse}"/>
+        <ContentControl Content="{Binding CascadedShadowMapPartitionInterval}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EnSs}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding Enabled}"/>
+        <StackPanel Classes="form" IsVisible="{Binding Enabled.Value}">
+          <ContentControl Content="{Binding Range}"/>
+          <ContentControl Content="{Binding Radius}"/>
+          <ContentControl Content="{Binding Attenuation}"/>
+          <ContentControl Content="{Binding Concentration}"/>
+          <ContentControl Content="{Binding Blur}"/>
+        </StackPanel>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:Env_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+      </StackPanel>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type cmds:FAA_}">
       <StackPanel Classes="form">
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>

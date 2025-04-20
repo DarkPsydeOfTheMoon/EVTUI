@@ -1,55 +1,41 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace EVTUI.ViewModels;
 
 public static class FieldUtils
 {
 
-    // deprecated in favor of BiDict, but leaving in for posterity... for now
-    /*public static List<string> NameList(Enum _enum, bool replaceUnderscores = true)
+    /*************************/
+    /*** UNIT VECTOR UTILS ***/
+    /*************************/
+
+    public static double VectorToAzimuth(float[] xyz)
     {
-        if (replaceUnderscores)
-            return (Enum.GetNames(_enum.GetType())).Select(x => x.Replace("__", " ").Replace("_", "-")).ToList();
-        else
-            return (Enum.GetNames(_enum.GetType())).ToList();
+        return Double.RadiansToDegrees(Math.Atan2(xyz[0], xyz[2]));
     }
 
-    public static string NumToName(Enum _enum, dynamic val, bool replaceUnderscores = true)
+    public static double VectorToElevation(float[] xyz)
     {
-        if (replaceUnderscores)
-            return Enum.GetName(_enum.GetType(), val).Replace("__", " ").Replace("_", "-");
-        else
-            return Enum.GetName(_enum.GetType(), val);
+        if (xyz[0] == 0 && xyz[2] == 0)
+            return (xyz[1] < 0) ? -90.0 : 90.0;
+        Vector3 direction = new Vector3(xyz[0], xyz[1], xyz[2]);
+        Vector3 projection = new Vector3(xyz[0], 0, xyz[2]);
+        return Double.RadiansToDegrees(((xyz[1] < 0) ? -1.0 : 1.0)*Math.Acos(Vector3.Dot(Vector3.Normalize(direction), Vector3.Normalize(projection))));
     }
 
-    public static dynamic NameToNum(Enum _enum, string name, bool replaceUnderscores = true)
+    public static float[] AnglesToVector(double azimuth, double elevation)
     {
-        if (replaceUnderscores)
-            return Enum.Parse(_enum.GetType(), name.Replace(" ", "__").Replace("-", "_"));
-        else
-            return Enum.Parse(_enum.GetType(), name);
-    }*/
-
-    // also deprecated because i moved bitfield stuff into the view and not the viewmodel......
-    // well.... i will still leave this here for a bit just in case
-    /*public static bool BitToBool(uint field, int pos)
-    {
-        return (((field >> pos) & 1) != 0);
+        azimuth = Double.DegreesToRadians(azimuth);
+        elevation = Double.DegreesToRadians(elevation);
+        double x = Math.Cos(elevation)*Math.Sin(azimuth);
+        double y = Math.Sin(elevation);
+        double z = Math.Cos(elevation)*Math.Cos(azimuth);
+        Vector3 norm = Vector3.Normalize(new Vector3((float)x, (float)y, (float)z));
+        return new float[] { norm.X, norm.Y, norm.Z };
     }
-
-    // useless because properties can't be passed by reference...
-    //public static void SetBit(ref dynamic field, int pos, bool val)
-    //{
-    //    field &= ~(1 << pos);
-    //    field |= (Convert.ToInt32(val) << pos);
-    //}
-
-    public static int BoolToBit(bool val, int pos)
-    {
-        return Convert.ToInt32(val) << pos;
-    }*/
 
 }
 

@@ -12,7 +12,7 @@ public class FOD_ : Generic
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x00000003));
 
         this.ActionType = new StringSelectionField("Mode", this.Editable, this.ActionTypes.Backward[this.CommandData.EnableFieldObject], this.ActionTypes.Keys);
-        this.ObjectIndex = new NumEntryField("Field Object Index", this.Editable, this.CommandData.ObjectIndex, 0, 65535, 1);
+        this.ObjectIndex = new NumEntryField("Field Object Index", this.Editable, this.CommandData.ObjectIndex, -1, 65535, 1);
 
     }
 
@@ -27,7 +27,7 @@ public class FOD_ : Generic
         this.Command.ObjectId = this.AssetID.Choice;
 
         this.CommandData.EnableFieldObject = this.ActionTypes.Forward[this.ActionType.Choice];
-        this.CommandData.ObjectIndex       = (uint)this.ObjectIndex.Value;
+        this.CommandData.ObjectIndex       = (int)this.ObjectIndex.Value;
     }
 
     public BiDict<string, uint> ActionTypes = new BiDict<string, uint>
