@@ -8,25 +8,25 @@ namespace EVTUI;
 
 public partial class CommandTypes
 {
-    public class FOD_ : ISerializable
+    public class Env_ : ISerializable
     {
         public const int DataSize = 16;
 
-        public UInt32 EnableFieldObject;
-        public Int32 ObjectIndex;
+        public Int32 ObjectId;
 
-        public UInt32[] UNUSED_UINT32 = new UInt32[2];
+        public UInt32[] UNUSED_UINT32 = new UInt32[3];
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            rw.RwUInt32(ref this.EnableFieldObject);
-            rw.RwInt32(ref this.ObjectIndex);
+            rw.RwUInt32(ref this.UNUSED_UINT32[0]);
+
+            rw.RwInt32(ref this.ObjectId);
+
+            rw.RwUInt32(ref this.UNUSED_UINT32[1]);
+            rw.RwUInt32(ref this.UNUSED_UINT32[2]);
 
             for (int i=0; i<this.UNUSED_UINT32.Length; i++)
-            {
-                rw.RwUInt32(ref this.UNUSED_UINT32[i]);
                 Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[i]}) in reserve variable.");
-            }
         }
     }
 }
