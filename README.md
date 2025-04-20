@@ -65,10 +65,12 @@ dotnet publish --runtime linux-x64
 
 ### Acknowledgments
 
+The `Serialization` library is a port of the excellent [exbip](https://github.com/Pherakki/exbip-python) (License: MIT) Python library — both original and port by [Pherakki](https://github.com/Pherakki).
+
 The ACB parsing code from [LazyBone152](https://github.com/LazyBone152)'s [XV2-Tools](https://github.com/LazyBone152/XV2-Tools) (License: MIT) was originally included as a patched module, but this dependency has since been deprecated. Even so, the current ACB code was heavily based on it. The same is true of the ADX parsing/decrypting from [Thealexbarney](https://github.com/Thealexbarney)'s [VGAudio](https://github.com/Thealexbarney/VGAudio) (License: MIT).
 
 Although [TGE](https://github.com/tge-was-taken)'s [EvtTool](https://github.com/tge-was-taken/EvtTool) (especially the contributions by [Secre-C](https://github.com/Secre-C)) is not explicitly used in this project, it was *heavily* referenced for the EVT-parsing functionality.
 
 [Rirurin](https://github.com/rirurin)'s [scripts](https://github.com/rirurin/persona5-june2014) (License: MIT) to access the June 2014 P5 beta debug menu were instrumental in parsing and UI-ifying EVTs and all of the commands within them. Additionally, the implementation for ENV-related commands is highly informed by the work of [bladekey88](https://github.com/bladekey88).
 
-Finally, the `Serialization` library is a port of the excellent [exbip](https://github.com/Pherakki/exbip-python) (License: MIT) Python library — both original and port by [Pherakki](https://github.com/Pherakki).
+Finally, this tool would be a broken mess (especially on Windows, but also in general) without the diligent testing of [CroissantGuard](https://github.com/CroissantGuard).
