@@ -87,6 +87,20 @@ public class SceneModel
             this.model.UnloadAnimation();
     }
 
+    private void LoadBlendAnimation(Animation animation, int index=-1)
+    {
+        // can maybe get rid of this check once asset management is more robust
+        if (!(this.model is null))
+            this.model.LoadBlendAnimation(animation, index);
+    }
+
+    private void UnloadBlendAnimation(int index)
+    {
+        // can maybe get rid of this check once asset management is more robust
+        if (!(this.model is null))
+            this.model.UnloadBlendAnimation(index);
+    }
+
     public void Draw(GLShaderProgram shaderProgram, GLCamera camera, double animationTime)
     {
         // can happen if EVT object isn't set up properly
@@ -198,18 +212,18 @@ public class SceneModel
             this.AddAnimInfo[track] = newInfo;
             if (isExt && !(this.ExtAddAnimationPack is null) && idx < this.ExtAddAnimationPack.BlendAnimations.Count)
             {
-                this.LoadAnimation(this.ExtAddAnimationPack.BlendAnimations[idx]);
+                this.LoadBlendAnimation(this.ExtAddAnimationPack.BlendAnimations[idx], track);
                 this.StartAnimTimer();
             }
             else if (!isExt && !(this.AddAnimationPack is null) && idx < this.AddAnimationPack.BlendAnimations.Count)
             {
-                this.LoadAnimation(this.AddAnimationPack.BlendAnimations[idx]);
+                this.LoadBlendAnimation(this.AddAnimationPack.BlendAnimations[idx], track);
                 this.StartAnimTimer();
             }
             else
             {
                 this.StopAnimTimer();
-                this.UnloadAnimation();
+                this.UnloadBlendAnimation(track);
             }
         }
     }

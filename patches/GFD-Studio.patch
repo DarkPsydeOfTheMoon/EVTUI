@@ -72,7 +72,7 @@ index 41fcfba..53de6dd 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLModel.cs b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-index 2ae0f2d..58800c7 100644
+index 2ae0f2d..8de9f36 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLModel.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLModel.cs
 @@ -5,7 +5,7 @@ using System.Linq;
@@ -84,7 +84,81 @@ index 2ae0f2d..58800c7 100644
  using OpenTK.Graphics.OpenGL;
  using Quaternion = System.Numerics.Quaternion;
  using Vector3 = System.Numerics.Vector3;
-@@ -149,7 +149,7 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -21,6 +21,7 @@ namespace GFDLibrary.Rendering.OpenGL
+         public Dictionary<string, GLMaterial> Materials { get; }
+ 
+         public Animation Animation { get; private set; }
++        public Dictionary<int, Animation> BlendAnimations { get; }
+ 
+         public GLModel( ModelPack modelPack, MaterialTextureCreator textureCreator )
+         {
+@@ -47,6 +48,8 @@ namespace GFDLibrary.Rendering.OpenGL
+                     glNode.Meshes.Add( glMesh );
+                 }
+             }
++
++            BlendAnimations = new Dictionary<int, Animation>();
+         }
+ 
+         public void LoadAnimation( Animation animation )
+@@ -93,6 +96,47 @@ namespace GFDLibrary.Rendering.OpenGL
+             }
+         }
+ 
++        public void LoadBlendAnimation( Animation animation, int index=-1 )
++        {
++            if (index < 0) { index = BlendAnimations.Count(); }
++            BlendAnimations[index] = animation;
++
++            foreach ( var glNode in Nodes )
++            {
++                int nodeControllerIndex = glNode.BlendControllerIndices.IndexOf( index );
++                List<AnimationController>? controller = null;
++                if (nodeControllerIndex == -1)
++                {
++                    glNode.BlendControllers.Add( new List<AnimationController>());
++                    controller = glNode.BlendControllers.Last();
++                }
++                else
++                {
++                    controller = glNode.BlendControllers[nodeControllerIndex];
++                    controller.Clear();
++                }
++
++                glNode.BlendControllerIndices.Add(index);
++                controller.AddRange( animation.Controllers.Where( x => x.TargetKind == TargetKind.Node &&
++                                                                  x.TargetName == glNode.Node.Name ) );
++            }
++        }
++
++        public void UnloadBlendAnimation( int index )
++        {
++            BlendAnimations.Remove( index );
++
++            foreach (var glNode in Nodes)
++            {
++                int nodeControllerIndex = glNode.BlendControllerIndices.IndexOf( index );
++                if ( nodeControllerIndex != -1 )
++                {
++                    glNode.BlendControllerIndices.RemoveAt( nodeControllerIndex );
++                    glNode.BlendControllers.RemoveAt( nodeControllerIndex );
++                }
++            }
++        }
++
+         public void Draw( GLShaderProgram shaderProgram, GLCamera camera, double animationTime )
+         {
+             var view = camera.View;
+@@ -102,7 +146,7 @@ namespace GFDLibrary.Rendering.OpenGL
+ 
+         public void Draw( GLShaderProgram shaderProgram, ref Matrix4 view, ref Matrix4 projection, double animationTime, GLCamera camera )
+         {
+-            if ( Animation != null )
++            if ( (Animation != null) || (BlendAnimations.Count() != 0) )
+                 AnimateNodes( animationTime );
+ 
+             shaderProgram.Use();
+@@ -149,7 +193,7 @@ namespace GFDLibrary.Rendering.OpenGL
              GL.Enable( EnableCap.Blend );
  
              // Sort transparent objects based on their distance from the camera
@@ -93,6 +167,139 @@ index 2ae0f2d..58800c7 100644
  
              // Disable depth mask
              GL.DepthMask( false );
+@@ -185,56 +229,75 @@ namespace GFDLibrary.Rendering.OpenGL
+         }
+ 
+ 
+-        private void AnimateNodes( double animationTime )
++        private void FetchNodeAnimation( List<AnimationController> controllers, double animationTime, ref Quaternion rotation, ref Vector3 translation, ref Vector3 scale)
+         {
+-            foreach ( var glNode in Nodes )
++            foreach ( var controller in controllers )
+             {
+-                var rotation    = glNode.Node.Rotation;
+-                var translation = glNode.Node.Translation;
+-                var scale       = glNode.Node.Scale;
+-
+-                foreach ( var controller in glNode.Controllers )
++                foreach ( var layer in controller.Layers )
+                 {
+-                    foreach ( var layer in controller.Layers )
++                    Key curKey = null;
++                    Key nextKey = null;
++
++                    if ( controller != null )
+                     {
+-                        Key curKey = null;
+-                        Key nextKey = null;
++                        (curKey, nextKey) = GetCurrentAndNextKeys( layer, animationTime );
++                    }
+ 
+-                        if ( controller != null )
++                    if ( controller != null && curKey != null )
++                    {
++                        if ( layer.HasPRSKeyFrames )
+                         {
+-                            (curKey, nextKey) = GetCurrentAndNextKeys( layer, animationTime );
+-                        }
++                            var prsKey = ( PRSKey )curKey;
++                            var nextPrsKey = ( PRSKey )nextKey;
+ 
+-                        if ( controller != null && curKey != null )
+-                        {
+-                            if ( layer.HasPRSKeyFrames )
++                            if ( nextPrsKey != null )
+                             {
+-                                var prsKey = ( PRSKey )curKey;
+-                                var nextPrsKey = ( PRSKey )nextKey;
+-
+-                                if ( nextPrsKey != null )
+-                                {
+-                                    InterpolateKeys( animationTime, layer, ref rotation, ref translation, ref scale, prsKey, nextPrsKey );
+-                                }
+-                                else
+-                                {
+-                                    if ( prsKey.HasRotation )
+-                                        rotation = prsKey.Rotation;
+-
+-                                    if ( prsKey.HasPosition )
+-                                        translation = prsKey.Position * layer.PositionScale;
+-
+-                                    if ( prsKey.HasScale )
+-                                        scale = prsKey.Scale * layer.ScaleScale;
+-                                }
++                                InterpolateKeys( animationTime, layer, ref rotation, ref translation, ref scale, prsKey, nextPrsKey );
+                             }
+                             else
+                             {
+-                                //Debugger.Break();
++                                if ( prsKey.HasRotation )
++                                    rotation = prsKey.Rotation;
++
++                                if ( prsKey.HasPosition )
++                                    translation = prsKey.Position * layer.PositionScale;
++
++                                if ( prsKey.HasScale )
++                                    scale = prsKey.Scale * layer.ScaleScale;
+                             }
+                         }
++                        else
++                        {
++                            //Debugger.Break();
++                        }
+                     }
+                 }
++            }
++        }
++
++        private void AnimateNodes( double animationTime )
++        {
++            foreach ( var glNode in Nodes )
++            {
++                var rotation    = glNode.Node.Rotation;
++                var translation = glNode.Node.Translation;
++                var scale       = glNode.Node.Scale;
++                FetchNodeAnimation(glNode.Controllers, animationTime, ref rotation, ref translation, ref scale);
++                var rotationEuler = (new OpenTK.Mathematics.Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W)).ToEulerAngles();
++                
++                foreach ( var blendControllers in glNode.BlendControllers )
++                {
++                    Quaternion blendRotation    = Quaternion.CreateFromYawPitchRoll( 0, 0, 0 );
++                    Vector3    blendTranslation = new Vector3( 0, 0, 0 );
++                    Vector3    blendScale       = new Vector3( 0, 0, 0 );
++                    FetchNodeAnimation(blendControllers, animationTime, ref blendRotation, ref blendTranslation, ref blendScale);
++                    var blendRotationEuler = (new OpenTK.Mathematics.Quaternion(blendRotation.X, blendRotation.Y, blendRotation.Z, blendRotation.W)).ToEulerAngles();
++                    rotationEuler += blendRotationEuler;
++                    translation   += blendTranslation;
++                    scale         += blendScale;
++                }
++                var rotationTK = OpenTK.Mathematics.Quaternion.FromEulerAngles(rotationEuler);
++                rotation = new Quaternion(rotationTK.X, rotationTK.Y, rotationTK.Z, rotationTK.W);
+ 
+                 // Calculate current transform
+                 var transform = Matrix4x4.CreateFromQuaternion( rotation ) * Matrix4x4.CreateScale( glNode.Node.Scale );
+diff --git a/GFDLibrary.Rendering.OpenGL/GLNode.cs b/GFDLibrary.Rendering.OpenGL/GLNode.cs
+index 6ad8f72..d22f91d 100644
+--- a/GFDLibrary.Rendering.OpenGL/GLNode.cs
++++ b/GFDLibrary.Rendering.OpenGL/GLNode.cs
+@@ -11,6 +11,8 @@ namespace GFDLibrary.Rendering.OpenGL
+         public GLNode Parent { get; set; }
+         public Node Node { get; set; }
+         public List<AnimationController> Controllers { get; }
++        public List<List<AnimationController>> BlendControllers { get; }
++        public List<int> BlendControllerIndices { get;}
+         public Matrix4x4 CurrentTransform { get; set; }
+         public Matrix4x4 WorldTransform { get; set; }
+         public List<GLMesh> Meshes { get; }
+@@ -22,6 +24,8 @@ namespace GFDLibrary.Rendering.OpenGL
+             WorldTransform = node.WorldTransform;
+             Meshes = new List<GLMesh>();
+             Controllers = new List<AnimationController>();
++            BlendControllers = new List<List<AnimationController>>();
++            BlendControllerIndices = new List<int>();
+         }
+ 
+         #region IDisposable Support
 diff --git a/GFDLibrary.Rendering.OpenGL/GLOrthographicCamera.cs b/GFDLibrary.Rendering.OpenGL/GLOrthographicCamera.cs
 index 3835e28..bdcd43a 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLOrthographicCamera.cs
