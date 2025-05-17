@@ -87,15 +87,41 @@ public class SceneModel
             this.model.UnloadAnimation();
     }
 
+    private void LoadBlendAnimation(Animation animation, int index=-1)
+    {
+        // can maybe get rid of this check once asset management is more robust
+        if (!(this.model is null))
+            this.model.LoadBlendAnimation(animation, index);
+    }
+
+    private void UnloadBlendAnimation(int index)
+    {
+        // can maybe get rid of this check once asset management is more robust
+        if (!(this.model is null))
+            this.model.UnloadBlendAnimation(index);
+    }
+
     public void Draw(GLShaderProgram shaderProgram, GLCamera camera, double animationTime)
     {
         // can happen if EVT object isn't set up properly
         if (this.model is null)
             return;
 
-        bool isAnimActive = !(this.model.Animation is null || this.model.Animation.Duration < 1);
-        double useAnimationTime = isAnimActive ? (animationTime % this.model.Animation.Duration) : 0;
-        
+        // There needs to be some kind of rewrite to support looping for multiple anim tracks independently.
+        bool isAnimActive = false;
+        double duration   = 0;
+        if (this.model.Animation is not null)
+        {
+            isAnimActive = this.model.Animation.Duration >= 1;
+            duration = this.model.Animation.Duration;
+        }
+        foreach (var (index, blendAnimation) in this.model.BlendAnimations)
+        {
+            isAnimActive |= blendAnimation.Duration >= 1;
+            duration = (blendAnimation.Duration > duration) ? blendAnimation.Duration : duration;
+        }
+
+        double useAnimationTime = isAnimActive ? (animationTime % duration) : 0;
         this.model.Draw(shaderProgram, camera, useAnimationTime);
     }
 
@@ -198,18 +224,18 @@ public class SceneModel
             this.AddAnimInfo[track] = newInfo;
             if (isExt && !(this.ExtAddAnimationPack is null) && idx < this.ExtAddAnimationPack.BlendAnimations.Count)
             {
-                this.LoadAnimation(this.ExtAddAnimationPack.BlendAnimations[idx]);
+                this.LoadBlendAnimation(this.ExtAddAnimationPack.BlendAnimations[idx], track);
                 this.StartAnimTimer();
             }
             else if (!isExt && !(this.AddAnimationPack is null) && idx < this.AddAnimationPack.BlendAnimations.Count)
             {
-                this.LoadAnimation(this.AddAnimationPack.BlendAnimations[idx]);
+                this.LoadBlendAnimation(this.AddAnimationPack.BlendAnimations[idx], track);
                 this.StartAnimTimer();
             }
             else
             {
                 this.StopAnimTimer();
-                this.UnloadAnimation();
+                this.UnloadBlendAnimation(track);
             }
         }
     }
