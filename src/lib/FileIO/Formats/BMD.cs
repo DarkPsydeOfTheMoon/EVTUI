@@ -216,7 +216,10 @@ public class Turn : ISerializable
             }
         }
         else
+        {
+            this.Elems = new byte[0][];
             this.TextBufferSize = 0;
+        }
     }
 
 }
