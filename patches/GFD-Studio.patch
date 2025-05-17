@@ -72,10 +72,10 @@ index 41fcfba..53de6dd 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLModel.cs b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-index 2ae0f2d..8de9f36 100644
+index 2ae0f2d..6fbbfa9 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLModel.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-@@ -5,7 +5,7 @@ using System.Linq;
+@@ -5,11 +5,12 @@ using System.Linq;
  using System.Numerics;
  using GFDLibrary.Animations;
  using GFDLibrary.Models;
@@ -84,7 +84,12 @@ index 2ae0f2d..8de9f36 100644
  using OpenTK.Graphics.OpenGL;
  using Quaternion = System.Numerics.Quaternion;
  using Vector3 = System.Numerics.Vector3;
-@@ -21,6 +21,7 @@ namespace GFDLibrary.Rendering.OpenGL
+ 
++
+ namespace GFDLibrary.Rendering.OpenGL
+ {
+     public class GLModel : IDisposable
+@@ -21,6 +22,7 @@ namespace GFDLibrary.Rendering.OpenGL
          public Dictionary<string, GLMaterial> Materials { get; }
  
          public Animation Animation { get; private set; }
@@ -92,16 +97,87 @@ index 2ae0f2d..8de9f36 100644
  
          public GLModel( ModelPack modelPack, MaterialTextureCreator textureCreator )
          {
-@@ -47,6 +48,8 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -47,6 +49,79 @@ namespace GFDLibrary.Rendering.OpenGL
                      glNode.Meshes.Add( glMesh );
                  }
              }
 +
 +            BlendAnimations = new Dictionary<int, Animation>();
++        }
++
++        public Vector3 QuatToEuler( Quaternion q )
++        {
++            Vector3 res = new Vector3(0, 0, 0);
++
++            var a = q.W - q.Y;
++            var b = q.Z + q.X;
++            var c = q.W + q.Y;
++            var d = q.Z - q.X;
++
++            res.Y = (float)(2 * System.Math.Atan2(System.Math.Sqrt(c * c + d * d), System.Math.Sqrt(a * a + b * b)));
++
++            var t0 = (float)System.Math.Atan2(b, a);
++            var t1 = (float)System.Math.Atan2(d, c);
++
++            if (System.Math.Abs(res.Y) < 1e-6)
++            {
++                res.X = 2 * t0;
++                res.Z = 0;
++            }
++            else if (System.Math.Abs(res.Y - System.Math.PI) < 1e-6)
++            {
++                res.X = -2 * t1;
++                res.Z = 0;
++            }
++            else
++            {
++                res.X = t0 - t1;
++                res.Z = t0 + t1;
++            }
++
++            res.Y -= (float)(System.Math.PI / 2);
++
++            float ClampPi(float val)
++            {
++                if      (val < -System.Math.PI) return (float)(val + 2 * System.Math.PI);
++                else if (val > +System.Math.PI) return (float)(val - 2 * System.Math.PI);
++                else                            return val;
++            }
++
++            res.X = ClampPi(res.X);
++            res.Y = ClampPi(res.Y);
++            res.Z = ClampPi(res.Z);
++            return res;
++        }
++
++        Quaternion EulerToQuat( Vector3 e )
++        {
++            var x = e.X / 2;
++            var y = e.Y / 2;
++            var z = e.Z / 2;
++
++            double cx = System.Math.Cos(x);
++            double sx = System.Math.Sin(x);
++            double cy = System.Math.Cos(y);
++            double sy = System.Math.Sin(y);
++            double cz = System.Math.Cos(z);
++            double sz = System.Math.Sin(z);
++
++            return new Quaternion(
++                (float)(sx * cy * cz - cx * sy * sz),
++                (float)(cx * sy * cz + sx * cy * sz),
++                (float)(cx * cy * sz - sx * sy * cz),
++                (float)(cx * cy * cz + sx * sy * sz)
++            );
++        }
++
++        bool NoActiveAnimations()
++        {
++            return (Animation == null) && (BlendAnimations.Count() == 0);
          }
  
          public void LoadAnimation( Animation animation )
-@@ -93,6 +96,47 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -93,6 +168,47 @@ namespace GFDLibrary.Rendering.OpenGL
              }
          }
  
@@ -116,7 +192,7 @@ index 2ae0f2d..8de9f36 100644
 +                List<AnimationController>? controller = null;
 +                if (nodeControllerIndex == -1)
 +                {
-+                    glNode.BlendControllers.Add( new List<AnimationController>());
++                    glNode.BlendControllers.Add( new List<AnimationController>() );
 +                    controller = glNode.BlendControllers.Last();
 +                }
 +                else
@@ -135,7 +211,7 @@ index 2ae0f2d..8de9f36 100644
 +        {
 +            BlendAnimations.Remove( index );
 +
-+            foreach (var glNode in Nodes)
++            foreach ( var glNode in Nodes )
 +            {
 +                int nodeControllerIndex = glNode.BlendControllerIndices.IndexOf( index );
 +                if ( nodeControllerIndex != -1 )
@@ -149,16 +225,25 @@ index 2ae0f2d..8de9f36 100644
          public void Draw( GLShaderProgram shaderProgram, GLCamera camera, double animationTime )
          {
              var view = camera.View;
-@@ -102,7 +146,7 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -102,7 +218,7 @@ namespace GFDLibrary.Rendering.OpenGL
  
          public void Draw( GLShaderProgram shaderProgram, ref Matrix4 view, ref Matrix4 projection, double animationTime, GLCamera camera )
          {
 -            if ( Animation != null )
-+            if ( (Animation != null) || (BlendAnimations.Count() != 0) )
++            if ( !NoActiveAnimations() )
                  AnimateNodes( animationTime );
  
              shaderProgram.Use();
-@@ -149,7 +193,7 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -127,7 +243,7 @@ namespace GFDLibrary.Rendering.OpenGL
+                         transparentMesh = true;
+                     }
+ 
+-                    if ( Animation != null && glMesh.Mesh != null )
++                    if ( !NoActiveAnimations() && glMesh.Mesh != null )
+                     {
+                         var oldGlMesh = glMesh;
+                         glMesh = glNode.Meshes[i] = new GLMesh( oldGlMesh.Mesh, glNode.WorldTransform, ModelPack.Model.Bones, Nodes, Materials );
+@@ -149,7 +265,7 @@ namespace GFDLibrary.Rendering.OpenGL
              GL.Enable( EnableCap.Blend );
  
              // Sort transparent objects based on their distance from the camera
@@ -167,12 +252,12 @@ index 2ae0f2d..8de9f36 100644
  
              // Disable depth mask
              GL.DepthMask( false );
-@@ -185,56 +229,75 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -185,59 +301,79 @@ namespace GFDLibrary.Rendering.OpenGL
          }
  
  
 -        private void AnimateNodes( double animationTime )
-+        private void FetchNodeAnimation( List<AnimationController> controllers, double animationTime, ref Quaternion rotation, ref Vector3 translation, ref Vector3 scale)
++        private void FetchNodeAnimation( List<AnimationController> controllers, double animationTime, ref Quaternion rotation, ref Vector3 translation, ref Vector3 scale )
          {
 -            foreach ( var glNode in Nodes )
 +            foreach ( var controller in controllers )
@@ -256,28 +341,33 @@ index 2ae0f2d..8de9f36 100644
 +        {
 +            foreach ( var glNode in Nodes )
 +            {
-+                var rotation    = glNode.Node.Rotation;
++                var rotation = glNode.Node.Rotation;
 +                var translation = glNode.Node.Translation;
-+                var scale       = glNode.Node.Scale;
-+                FetchNodeAnimation(glNode.Controllers, animationTime, ref rotation, ref translation, ref scale);
-+                var rotationEuler = (new OpenTK.Mathematics.Quaternion(rotation.X, rotation.Y, rotation.Z, rotation.W)).ToEulerAngles();
-+                
++                var scale = glNode.Node.Scale;
++                FetchNodeAnimation( glNode.Controllers, animationTime, ref rotation, ref translation, ref scale );
++                var rotationEuler = QuatToEuler( rotation );
++                var bkp_rotation = rotation;
++
 +                foreach ( var blendControllers in glNode.BlendControllers )
 +                {
-+                    Quaternion blendRotation    = Quaternion.CreateFromYawPitchRoll( 0, 0, 0 );
-+                    Vector3    blendTranslation = new Vector3( 0, 0, 0 );
-+                    Vector3    blendScale       = new Vector3( 0, 0, 0 );
-+                    FetchNodeAnimation(blendControllers, animationTime, ref blendRotation, ref blendTranslation, ref blendScale);
-+                    var blendRotationEuler = (new OpenTK.Mathematics.Quaternion(blendRotation.X, blendRotation.Y, blendRotation.Z, blendRotation.W)).ToEulerAngles();
++                    Quaternion blendRotation = new Quaternion(0, 0, 0, 1);
++                    Vector3 blendTranslation = new Vector3(0, 0, 0);
++                    Vector3 blendScale = new Vector3(0, 0, 0);
++                    FetchNodeAnimation( blendControllers, animationTime, ref blendRotation, ref blendTranslation, ref blendScale );
++                    var blendRotationEuler = QuatToEuler( blendRotation );
++
 +                    rotationEuler += blendRotationEuler;
 +                    translation   += blendTranslation;
 +                    scale         += blendScale;
 +                }
-+                var rotationTK = OpenTK.Mathematics.Quaternion.FromEulerAngles(rotationEuler);
-+                rotation = new Quaternion(rotationTK.X, rotationTK.Y, rotationTK.Z, rotationTK.W);
++                rotation = EulerToQuat( rotationEuler );
  
                  // Calculate current transform
-                 var transform = Matrix4x4.CreateFromQuaternion( rotation ) * Matrix4x4.CreateScale( glNode.Node.Scale );
+-                var transform = Matrix4x4.CreateFromQuaternion( rotation ) * Matrix4x4.CreateScale( glNode.Node.Scale );
++                var transform = Matrix4x4.CreateFromQuaternion( rotation ) * Matrix4x4.CreateScale( scale );
+                 transform.Translation   = translation;
+                 glNode.CurrentTransform = transform;
+ 
 diff --git a/GFDLibrary.Rendering.OpenGL/GLNode.cs b/GFDLibrary.Rendering.OpenGL/GLNode.cs
 index 6ad8f72..d22f91d 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLNode.cs
