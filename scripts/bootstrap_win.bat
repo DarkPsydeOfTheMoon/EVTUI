@@ -7,10 +7,9 @@ cd ..
 :: Grab dependencies
 git submodule update --init --recursive
 
-echo Applying patch to GFDLibrary.Rendering.OpenGL...
-cd external/GFD-Studio/GFDLibrary.Rendering.OpenGL
-git apply --reject --whitespace=fix ../../../patches/GFDLibrary.Rendering.OpenGL.patch
-cd ..
+echo Applying patch to GFDLibrary...
+cd external/GFD-Studio
+git apply --reject --whitespace=fix ../../patches/GFD-Studio.patch
 cd ..
 echo Applying patch to Atlus-Script-Tools...
 cd Atlus-Script-Tools

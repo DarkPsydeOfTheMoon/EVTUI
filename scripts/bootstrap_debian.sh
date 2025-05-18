@@ -4,7 +4,7 @@
 git submodule update --init --recursive
 
 # apply batches to submodules
-./scripts/apply_patches.sh;
+./scripts/apply_patches.sh
 
 # install other dependencies
 sudo apt-get install libvlc-dev vlc
