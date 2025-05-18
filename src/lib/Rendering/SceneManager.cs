@@ -122,7 +122,14 @@ public class SceneModel
         }
 
         double useAnimationTime = isAnimActive ? (animationTime % duration) : 0;
-        this.model.Draw(shaderProgram, camera, useAnimationTime);
+        ShaderRegistry mShaderRegistry = new ShaderRegistry();
+        mShaderRegistry.mDefaultShader = shaderProgram;
+        this.model.Draw( new DrawContext()
+        {
+            ShaderRegistry = mShaderRegistry,
+            Camera = camera,
+            AnimationTime = useAnimationTime,
+        } );
     }
 
     public void Draw(GLShaderProgram shaderProgram, GLCamera camera)
@@ -252,6 +259,13 @@ public class SceneManager
     GLPerspectiveCamera fallbackCamera = new GLPerspectiveCamera(
         0.01f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
         new BoundingSphere(new Vector3(0, 0, 0), 100), 
+        new OpenTK.Mathematics.Vector3(0, -80, -100), 
+        new OpenTK.Mathematics.Vector3(0, 0, 0)
+    );
+
+    GLPerspectiveCamera closeupCamera = new GLPerspectiveCamera(
+        0.01f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
+        new BoundingSphere(new Vector3(0, 90, 0), -20), 
         new OpenTK.Mathematics.Vector3(0, -80, -100), 
         new OpenTK.Mathematics.Vector3(0, 0, 0)
     );
@@ -412,6 +426,7 @@ public class SceneManager
 
     public void LoadAddAnimationTrack(int model_index, bool isExt, int idx, int track)
     {
+        this.activeCamera = closeupCamera;
         if (this.sceneModels.ContainsKey(model_index))
             this.sceneModels[model_index].LoadAddAnimationTrack(isExt, idx, track);
         else
