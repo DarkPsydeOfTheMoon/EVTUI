@@ -37,24 +37,24 @@ public class SceneModel
 
     public SceneModel(DataManager config, SerialObject obj)
     {
-        List<string> assetPaths = config.EventManager.GetAssetPaths(obj.Id, config.CpkList, config.VanillaExtractionPath);
+        List<string> assetPaths = config.EventManager.GetAssetPaths(obj.Id);
         if (assetPaths.Count > 0)
         {
             this.LoadModel(assetPaths[0]);
 
-            List<string> baseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, false, config.CpkList, config.VanillaExtractionPath);
+            List<string> baseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, false);
             if (baseAnimPaths.Count > 0)
                 this.BaseAnimationPack = this.TryLoadAnimationPack(baseAnimPaths[0]);
 
-            List<string> extBaseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, false, config.CpkList, config.VanillaExtractionPath);
+            List<string> extBaseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, false);
             if (extBaseAnimPaths.Count > 0)
                 this.ExtBaseAnimationPack = this.TryLoadAnimationPack(extBaseAnimPaths[0]);
 
-            List<string> addAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, true, config.CpkList, config.VanillaExtractionPath);
+            List<string> addAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, true);
             if (addAnimPaths.Count > 0)
                 this.AddAnimationPack = this.TryLoadAnimationPack(addAnimPaths[0]);
 
-            List<string> extAddAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, true, config.CpkList, config.VanillaExtractionPath);
+            List<string> extAddAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, true);
             if (extAddAnimPaths.Count > 0)
                 this.ExtAddAnimationPack = this.TryLoadAnimationPack(extAddAnimPaths[0]);
         }

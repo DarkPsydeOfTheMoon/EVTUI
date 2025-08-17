@@ -28,6 +28,12 @@ public class EventManager
     private ECS?   SerialEventSounds         = null;
     private string CpkDecryptionFunctionName = null;
 
+    // from DataManager, just copied for convenience
+    // not the most elegant approach, so TODO probably
+    private List<string> CpkList;
+    private string       VanillaDir;
+    private string       ModdedDir;
+
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ///////////////.////////////
@@ -46,10 +52,14 @@ public class EventManager
     ////////////////////////////
     public bool Load(List<string> cpkList, string evtid, string vanillaDir, string moddedDir, string cpkDecryptionFunctionName)
     {
+        this.CpkList = cpkList;
+        this.VanillaDir = vanillaDir;
+        this.ModdedDir = moddedDir;
+
         this.Clear();
         this.CpkDecryptionFunctionName = cpkDecryptionFunctionName;
 
-        CpkEVTContents? cpkEVTContents = CPKExtract.ExtractEVTFiles(cpkList, evtid, vanillaDir, moddedDir, this.CpkDecryptionFunctionName);
+        CpkEVTContents? cpkEVTContents = CPKExtract.ExtractEVTFiles(this.CpkList, evtid, this.VanillaDir, this.ModdedDir, this.CpkDecryptionFunctionName);
         if (cpkEVTContents is null)
             return false;
 
@@ -59,7 +69,10 @@ public class EventManager
 
         this.EcsPath = cpkEVTContents.Value.ecsPath;
         this.SerialEventSounds = new ECS();
-        this.SerialEventSounds.Read(this.EcsPath);
+        if (this.EcsPath is null)
+            this.EcsPath = this.EvtPath.Substring(0, this.EvtPath.Length-4) + ".ECS";
+        else
+            this.SerialEventSounds.Read(this.EcsPath);
 
         // the DataManager will pass these to the AudioManager
         this.AcwbPaths = new List<(string ACB, string? AWB)>();
@@ -164,7 +177,7 @@ public class EventManager
         return ids;
     }
 
-    public List<string> GetAssetPaths(int assetId, List<string> cpkList, string targetdir)
+    public List<string> GetAssetPaths(int assetId)
     {
         if (!(this.ObjectsById.ContainsKey(assetId)))
             return new List<string>();
@@ -210,11 +223,11 @@ public class EventManager
         if (pattern == "")
             return new List<string>();
         else
-            return CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir, this.CpkDecryptionFunctionName);
+            return CPKExtract.ExtractMatchingFiles(this.CpkList, pattern, this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
     }
 
     // TODO: needs ResourceType
-    public List<string> GetAnimPaths(int assetId, bool fromBaseAnims, bool blendAnims, List<string> cpkList, string targetdir)
+    public List<string> GetAnimPaths(int assetId, bool fromBaseAnims, bool blendAnims)
     {
         SerialObject obj = this.ObjectsById[assetId];
         string animType = (fromBaseAnims) ? "B" : "A";
@@ -250,11 +263,11 @@ public class EventManager
             return new List<string>();
         else
         {
-            List<string> candidates = CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir, this.CpkDecryptionFunctionName);
+            List<string> candidates = CPKExtract.ExtractMatchingFiles(this.CpkList, pattern, this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
             if (candidates.Count == 0 && (ObjectTypes)obj.Type == ObjectTypes.Character)
             {
                 pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]COMMON_ANIM[\\\\/]{animType}CMN{animId:0000}\\.GAP";
-                candidates = CPKExtract.ExtractMatchingFiles(cpkList, pattern, targetdir, this.CpkDecryptionFunctionName);
+                candidates = CPKExtract.ExtractMatchingFiles(this.CpkList, pattern, this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
             }
             return candidates;
         }
