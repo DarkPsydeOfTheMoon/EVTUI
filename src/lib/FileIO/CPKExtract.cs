@@ -35,10 +35,16 @@ public static class CPKExtract
             dir.Delete(true); 
     }
 
-    public static List<string> ExtractMatchingFiles(List<string> CpkList, string filePatternString, string OutputFolder, string decryptionFunctionName)
+    public static List<string> ExtractMatchingFiles(List<string> CpkList, string filePatternString, string ExistingFolder, string OutputFolder, string decryptionFunctionName)
     {
         Regex filePattern = new Regex(filePatternString, RegexOptions.IgnoreCase);
         List<string> matches = new List<string>();
+
+        Parallel.ForEach(Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories), ModPath =>
+        {
+            if (filePattern.IsMatch(ModPath))
+                matches.Add(ModPath);
+        });
 
         KnownDecryptionFunction decryptionFunctionIndex;
         InPlaceDecryptionFunction decryptionFunction = null;
@@ -138,6 +144,46 @@ public static class CPKExtract
         if (Enum.TryParse(decryptionFunctionName, out decryptionFunctionIndex))
             decryptionFunction = CriFsLib.Instance.GetKnownDecryptionFunction(decryptionFunctionIndex);
 
+        bool maybePickFile(string candidatePath, bool looseFiles)
+        {
+            if (eventPattern.IsMatch(candidatePath))
+            {
+                if (CPKExtract.Patterns["EVT:EVT"].IsMatch(candidatePath))
+                {
+                    evtFound = true;
+                    retval.evtPath = candidatePath;
+                }
+                else if (CPKExtract.Patterns["EVT:ECS"].IsMatch(candidatePath))
+                    retval.ecsPath = candidatePath;
+                else if (CPKExtract.Patterns["EVT:ACB"].IsMatch(candidatePath))
+                    retval.acbPaths.Add(candidatePath);
+                else if (CPKExtract.Patterns["EVT:AWB"].IsMatch(candidatePath))
+                    retval.awbPaths.Add(candidatePath);
+                else if (CPKExtract.Patterns["EVT:BMD"].IsMatch(candidatePath) && (!looseFiles || new FileInfo(candidatePath).Length > 0))
+                    retval.bmdPaths.Add(candidatePath);
+                else if (CPKExtract.Patterns["EVT:BF"].IsMatch(candidatePath) && (!looseFiles || new FileInfo(candidatePath).Length > 0))
+                    retval.bfPaths.Add(candidatePath);
+                else
+                    return false;
+            }
+            else if (CPKExtract.Patterns["VSW:ACB"].IsMatch(candidatePath))
+                retval.acbPaths.Add(candidatePath);
+            else if (CPKExtract.Patterns["VSW:AWB"].IsMatch(candidatePath))
+                retval.awbPaths.Add(candidatePath);
+            else if (CPKExtract.Patterns["SYS:ACB"].IsMatch(candidatePath))
+                retval.acbPaths.Add(candidatePath);
+            else if (CPKExtract.Patterns["SYS:AWB"].IsMatch(candidatePath))
+                retval.awbPaths.Add(candidatePath);
+            else if (CPKExtract.Patterns["BGM:ACB"].IsMatch(candidatePath))
+                retval.acbPaths.Add(candidatePath);
+            else if (CPKExtract.Patterns["BGM:AWB"].IsMatch(candidatePath))
+                retval.awbPaths.Add(candidatePath);
+            else
+                return false;
+            Console.WriteLine(candidatePath);
+            return true;
+        }
+
         Parallel.ForEach(CpkList, CpkPath =>
         {
             Console.WriteLine(CpkPath);
@@ -155,59 +201,16 @@ public static class CPKExtract
                 string inCpkPath = Path.Combine(Path.Combine(files[x].Directory.Split(dirSeps)) ?? "", files[x].FileName);
                 string outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
 
-                // hmmmokay right now the behavior is to skip extracting if it exists
-                // but actually... it should not do this, that's silly
-                // (that's a TODO for a future file management PR)
-                string maybeExistingPath = null;
-                if (!(existingFolder is null))
-                {
-                    maybeExistingPath = Path.Combine(existingFolder, Path.GetFileName(CpkPath), inCpkPath);
-                    if (File.Exists(maybeExistingPath) && new FileInfo(maybeExistingPath).Length > 0)
-                        outputPath = maybeExistingPath;
-                }
-
-                if (eventPattern.IsMatch(inCpkPath))
-                {
-                    if (CPKExtract.Patterns["EVT:EVT"].IsMatch(inCpkPath))
-                    {
-                        evtFound = true;
-                        retval.evtPath = outputPath;
-                    }
-                    else if (CPKExtract.Patterns["EVT:ECS"].IsMatch(inCpkPath))
-                        retval.ecsPath = outputPath;
-                    else if (CPKExtract.Patterns["EVT:ACB"].IsMatch(inCpkPath))
-                        retval.acbPaths.Add(outputPath);
-                    else if (CPKExtract.Patterns["EVT:AWB"].IsMatch(inCpkPath))
-                        retval.awbPaths.Add(outputPath);
-                    else if (CPKExtract.Patterns["EVT:BMD"].IsMatch(inCpkPath))
-                        retval.bmdPaths.Add(outputPath);
-                    else if (CPKExtract.Patterns["EVT:BF"].IsMatch(inCpkPath))
-                        retval.bfPaths.Add(outputPath);
-                    else
-                        return;
-                }
-                else if (CPKExtract.Patterns["VSW:ACB"].IsMatch(inCpkPath))
-                    retval.acbPaths.Add(outputPath);
-                else if (CPKExtract.Patterns["VSW:AWB"].IsMatch(inCpkPath))
-                    retval.awbPaths.Add(outputPath);
-                else if (CPKExtract.Patterns["SYS:ACB"].IsMatch(inCpkPath))
-                    retval.acbPaths.Add(outputPath);
-                else if (CPKExtract.Patterns["SYS:AWB"].IsMatch(inCpkPath))
-                    retval.awbPaths.Add(outputPath);
-                else if (CPKExtract.Patterns["BGM:ACB"].IsMatch(inCpkPath))
-                    retval.acbPaths.Add(outputPath);
-                else if (CPKExtract.Patterns["BGM:AWB"].IsMatch(inCpkPath))
-                    retval.awbPaths.Add(outputPath);
-                else
-                    return;
-                Console.WriteLine(outputPath);
-                if (outputPath != maybeExistingPath)
+                if (maybePickFile(outputPath, false))
                     extractor.QueueItem(new ItemModel(outputPath, files[x]));
             });
             extractor.WaitForCompletion();
             ArrayRental.Reset();
         });
-        
+
+        // overwrite paths to extracted (vanilla) files with files from mod
+        Parallel.ForEach(Directory.GetFiles(existingFolder, "*.*", SearchOption.AllDirectories), ModPath => { maybePickFile(ModPath, true); });
+
         if (!evtFound)
             return null;
 

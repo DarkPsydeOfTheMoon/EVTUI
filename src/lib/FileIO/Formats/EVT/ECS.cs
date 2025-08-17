@@ -11,19 +11,19 @@ namespace EVTUI;
 
 public class ECS : ISerializable
 {
-    private static Int32 ENTRY_OFFSET = 16;
-    private static Int32 RESERVE      = 0;
+    private static UInt32 ENTRY_OFFSET = 16;
+    private static UInt32 RESERVE      = 0;
 
     public static HashSet<string> ValidEcsCommands = new HashSet<string> {"SBEA", "SBE_", "SFts", "Snd_"};
 
-    public bool   IsLittleEndian;
-    public Int32  CommandCount;
-    public UInt32 CommandOffset;
-    public UInt32 CommandSize;
-    public UInt32 Reserve = 0;
+    public bool   IsLittleEndian = false;
+    public Int32  CommandCount   = 0;
+    public UInt32 CommandOffset  = ECS.ENTRY_OFFSET;
+    public UInt32 CommandSize    = EVT.ENTRY_SIZE;
+    public UInt32 Reserve        = ECS.RESERVE;
 
-    public SerialCommand[] Commands;
-    public ArrayList       CommandData;
+    public SerialCommand[] Commands    = new SerialCommand[0];
+    public ArrayList       CommandData = new ArrayList();
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {

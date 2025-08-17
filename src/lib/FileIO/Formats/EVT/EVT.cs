@@ -12,8 +12,8 @@ namespace EVTUI;
 
 public class EVT : ISerializable
 {
-    private static string MAGIC         = "EVT";
-    public  static Int32  ENTRY_SIZE    = 48;
+    private static string MAGIC      = "EVT";
+    public  static UInt32 ENTRY_SIZE = 48;
 
     public string Magic;
     public byte Endianness;

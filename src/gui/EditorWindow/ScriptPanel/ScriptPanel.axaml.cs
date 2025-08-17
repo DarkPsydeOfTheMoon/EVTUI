@@ -3,6 +3,7 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.ReactiveUI;
 
 using AvaloniaEdit;
@@ -65,6 +66,8 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
         // very goofy to have to do this here but I can't figure out the right XAML for it lolz
         _textEditor.TextArea.TextView.Margin = new Thickness(0, 0, 20, 0);
         _textEditor.IsReadOnly = !(ViewModel!.Editable);
+        if (!(ViewModel!.Editable))
+            _textEditor.TextArea.Caret.CaretBrush = Brushes.Transparent;
         _textEditor.IsEnabled = ViewModel!.HasDecompiledFiles;
         _textEditor.Document = new TextDocument(ViewModel!.SelectedScriptContent);
         this.WhenAnyValue(x => x._textEditor.Document.Text).Subscribe(x => ViewModel!.SelectedScriptContent = x );
