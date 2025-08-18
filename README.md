@@ -33,6 +33,14 @@ The command prompt and similar interfaces should work with this syntax:
 ./scripts/bootstrap_debian.sh
 ```
 
+### Fedora-based Linux
+
+```
+./scripts/bootstrap_fedora.sh
+```
+
+(Credit to [theloneraven](https://github.com/theloneraven) for getting this setup working.)
+
 ### Other Linux
 
 TBD.
