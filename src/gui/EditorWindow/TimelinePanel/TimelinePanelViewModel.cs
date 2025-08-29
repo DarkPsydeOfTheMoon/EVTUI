@@ -119,23 +119,21 @@ public class Timeline : ReactiveObject
         this.ActiveFrame = 0;
 
         this.Categories = new ObservableCollection<Category>();
-        this.Categories.Add(new Category("Field",    1,  this.FrameCount));
-        this.Categories.Add(new Category("Env",      2,  this.FrameCount));
-        this.Categories.Add(new Category("Camera",   3,  this.FrameCount));
-        this.Categories.Add(new Category("Model",    4,  this.FrameCount));
-        this.Categories.Add(new Category("Effect",   5,  this.FrameCount));
-        this.Categories.Add(new Category("Crowd",    6,  this.FrameCount));
-        this.Categories.Add(new Category("Image",    7,  this.FrameCount));
+        this.Categories.Add(new Category("Camera",   1,  this.FrameCount));
+        this.Categories.Add(new Category("Field",    2,  this.FrameCount));
+        this.Categories.Add(new Category("Model",    3,  this.FrameCount));
+        this.Categories.Add(new Category("Effect",   4,  this.FrameCount));
+        this.Categories.Add(new Category("Env",      5,  this.FrameCount));
+        this.Categories.Add(new Category("Post",     6,  this.FrameCount));
+        this.Categories.Add(new Category("Texture",  7,  this.FrameCount));
         this.Categories.Add(new Category("Movie",    8,  this.FrameCount));
-        this.Categories.Add(new Category("Dialogue", 9,  this.FrameCount));
-        this.Categories.Add(new Category("Texture",  10, this.FrameCount));
-        this.Categories.Add(new Category("UI",       11, this.FrameCount));
-        this.Categories.Add(new Category("Post",     12, this.FrameCount));
-        this.Categories.Add(new Category("Audio",    13, this.FrameCount));
-        this.Categories.Add(new Category("Script",   14, this.FrameCount));
-        this.Categories.Add(new Category("Timing",   15, this.FrameCount));
-        this.Categories.Add(new Category("Hardware", 16, this.FrameCount));
-        this.Categories.Add(new Category("Other",    17, this.FrameCount));
+        this.Categories.Add(new Category("Overlay",  9,  this.FrameCount));
+        this.Categories.Add(new Category("Dialogue", 10, this.FrameCount));
+        this.Categories.Add(new Category("Audio",    11, this.FrameCount));
+        this.Categories.Add(new Category("Script",   12, this.FrameCount));
+        this.Categories.Add(new Category("Timing",   13, this.FrameCount));
+        this.Categories.Add(new Category("Hardware", 14, this.FrameCount));
+        this.Categories.Add(new Category("Other",    15, this.FrameCount));
 
         this.WhenAnyValue(x => x.FrameDuration.Value).Subscribe(x => 
         {
@@ -199,44 +197,44 @@ public class Timeline : ReactiveObject
     public static int CodeToCategory(string code, bool isAudio)
     {
         if (isAudio)
-            return 12;
-        int catInd = 16;
-        if (code == "FbEn" || code == "Flbk" || code.StartsWith("Im"))
-            catInd = 6;
-        else if (code == "Msg_" || code == "MsgR" || code == "Cht_")
-            catInd = 8;
-        else if (code == "LBX_" || code == "Date")
-            catInd = 10;
-        else if (code == "AlEf" || code.StartsWith("G"))
-            catInd = 11;
-        else if (code == "Scr_")
-            catInd = 13;
-        else if (code == "Chap" || code == "FrJ_")
-            catInd = 14;
-        else if (code == "PRum" || code == "TrMc")
-            catInd = 15;
-        else if (code.StartsWith("En"))
-            catInd = 1;
-        else if (code.StartsWith("Cw"))
+            return 10;
+        int catInd = 14;
+        if (code == "AlEf" || code == "SFlt")
             catInd = 5;
+        else if (code == "FbEn" || code == "Flbk" || code.StartsWith("Im"))
+            catInd = 6;
+        else if (code == "LBX_" || code == "Date")
+            catInd = 8;
+        else if (code == "Msg_" || code == "MsgR" || code == "Cht_")
+            catInd = 9;
+        else if (code == "Scr_")
+            catInd = 11;
+        else if (code == "Chap" || code == "FrJ_")
+            catInd = 12;
+        else if (code == "PRum" || code == "TrMc")
+            catInd = 13;
+        else if (code.StartsWith("Cw"))
+            catInd = 1;
+        else if (code.StartsWith("En"))
+            catInd = 4;
         else if (code.StartsWith("Mv"))
             catInd = 7;
         else if (code.StartsWith("Fd"))
-            catInd = 10;
-        else if (code.StartsWith("F"))
-            catInd = 0;
+            catInd = 8;
         else if (code.StartsWith("C"))
-            catInd = 2;
+            catInd = 0;
+        else if (code.StartsWith("F"))
+            catInd = 1;
         else if (code.StartsWith("M"))
-            catInd = 3;
+            catInd = 2;
         else if (code.StartsWith("E"))
-            catInd = 4;
-        else if (code.StartsWith("T"))
-            catInd = 9;
+            catInd = 3;
         else if (code.StartsWith("P"))
-            catInd = 11;
-        //else
-        //    catInd = 16;
+            catInd = 5;
+        else if (code.StartsWith("T"))
+            catInd = 6;
+        else if (code.StartsWith("G"))
+            catInd = 8;
         return catInd;
     }
 

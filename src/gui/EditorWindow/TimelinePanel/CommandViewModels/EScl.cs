@@ -1,11 +1,11 @@
 namespace EVTUI.ViewModels.TimelineCommands;
 
-public class MScl : Generic
+public class EScl : Generic
 {
-    public MScl(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public EScl(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
     {
-        this.LongName = "Model: Scale";
-        this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
+        this.LongName = "Effect: Scale";
+        this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x01000002));
 
         this.Scale = new NumRangeField("Scale", this.Editable, this.CommandData.Scale, 0, 100, 0.1);
         this.InterpolationSettings = new InterpolationParameters(this.CommandData.InterpolationParameters, this.Editable);

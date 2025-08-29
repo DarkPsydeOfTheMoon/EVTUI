@@ -9,14 +9,14 @@ public class MAA_ : Generic
         this.LongName = "Model: Additive Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
 
-        this.TrackNumber = new IntSelectionField("Track Number", this.Editable, this.CommandData.TrackNumber+1, new List<int> {1, 2, 3, 4, 5, 6, 7, 8});
-        this.AddAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.AddAnimation, this.CommandData.Flags, $"Animation", extInd:0, trackNum:this.TrackNumber.Choice);
+        this.TrackNumber = new NumEntryField("Track Number", this.Editable, this.CommandData.TrackNumber, 0, 7, 1);
+        this.AddAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.AddAnimation, this.CommandData.Flags, $"Animation", extInd:0, trackNum:(int)this.TrackNumber.Value);
         this.DebugFrameForward = new BoolChoiceField("Frame Forward", this.Editable, this.CommandData.Flags[31]);
 
     }
 
     public IntSelectionField AssetID           { get; set; }
-    public IntSelectionField TrackNumber       { get; set; }
+    public NumEntryField     TrackNumber       { get; set; }
     public AnimationWidget   AddAnimation      { get; set; }
     public BoolChoiceField   DebugFrameForward { get; set; }
 
@@ -25,7 +25,7 @@ public class MAA_ : Generic
         base.SaveChanges();
         this.Command.ObjectId = this.AssetID.Choice;
 
-        this.CommandData.TrackNumber = this.TrackNumber.Choice-1;
+        this.CommandData.TrackNumber = (int)this.TrackNumber.Value;
         this.AddAnimation.SaveChanges();
         this.CommandData.Flags[31] = this.DebugFrameForward.Value;
     }

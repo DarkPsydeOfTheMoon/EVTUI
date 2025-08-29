@@ -454,3 +454,47 @@ public class InterpolationParameters : ViewModelBase
         }
     );
 }
+
+public class Target : ViewModelBase
+{
+    public Target(DataManager config, object commandData, int groupInd, bool isActive)
+    {
+        this.CommandData = commandData;
+
+        this.Editable = !config.ReadOnly;
+        this.Idx = groupInd;
+        _isActive = isActive;
+
+        this.X = new NumRangeField("X", this.Editable, this.CommandData.Targets[this.Idx,0], -99999, 99999, 1);
+        this.Y = new NumRangeField("Y", this.Editable, this.CommandData.Targets[this.Idx,1], -99999, 99999, 1);
+        this.Z = new NumRangeField("Z", this.Editable, this.CommandData.Targets[this.Idx,2], -99999, 99999, 1);
+    }
+
+    public NumRangeField X { get; set; }
+    public NumRangeField Y { get; set; }
+    public NumRangeField Z { get; set; }
+
+    public bool   Editable { get; }
+    public int    Idx      { get; }
+    public string Name     { get => $"Position #{this.Idx+1}"; }
+
+    private bool _isActive;
+    public bool IsActive
+    {
+        get => _isActive;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _isActive, value);
+            OnPropertyChanged(nameof(IsActive));
+        }
+    }
+
+    protected dynamic CommandData;
+
+    public void SaveChanges()
+    {
+        this.CommandData.Targets[this.Idx,0] = (float)this.X.Value;
+        this.CommandData.Targets[this.Idx,1] = (float)this.Y.Value;
+        this.CommandData.Targets[this.Idx,2] = (float)this.Z.Value;
+    }
+}
