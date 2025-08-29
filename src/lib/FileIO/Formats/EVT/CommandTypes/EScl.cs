@@ -8,7 +8,7 @@ namespace EVTUI;
 
 public partial class CommandTypes
 {
-    public class MScl : ISerializable
+    public class EScl : ISerializable
     {
         public const int DataSize = 16;
 

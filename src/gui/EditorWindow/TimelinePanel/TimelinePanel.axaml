@@ -574,6 +574,79 @@
       </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type cmds:ERgs}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding Display}"/>
+        <ContentControl Content="{Binding Scene}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:EScl}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <ContentControl Content="{Binding Scale}"/>
+        <ContentControl Content="{Binding InterpolationSettings}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:ESD_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <Expander Header="Position">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding X}"/>
+            <ContentControl Content="{Binding Y}"/>
+            <ContentControl Content="{Binding Z}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Rotation (Degrees)">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding YawDegrees}"/>
+            <ContentControl Content="{Binding PitchDegrees}"/>
+            <ContentControl Content="{Binding RollDegrees}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type cmds:ESH_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding AssetID}"/>
+        <StackPanel Classes="preview">
+          <ContentControl Content="{Binding ModelAssetID}"/>
+          <ContentControl Content="{Binding ParentModelPreviewVM}"/>
+        </StackPanel>
+        <ContentControl Content="{Binding HelperID}"/>
+        <ContentControl Content="{Binding AlwaysSynchronize}"/>
+        <ContentControl Content="{Binding CorrectionFrameEnabled}"/>
+        <Expander Header="Start Correction Frames" IsVisible="{Binding CorrectionFrameEnabled.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding StartCorrectionFrameNumber}"/>
+            <ContentControl Content="{Binding StartInterpolationSettings}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="End Correction Frames" IsVisible="{Binding CorrectionFrameEnabled.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding EndCorrectionFrameNumber}"/>
+            <ContentControl Content="{Binding EndInterpolationSettings}"/>
+          </StackPanel>
+        </Expander>
+      </StackPanel>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type cmds:EnBc}">
       <StackPanel Classes="form">
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
@@ -1327,6 +1400,7 @@
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
         <ContentControl Content="{Binding Scale}"/>
+        <ContentControl Content="{Binding InterpolationSettings}"/>
       </StackPanel>
     </DataTemplate>
 
