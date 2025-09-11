@@ -52,8 +52,10 @@ Although this project is a WIP and has no official release, you can see the curr
 ### Windows
 
 ```
-dotnet publish --runtime win-x86
+dotnet publish --runtime win-x64
 ```
+
+*NOTE: If you're on a 32-bit machine, you can try building for `win-x86`, but you'll likely get an `Out of memory` crash. Sorry!*
 
 ### Linux
 
