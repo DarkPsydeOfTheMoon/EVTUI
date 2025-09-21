@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 using Serialization;
 
@@ -81,7 +82,8 @@ public abstract class BitfieldBase : ISerializable
 
     protected void Init(int size, uint field)
     {
-        Trace.Assert(size == 8 || size == 16 || size == 32, $"Only bitfields of size 8, 16, and 32 are supported (input size: {size})");
+        if (size != 8 && size != 16 && size != 32)
+            throw new ArgumentException($"Only bitfields of size 8, 16, and 32 are supported (input size: {size})");
         this.Bits = new bool[size];
         for (int i=0; i<this.Bits.Length; i++)
             this.Bits[i] = (((field >> i) & 0x1) != 0);
@@ -106,8 +108,7 @@ public abstract class BitfieldBase : ISerializable
 
 public class Bitfield32 : BitfieldBase
 {
-    //private UInt32 Field;
-    public UInt32 Field;
+    private UInt32 Field;
 
     public Bitfield32(uint field = 0)
     {
@@ -115,7 +116,6 @@ public class Bitfield32 : BitfieldBase
         this.Init(32, this.Field);
     }
 
-    //public override void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     public override void ExbipHook<T>(T rw, Dictionary<string, object> args)
     {
         if (rw.IsParselike())
@@ -135,7 +135,6 @@ public class Bitfield16 : BitfieldBase
         this.Init(16, (uint)this.Field);
     }
 
-    //public override void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     public override void ExbipHook<T>(T rw, Dictionary<string, object> args)
     {
         if (rw.IsParselike())
@@ -155,12 +154,139 @@ public class Bitfield8 : BitfieldBase
         this.Init(8, (uint)this.Field);
     }
 
-    //public override void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     public override void ExbipHook<T>(T rw, Dictionary<string, object> args)
     {
         if (rw.IsParselike())
             this.Field = (byte)this.Compose();
         rw.RwUInt8(ref this.Field);
         this.Init(8, (uint)this.Field);
+    }
+}
+
+public class ConstUInt32 : ISerializable
+{
+    public  UInt32 ActualValue;
+    private UInt32 ExpectedValue;
+
+    public ConstUInt32(UInt32 expectedValue = 0)
+    {
+        this.ActualValue   = expectedValue;
+        this.ExpectedValue = expectedValue;
+    }
+
+    public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    {
+        if (rw.IsParselike())
+            this.ActualValue = this.ExpectedValue;
+
+        rw.RwUInt32(ref this.ActualValue);
+        if (this.ActualValue != this.ExpectedValue)
+            Trace.TraceWarning($"Unexpected value ({this.ActualValue} != {this.ExpectedValue}) in reserve variable");
+        // auto-cleanup of errorful reserve bytes, otherwise it's annoying for little benefit
+        this.ActualValue = this.ExpectedValue;
+    }
+}
+
+public class ConstUInt16 : ISerializable
+{
+    public  UInt16 ActualValue;
+    private UInt16 ExpectedValue;
+
+    public ConstUInt16(UInt16 expectedValue = 0)
+    {
+        this.ActualValue   = expectedValue;
+        this.ExpectedValue = expectedValue;
+    }
+
+    public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    {
+        if (rw.IsParselike())
+            this.ActualValue = this.ExpectedValue;
+        rw.RwUInt16(ref this.ActualValue);
+        if (this.ActualValue != this.ExpectedValue)
+            Trace.TraceWarning($"Unexpected value ({this.ActualValue} != {this.ExpectedValue}) in reserve variable");
+        // auto-cleanup of errorful reserve bytes, otherwise it's annoying for little benefit
+        this.ActualValue = this.ExpectedValue;
+    }
+}
+
+public class ConstUInt8 : ISerializable
+{
+    public  byte ActualValue;
+    private byte ExpectedValue;
+
+    public ConstUInt8(byte expectedValue = 0)
+    {
+        this.ActualValue   = expectedValue;
+        this.ExpectedValue = expectedValue;
+    }
+
+    public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    {
+        if (rw.IsParselike())
+            this.ActualValue = this.ExpectedValue;
+        rw.RwUInt8(ref this.ActualValue);
+        if (this.ActualValue != this.ExpectedValue)
+            Trace.TraceWarning($"Unexpected value ({this.ActualValue} != {this.ExpectedValue}) in reserve variable");
+        // auto-cleanup of errorful reserve bytes, otherwise it's annoying for little benefit
+        this.ActualValue = this.ExpectedValue;
+    }
+}
+
+public class PositionalInt32 : ISerializable
+{
+    public Int32 Value;
+
+    public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    {
+        rw.RwInt32(ref this.Value);
+    }
+
+    public void Validate(Int32 expectedValue, bool updateFirst)
+    {
+        if (updateFirst)
+            this.Value = expectedValue;
+        if (this.Value != expectedValue)
+            Trace.TraceWarning($"Unexpected value ({this.Value} != {expectedValue}) in positional variable");
+    }
+}
+
+public class PositionalInt16 : ISerializable
+{
+    public Int16 Value;
+
+    public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    {
+        rw.RwInt16(ref this.Value);
+    }
+
+    public void Validate(Int16 expectedValue, bool updateFirst)
+    {
+        if (updateFirst)
+            this.Value = expectedValue;
+        if (this.Value != expectedValue)
+            Trace.TraceWarning($"Unexpected value ({this.Value} != {expectedValue}) in positional variable");
+    }
+}
+
+public class MagicString : ISerializable
+{
+    public  string   ActualValue;
+    private string   ExpectedValue;
+    private Encoding _Encoding = Encoding.ASCII;
+
+    public MagicString(string expectedValue, Encoding? encoding = null)
+    {
+        this.ActualValue   = expectedValue;
+        this.ExpectedValue = expectedValue;
+        if (!(encoding is null))
+            this._Encoding = encoding;
+    }
+
+    public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    {
+        rw.RwString(ref this.ActualValue, this.ExpectedValue.Length, this._Encoding);
+        if (this.ActualValue != this.ExpectedValue)
+            throw new Exception($"Magic string ({this.ActualValue}) doesn't match expected string ({this.ExpectedValue})");
     }
 }

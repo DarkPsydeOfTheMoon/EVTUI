@@ -294,10 +294,10 @@ public class SceneManager
         switch(errorcode)
         {
             case 0x500:
-                Console.WriteLine("OpenGLError: Invalid Enum");
+                Trace.TraceError("OpenGLError: Invalid Enum");
                 break;
             default:
-                Console.WriteLine("OpenGLError Code: 0x" + String.Format("{0:X}", errorcode));
+                Trace.TraceError("OpenGLError Code: 0x" + String.Format("{0:X}", errorcode));
                 break;
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -162,7 +163,7 @@ public class ScriptManager
                                     }
                                     messageCues.Add(node.FunctionArguments[3], new MessageCue(speakerName, turnName, indWithinTurn+1));
                                 }
-                            } catch {}
+                            } catch (Exception ex) { Trace.TraceError(ex.ToString()); }
                         }
             }
             return eventCues;
@@ -451,6 +452,7 @@ public class ScriptManager
         }
         catch (Exception ex)
         {
+            Trace.TraceError(ex.ToString());
             this.ScriptErrors["BMD"][fileBase] = ex.ToString();
         }
     }
@@ -476,6 +478,7 @@ public class ScriptManager
         }
         catch (Exception ex)
         {
+            Trace.TraceError(ex.ToString());
             listener.Text += ex.ToString();
         }
         return listener.Text;
@@ -507,6 +510,7 @@ public class ScriptManager
         }
         catch (Exception ex)
         {
+            Trace.TraceError(ex.ToString());
             listener.Text += ex.ToString();
         }
         this.ScriptErrors["BF"][fileBase] = listener.Text;
@@ -539,6 +543,7 @@ public class ScriptManager
         }
         catch (Exception ex)
         {
+            Trace.TraceError(ex.ToString());
             listener.Text += ex.ToString();
         }
         Directory.SetCurrentDirectory(oldWorkingDir);
@@ -736,8 +741,9 @@ public class ScriptManager
                     else
                         encoded += this.EnCharLookup[(high, unencoded.Dequeue())];
                 }
-                catch (KeyNotFoundException)
+                catch (KeyNotFoundException ex)
                 {
+                    Trace.TraceError(ex.ToString());
                     encoded += "*";
                 }
             else if (high != 0)

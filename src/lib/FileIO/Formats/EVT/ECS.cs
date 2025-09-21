@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 using DeepCopy;
 
@@ -11,16 +12,15 @@ namespace EVTUI;
 
 public class ECS : ISerializable
 {
-    private static UInt32 ENTRY_OFFSET = 16;
-    private static UInt32 RESERVE      = 0;
-
     public static HashSet<string> ValidEcsCommands = new HashSet<string> {"SBEA", "SBE_", "SFts", "Snd_"};
 
-    public bool   IsLittleEndian = false;
-    public Int32  CommandCount   = 0;
-    public UInt32 CommandOffset  = ECS.ENTRY_OFFSET;
-    public UInt32 CommandSize    = EVT.ENTRY_SIZE;
-    public UInt32 Reserve        = ECS.RESERVE;
+    public bool    IsLittleEndian = false;
+    private UInt32 TestOffset;
+
+    public PositionalInt32  CommandCount   = new PositionalInt32();
+    public ConstUInt32      CommandOffset  = new ConstUInt32(16);
+    public ConstUInt32      CommandSize    = new ConstUInt32(48);
+    public ConstUInt32      Reserve        = new ConstUInt32(0);
 
     public SerialCommand[] Commands    = new SerialCommand[0];
     public ArrayList       CommandData = new ArrayList();
@@ -28,13 +28,17 @@ public class ECS : ISerializable
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
         if (rw.IsConstructlike())
+            Trace.TraceInformation("Reading ECS file");
+        else if (rw.IsParselike())
+            Trace.TraceInformation("Writing ECS file");
+
+        if (rw.IsConstructlike())
         {
             this.IsLittleEndian = false;
             rw.SetLittleEndian(this.IsLittleEndian);
-            rw.RwInt32(ref this.CommandCount);
-            rw.RwUInt32(ref this.CommandOffset);
-            rw.RwUInt32(ref this.CommandSize);
-            if (this.CommandSize != EVT.ENTRY_SIZE)
+            rw.RwObj(ref this.CommandCount);
+            rw.RwUInt32(ref this.TestOffset);
+            if (this.TestOffset != 16)
             {
                 this.IsLittleEndian = true;
                 rw.SetLittleEndian(this.IsLittleEndian);
@@ -44,29 +48,20 @@ public class ECS : ISerializable
         else if (rw.IsParselike())
             rw.SetLittleEndian(this.IsLittleEndian);
 
-        if (rw.IsParselike())
-            this.CommandCount = this.Commands.Length;
-        rw.RwInt32(ref this.CommandCount);
+        this.CommandCount.Validate(this.Commands.Length, rw.IsParselike());
+        rw.RwObj(ref this.CommandCount);
 
-        rw.RwUInt32(ref this.CommandOffset);
-        Trace.Assert(this.CommandOffset == ECS.ENTRY_OFFSET, $"ECS command offset ({this.CommandOffset}) does not match expected offset ({ECS.ENTRY_OFFSET})");
+        rw.RwObj(ref this.CommandOffset);
+        rw.RwObj(ref this.CommandSize);
+        rw.RwObj(ref this.Reserve);
 
-        rw.RwUInt32(ref this.CommandSize);
-        Trace.Assert(this.CommandSize == EVT.ENTRY_SIZE, $"ECS command size ({this.CommandSize}) does not match expected offset ({EVT.ENTRY_SIZE})");
-
-        rw.RwUInt32(ref this.Reserve);
-        Trace.Assert(this.Reserve == ECS.RESERVE, $"ECS reserve ({this.Reserve}) does not match expected value ({ECS.RESERVE})");
-
-        if (rw.IsParselike())
-            this.CommandOffset = (uint)rw.RelativeTell();
-        Trace.Assert(this.CommandOffset == rw.RelativeTell(), $"Stream position should be at end of ECS header ({this.CommandOffset}) but is instead at position {rw.RelativeTell()}");
-
-        rw.RwObjs(ref this.Commands, this.CommandCount);
-        Trace.Assert(this.Commands.Length == this.CommandCount, $"Number of commands ({this.Commands.Length}) doesn't match expected CommandCount ({this.CommandCount})");
+        if (rw.IsConstructlike())
+            this.Commands = Enumerable.Range(0, this.CommandCount.Value).Select(i => new SerialCommand()).ToArray();
+        rw.RwObjs(ref this.Commands, this.CommandCount.Value);
 
         if (rw.IsConstructlike())
            this.CommandData = new ArrayList();
-        for (var i=0; i<this.CommandCount; i++) {
+        for (var i=0; i<this.CommandCount.Value; i++) {
             if (rw.IsConstructlike())
             {
                 Type commandType = typeof(CommandTypes).GetNestedType(this.Commands[i].CommandCode);
@@ -75,9 +70,7 @@ public class ECS : ISerializable
                 else
                     this.CommandData.Add(Activator.CreateInstance(commandType));
             }
-            if (rw.IsParselike())
-                this.Commands[i].DataOffset = (int)rw.RelativeTell();
-            Trace.Assert(this.Commands[i].DataOffset == rw.RelativeTell());
+            this.Commands[i].DataOffset.Validate((int)rw.RelativeTell(), rw.IsParselike());
             rw.RwObj((ISerializable)this.CommandData[i], new Dictionary<string, object>()
                 { ["dataSize"]  = this.Commands[i].DataSize });
         }
@@ -87,18 +80,15 @@ public class ECS : ISerializable
 
     public bool DeleteCommand(int index)
     {
-        if (index < 0 || index >= this.CommandCount)
+        if (index < 0 || index >= this.CommandCount.Value || this.Commands.Length != this.CommandData.Count)
             return false;
 
         List<SerialCommand> cmdList = new List<SerialCommand>(this.Commands);
         cmdList.RemoveAt(index);
         this.Commands = cmdList.ToArray();
-        Trace.Assert(this.Commands.Length == this.CommandCount-1);
-
         this.CommandData.RemoveAt(index);
-        Trace.Assert(this.CommandData.Count == this.CommandCount-1);
 
-        this.CommandCount -= 1;
+        this.CommandCount.Validate(this.Commands.Length, true);
         return true;
     }
 
@@ -110,11 +100,10 @@ public class ECS : ISerializable
         List<SerialCommand> cmdList = new List<SerialCommand>(this.Commands);
         cmdList.Add(newCmd);
         this.Commands = cmdList.ToArray();
-
         this.CommandData.Add(DeepCopier.Copy(cmdData));
 
-        this.CommandCount += 1;
-        return this.CommandCount-1;
+        this.CommandCount.Validate(this.Commands.Length, true);
+        return this.CommandCount.Value-1;
     }
 
     public int NewCommand(string commandCode, int frameStart)
@@ -122,7 +111,7 @@ public class ECS : ISerializable
         Type commandType = typeof(CommandTypes).GetNestedType(commandCode);
         if (commandType == null)
         {
-            Console.WriteLine($"Unsupported new command type: {commandCode}");
+            Trace.TraceWarning($"Unsupported new command type: {commandCode}");
             return -1;
         }
 
@@ -135,11 +124,10 @@ public class ECS : ISerializable
         List<SerialCommand> cmdList = new List<SerialCommand>(this.Commands);
         cmdList.Add(newCmd);
         this.Commands = cmdList.ToArray();
-
         this.CommandData.Add(Activator.CreateInstance(commandType));
 
-        this.CommandCount += 1;
-        return this.CommandCount-1;
+        this.CommandCount.Validate(this.Commands.Length, true);
+        return this.CommandCount.Value-1;
     }
 
     public void Write(string filepath)

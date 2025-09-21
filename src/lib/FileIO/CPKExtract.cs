@@ -6,6 +6,7 @@ using CriFsV2Lib.Definitions.Utilities;
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -180,13 +181,13 @@ public static class CPKExtract
                 retval.awbPaths.Add(candidatePath);
             else
                 return false;
-            Console.WriteLine(candidatePath);
+            Trace.TraceInformation($"Found file path to load: {candidatePath}");
             return true;
         }
 
         Parallel.ForEach(CpkList, CpkPath =>
         {
-            Console.WriteLine(CpkPath);
+            Trace.TraceInformation($"Loading from CPK: {CpkPath}");
             CpkFile[] files;
             using (var fileStream = new FileStream(CpkPath, FileMode.Open))
             using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, decryptionFunction))

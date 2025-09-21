@@ -1796,7 +1796,7 @@
                     </ItemsPanelTemplate>
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.Styles>
-                    <Style Selector="ContentPresenter"> <!--x:DataType="vm:CommandPointer"-->
+                    <Style Selector="ItemsControl > ContentPresenter" x:DataType="vm:CommandPointer">
                       <Setter Property="Canvas.Left" Value="{c:Binding 85*Frame + 10}"/>
                     </Style>
                     <Style Selector="ItemsControl.show > ContentPresenter">

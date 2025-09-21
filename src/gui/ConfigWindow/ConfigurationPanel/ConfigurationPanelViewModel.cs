@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -445,12 +446,14 @@ public class ConfigurationPanelViewModel : ViewModelBase
             else if (!this.Config.EventLoaded)
                 return (1, $"Event E{this.EventMajorId:000}_{this.EventMinorId:000} does not exist and could not be loaded.");
         }
-        catch (IOException)
+        catch (IOException ex)
         {
+            Trace.TraceError(ex.ToString());
             return (1, "Failed to load event because the game files are in use.\nIf the game is currently open, close it before trying again.");
         }
         catch (Exception ex)
         {
+            Trace.TraceError(ex.ToString());
             return (1, "Failed to extract EVT due to unhandled exception: '" + ex.ToString() + "'");
         }
 

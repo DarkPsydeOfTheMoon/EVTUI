@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -217,7 +218,7 @@ public class EventManager
                 pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{obj.ResourceMajorId:000}_{obj.ResourceMinorId:000}_{obj.ResourceSubId}\\.GFS";
                 break;
             default:
-                Console.WriteLine(obj.Type);
+                Trace.TraceWarning($"Unknown asset type: {obj.Type}");
                 break;
         }
         if (pattern == "")

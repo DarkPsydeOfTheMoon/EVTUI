@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using Serialization;
 
@@ -22,7 +21,7 @@ public partial class CommandTypes
         public UInt32 UpdateIntervalMinimumFrameValue = 150;
         public UInt32 UpdateIntervalRandomFrame = 60;
 
-        public UInt32 UNUSED_UINT32;
+        public ConstUInt32 UNUSED_UINT32 = new ConstUInt32();
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
@@ -36,8 +35,7 @@ public partial class CommandTypes
             rw.RwUInt32(ref this.UpdateIntervalMinimumFrameValue);
             rw.RwUInt32(ref this.UpdateIntervalRandomFrame);
 
-            rw.RwUInt32(ref this.UNUSED_UINT32);
-            Trace.Assert(this.UNUSED_UINT32 == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32}) in reserve variable.");
+            rw.RwObj(ref this.UNUSED_UINT32, args);
         }
     }
 }

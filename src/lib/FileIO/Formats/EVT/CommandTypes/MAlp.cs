@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 using Serialization;
 
@@ -16,24 +15,20 @@ public partial class CommandTypes
         public UInt32 InterpolationParameters = 4354;
         public byte TranslucentMode;
 
-        public byte UNUSED_UINT8;
-        public UInt16 UNUSED_UINT16;
-        public UInt32 UNUSED_UINT32;
+        public ConstUInt8  UNUSED_UINT8  = new ConstUInt8();
+        public ConstUInt16 UNUSED_UINT16 = new ConstUInt16();
+        public ConstUInt32 UNUSED_UINT32 = new ConstUInt32();
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            rw.RwUInt32(ref this.UNUSED_UINT32);
-            Trace.Assert(this.UNUSED_UINT32 == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32}) in reserve variable.");
+            rw.RwObj(ref this.UNUSED_UINT32, args);
 
             rw.RwUInt8s(ref this.RGBA, 4);
             rw.RwUInt32(ref this.InterpolationParameters);
             rw.RwUInt8(ref this.TranslucentMode);
 
-            rw.RwUInt8(ref this.UNUSED_UINT8);
-            Trace.Assert(this.UNUSED_UINT8 == 0, $"Unexpected nonzero value ({this.UNUSED_UINT8}) in reserve variable.");
-            rw.RwUInt16(ref this.UNUSED_UINT16);
-            Trace.Assert(this.UNUSED_UINT16 == 0, $"Unexpected nonzero value ({this.UNUSED_UINT16}) in reserve variable.");
-
+            rw.RwObj(ref this.UNUSED_UINT8, args);
+            rw.RwObj(ref this.UNUSED_UINT16, args);
         }
     }
 }

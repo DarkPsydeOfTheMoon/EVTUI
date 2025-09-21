@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 using Serialization;
@@ -11,8 +12,8 @@ namespace EVTUI;
 public class Afs2 : ISerializable
 {
     public const string MAGIC = "AFS2";
+    public MagicString Magic = new MagicString(Afs2.MAGIC);
 
-    public string     Magic;
     public byte       Type;
     public byte       PositionFieldLength;
     public byte       IdFieldLength;
@@ -28,10 +29,14 @@ public class Afs2 : ISerializable
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
+        if (rw.IsConstructlike())
+            Trace.TraceInformation("Reading AFS2 object");
+        else if (rw.IsParselike())
+            Trace.TraceInformation("Writing AFS2 object");
+
         rw.SetLittleEndian(true);
 
-        rw.RwString(ref this.Magic, 4, Encoding.ASCII);
-        Trace.Assert(this.Magic == Afs2.MAGIC, $"Magic string ({this.Magic}) doesn't match expected string ({Afs2.MAGIC})");
+        rw.RwObj(ref this.Magic);
 
         rw.RwUInt8(ref this.Type);
         rw.RwUInt8(ref this.PositionFieldLength);
@@ -41,11 +46,16 @@ public class Afs2 : ISerializable
         rw.RwInt32(ref this.EntryCount);
         rw.RwUInt32(ref this.Align);
 
-        rw.RwObjs(ref EntryIds, this.EntryCount, new Dictionary<string, object>()
+        if (rw.IsConstructlike())
+        {
+            this.EntryIds = Enumerable.Range(0, this.EntryCount).Select(i => new AfsValue()).ToArray();
+            this.EntryPositions = Enumerable.Range(0, this.EntryCount).Select(i => new AfsValue()).ToArray();
+        }
+        rw.RwObjs(ref this.EntryIds, this.EntryCount, new Dictionary<string, object>()
             { ["fieldLength"] = this.IdFieldLength });
-        rw.RwObjs(ref EntryPositions, this.EntryCount, new Dictionary<string, object>()
+        rw.RwObjs(ref this.EntryPositions, this.EntryCount, new Dictionary<string, object>()
             { ["fieldLength"] = this.PositionFieldLength });
-        rw.RwObj(ref EndPosition, new Dictionary<string, object>()
+        rw.RwObj(ref this.EndPosition, new Dictionary<string, object>()
             { ["fieldLength"] = this.PositionFieldLength });
 
         if (this.EntryCount > 1)

@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 
 using Avalonia;
@@ -25,12 +26,14 @@ public partial class EditorWindow : Window
             ((EditorWindowViewModel)DataContext).SaveMod(((MenuItem)sender).Name);
             await Utils.RaiseModal(this, "Saved successfully!");
         }
-        catch (IOException)
+        catch (IOException ex)
         {
+            Trace.TraceError(ex.ToString());
             await Utils.RaiseModal(this, "Failed to save because the game files are in use.\nIf the game is currently open, close it before trying again.");
         }
         catch (Exception ex)
         {
+            Trace.TraceError(ex.ToString());
             await Utils.RaiseModal(this, "Failed to save due to unhandled exception: '" + ex.ToString() + "'");
         }
     }

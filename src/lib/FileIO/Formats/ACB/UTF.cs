@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 
 using Serialization;
@@ -10,8 +11,8 @@ namespace EVTUI;
 public class UtfTable : ISerializable
 {
     public const string MAGIC = "@UTF";
+    public MagicString Magic = new MagicString(UtfTable.MAGIC);
 
-    public string    Magic;
     public UInt32    TableSize;
     public byte      ReservedByte;
     public byte      EncodingType;
@@ -28,10 +29,14 @@ public class UtfTable : ISerializable
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
+        if (rw.IsConstructlike())
+            Trace.TraceInformation("Reading UTF object");
+        else if (rw.IsParselike())
+            Trace.TraceInformation("Writing UTF object");
+
         rw.SetLittleEndian(false);
 
-        rw.RwString(ref this.Magic, 4, Encoding.ASCII);
-        Trace.Assert(this.Magic == UtfTable.MAGIC, $"Magic string ({this.Magic}) doesn't match expected string ({UtfTable.MAGIC})");
+        rw.RwObj(ref this.Magic);
 
         rw.RwUInt32(ref this.TableSize);
         rw.RwUInt8(ref this.ReservedByte);
@@ -53,7 +58,7 @@ public class UtfTable : ISerializable
 
         if (rw.IsConstructlike())
         {
-            UtfField[] fields = new UtfField[this.ColumnCount];
+            UtfField[] fields = Enumerable.Range(0, this.ColumnCount).Select(i => new UtfField()).ToArray();
             rw.RwObjs(ref fields, this.ColumnCount, new Dictionary<string, object>()
             {
                 ["stringsOffset"] = this.StringsOffset + 8,

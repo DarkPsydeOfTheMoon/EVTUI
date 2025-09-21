@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using ReactiveUI;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.ReactiveUI;
 
@@ -133,20 +134,28 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
 
     public async void UseSelectedEvent(object sender, RoutedEventArgs e)
     {
+        this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
         var retTuple = ViewModel!.TryLoadEvent(true);
         if (retTuple.Status == 0)
             this.topLevel.Close(0);
         else
+        {
+            this.topLevel.Cursor = Cursor.Default;
             await Utils.RaiseModal(this.topLevel, retTuple.Message);
+        }
     }
 
     public async void UseEnteredEvent(object sender, RoutedEventArgs e)
     {
+        this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
         var retTuple = ViewModel!.TryLoadEvent(false);
         if (retTuple.Status == 0)
             this.topLevel.Close(0);
         else
+        {
+            this.topLevel.Cursor = Cursor.Default;
             await Utils.RaiseModal(this.topLevel, retTuple.Message);
+        }
     }
 
 }

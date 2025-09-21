@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 using Serialization;
 
@@ -27,12 +28,13 @@ public partial class CommandTypes
         public AnimationStruct MovingAnimation = new AnimationStruct(loopBool:1);
         public AnimationStruct WaitingAnimation = new AnimationStruct(loopBool:1);
 
-        public UInt16   UNUSED_UINT16;
-        public UInt32[] UNUSED_UINT32 = new UInt32[8];
+        public ConstUInt16   UNUSED_UINT16 = new ConstUInt16();
+        public ConstUInt32[] UNUSED_UINT32 = Enumerable.Range(0, 8).Select(i => new ConstUInt32()).ToArray();
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            Trace.Assert((int)args["dataSize"] == 96 || (int)args["dataSize"] == 384);
+            if ((int)args["dataSize"] != 96 && (int)args["dataSize"] != 384)
+                throw new Exception($"MMD_ command should have dataSize 96 or 384; instead has {(int)args["dataSize"]}");
 
             rw.RwUInt32(ref this.InterpolationType);
             rw.RwUInt32(ref this.NumControlGroups);
@@ -49,8 +51,7 @@ public partial class CommandTypes
             rw.RwUInt8(ref this.StartSpeedType);
             rw.RwUInt8(ref this.FinalSpeedType);
 
-            rw.RwUInt16(ref this.UNUSED_UINT16);
-            Trace.Assert(this.UNUSED_UINT16 == 0, $"Unexpected nonzero value ({this.UNUSED_UINT16}) in reserve variable.");
+            rw.RwObj(ref this.UNUSED_UINT16, args);
 
             rw.RwUInt32(ref this.MovingAnimation.Index);
             rw.RwUInt32(ref this.MovingAnimation.InterpolatedFrames);
@@ -58,9 +59,9 @@ public partial class CommandTypes
             rw.RwFloat32(ref this.MovingAnimation.PlaybackSpeed);
             rw.RwUInt32(ref this.MovingAnimation.StartingFrame);
 
-            rw.RwUInt32(ref this.UNUSED_UINT32[0]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[1]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[2]);
+            rw.RwObj(ref this.UNUSED_UINT32[0], args);
+            rw.RwObj(ref this.UNUSED_UINT32[1], args);
+            rw.RwObj(ref this.UNUSED_UINT32[2], args);
 
             rw.RwUInt32(ref this.WaitingAnimation.Index);
             rw.RwUInt32(ref this.WaitingAnimation.InterpolatedFrames);
@@ -68,14 +69,11 @@ public partial class CommandTypes
             rw.RwFloat32(ref this.WaitingAnimation.PlaybackSpeed);
             rw.RwUInt32(ref this.WaitingAnimation.StartingFrame);
 
-            rw.RwUInt32(ref this.UNUSED_UINT32[3]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[4]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[5]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[6]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[7]);
-
-            for (int i=0; i<this.UNUSED_UINT32.Length; i++)
-                Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[i]}) in reserve variable.");
+            rw.RwObj(ref this.UNUSED_UINT32[3], args);
+            rw.RwObj(ref this.UNUSED_UINT32[4], args);
+            rw.RwObj(ref this.UNUSED_UINT32[5], args);
+            rw.RwObj(ref this.UNUSED_UINT32[6], args);
+            rw.RwObj(ref this.UNUSED_UINT32[7], args);
         }
     }
 }

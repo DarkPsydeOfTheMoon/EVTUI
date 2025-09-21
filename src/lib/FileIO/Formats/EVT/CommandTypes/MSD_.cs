@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 
 using Serialization;
 
@@ -19,11 +19,12 @@ public partial class CommandTypes
 
         public Bitfield32 Flags = new Bitfield32();
 
-        public UInt32[] UNUSED_UINT32 = new UInt32[4];
+        public ConstUInt32[] UNUSED_UINT32 = Enumerable.Range(0, 4).Select(i => new ConstUInt32()).ToArray();
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            Trace.Assert((int)args["dataSize"] == 48 || (int)args["dataSize"] == 64);
+            if ((int)args["dataSize"] != 48 && (int)args["dataSize"] != 64)
+                throw new Exception($"MSD_ command should have dataSize 48 or 64; instead has {(int)args["dataSize"]}");
 
             rw.RwFloat32s(ref this.Position, 3);
             rw.RwFloat32s(ref this.Rotation, 3);
@@ -38,11 +39,7 @@ public partial class CommandTypes
             rw.RwUInt32(ref this.WaitingAnimation.StartingFrame);
 
             if ((int)args["dataSize"] == 64)
-                for (var i=0; i<4; i++)
-                {
-                    rw.RwUInt32(ref this.UNUSED_UINT32[i]); // observed values: 0
-                    Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[i]}) in MSD_ reserve variable.");
-                }
+                rw.RwObjs(ref this.UNUSED_UINT32, 4, args);
         }
     }
 }
