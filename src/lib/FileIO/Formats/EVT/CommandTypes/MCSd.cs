@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 
 using Serialization;
 
@@ -20,7 +20,7 @@ public partial class CommandTypes
         public UInt16 InnerCircleDiameter = 20;
         public UInt16 OuterCircleDiameter = 40;
 
-        public UInt32[] UNUSED_UINT32 = new UInt32[4];
+        public ConstUInt32[] UNUSED_UINT32 = Enumerable.Range(0, 4).Select(i => new ConstUInt32()).ToArray();
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
@@ -29,17 +29,14 @@ public partial class CommandTypes
             rw.RwUInt32(ref this.InnerCircleRGBA);
             rw.RwUInt32(ref this.OuterCircleRGBA);
 
-            rw.RwUInt32(ref this.UNUSED_UINT32[0]);
+            rw.RwObj(ref this.UNUSED_UINT32[0], args);
 
             rw.RwUInt16(ref this.InnerCircleDiameter);
             rw.RwUInt16(ref this.OuterCircleDiameter);
 
-            rw.RwUInt32(ref this.UNUSED_UINT32[1]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[2]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[3]);
-
-            for (int i=0; i<this.UNUSED_UINT32.Length; i++)
-                Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[i]}) in reserve variable.");
+            rw.RwObj(ref this.UNUSED_UINT32[1], args);
+            rw.RwObj(ref this.UNUSED_UINT32[2], args);
+            rw.RwObj(ref this.UNUSED_UINT32[3], args);
         }
     }
 }

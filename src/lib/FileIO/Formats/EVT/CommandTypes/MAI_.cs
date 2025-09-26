@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 using Serialization;
@@ -17,11 +16,11 @@ public partial class CommandTypes
 
         public AnimationStruct[] IdleAnimations = Enumerable.Range(0, 10).Select(_ => new AnimationStruct(endingFrame:0)).ToArray();
 
-        public UInt32[] UNUSED_UINT32 = new UInt32[4];
+        public ConstUInt32[] UNUSED_UINT32 = Enumerable.Range(0, 4).Select(i => new ConstUInt32()).ToArray();
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            rw.RwUInt32(ref this.UNUSED_UINT32[0]);
+            rw.RwObj(ref this.UNUSED_UINT32[0], args);
 
             for (int i=0; i<10; i++)
             {
@@ -33,12 +32,9 @@ public partial class CommandTypes
                 rw.RwFloat32(ref this.IdleAnimations[i].PlaybackSpeed);
             }
 
-            rw.RwUInt32(ref this.UNUSED_UINT32[1]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[2]);
-            rw.RwUInt32(ref this.UNUSED_UINT32[3]);
-
-            for (int i=0; i<this.UNUSED_UINT32.Length; i++)
-                Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[i]}) in reserve variable.");
+            rw.RwObj(ref this.UNUSED_UINT32[1], args);
+            rw.RwObj(ref this.UNUSED_UINT32[2], args);
+            rw.RwObj(ref this.UNUSED_UINT32[3], args);
         }
     }
 }

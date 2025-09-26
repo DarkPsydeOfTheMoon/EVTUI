@@ -93,8 +93,6 @@ public class DataManager
         this.WorkingPath = Path.Combine(this.WorkingPathBase, Hashify(this.CpkPath));
         if (!Directory.Exists(this.WorkingPath))
             Directory.CreateDirectory(this.WorkingPath);
-
-        Console.WriteLine("#######################################");
     }
 
     public bool LoadEvent(int majorId, int minorId)

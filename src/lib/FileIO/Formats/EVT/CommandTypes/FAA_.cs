@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 
 using Serialization;
 
@@ -20,7 +20,7 @@ public partial class CommandTypes
         public AnimationStruct FirstAnimation = new AnimationStruct(loopBool:0, endingFrame:0, weight:1.0F);
         public AnimationStruct SecondAnimation = new AnimationStruct(loopBool:0, endingFrame:0, weight:1.0F);
 
-        public UInt32[] UNUSED_UINT32 = new UInt32[3];
+        public ConstUInt32[] UNUSED_UINT32 = Enumerable.Range(0, 3).Select(i => new ConstUInt32()).ToArray();
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
@@ -29,7 +29,7 @@ public partial class CommandTypes
 
             rw.RwObj(ref this.Flags);
 
-            rw.RwUInt32(ref this.UNUSED_UINT32[0]);
+            rw.RwObj(ref this.UNUSED_UINT32[0], args);
 
             rw.RwUInt32(ref this.FirstAnimation.Index);
             rw.RwUInt32(ref this.FirstAnimation.StartingFrame);
@@ -39,7 +39,7 @@ public partial class CommandTypes
             rw.RwFloat32(ref this.FirstAnimation.Weight);
             rw.RwFloat32(ref this.FirstAnimation.PlaybackSpeed);
 
-            rw.RwUInt32(ref this.UNUSED_UINT32[1]);
+            rw.RwObj(ref this.UNUSED_UINT32[1], args);
 
             rw.RwUInt32(ref this.SecondAnimation.Index);
             rw.RwUInt32(ref this.SecondAnimation.StartingFrame);
@@ -49,10 +49,7 @@ public partial class CommandTypes
             rw.RwFloat32(ref this.SecondAnimation.Weight);
             rw.RwFloat32(ref this.SecondAnimation.PlaybackSpeed);
 
-            rw.RwUInt32(ref this.UNUSED_UINT32[2]);
-
-            for (int i=1; i<this.UNUSED_UINT32.Length; i++)
-                Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[i]}) in reserve variable.");
+            rw.RwObj(ref this.UNUSED_UINT32[2], args);
         }
     }
 }

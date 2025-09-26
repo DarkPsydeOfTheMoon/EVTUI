@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -15,5 +16,15 @@ public static class Utils
                 sb.Append($"{b:X2}");
         }
         return sb.ToString();
+    }
+
+    public static void CheckBytes(byte[] bytes, byte expectedValue)
+    {
+        foreach (byte actualValue in bytes)
+            if (actualValue != expectedValue)
+            {
+                Trace.TraceWarning($"Expected sequence of bytes with value {expectedValue} but reached a byte with value {actualValue} instead");
+                break;
+            }
     }
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
 namespace EVTUI;
@@ -152,7 +151,8 @@ public class ProjectManager
     {
         lock (this.UserData)
         {
-            Trace.Assert(projInd >= 0 && projInd < this.UserData.Projects.Count && this.UserData.Projects.Count > 0, "User project data is corrupted.");
+            if (projInd < 0 || projInd >= this.UserData.Projects.Count || this.UserData.Projects.Count <= 0)
+                throw new Exception("User project data is corrupted.");
 
             if (projInd > 0)
             {
@@ -176,7 +176,8 @@ public class ProjectManager
                     break;
                 }
 
-            Trace.Assert(!(this.ActiveGame is null) && !(this.ActiveProject is null), "Game specified for project doesn't exist.");
+            if (this.ActiveGame is null || this.ActiveProject is null)
+                throw new Exception("Game specified for project doesn't exist.");
 
             this.ModdedFileDir = this.ActiveProject.Mod.Path;
             if (this.HasFramework("P5REssentials"))
@@ -205,7 +206,8 @@ public class ProjectManager
     {
         lock (this.UserData)
         {
-            Trace.Assert(gameInd >= 0 && gameInd < this.UserData.Games.Count && this.UserData.Games.Count > 0, "User game path data is corrupted.");
+            if (gameInd < 0 || gameInd >= this.UserData.Games.Count || this.UserData.Games.Count <= 0)
+                throw new Exception("User game path data is corrupted.");
 
             if (gameInd > 0)
             {

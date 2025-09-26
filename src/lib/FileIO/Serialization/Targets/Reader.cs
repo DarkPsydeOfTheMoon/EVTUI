@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+//using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -111,12 +111,8 @@ namespace Serialization
         }
         public void RwObjs<T>(ref T[] objs, int count, Dictionary<string, object> args = null) where T : ISerializable 
         {
-             objs = new T[count];
              for (int i=0; i < count; ++i)
-             {
-                objs[i] = (T) typeof(T).GetConstructors().First().Invoke([]);
                 this.RwObj(objs[i], args);
-             }
         }
 
         // Stream Manipulation
@@ -164,7 +160,8 @@ namespace Serialization
             int skiplength = (int)IBaseBinaryTarget.GetAlignment(position, alignment);
             var buf = this.bytestream.ReadBytes(skiplength);
             foreach (var v in buf)
-                Trace.Assert(v == 0x00, "Expected alignment buffer to be 0x00");
+                if (v != 0x00)
+                    throw new Exception("Expected alignment buffer to be 0x00");
         }
 
         public bool IsEOF()
@@ -174,7 +171,8 @@ namespace Serialization
 
         public void AssertEOF()
         {
-            Trace.Assert(this.IsEOF(), "Finished reading the stream before EOF was reached");
+            if (!this.IsEOF())
+                throw new Exception("Finished reading the stream before EOF was reached");
         }
     }
 }

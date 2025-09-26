@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 
 using Serialization;
 
@@ -23,7 +23,7 @@ public partial class CommandTypes
         public Int32 ModelObjectId;
         public UInt32 HelperId;
 
-        public UInt32[] UNUSED_UINT32 = new UInt32[2];
+        public ConstUInt32[] UNUSED_UINT32 = Enumerable.Range(0, 2).Select(i => new ConstUInt32()).ToArray();
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
@@ -38,11 +38,8 @@ public partial class CommandTypes
             rw.RwInt32(ref this.ModelObjectId);
             rw.RwUInt32(ref this.HelperId);
 
-            for (int i=0; i<this.UNUSED_UINT32.Length; i++)
-            {
-                rw.RwUInt32(ref this.UNUSED_UINT32[i]);
-                Trace.Assert(this.UNUSED_UINT32[i] == 0, $"Unexpected nonzero value ({this.UNUSED_UINT32[1]}) in reserve variable.");
-            }
+            rw.RwObj(ref this.UNUSED_UINT32[0], args);
+            rw.RwObj(ref this.UNUSED_UINT32[1], args);
         }
     }
 }

@@ -19,7 +19,7 @@ public class BMD : ISerializable
     public UInt32 FileSize;
 
     public string Endianness;
-    public string Magic;
+    public MagicString Magic = new MagicString(BMD.MAGIC);
 
     public UInt32 ExtSize;
     public UInt32 RelocationTableOffset;
@@ -46,6 +46,11 @@ public class BMD : ISerializable
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
+        if (rw.IsConstructlike())
+            Trace.TraceInformation("Reading BMD object");
+        else if (rw.IsParselike())
+            Trace.TraceInformation("Writing BMD object");
+
         rw.RwUInt8(ref this.FileType);
         rw.RwUInt8(ref this.Format);
         rw.RwUInt16(ref this.UserId);
@@ -56,8 +61,7 @@ public class BMD : ISerializable
         if (this.Endianness == "0")
             rw.SetLittleEndian(true);
 
-        rw.RwString(ref this.Magic, 3, Encoding.ASCII);
-        Trace.Assert(this.Magic == BMD.MAGIC, $"Magic string ({this.Magic}) doesn't match expected string ({BMD.MAGIC})");
+        rw.RwObj(ref this.Magic);
 
         rw.RwUInt32(ref this.ExtSize);
         rw.RwUInt32(ref this.RelocationTableOffset);

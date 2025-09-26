@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using YamlDotNet.Serialization;
 
+using System.Diagnostics;
+
 namespace EVTUI;
 
 public static class UserCache
@@ -27,13 +29,20 @@ Preferences: {}";
     public static string LocalDir      = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EVTUI");
     public static string UserCacheFile = Path.Combine(LocalDir, "UserCache.yaml");
 
+    public static string                  UserLogPath   = Path.Combine(LocalDir, "UserLog.txt");
+    public static TextWriter              UserLogWriter = File.CreateText(UserLogPath);
+    public static TextWriterTraceListener Logger        = new TextWriterTraceListener(UserLogWriter);
+
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
     public static User InitializeOrLoadUser()
     {
-        if (!Directory.Exists(LocalDir))
-            Directory.CreateDirectory(LocalDir);
+        Console.SetOut(UserLogWriter);
+        Console.SetError(UserLogWriter);
+
+        Trace.Listeners.Add(Logger);
+        Trace.AutoFlush = true;
 
         TextReader yamlStream;
         if (File.Exists(UserCacheFile))
@@ -43,8 +52,9 @@ Preferences: {}";
             {
                 yamlStream = new StreamReader(UserCacheFile);
             }
-            catch
+            catch (Exception ex)
             {
+                Trace.TraceError(ex.ToString());
                 yamlStream = new StringReader(DefaultYaml);
             }
         else

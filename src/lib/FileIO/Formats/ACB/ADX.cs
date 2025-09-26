@@ -6,57 +6,65 @@ using System.Text;
 
 using Serialization;
 
+using static EVTUI.Utils;
+
 namespace EVTUI;
 
 public class Adx : ISerializable
 {
-    public const           ushort HEADER_MAGIC = 0x8000;
-    public static readonly byte[] AUDIO_MAGIC  = Encoding.ASCII.GetBytes("(c)CRI");
-    public const           ushort FOOTER_MAGIC = 0x8001;
+    public ConstUInt16 HeaderMagic = new ConstUInt16(0x8000);
 
-    public UInt16     HeaderMagic;
-    public UInt16     HeaderSize;
-    public byte       EncodingType;
-    public byte       FrameSize;
-    public byte       BitDepth;
-    public byte       ChannelCount;
-    public UInt32     SampleRate;
-    public UInt32     SampleCount;
-    public UInt16     HighpassFreq;
-    public byte       Version;
-    public byte       Revision;
-    public byte       CodingType;
+    public PositionalInt16 HeaderSize = new PositionalInt16();
+
+    public byte   EncodingType;
+    public byte   FrameSize;
+    public byte   BitDepth;
+    public byte   ChannelCount;
+    public UInt32 SampleRate;
+    public UInt32 SampleCount;
+    public UInt16 HighpassFreq;
+    public byte   Version;
+    public byte   Revision;
+    public byte   CodingType;
 
     public UInt32     HistoryPrePad;
     public UInt16[][] HistorySamples;
     public UInt32     HistoryPostPad;
 
-    public UInt16     InsertedSamples;
-    public UInt16     LoopCount;
-    public UInt32     LoopType;
-    public UInt32     LoopStartSample;
-    public UInt32     LoopStartByte;
-    public UInt32     LoopEndSample;
-    public UInt32     LoopEndByte;
+    public UInt16 InsertedSamples;
+    public UInt16 LoopCount;
+    public UInt32 LoopType;
+    public UInt32 LoopStartSample;
+    public UInt32 LoopStartByte;
+    public UInt32 LoopEndSample;
+    public UInt32 LoopEndByte;
 
-    public byte[]     AudioMagic;
-    public int        SamplesPerFrame;
-    public int        FrameCount;
-    public int        AudioSize;
-    public byte[]     AudioDataBytes;
+    public byte[]     MagicPadding;
 
-    public UInt16     FooterMagic;
+    public MagicString AudioMagic = new MagicString("(c)CRI");
+
+    public int    SamplesPerFrame;
+    public int    FrameCount;
+    public int    AudioSize;
+    public byte[] AudioDataBytes;
+
+    public ConstUInt16 FooterMagic = new ConstUInt16(0x8001);
+
     public UInt16     FooterSignature;
     public byte[]     Padding;
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
+        if (rw.IsConstructlike())
+            Trace.TraceInformation("Reading ADX object");
+        else if (rw.IsParselike())
+            Trace.TraceInformation("Writing ADX object");
+
         rw.SetLittleEndian(false);
 
-        rw.RwUInt16(ref this.HeaderMagic);
-        Trace.Assert(this.HeaderMagic == Adx.HEADER_MAGIC, $"Magic string ({this.HeaderMagic}) doesn't match expected string ({Adx.HEADER_MAGIC})");
+        rw.RwObj(ref this.HeaderMagic);
 
-        rw.RwUInt16(ref this.HeaderSize);
+        rw.RwObj(ref this.HeaderSize);
         rw.RwUInt8(ref this.EncodingType);
         rw.RwUInt8(ref this.FrameSize);
         rw.RwUInt8(ref this.BitDepth);
@@ -80,7 +88,7 @@ public class Adx : ISerializable
                 rw.RwUInt32(ref this.HistoryPostPad);
         }
 
-        if (rw.RelativeTell()+24 <= this.HeaderSize)
+        if (rw.RelativeTell()+24 <= this.HeaderSize.Value)
         {
             rw.RwUInt16(ref this.InsertedSamples);
             rw.RwUInt16(ref this.LoopCount);
@@ -94,30 +102,29 @@ public class Adx : ISerializable
             }
         }
 
-        int magicSize = this.HeaderSize+4-(int)rw.RelativeTell();
-        rw.RwBytestring(ref this.AudioMagic, this.HeaderSize+4-(int)rw.RelativeTell());
-        byte[] checkMagic = Enumerable.Repeat((byte)0, this.AudioMagic.Length).ToArray();
-        Array.Copy(Adx.AUDIO_MAGIC, 0, checkMagic, checkMagic.Length-6, 6);
-        Trace.Assert(Enumerable.SequenceEqual(this.AudioMagic, checkMagic), $"Magic audio string doesn't match expected zero-padded '(c)CRI'");
+        int magicPaddingSize = this.HeaderSize.Value+4-(int)rw.RelativeTell()-6;
+        if (magicPaddingSize > 0)
+            rw.RwBytestring(ref this.MagicPadding, magicPaddingSize);
+        //Trace.Assert(Enumerable.SequenceEqual(Enumerable.Repeat((byte)0, magicPaddingSize), this.MagicPadding), "Ending padding should be all zero bytes, but it contains other content");
+        CheckBytes(this.MagicPadding, 0);
+        rw.RwObj(ref this.AudioMagic);
 
-        Trace.Assert(rw.RelativeTell() == this.HeaderSize+4, $"Header size ({rw.RelativeTell}) does not match expected size ({this.HeaderSize+4})");
+        this.HeaderSize.Validate((short)(rw.RelativeTell()-4), rw.IsParselike());
 
         this.SamplesPerFrame = (this.FrameSize - 2) * 2;
-        Trace.Assert(this.SamplesPerFrame == 32, $"Samples per frame ({this.SamplesPerFrame}) does not match expected count (32)");
-
         this.FrameCount = (int)Math.Ceiling((double)this.SampleCount / this.SamplesPerFrame);
         this.AudioSize = (int)this.FrameSize * (int)this.FrameCount * (int)this.ChannelCount;
         rw.RwBytestring(ref this.AudioDataBytes, this.AudioSize);
 
-        rw.RwUInt16(ref this.FooterMagic);
-        Trace.Assert(this.FooterMagic == Adx.FOOTER_MAGIC, $"Magic string ({this.FooterMagic}) doesn't match expected string ({Adx.FOOTER_MAGIC})");
+        rw.RwObj(ref this.FooterMagic);
         rw.RwUInt16(ref this.FooterSignature);
 
         int paddingSize = this.FrameSize - 4;
         if (this.LoopCount > 0 && (rw.RelativeTell() + this.FrameSize) % 2048 > 0)
             paddingSize = this.FrameSize + 2048 - ((int)rw.RelativeTell() + this.FrameSize) % 2048;
         rw.RwBytestring(ref this.Padding, paddingSize);
-        Trace.Assert(Enumerable.SequenceEqual(Enumerable.Repeat((byte)0, paddingSize), this.Padding), "Ending padding should be all zero bytes, but it contains other content");
+        CheckBytes(this.Padding, 0);
+        //Trace.Assert(Enumerable.SequenceEqual(Enumerable.Repeat((byte)0, paddingSize), this.Padding), "Ending padding should be all zero bytes, but it contains other content");
 
         rw.ResetEndianness();
     }
@@ -135,11 +142,12 @@ public class Adx : ISerializable
 
     public void Encrypt(ulong keyCode, byte? codingType)
     {
-        Trace.Assert(!(codingType is null) || this.CodingType != 0, "Must specify coding type for encryption");
-        if (!(codingType is null))
-            this.Revision = (byte)codingType;
-        else
+        if (codingType is null && this.CodingType == 0)
+            Trace.TraceInformation("Failed to specify coding type for encryption");
+        if (codingType is null)
             this.Revision = this.CodingType;
+        else
+            this.Revision = (byte)codingType;
         this.Crypt(keyCode);
     }
 
