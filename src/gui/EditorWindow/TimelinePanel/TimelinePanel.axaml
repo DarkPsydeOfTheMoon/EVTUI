@@ -878,6 +878,16 @@
       </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type cmds:FdS_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding FadeType}"/>
+        <ContentControl Content="{Binding UnkBool}"/>
+      </StackPanel>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type cmds:FAA_}">
       <StackPanel Classes="form">
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
