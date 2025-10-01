@@ -12,7 +12,6 @@ public class FdS_ : Generic
         this.LongName = "Fade (Simple)";
 
         this.FadeType = new StringSelectionField("Fade Type", this.Editable, this.BasicFadeTypes.Backward[this.CommandData.FadeType], this.BasicFadeTypes.Keys);
-        // bits
         this.UnkBool = new BoolChoiceField("Unknown", this.Editable, this.CommandData.UnkBool != 0);
     }
 
