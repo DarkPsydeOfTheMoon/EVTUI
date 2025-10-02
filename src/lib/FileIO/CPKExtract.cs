@@ -132,9 +132,6 @@ public static class CPKExtract
 
     public static CpkEVTContents? ExtractEVTFiles(List<string> CpkList, string eventId, string OutputFolder, string existingFolder, string decryptionFunctionName)
     {
-        // clear it first!
-        CPKExtract.ClearDirectory(OutputFolder);
-
         var retval = new CpkEVTContents();
         Regex eventPattern = new Regex($"[\\\\/]{eventId}([\\\\/\\.]|_SE)", RegexOptions.IgnoreCase);
         bool evtFound = false;
