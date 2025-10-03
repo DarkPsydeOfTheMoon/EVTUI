@@ -206,6 +206,12 @@ public static class CPKExtract
             ArrayRental.Reset();
         });
 
+        // sort them so they can be reverse sorted later in the EventManager
+        // awbPaths is only ever searched in the order of acbPaths so there's no point in sorting it
+        retval.acbPaths.Sort();
+        retval.bfPaths.Sort();
+        retval.bmdPaths.Sort();
+
         // overwrite paths to extracted (vanilla) files with files from mod
         Parallel.ForEach(Directory.GetFiles(existingFolder, "*.*", SearchOption.AllDirectories), ModPath => { maybePickFile(ModPath, true); });
 

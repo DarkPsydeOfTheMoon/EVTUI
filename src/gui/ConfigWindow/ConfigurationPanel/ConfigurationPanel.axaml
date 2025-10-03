@@ -213,6 +213,16 @@
         <StackPanel IsVisible="{Binding AnyRecentProjects}">
           <TextBlock Classes="tabletitle" Text="Recent Projects"/>
           <DataGrid ItemsSource="{Binding ProjectList}" SelectedItem="{Binding ProjectSelection}">
+            <DataGrid.Styles>
+              <Style Selector="DataGridRow">
+                <Setter Property="ContextMenu">
+                  <ContextMenu>
+                    <MenuItem Header="Delete" Click="DeleteProject"/>
+                    <MenuItem Header="Configure" IsEnabled="false"/>
+                  </ContextMenu>
+                </Setter>
+              </Style>
+            </DataGrid.Styles>
             <DataGrid.Columns>
               <DataGridTextColumn Header="Project Name" Binding="{Binding Name}" IsReadOnly="False"/>
               <DataGridTextColumn Header="Notes" Binding="{Binding Notes}" IsReadOnly="False"/>
