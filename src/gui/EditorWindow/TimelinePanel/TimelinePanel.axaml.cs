@@ -167,6 +167,11 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
 
     public void OpenModal(object sender, RoutedEventArgs e)
     {
+        Category category = (Category)(((ItemsControl)LogicalExtensions.GetLogicalParent(
+            (Control)(((Popup)LogicalExtensions.GetLogicalParent(
+                (ContextMenu)LogicalExtensions.GetLogicalParent(
+                    (MenuItem)sender))).PlacementTarget))).DataContext);
+        ViewModel!.SetAddableCodes(category);
         this.ModalIsOpen = true;
     }
 

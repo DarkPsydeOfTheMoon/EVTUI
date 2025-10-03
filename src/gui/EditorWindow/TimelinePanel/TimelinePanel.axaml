@@ -1794,12 +1794,6 @@
       </ScrollViewer>
       <ScrollViewer Name="Scrolly" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="153,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16" PointerPressed="LogPosition">
-          <ScrollViewer.ContextMenu>
-            <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
-              <MenuItem Header="New" Click="OpenModal" />
-              <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).SharedClipboard.HasCopiedCommand}" />
-            </ContextMenu>
-          </ScrollViewer.ContextMenu> 
           <ItemsControl ItemsSource="{Binding Categories}" VerticalAlignment="Stretch">
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
@@ -1810,7 +1804,13 @@
               <DataTemplate>
                 <ItemsControl ItemsSource="{Binding Commands}" MinHeight="40"
                  Classes.show="{Binding IsOpen}"
-                 Classes.hide="{Binding !IsOpen}">
+                 Classes.hide="{Binding !IsOpen}" Background="Transparent">
+                  <ItemsControl.ContextMenu>
+                    <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
+                      <MenuItem Header="New" Click="OpenModal" />
+                      <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).SharedClipboard.HasCopiedCommand}" />
+                    </ContextMenu>
+                  </ItemsControl.ContextMenu> 
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
                       <Canvas MinHeight="40" Height="{c:Binding (IsOpen) ? 60*MaxInOneFrame + 20 : 40}" Width="{c:Binding 85*FrameCount - 5}" Classes.open="{Binding IsOpen}" Classes.closed="{Binding !IsOpen}" HorizontalAlignment="Left"/>

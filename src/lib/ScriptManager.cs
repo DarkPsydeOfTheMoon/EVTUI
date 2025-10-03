@@ -313,7 +313,11 @@ public class ScriptManager
         // TODO: this is dumb, fix this with the file management PR
         foreach (List<string> pathList in new[] { bmdPaths, bfPaths })
             if (!(pathList is null))
-                for (int i = 0; i < pathList.Count; i++)
+                //for (int i = 0; i < pathList.Count; i++)
+                // oh god this is bad and stupid. bandaid solution to go with the sort + reverse thing for the files
+                // otherwise, if the vanilla and mod cpk names are the same and emulator is off, it gets ugly.
+                // TODO TODO TODO oh god TODO
+                for (int i = pathList.Count-1; i >= 0; i--)
                 {
                     string workingPath = null;
                     if (pathList[i].StartsWith(baseDir))

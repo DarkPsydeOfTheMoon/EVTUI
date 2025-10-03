@@ -38,8 +38,8 @@ Preferences: {}";
     ////////////////////////////
     public static User InitializeOrLoadUser()
     {
-        Console.SetOut(UserLogWriter);
-        Console.SetError(UserLogWriter);
+        //Console.SetOut(UserLogWriter);
+        //Console.SetError(UserLogWriter);
 
         Trace.Listeners.Add(Logger);
         Trace.AutoFlush = true;

@@ -182,7 +182,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
     public bool AnyRecentGames { get => (!(this.GameList is null) && this.GameList.Count > 0); }
     public bool NoRecentGames  { get { return !this.AnyRecentGames; } }
 
-    public ObservableCollection<DisplayableProject> ProjectList      { get; }
+    public ObservableCollection<DisplayableProject> ProjectList      { get; set; }
     public DisplayableProject                       ProjectSelection { get; set; }
     public bool AnyRecentProjects { get => (this.Config.AllProjects.Count > 0); }
     public bool NoRecentProjects { get => !this.AnyRecentProjects; }
@@ -363,6 +363,27 @@ public class ConfigurationPanelViewModel : ViewModelBase
             return (1, "No project loaded.");
 
         return (0, $"Loaded project \"{this.Config.ProjectManager.ActiveProject.Name}\"!");
+    }
+
+    public (int Status, string Message) TryDeleteProject(DisplayableProject project)
+    {
+        if (this.Config.CheckIfProjOpen(project.ModPath) || !(this.Config.ProjectManager.ActiveGame is null && this.Config.ProjectManager.ActiveProject is null && this.Config.ProjectManager.ActiveEvent is null))
+            return (1, $"Couldn't delete the project \"{project.Name}\" because it appears to be open. Close any open editors for the project if you really want to delete it.");
+
+        this.ProjectSelection = null;
+        this.ProjectList.Remove(project);
+
+        bool success = this.Config.ProjectManager.DeleteProject(project.Ind);
+        if (success)
+            return (0, $"Successfully deleted the project \"{project.Name}\".");
+        else
+        {
+            // in case we cleared it from the view but it didn't actually delete lol
+            this.ProjectList.Clear();
+            for (int i=0; i<this.Config.AllProjects.Count; i++)
+                this.ProjectList.Add(new DisplayableProject(this.Config, i));
+            return (1, $"Couldn't delete the project \"{project.Name}\".");
+        }
     }
 
     public List<DisplayableEvent> ConstructDisplayableEvents(List<SimpleEvent> evts, List<SimpleEvent> projPins, List<SimpleEvent> gamePins)

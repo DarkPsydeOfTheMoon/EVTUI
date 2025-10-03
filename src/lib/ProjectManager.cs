@@ -202,6 +202,18 @@ public class ProjectManager
         }
     }
 
+    public bool DeleteProject(int projInd)
+    {
+        lock (this.UserData)
+        {
+            if (projInd < 0 || projInd >= this.UserData.Projects.Count || this.UserData.Projects.Count <= 0)
+                return false;
+            this.UserData.Projects.RemoveAt(projInd);
+            this.SaveUserCache();
+        }
+        return true;
+    }
+
     public void LoadGameReadOnly(int gameInd)
     {
         lock (this.UserData)
