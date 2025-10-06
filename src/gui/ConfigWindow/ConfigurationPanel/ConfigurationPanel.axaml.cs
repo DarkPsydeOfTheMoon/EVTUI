@@ -140,7 +140,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
                             (Control)(((Popup)LogicalExtensions.GetLogicalParent(
                                 (ContextMenu)LogicalExtensions.GetLogicalParent(
                                     (MenuItem)sender))).PlacementTarget))))))).DataContext;
-        int? check = await Utils.RaiseDoubleCheck(this.topLevel, $"Are you sure you want to delete the project \"{project.Name}\"?", "Yes", "No");
+        int? check = await Utils.RaiseDoubleCheck(this.topLevel, $"Are you sure you want to delete the project \"{project.Name}\"?\n(This will not delete any files, only EVTUI's metadata about the project.)", "Yes", "No");
         if (check == 0)
         {
             var retTuple = ViewModel!.TryDeleteProject(project);
