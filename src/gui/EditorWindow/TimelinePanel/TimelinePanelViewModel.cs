@@ -196,7 +196,7 @@ public class Timeline : ReactiveObject
 
     public static int CodeToCategory(string code, bool isAudio)
     {
-        if (isAudio || code == "Snd_" || code == "SBE_" || code == "SBEA")
+        if (isAudio || code == "Snd_" || code == "SBE_" || code == "SBEA" || code == "SFts")
             return 10;
         int catInd = 14;
         if (code == "AlEf" || code == "SFlt")
