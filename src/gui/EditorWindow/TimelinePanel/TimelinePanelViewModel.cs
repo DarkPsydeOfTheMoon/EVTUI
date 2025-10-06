@@ -196,7 +196,7 @@ public class Timeline : ReactiveObject
 
     public static int CodeToCategory(string code, bool isAudio)
     {
-        if (isAudio)
+        if (isAudio || code == "Snd_" || code == "SBE_" || code == "SBEA" || code == "SFts")
             return 10;
         int catInd = 14;
         if (code == "AlEf" || code == "SFlt")
@@ -503,7 +503,7 @@ public class TimelinePanelViewModel : ViewModelBase
     public Timeline TimelineContent { get; set; }
     public dynamic ActiveCommand { get; set; }
 
-    public List<string> AddableCodes { get => this.Config.EventManager.AddableCodes; }
+    public ObservableCollection<string> AddableCodes { get; set; } = new ObservableCollection<string>();
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -513,6 +513,14 @@ public class TimelinePanelViewModel : ViewModelBase
         this.Config          = dataManager;
         this.TimelineContent = new Timeline(dataManager);
         this.SharedClipboard = clipboard;
+    }
+
+	public void SetAddableCodes(Category category)
+    {
+        this.AddableCodes.Clear();
+        foreach (string code in this.Config.EventManager.AddableCodes)
+            if (Timeline.CodeToCategory(code, false) + 1 == category.Index)
+                this.AddableCodes.Add(code);
     }
 
     public void SetActiveCommand(CommandPointer cmd)

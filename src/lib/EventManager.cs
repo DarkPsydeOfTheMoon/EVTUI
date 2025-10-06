@@ -75,6 +75,12 @@ public class EventManager
         else
             this.SerialEventSounds.Read(this.EcsPath);
 
+        // cheap way of putting en.cpk before base.cpk and modded files before vanilla files, lolllll
+        // i'll do it properly eventually, maybe
+        cpkEVTContents.Value.acbPaths.Reverse();
+        cpkEVTContents.Value.bfPaths.Reverse();
+        cpkEVTContents.Value.bmdPaths.Reverse();
+
         // the DataManager will pass these to the AudioManager
         this.AcwbPaths = new List<(string ACB, string? AWB)>();
         foreach (string acbPath in cpkEVTContents.Value.acbPaths)

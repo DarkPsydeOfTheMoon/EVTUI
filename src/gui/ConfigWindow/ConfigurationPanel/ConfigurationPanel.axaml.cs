@@ -3,8 +3,10 @@ using System.Threading.Tasks;
 
 using ReactiveUI;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
 
 using EVTUI.ViewModels;
@@ -126,6 +128,25 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         }
         else
             await Utils.RaiseModal(this.topLevel, retTuple.Message);
+    }
+
+    public async void DeleteProject(object sender, RoutedEventArgs e)
+    {
+        DisplayableProject project = (DisplayableProject)((DataGridRow)LogicalExtensions.GetLogicalParent(
+            (Border)LogicalExtensions.GetLogicalParent(
+                (DataGridFrozenGrid)LogicalExtensions.GetLogicalParent(
+                    (DataGridCellsPresenter)LogicalExtensions.GetLogicalParent(
+                        (DataGridCell)LogicalExtensions.GetLogicalParent(
+                            (Control)(((Popup)LogicalExtensions.GetLogicalParent(
+                                (ContextMenu)LogicalExtensions.GetLogicalParent(
+                                    (MenuItem)sender))).PlacementTarget))))))).DataContext;
+        int? check = await Utils.RaiseDoubleCheck(this.topLevel, $"Are you sure you want to delete the project \"{project.Name}\"?\n(This will not delete any files, only EVTUI's metadata about the project.)", "Yes", "No");
+        if (check == 0)
+        {
+            var retTuple = ViewModel!.TryDeleteProject(project);
+            if (retTuple.Status != 0)
+                await Utils.RaiseModal(this.topLevel, retTuple.Message);
+        }
     }
 
     //////////////////////////////////

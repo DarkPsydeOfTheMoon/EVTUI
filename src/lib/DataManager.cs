@@ -40,19 +40,31 @@ public class DataManager
     public List<Project>      AllProjects   { get => this.ProjectManager.UserData.Projects; }
     public List<GameSettings> AllGames      { get => this.ProjectManager.UserData.Games;    }
 
+    private HashSet<(string GamePath, string? ModPath, int MajorId, int MinorId)> OpenStuff;
+
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public DataManager(User userData)
+    public DataManager(User userData, HashSet<(string GamePath, string? ModPath, int MajorId, int MinorId)> openStuff)
     {
         if (!Directory.Exists(this.VanillaExtractionPath))
             Directory.CreateDirectory(this.VanillaExtractionPath);
+
+        this.OpenStuff = openStuff;
 
         this.ProjectManager = new ProjectManager(userData);
         this.EventManager   = new EventManager();
         this.ScriptManager  = new ScriptManager();
         this.AudioManager   = new AudioManager();
         this.CpkList        = new List<string>();
+    }
+
+    public bool CheckIfProjOpen(string modPath)
+    {
+        foreach (var openThing in this.OpenStuff)
+            if (openThing.ModPath == modPath)
+                return true;
+        return false;
     }
 
     public void Reset()

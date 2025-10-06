@@ -6,8 +6,6 @@ namespace EVTUI.Views;
 public partial class Utils
 {
 
-    // If we need to pop boxes like this from multiple places, we should add this to
-    // a View base class or something.
     public static async Task<int> RaiseModal(Window tl, string text)
     {
         Window sampleWindow =
@@ -27,4 +25,22 @@ public partial class Utils
             return (int)res;
     }
 
+    public static async Task<int> RaiseDoubleCheck(Window tl, string mainMsg="Are you sure?", string yesMsg="Yes", string noMsg="No")
+    {
+        Window sampleWindow =
+            new Window 
+            { 
+                SizeToContent = SizeToContent.WidthAndHeight,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+        sampleWindow.Content = new SafetyBox(mainMsg, yesMsg, noMsg);
+
+        // Launch window and get a return code to distinguish how the window
+        // was closed.
+        int? res = await sampleWindow.ShowDialog<int?>(tl);
+        if (res is null)
+            return 1;
+        else
+            return (int)res;
+    }
 }

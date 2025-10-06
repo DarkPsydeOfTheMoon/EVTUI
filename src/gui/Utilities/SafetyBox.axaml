@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="EVTUI.Views.SafetyBox">
+  <StackPanel Margin="20" VerticalAlignment="Center">
+    <TextBlock Name="ModalText" HorizontalAlignment="Center" Margin="20"/>
+    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+      <Button Name="YesButton" Click="YesHandler" Background="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center" Padding="10" Margin="20" Focusable="True">
+        <TextBlock Name="YesText"/>
+      </Button>
+      <Button Name="NoButton" Click="NoHandler" HorizontalAlignment="Center" Padding="10" Margin="20" Focusable="True">
+        <TextBlock Name="NoText"/>
+      </Button>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

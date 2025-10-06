@@ -61,7 +61,7 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
         while (true)
         {
             User userData = ((LandingPageViewModel)DataContext).UserData;
-            DataManager config = new DataManager(userData);
+            DataManager config = new DataManager(userData, this.openStuff);
 
             ConfigWindowViewModel configWindowVM   = new ConfigWindowViewModel(
                 config, configtype);
