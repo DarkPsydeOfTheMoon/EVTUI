@@ -279,10 +279,11 @@ public class ScriptManager
     public void SaveScript(string scriptType, string workingDir, string modDir, string emuDir)
     {
         foreach (string script in this.ScriptList[scriptType])
-            // extremely dumb workaround for BASE.CPK version overwriting...
-            // methinks i shall come up with a solution for this in the file management PR
-            // TODO: only chosen-to-be-edited files are edited
-            if (script.StartsWith("EN.CPK"))
+        {
+            // for now, only saves the active script...
+            // there's probably a better way to do this, but i think the UI needs to be a bit clearer
+            // for now, this at least is better than the hardcoding there was before, but TODO
+            if ((scriptType == "BMD" && script == this.ActiveBMD) || (scriptType == "BF" && script == this.ActiveBF))
             {
                 if (!Directory.Exists(Path.GetDirectoryName(Path.Combine(modDir, script))))
                     Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(modDir, script)));
@@ -306,6 +307,7 @@ public class ScriptManager
                         }
                 }
             }
+        }
     }
 
     public void PopulateWorkingDir(string workingDir, string baseDir, string modDir, string emuDir, List<string> bmdPaths, List<string> bfPaths, string gameType)
