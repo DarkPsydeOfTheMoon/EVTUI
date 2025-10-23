@@ -15,7 +15,7 @@ public class Generic : ReactiveObject
         this.Editable    = !config.ReadOnly;
         this.Basics      = new Basics(config, command);
 
-        this.Size = command.DataSize;
+        this.Size = command.DataSize.Value;
     }
 
     public string           LongName    { get; set; }

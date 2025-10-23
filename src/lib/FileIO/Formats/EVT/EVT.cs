@@ -155,8 +155,13 @@ public class EVT : ISerializable
                     this.CommandData.Add(Activator.CreateInstance(commandType));
             }
             this.Commands[i].DataOffset.Validate((int)rw.RelativeTell(), rw.IsParselike());
+            if (this.Commands[i].DataOffset.Value != (int)rw.RelativeTell())
+                rw.RelativeSeek(this.Commands[i].DataOffset.Value, 0);
             rw.RwObj((ISerializable)this.CommandData[i], new Dictionary<string, object>()
-                { ["dataSize"] = this.Commands[i].DataSize });
+                { ["dataSize"] = this.Commands[i].DataSize.Value });
+            this.Commands[i].DataSize.Validate((int)rw.RelativeTell() - this.Commands[i].DataOffset.Value, rw.IsParselike());
+            if (this.Commands[i].DataSize.Value != (int)rw.RelativeTell())
+                rw.RelativeSeek(this.Commands[i].DataOffset.Value + this.Commands[i].DataSize.Value, 0);
         }
 
         if (this.Flags[12])
@@ -308,7 +313,7 @@ public class EVT : ISerializable
         newCmd.CommandCode = commandCode;
         newCmd.FrameStart = frameStart;
         // TODO: maybe null check here
-        newCmd.DataSize = (int)commandType.GetField("DataSize").GetRawConstantValue();
+        newCmd.DataSize.Value = (int)commandType.GetField("DataSize").GetRawConstantValue();
 
         List<SerialCommand> cmdList = new List<SerialCommand>(this.Commands);
         cmdList.Add(newCmd);
@@ -376,7 +381,7 @@ public class SerialCommand : ISerializable
     public Int32  FrameDuration = 1;
 
     public PositionalInt32 DataOffset = new PositionalInt32();
-    public Int32  DataSize;
+    public PositionalInt32 DataSize = new PositionalInt32();
 
     public UInt32 ConditionalType;
     public UInt32 ConditionalIndex;
@@ -393,7 +398,7 @@ public class SerialCommand : ISerializable
         rw.RwInt32(ref this.FrameStart);
         rw.RwInt32(ref this.FrameDuration);
         rw.RwObj(ref this.DataOffset);
-        rw.RwInt32(ref this.DataSize);
+        rw.RwObj(ref this.DataSize);
         rw.RwUInt32(ref this.ConditionalType);
         rw.RwUInt32(ref this.ConditionalIndex);
         rw.RwInt32(ref this.ConditionalValue);

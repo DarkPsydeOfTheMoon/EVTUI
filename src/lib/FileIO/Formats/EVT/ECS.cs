@@ -43,7 +43,7 @@ public class ECS : ISerializable
                 this.IsLittleEndian = true;
                 rw.SetLittleEndian(this.IsLittleEndian);
             }
-            rw.Seek(0, 0);
+            rw.RelativeSeek(0, 0);
         }
         else if (rw.IsParselike())
             rw.SetLittleEndian(this.IsLittleEndian);
@@ -119,7 +119,7 @@ public class ECS : ISerializable
         newCmd.CommandCode = commandCode;
         newCmd.FrameStart = frameStart;
         // TODO: maybe null check here
-        newCmd.DataSize = (int)commandType.GetField("DataSize").GetRawConstantValue();
+        newCmd.DataSize.Value = (int)commandType.GetField("DataSize").GetRawConstantValue();
 
         List<SerialCommand> cmdList = new List<SerialCommand>(this.Commands);
         cmdList.Add(newCmd);
