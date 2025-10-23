@@ -7,7 +7,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class ERgs : Generic
 {
-    public ERgs(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public ERgs(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Effect: Registry";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x01000002));

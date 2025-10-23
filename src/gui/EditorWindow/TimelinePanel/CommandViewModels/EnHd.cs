@@ -2,7 +2,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnHd : Generic
 {
-    public EnHd(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public EnHd(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Environment: HDR";
 

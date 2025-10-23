@@ -8,7 +8,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class Msg_ : Generic
 {
-    public Msg_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public Msg_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Dialogue Turn";
 
@@ -16,6 +16,7 @@ public class Msg_ : Generic
         this.HasMessage = new BoolChoiceField("Includes Message?", this.Editable, (((this.CommandData.MessageMode) & 1) == 1));
         this.HasSelection = new BoolChoiceField("Includes Selection?", this.Editable, (((this.CommandData.MessageMode >> 1) & 1) == 1));
         this.IsSubtitle = new BoolChoiceField("Is Subtitle?", this.Editable, (((this.CommandData.MessageMode >> 2) & 1) == 1));
+        this.WhenAnyValue(_ => _.HasMessage.Value, _ => _.HasSelection.Value, _ => _.IsSubtitle.Value).Subscribe(_ => this.CommandData.MessageMode = (Convert.ToInt32(this.IsSubtitle.Value) << 2) + (Convert.ToInt32(this.HasSelection.Value) << 1) + Convert.ToInt32(this.HasMessage.Value));
 
         int msgIndex = config.ScriptManager.GetTurnIndex(this.CommandData.MessageMajorId, this.CommandData.MessageMinorId, this.CommandData.MessageSubId);
         string msgId = config.ScriptManager.GetTurnName(msgIndex);
@@ -29,6 +30,13 @@ public class Msg_ : Generic
                 int newMsgIndex = config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
                 if (config.ScriptManager.MsgNames.Contains(config.ScriptManager.GetTurnName(newMsgIndex)))
                     this.MessageBlock = new MessagePreview(config, newMsgIndex);
+                string[] msgPieces = this.MessageID.Choice.Split("_");
+                if (msgPieces.Length == 4)
+                {
+                    this.CommandData.MessageMajorId = Int16.Parse(msgPieces[1]);
+                    this.CommandData.MessageMinorId = byte.Parse(msgPieces[2]);
+                    this.CommandData.MessageSubId = byte.Parse(msgPieces[3]);
+                }
             });
 
             int selIndex = config.ScriptManager.GetTurnIndex(this.CommandData.SelectMajorId, this.CommandData.SelectMinorId, this.CommandData.SelectSubId);
@@ -41,6 +49,13 @@ public class Msg_ : Generic
                 int newSelIndex = config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
                 if (config.ScriptManager.SelNames.Contains(config.ScriptManager.GetTurnName(newSelIndex)))
                     this.SelectionBlock = new SelectionPreview(config, newSelIndex);
+                string[] selPieces = this.SelectionID.Choice.Split("_");
+                if (selPieces.Length == 4)
+                {
+                    this.CommandData.SelectMajorId = Int16.Parse(selPieces[1]);
+                    this.CommandData.SelectMinorId = byte.Parse(selPieces[2]);
+                    this.CommandData.SelectSubId = byte.Parse(selPieces[3]);
+                }
             });
         }
     }
@@ -64,44 +79,14 @@ public class Msg_ : Generic
         get => _selectionBlock;
         set => this.RaiseAndSetIfChanged(ref _selectionBlock, value);
     }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.CommandData.MessageMode = (Convert.ToInt32(this.IsSubtitle.Value) << 2) + (Convert.ToInt32(this.HasSelection.Value) << 1) + Convert.ToInt32(this.HasMessage.Value);
-        if (!(this.MessageID is null))
-        {
-            string[] msgPieces = this.MessageID.Choice.Split("_");
-            if (msgPieces.Length == 4)
-            {
-                this.CommandData.MessageMajorId = Int16.Parse(msgPieces[1]);
-                this.CommandData.MessageMinorId = byte.Parse(msgPieces[2]);
-                this.CommandData.MessageSubId = byte.Parse(msgPieces[3]);
-            }
-        }
-
-        if (!(this.SelectionID is null))
-        {
-            string[] selPieces = this.SelectionID.Choice.Split("_");
-            if (selPieces.Length == 4)
-            {
-                this.CommandData.SelectMajorId = Int16.Parse(selPieces[1]);
-                this.CommandData.SelectMinorId = byte.Parse(selPieces[2]);
-                this.CommandData.SelectSubId = byte.Parse(selPieces[3]);
-            }
-        }
-        if (!(this.MessageBlock is null))
-            this.MessageBlock.SaveChanges();
-        if (!(this.SelectionBlock is null))
-            this.SelectionBlock.SaveChanges();
-    }
 }
 
 public class MessagePreview : ReactiveObject
 {
     public MessagePreview(DataManager config, int index)
     {
-        this.Editable = !config.ReadOnly;
+        //this.Editable = !config.ReadOnly;
+        this.Editable = false;
         List<string> speakerNames = config.ScriptManager.SpeakerNames;
         string speaker = config.ScriptManager.GetTurnSpeakerName(index);
         string msgId = config.ScriptManager.GetTurnName(index);
@@ -133,25 +118,20 @@ public class MessagePreview : ReactiveObject
     public static List<string> MessagePrefixes = new List<string>{"DVL",   "MSG", "MND",     "PFM",    "SEL"   };
     public static List<string> MessageTypes    = new List<string>{"Enemy", "NPC", "Thought", "System", "Select"};
 
-    public bool    Editable { get; }
+    public bool Editable { get; }
 
     public StringSelectionField MessageType { get; set; }
     public StringSelectionField Speaker     { get; set; }
 
     public ObservableCollection<PagePreview> Pages { get; set; }
-
-    public void SaveChanges()
-    {
-        foreach (PagePreview page in this.Pages)
-            page.SaveChanges();
-    }
 }
 
 public class PagePreview : ReactiveObject
 {
     public PagePreview(DataManager config, int turnIndex, int pageIndex)
     {
-        this.Editable = !config.ReadOnly;
+        //this.Editable = !config.ReadOnly;
+        this.Editable = false;
         this.Update(config, turnIndex, pageIndex);
     }
 
@@ -188,8 +168,6 @@ public class PagePreview : ReactiveObject
         get => _hasVoiceLine;
         set => this.RaiseAndSetIfChanged(ref _hasVoiceLine, value);
     }
-
-    public void SaveChanges() {}
 }
 
 public class SelectionPreview : ReactiveObject
@@ -209,12 +187,6 @@ public class SelectionPreview : ReactiveObject
     }
 
     public ObservableCollection<OptionPreview> Options { get; set; }
-
-    public void SaveChanges()
-    {
-        foreach (OptionPreview option in this.Options)
-            option.SaveChanges();
-    }
 }
 
 public class OptionPreview : ReactiveObject
@@ -231,9 +203,6 @@ public class OptionPreview : ReactiveObject
         this.Dialogue = new StringEntryField($"Option #{pageIndex+1}", this.Editable, text, null);
     }
 
-    public StringEntryField     Dialogue    { get; set; }
-
-    public bool    Editable { get; }
-
-    public void SaveChanges() {}
+    public StringEntryField Dialogue { get; set; }
+    public bool             Editable { get; }
 }

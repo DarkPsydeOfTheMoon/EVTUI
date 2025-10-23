@@ -2,7 +2,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class FDFl : Generic
 {
-    public FDFl(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public FDFl(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Field: ???";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x00000003));

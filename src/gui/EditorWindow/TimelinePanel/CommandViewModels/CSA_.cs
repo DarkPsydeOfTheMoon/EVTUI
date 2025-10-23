@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CSA_ : Generic
 {
-    public CSA_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public CSA_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Camera: Base Animation";
 

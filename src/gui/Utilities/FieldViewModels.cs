@@ -243,45 +243,66 @@ public class AnimationWidget : ViewModelBase
         this.Editable = !config.ReadOnly;
 
         if (!(_enabledInd is null))
-            if (_enabledFlip)
-                this.AnimationEnabled = new BoolChoiceField("Enabled?", this.Editable, !_bitfield[(int)_enabledInd]);
-            else
-                this.AnimationEnabled = new BoolChoiceField("Enabled?", this.Editable, _bitfield[(int)_enabledInd]);
+        {
+            this.AnimationEnabled = new BoolChoiceField("Enabled?", this.Editable, (_enabledFlip) ? (!_bitfield[(int)_enabledInd]) : (_bitfield[(int)_enabledInd]));
+            this.WhenAnyValue(_ => _.AnimationEnabled.Value).Subscribe(_ => _bitfield[(int)_enabledInd] = (_enabledFlip) ? (!this.AnimationEnabled.Value) : (this.AnimationEnabled.Value));
+        }
 
         if (!(_extInd is null))
-            if (_extFlip)
-                this.AnimationFromExt = new BoolChoiceField("From ext?", this.Editable, !_bitfield[(int)_extInd]);
-            else
-                this.AnimationFromExt = new BoolChoiceField("From ext?", this.Editable, _bitfield[(int)_extInd]);
+        {
+            this.AnimationFromExt = new BoolChoiceField("From ext?", this.Editable, (_extFlip) ? (!_bitfield[(int)_extInd]) : (_bitfield[(int)_extInd]));
+            this.WhenAnyValue(_ => _.AnimationFromExt.Value).Subscribe(_ => _bitfield[(int)_extInd] = (_extFlip) ? (!this.AnimationFromExt.Value) : (this.AnimationFromExt.Value));
+        }
 
         if (!(_frameBlendingInd is null))
-            if (_frameBlendingFlip)
-                this.AnimationFrameBlendingEnabled = new BoolChoiceField("Frame Blending Enabled?", this.Editable, !_bitfield[(int)_frameBlendingInd]);
-            else
-                this.AnimationFrameBlendingEnabled = new BoolChoiceField("Frame Blending Enabled?", this.Editable, _bitfield[(int)_frameBlendingInd]);
+        {
+            this.AnimationFrameBlendingEnabled = new BoolChoiceField("Frame Blending Enabled?", this.Editable, (_frameBlendingFlip) ? (!_bitfield[(int)_frameBlendingInd]) : (_bitfield[(int)_frameBlendingInd]));
+            this.WhenAnyValue(_ => _.AnimationFrameBlendingEnabled.Value).Subscribe(_ => _bitfield[(int)_frameBlendingInd] = (_frameBlendingFlip) ? (!this.AnimationFrameBlendingEnabled.Value) : (this.AnimationFrameBlendingEnabled.Value));
+        }
 
         if (_animation.IncludeLoopBool)
-            if (_loopFlip)
-                this.AnimationLoopBool = new BoolChoiceField("Loop Playback?", this.Editable, (_animation.LoopBool == 0));
-            else
-                this.AnimationLoopBool = new BoolChoiceField("Loop Playback?", this.Editable, (_animation.LoopBool != 0));
+        {
+            this.AnimationLoopBool = new BoolChoiceField("Loop Playback?", this.Editable, (_loopFlip) ? (_animation.LoopBool == 0) : (_animation.LoopBool != 0));
+            this.WhenAnyValue(_ => _.AnimationLoopBool.Value).Subscribe(_ => _animation.LoopBool = Convert.ToUInt32((_loopFlip) ? (!this.AnimationLoopBool.Value) : (this.AnimationLoopBool.Value)));
+        }
 
         if (_animation.IncludeIndex)
+        {
             this.AnimationID = new NumEntryField("Animation ID", this.Editable, _animation.Index, 0, 59, 1);
+            this.WhenAnyValue(_ => _.AnimationID.Value).Subscribe(_ => _animation.Index = (uint)this.AnimationID.Value);
+        }
 
         if (_animation.IncludeStartingFrame)
+        {
             this.AnimationStartingFrame = new NumEntryField("Starting Frame", this.Editable, _animation.StartingFrame, 0, 99999, 1);
+            this.WhenAnyValue(_ => _.AnimationStartingFrame.Value).Subscribe(_ => _animation.StartingFrame = (uint)this.AnimationStartingFrame.Value);
+        }
+
         if (_animation.IncludeEndingFrame)
+        {
             this.AnimationEndingFrame = new NumEntryField("Ending Frame", this.Editable, _animation.EndingFrame, 0, 99999, 1);
+            this.WhenAnyValue(_ => _.AnimationEndingFrame.Value).Subscribe(_ => _animation.EndingFrame = (uint)this.AnimationEndingFrame.Value);
+        }
+
         if (_animation.IncludeInterpolatedFrames)
+        {
             this.AnimationInterpolatedFrames = new NumEntryField("Interpolated Frames", this.Editable, _animation.InterpolatedFrames, 0, 100, 1);
+            this.WhenAnyValue(_ => _.AnimationInterpolatedFrames.Value).Subscribe(_ => _animation.InterpolatedFrames = (uint)this.AnimationInterpolatedFrames.Value);
+        }
+
         if (_animation.IncludePlaybackSpeed)
+        {
             this.AnimationPlaybackSpeed = new NumEntryField("Playback Speed", this.Editable, _animation.PlaybackSpeed, 0, 10, 0.1);
+            this.WhenAnyValue(_ => _.AnimationPlaybackSpeed.Value).Subscribe(_ => _animation.PlaybackSpeed = (float)this.AnimationPlaybackSpeed.Value);
+        }
+
         if (_animation.IncludeWeight)
+        {
             this.AnimationWeight = new NumEntryField("Weight", this.Editable, _animation.Weight, 0, 1, 0.01);
+            this.WhenAnyValue(_ => _.AnimationWeight.Value).Subscribe(_ => _animation.Weight = (float)this.AnimationWeight.Value);
+        }
 
         this.AnimationPreviewVM = new GFDRenderingPanelViewModel();
-
         this.WhenAnyValue(x => x.AnimationPreviewVM.ReadyToRender).Subscribe(x =>
         {
             if (x)
@@ -337,47 +358,6 @@ public class AnimationWidget : ViewModelBase
     protected bool _extFlip;
     protected bool _frameBlendingFlip;
     protected bool _loopFlip;
-
-    public void SaveChanges()
-    {
-        if (!(_enabledInd is null))
-            if (_enabledFlip)
-                _bitfield[(int)_enabledInd] = !this.AnimationEnabled.Value;
-            else
-                _bitfield[(int)_enabledInd] = this.AnimationEnabled.Value;
-
-        if (!(_extInd is null))
-            if (_extFlip)
-                _bitfield[(int)_extInd] = !this.AnimationFromExt.Value;
-            else
-                _bitfield[(int)_extInd] = this.AnimationFromExt.Value;
-
-        if (!(_frameBlendingInd is null))
-            if (_frameBlendingFlip)
-                _bitfield[(int)_frameBlendingInd] = !this.AnimationFrameBlendingEnabled.Value;
-            else
-                _bitfield[(int)_frameBlendingInd] = this.AnimationFrameBlendingEnabled.Value;
-
-        if (_animation.IncludeLoopBool)
-            if (_loopFlip)
-                _animation.LoopBool = Convert.ToUInt32(!this.AnimationLoopBool.Value);
-            else
-                _animation.LoopBool = Convert.ToUInt32(this.AnimationLoopBool.Value);
-
-        if (_animation.IncludeIndex)
-            _animation.Index              = (uint)this.AnimationID.Value;
-
-        if (_animation.IncludeStartingFrame)
-            _animation.StartingFrame      = (uint)this.AnimationStartingFrame.Value;
-        if (_animation.IncludeEndingFrame)
-            _animation.EndingFrame        = (uint)this.AnimationEndingFrame.Value;
-        if (_animation.IncludeInterpolatedFrames)
-            _animation.InterpolatedFrames = (uint)this.AnimationInterpolatedFrames.Value;
-        if (_animation.IncludePlaybackSpeed)
-            _animation.PlaybackSpeed      = (float)this.AnimationPlaybackSpeed.Value;
-        if (_animation.IncludeWeight)
-            _animation.Weight             = (float)this.AnimationWeight.Value;
-    }
 }
 
 public class ModelPreviewWidget : ViewModelBase
@@ -466,8 +446,11 @@ public class Target : ViewModelBase
         _isActive = isActive;
 
         this.X = new NumRangeField("X", this.Editable, this.CommandData.Targets[this.Idx,0], -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.X.Value).Subscribe(_ => this.CommandData.Targets[this.Idx,0] = (float)this.X.Value);
         this.Y = new NumRangeField("Y", this.Editable, this.CommandData.Targets[this.Idx,1], -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.Y.Value).Subscribe(_ => this.CommandData.Targets[this.Idx,1] = (float)this.Y.Value);
         this.Z = new NumRangeField("Z", this.Editable, this.CommandData.Targets[this.Idx,2], -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.Z.Value).Subscribe(_ => this.CommandData.Targets[this.Idx,2] = (float)this.Z.Value);
     }
 
     public NumRangeField X { get; set; }
@@ -490,11 +473,4 @@ public class Target : ViewModelBase
     }
 
     protected dynamic CommandData;
-
-    public void SaveChanges()
-    {
-        this.CommandData.Targets[this.Idx,0] = (float)this.X.Value;
-        this.CommandData.Targets[this.Idx,1] = (float)this.Y.Value;
-        this.CommandData.Targets[this.Idx,2] = (float)this.Z.Value;
-    }
 }

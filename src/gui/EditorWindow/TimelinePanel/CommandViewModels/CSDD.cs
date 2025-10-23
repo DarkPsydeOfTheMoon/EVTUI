@@ -2,7 +2,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CSDD : Generic
 {
-    public CSDD(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public CSDD(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Camera: Placement (Old)";
 

@@ -5,7 +5,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnSh : Generic
 {
-    public EnSh(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public EnSh(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Environment: Shadows";
 

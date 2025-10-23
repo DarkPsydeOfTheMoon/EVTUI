@@ -4,7 +4,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MAAB : Generic
 {
-    public MAAB(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public MAAB(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Model: Attachment Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
@@ -31,7 +31,7 @@ public class MAAB : Generic
 
         this.CommandData.ChildObjectId = this.ChildAssetID.Choice;
 
-        this.FirstAnimation.SaveChanges();
-        this.SecondAnimation.SaveChanges();
+        //this.FirstAnimation.SaveChanges();
+        //this.SecondAnimation.SaveChanges();
     }
 }

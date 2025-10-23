@@ -5,7 +5,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnSs : Generic
 {
-    public EnSs(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public EnSs(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Environment: SSAO";
 

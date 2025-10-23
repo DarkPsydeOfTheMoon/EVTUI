@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnDf : Generic
 {
-    public EnDf(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public EnDf(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Environment: Depth of Field";
 

@@ -4,7 +4,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnLI : Generic
 {
-    public EnLI(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public EnLI(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Environment: Lighting (Characters)";
 

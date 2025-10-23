@@ -2,7 +2,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CAA_ : Generic
 {
-    public CAA_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public CAA_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Camera: Additive Animation";
 

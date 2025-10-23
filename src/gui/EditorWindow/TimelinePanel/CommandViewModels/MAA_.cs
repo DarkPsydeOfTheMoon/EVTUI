@@ -4,7 +4,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MAA_ : Generic
 {
-    public MAA_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public MAA_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Model: Additive Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
@@ -26,7 +26,7 @@ public class MAA_ : Generic
         this.Command.ObjectId = this.AssetID.Choice;
 
         this.CommandData.TrackNumber = (int)this.TrackNumber.Value;
-        this.AddAnimation.SaveChanges();
+        //this.AddAnimation.SaveChanges();
         this.CommandData.Flags[31] = this.DebugFrameForward.Value;
     }
 }

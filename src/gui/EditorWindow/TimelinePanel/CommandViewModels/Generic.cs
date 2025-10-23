@@ -7,15 +7,15 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class Generic : ReactiveObject
 {
-    public Generic(DataManager config, SerialCommand command, object commandData)
+    public Generic(DataManager config, CommandPointer cmd)
     {
-        this.LongName    = command.CommandCode;
-        this.Command     = command;
-        this.CommandData = commandData;
+        this.LongName    = cmd.Command.CommandCode;
+        this.Command     = cmd.Command;
+        this.CommandData = cmd.CommandData;
         this.Editable    = !config.ReadOnly;
-        this.Basics      = new Basics(config, command);
+        this.Basics      = new Basics(config, cmd);
 
-        this.Size = command.DataSize;
+        this.Size = cmd.Command.DataSize;
     }
 
     public string           LongName    { get; set; }
@@ -26,29 +26,33 @@ public class Generic : ReactiveObject
 
     public int Size { get; }
 
-    public void SaveChanges()
-    {
-        this.Basics.SaveChanges();
-    }
+    public void SaveChanges() {}
 }
 
 public class Basics : ReactiveObject
 {
-    public Basics(DataManager config, SerialCommand command)
+    public Basics(DataManager config, CommandPointer cmd)
     {
-        this.Command = command;
+        this.Command = cmd.Command;
         this.Editable = !config.ReadOnly;
 
         this.WaitOnCommand = new BoolChoiceField("Wait while frame is stopped?", this.Editable, this.Command.Flags[1]);
-        // i don't feel like making this reactive lol that's annoying, woe readonly be upon you
-        this.StartingFrame = new NumEntryField("Starting Frame", false, this.Command.FrameStart, 0, 999999, 1);
+        this.WhenAnyValue(_ => _.WaitOnCommand.Value).Subscribe(_ => this.Command.Flags[1] = this.WaitOnCommand.Value);
+        this.StartingFrame = new NumEntryField("Starting Frame", this.Editable, this.Command.FrameStart, 0, 999999, 1);
+        this.WhenAnyValue(_ => _.StartingFrame.Value).Subscribe(_ => this.Command.FrameStart = (int)this.StartingFrame.Value);
         this.FrameCount = new NumEntryField("Frame Duration", this.Editable, this.Command.FrameDuration, 0, 999999, 1);
+        this.WhenAnyValue(_ => _.FrameCount.Value).Subscribe(_ => this.Command.FrameDuration = (int)this.FrameCount.Value);
 
         this.ForceSkipCommand = new BoolChoiceField("Force-skip command?", this.Editable, this.Command.Flags[0]);
+        this.WhenAnyValue(_ => _.ForceSkipCommand.Value).Subscribe(_ => this.Command.Flags[0] = this.ForceSkipCommand.Value);
         this.ConditionalType = new StringSelectionField("Conditional Type", this.Editable, this.ConditionalTypes.Backward[this.Command.ConditionalType], this.ConditionalTypes.Keys);
+        this.WhenAnyValue(_ => _.ConditionalType.Choice).Subscribe(_ => this.Command.ConditionalType = this.ConditionalTypes.Forward[this.ConditionalType.Choice]);
         this.ConditionalIndex = new NumEntryField("Conditional Index", this.Editable, this.Command.ConditionalIndex, 0, null, 1);
+        this.WhenAnyValue(_ => _.ConditionalIndex.Value).Subscribe(_ => this.Command.ConditionalIndex = (uint)this.ConditionalIndex.Value);
         this.ComparisonType = new StringSelectionField("Comparison Type", this.Editable, this.ComparisonTypes.Backward[this.Command.ConditionalComparisonType], this.ComparisonTypes.Keys);
+        this.WhenAnyValue(_ => _.ComparisonType.Choice).Subscribe(_ => this.Command.ConditionalComparisonType = this.ComparisonTypes.Forward[this.ComparisonType.Choice]);
         this.ConditionalValue = new NumEntryField("Conditional Value", this.Editable, this.Command.ConditionalValue, null, null, 1);
+        this.WhenAnyValue(_ => _.ConditionalValue.Value).Subscribe(_ => this.Command.ConditionalValue = (int)this.ConditionalValue.Value);
 
         this.WhenAnyValue(x => x.ConditionalType.Choice).Subscribe(x =>
         {
@@ -77,21 +81,6 @@ public class Basics : ReactiveObject
 
     protected SerialCommand Command;
     public    bool          Editable { get; set; }
-
-    public void SaveChanges()
-    {
-
-        this.Command.Flags[0] = this.ForceSkipCommand.Value;
-        this.Command.Flags[1] = this.WaitOnCommand.Value;
-
-        this.Command.FrameStart    = (int)this.StartingFrame.Value;
-        this.Command.FrameDuration = (int)this.FrameCount.Value;
-
-        this.Command.ConditionalType           = this.ConditionalTypes.Forward[this.ConditionalType.Choice];
-        this.Command.ConditionalIndex          = (uint)this.ConditionalIndex.Value;
-        this.Command.ConditionalValue          = (int)this.ConditionalValue.Value;
-        this.Command.ConditionalComparisonType = this.ComparisonTypes.Forward[this.ComparisonType.Choice];
-    }
 
     public BiDict<string, uint> ConditionalTypes = new BiDict<string, uint>
     (

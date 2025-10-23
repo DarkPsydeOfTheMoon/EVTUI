@@ -7,7 +7,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class Fd__ : Generic
 {
-    public Fd__(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public Fd__(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Fade";
 

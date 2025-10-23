@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MDt_ : Generic
 {
-    public MDt_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public MDt_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Model: Detachment";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);

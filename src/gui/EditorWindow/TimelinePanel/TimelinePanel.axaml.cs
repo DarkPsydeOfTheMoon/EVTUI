@@ -11,6 +11,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
+using Avalonia.VisualTree;
 
 using ReactiveUI;
 
@@ -196,7 +197,24 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         target.Classes.Add("selected");
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(((Flyout)sender).Target)).Content;
         ViewModel!.SetActiveCommand(cmd);
-        ((Flyout)sender).Content = ViewModel!.ActiveCommand;
+        //((Flyout)sender).Content = ViewModel!.ActiveCommand;
+        CommandEditor.Content = ViewModel!.ActiveCommand;
+        //CommandEditor.IsExpanded = true;
+    }
+
+    public void PopulateCommandEditor(object sender, RoutedEventArgs e)
+    {
+        ViewModel!.UnsetActiveCommand(true);
+        CommandEditor.Content = null;
+        foreach (Button b in Scrolly.GetVisualDescendants().OfType<Button>())
+            b.Classes.Remove("selected");
+
+        ((Button)sender).Classes.Add("selected");
+        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent((Button)sender)).Content;
+        ViewModel!.SetActiveCommand(cmd);
+        //((Flyout)sender).Content = ViewModel!.ActiveCommand;
+        CommandEditor.Content = ViewModel!.ActiveCommand;
+        //CommandEditor.IsExpanded = true;
     }
 
     public void ClearFlyout(object sender, EventArgs e)
@@ -204,7 +222,8 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         Button target = (Button)((Flyout)sender).Target;
         target.Classes.Remove("selected");
         ViewModel!.UnsetActiveCommand(true);
-        ((Flyout)sender).Content = null;
+        //((Flyout)sender).Content = null;
+        CommandEditor.Content = null;
     }
 
     public void PlaySFXTrack(object sender, RoutedEventArgs e)

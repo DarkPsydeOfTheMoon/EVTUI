@@ -2,7 +2,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnFH : Generic
 {
-    public EnFH(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public EnFH(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Environment: Fog Height";
 

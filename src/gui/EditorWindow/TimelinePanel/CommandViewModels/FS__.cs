@@ -7,7 +7,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class FS__ : Generic
 {
-    public FS__(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public FS__(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Field: Placement";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x00000003));

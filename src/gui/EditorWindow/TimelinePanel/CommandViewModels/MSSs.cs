@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MSSs : Generic
 {
-    public MSSs(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public MSSs(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Model: \"Shoe\" Visibility";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);

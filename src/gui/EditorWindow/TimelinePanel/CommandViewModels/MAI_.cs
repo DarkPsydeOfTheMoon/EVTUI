@@ -8,7 +8,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MAI_ : Generic
 {
-    public MAI_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public MAI_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Model: Idle Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
@@ -27,7 +27,7 @@ public class MAI_ : Generic
         base.SaveChanges();
         this.Command.ObjectId = this.AssetID.Choice;
 
-        foreach (AnimationWidget animation in this.Animations)
-            animation.SaveChanges();
+        //foreach (AnimationWidget animation in this.Animations)
+        //    animation.SaveChanges();
     }
 }

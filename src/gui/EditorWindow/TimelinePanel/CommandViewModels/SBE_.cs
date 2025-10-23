@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class SBE_ : Generic
 {
-    public SBE_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public SBE_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Sounds: Environment Noise";
 

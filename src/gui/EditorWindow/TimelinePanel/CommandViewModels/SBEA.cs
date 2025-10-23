@@ -5,7 +5,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class SBEA : Generic
 {
-    public SBEA(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public SBEA(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Sounds: Environment Noise (All)";
         this.Action = new StringSelectionField("Action", this.Editable, Enum.GetName(typeof(ActionTypes), this.CommandData.Action), new List<string>(Enum.GetNames(typeof(ActionTypes))));

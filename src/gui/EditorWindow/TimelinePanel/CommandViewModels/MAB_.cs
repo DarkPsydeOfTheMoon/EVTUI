@@ -4,7 +4,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MAB_ : Generic
 {
-    public MAB_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public MAB_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Model: Base Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
@@ -59,9 +59,9 @@ public class MAB_ : Generic
         base.SaveChanges();
         this.Command.ObjectId = this.AssetID.Choice;
 
-        this.FirstAnimation.SaveChanges();
+        //this.FirstAnimation.SaveChanges();
         this.CommandData.FirstAnimationUnkFrames = (ushort)this.FirstAnimationUnk.Value;
-        this.SecondAnimation.SaveChanges();
+        //this.SecondAnimation.SaveChanges();
         this.CommandData.SecondAnimationUnkFrames = (ushort)this.SecondAnimationUnk.Value;
 
         this.CommandData.Flags[6]  = this.UnkBool1.Value;

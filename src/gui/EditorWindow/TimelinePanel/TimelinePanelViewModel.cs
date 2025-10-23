@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 using ReactiveUI;
 //using ReactiveUI.Fody.Helpers;
@@ -352,6 +353,39 @@ public class Category : ViewModelBase
 
     private Dictionary<int, int> CommandsPerFrame;
 
+    public void MoveCommand(CommandPointer cmd, int newFrame)
+    {
+        // uh....... idk why this would happen but let's. avoid that weirdness.
+        if (!this.Commands.Contains(cmd) || cmd.Frame == newFrame)
+            return;
+
+        // remove it from the old frame...
+        this.CommandsPerFrame[cmd.Frame] -= 1;
+        if (this.CommandsPerFrame[cmd.Frame] <= 0)
+            this.CommandsPerFrame.Remove(cmd.Frame);
+        // shrink the category height if necessary
+        this._maxInOneFrame = 0;
+        foreach (int frame in this.CommandsPerFrame.Keys)
+            if (this.CommandsPerFrame[frame] > this._maxInOneFrame)
+                this.MaxInOneFrame = this.CommandsPerFrame[frame];
+        // move up all subsequent commands in the same category + frame
+        for (int i=this.Commands.Count-1; i>=0; i--)
+            if (this.Commands[i].Frame == cmd.Frame && this.Commands[i].PositionWithinFrame > cmd.PositionWithinFrame)
+                this.Commands[i].PositionWithinFrame -= 1;
+
+        // ...and then add it to the new frame
+        if (!(this.CommandsPerFrame.ContainsKey(newFrame)))
+            this.CommandsPerFrame[newFrame] = 0;
+        cmd.PositionWithinFrame = this.CommandsPerFrame[newFrame];
+        this.CommandsPerFrame[newFrame] += 1;
+        if (this.CommandsPerFrame[newFrame] > this.MaxInOneFrame)
+            this.MaxInOneFrame = this.CommandsPerFrame[newFrame];
+
+        // ......and actually change it
+        cmd.Frame = newFrame;
+        this.SortCommands();
+    }
+
     public void AddCommand(CommandPointer newCmd)
     {
         if (!(this.CommandsPerFrame.ContainsKey(newCmd.Frame)))
@@ -370,6 +404,8 @@ public class Category : ViewModelBase
             if (this.Commands[i] == cmd)
             {
                 this.CommandsPerFrame[cmd.Frame] -= 1;
+                if (this.CommandsPerFrame[cmd.Frame] <= 0)
+                    this.CommandsPerFrame.Remove(cmd.Frame);
                 this.Commands.RemoveAt(i);
                 break;
             }
@@ -377,18 +413,24 @@ public class Category : ViewModelBase
         // TODO: deal with it if nothing was removed somehow???
 
         // shrink the category height if necessary
-        if (this.CommandsPerFrame[cmd.Frame] + 1 == this.MaxInOneFrame)
-        {
-            this.MaxInOneFrame -= 1;
-            foreach (int frame in this.CommandsPerFrame.Keys)
-                if (this.CommandsPerFrame[frame] > this.MaxInOneFrame)
-                    this.MaxInOneFrame = this.CommandsPerFrame[frame];
-        }
+        this._maxInOneFrame = 0;
+        foreach (int frame in this.CommandsPerFrame.Keys)
+            if (this.CommandsPerFrame[frame] > this._maxInOneFrame)
+                this.MaxInOneFrame = this.CommandsPerFrame[frame];
 
         // move up all subsequent commands in the same category + frame
         for (int i=this.Commands.Count-1; i>=0; i--)
             if (this.Commands[i].Frame == cmd.Frame && this.Commands[i].PositionWithinFrame > cmd.PositionWithinFrame)
                 this.Commands[i].PositionWithinFrame -= 1;
+    }
+
+    // make sure they get drawn in the right order, basically...
+    public void SortCommands()
+    {
+        ObservableCollection<CommandPointer> temp = new ObservableCollection<CommandPointer>(this.Commands.OrderBy(cmd => cmd.Frame));
+        this.Commands.Clear();
+        foreach (CommandPointer cmd in temp)
+            this.Commands.Add(cmd);
     }
 
     private int _frameCount;
@@ -465,8 +507,28 @@ public class CommandPointer : ViewModelBase
         }
     }
 
-    public int    Frame      { get; }
-    public int    Duration   { get; }
+    //public int Frame { get; }
+    private int _frame;
+    public int Frame
+    {
+        get => _frame;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _frame, value);
+            OnPropertyChanged(nameof(Frame));
+        }
+    }
+
+    private int _duration;
+    public int Duration
+    {
+        get => _duration;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _duration, value);
+            OnPropertyChanged(nameof(Duration));
+        }
+    }
 
     private int _positionWithinFrame;
     public int PositionWithinFrame
@@ -501,7 +563,10 @@ public class TimelinePanelViewModel : ViewModelBase
     public Clipboard SharedClipboard { get; }
 
     public Timeline TimelineContent { get; set; }
-    public dynamic ActiveCommand { get; set; }
+    //public dynamic ActiveCommand { get; set; }
+    public TimelineCommands.Generic ActiveCommand { get; set; }
+    protected CommandPointer _activeCommandPointer;
+    protected Category _activeCategory;
 
     public ObservableCollection<string> AddableCodes { get; set; } = new ObservableCollection<string>();
 
@@ -525,16 +590,30 @@ public class TimelinePanelViewModel : ViewModelBase
 
     public void SetActiveCommand(CommandPointer cmd)
     {
+        this._activeCommandPointer = cmd;
+        this._activeCategory = this.TimelineContent.Categories[Timeline.CodeToCategory(cmd.Code, false)];
         if (cmd.CommandType is null)
-            this.ActiveCommand = new TimelineCommands.Generic(this.Config, cmd.Command, cmd.CommandData);
+            this.ActiveCommand = new TimelineCommands.Generic(this.Config, cmd);
         else
-            this.ActiveCommand = Activator.CreateInstance(cmd.CommandType, new object[] { this.Config, cmd.Command, cmd.CommandData });
+            this.ActiveCommand = (TimelineCommands.Generic)Activator.CreateInstance(cmd.CommandType, new object[] { this.Config, cmd });
+
+        this.WhenAnyValue(x => x.ActiveCommand.Basics.StartingFrame.Value).Subscribe(x => {
+            this._activeCategory.MoveCommand(this._activeCommandPointer, (int)this.ActiveCommand.Basics.StartingFrame.Value);
+        });
+        this.WhenAnyValue(x => x.ActiveCommand.Basics.FrameCount.Value).Subscribe(x => {
+            this._activeCommandPointer.Duration = (int)this.ActiveCommand.Basics.FrameCount.Value;
+        });
     }
 
     public void UnsetActiveCommand(bool saveFirst)
     {
-        if (!this.Config.ReadOnly && saveFirst)
-            this.ActiveCommand.SaveChanges();
+        this._activeCommandPointer = null;
+        this._activeCategory = null;;
+        //if (!this.Config.ReadOnly && saveFirst && !(this.ActiveCommand is null))
+        //    this.ActiveCommand.SaveChanges();
+            //((typeof(this._activeCommandPointer.CommandType))this.ActiveCommand).SaveChanges();
+            //(this.ActiveCommand as this._activeCommandPointer.CommandType).SaveChanges();
+            //(Convert.ChangeType(this.ActiveCommand, this._activeCommandPointer.CommandType)).SaveChanges();
         this.ActiveCommand = null;
     }
 

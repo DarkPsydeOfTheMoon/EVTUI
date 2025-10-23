@@ -2,7 +2,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class FAA_ : Generic
 {
-    public FAA_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public FAA_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Field: Additive Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x00000003));
@@ -28,8 +28,8 @@ public class FAA_ : Generic
         this.Command.ObjectId = this.AssetID.Choice;
 
         this.CommandData.ObjectIndex = (uint)this.ObjectIndex.Value;
-        this.FirstAnimation.SaveChanges();
-        this.SecondAnimation.SaveChanges();
+        //this.FirstAnimation.SaveChanges();
+        //this.SecondAnimation.SaveChanges();
         this.CommandData.Flags[31] = this.DebugFrameForward.Value;
     }
 }
