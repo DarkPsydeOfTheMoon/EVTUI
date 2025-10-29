@@ -107,7 +107,8 @@ public class MessagePreview : ReactiveObject
         string msgId = config.ScriptManager.GetTurnName(index);
         if (speaker == "")
             speaker = "(UNNAMED)";
-        this.MessageType = new StringSelectionField("Message Type", this.Editable, MessagePreview.MessageTypes[MessagePreview.MessagePrefixes.IndexOf(msgId.Substring(0, 3))], MessagePreview.MessageTypes);
+        int prefInd = MessagePreview.MessagePrefixes.IndexOf(msgId.Substring(0, 3));
+        this.MessageType = new StringSelectionField("Message Type", this.Editable, MessagePreview.MessageTypes[(prefInd < 0) ? 0 : prefInd], MessagePreview.MessageTypes);
         this.Speaker = new StringSelectionField("Speaker Name", this.Editable, speaker, speakerNames);
 
         this.Pages = new ObservableCollection<PagePreview>();
@@ -122,7 +123,8 @@ public class MessagePreview : ReactiveObject
         string msgId = config.ScriptManager.GetTurnName(index);
         if (speaker == "")
             speaker = "(UNNAMED)";
-        this.MessageType.Choice = MessagePreview.MessageTypes[MessagePreview.MessagePrefixes.IndexOf(msgId.Substring(0, 3))];
+        int prefInd = MessagePreview.MessagePrefixes.IndexOf(msgId.Substring(0, 3));
+        this.MessageType.Choice = MessagePreview.MessageTypes[(prefInd < 0) ? 0 : prefInd];
         this.Speaker.Choice = speaker;
 
         this.Pages.Clear();
@@ -130,8 +132,8 @@ public class MessagePreview : ReactiveObject
             this.Pages.Add(new PagePreview(config, index, i));
     }
 
-    public static List<string> MessagePrefixes = new List<string>{"DVL",   "MSG", "MND",     "PFM",    "SEL"   };
-    public static List<string> MessageTypes    = new List<string>{"Enemy", "NPC", "Thought", "System", "Select"};
+    public static List<string> MessagePrefixes = new List<string>{"UNK",     "DVL",   "MSG", "MND",     "PFM",    "SEL",    "TRV"   };
+    public static List<string> MessageTypes    = new List<string>{"Unknown", "Enemy", "NPC", "Thought", "System", "Select", "Trivia"};
 
     public bool    Editable { get; }
 
