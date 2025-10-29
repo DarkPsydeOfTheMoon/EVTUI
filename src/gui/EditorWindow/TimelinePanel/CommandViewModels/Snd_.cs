@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 
 using ReactiveUI;
 
+using static EVTUI.ViewModels.FieldUtils;
+
 namespace EVTUI.ViewModels.TimelineCommands;
 
 public class Snd_ : Generic
@@ -12,17 +14,17 @@ public class Snd_ : Generic
     {
         this.LongName = "Sounds: Play Cue";
 
-        _isPlayCmd = ((ActionTypes)this.CommandData.Action == ActionTypes.Play);
-        this.Action   = new StringSelectionField("Action", this.Editable, Enum.GetName(typeof(ActionTypes), this.CommandData.Action), new List<string>(Enum.GetNames(typeof(ActionTypes))));
-        this.WhenAnyValue(x => x.Action.Choice).Subscribe(x => this.IsPlayCmd = (this.Action.Choice == "Play"));
+        this.ActionType = new StringSelectionField("Action", this.Editable, this.ActionTypes.Backward[this.CommandData.Action], this.ActionTypes.Keys);
+        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Action = this.ActionTypes.Forward[this.ActionType.Choice]);
 
-        this.Channel  = new StringSelectionField("Channel", this.Editable, Enum.GetName(typeof(ChannelTypes), this.CommandData.Channel), new List<string>(Enum.GetNames(typeof(ChannelTypes))));
+        this.CueID = new IntSelectionField("Cue ID", this.Editable, this.CommandData.CueId, config.AudioManager.CueIds.ConvertAll(x => (int)x));
+        this.WhenAnyValue(_ => _.CueID.Choice).Subscribe(_ => this.CommandData.CueId = this.CueID.Choice);
 
-        this.Source   = new StringSelectionField("Source", this.Editable, Enum.GetName(typeof(SourceTypes), this.CommandData.Source), new List<string>(Enum.GetNames(typeof(SourceTypes))));
-        config.AudioManager.SetActiveACBType(this.Source.Choice);
-        this.CueID    = new IntSelectionField("Cue ID", this.Editable, this.CommandData.CueId, config.AudioManager.CueIds.ConvertAll(x => (int)x));
-        this.WhenAnyValue(x => x.Source.Choice).Subscribe(x =>
+        this.SourceType = new StringSelectionField("Source", this.Editable,  this.SourceTypes.Backward[this.CommandData.Source], this.SourceTypes.Keys);
+        config.AudioManager.SetActiveACBType(this.SourceType.Choice);
+        this.WhenAnyValue(x => x.SourceType.Choice).Subscribe(x =>
         {
+            this.CommandData.Source = this.SourceTypes.Forward[this.SourceType.Choice];
             config.AudioManager.SetActiveACBType(x);
             // shenanigans to avoid not-an-object issues when old cueId is not in new set
             if (!config.AudioManager.CueIds.Contains((uint)this.CueID.Choice))
@@ -30,52 +32,39 @@ public class Snd_ : Generic
             this.CueID.Choices = new ObservableCollection<int>(config.AudioManager.CueIds.ConvertAll(x => (int)x));
         });
 
-        this.FadeDuration = new NumEntryField("Fade Duration (ms)", this.Editable, this.CommandData.FadeDuration, null, null, 1);
+        this.FadeDuration = new NumEntryField("Fade Duration (ms)", this.Editable, this.CommandData.FadeDuration, 0, 120, 1);
+        this.WhenAnyValue(_ => _.FadeDuration.Value).Subscribe(_ => this.CommandData.FadeDuration = (int)this.FadeDuration.Value);
+
+        this.Unk = new NumEntryField("Unknown", this.Editable, this.CommandData.Channel, 0, 3, 1);
+        this.WhenAnyValue(_ => _.Unk.Value).Subscribe(_ => this.CommandData.Channel = (int)this.Unk.Value);
     }
 
-    public IntSelectionField    CueID        { get; set; }
-    public StringSelectionField Action       { get; set; }
-    public StringSelectionField Channel      { get; set; }
-    public StringSelectionField Source       { get; set; }
-    public NumEntryField        FadeDuration { get; set; }
+    public StringSelectionField SourceType { get; set; }
+    public StringSelectionField ActionType { get; set; }
 
-    private bool _isPlayCmd;
-    public bool IsPlayCmd
-    {
-        get => _isPlayCmd;
-        set => this.RaiseAndSetIfChanged(ref _isPlayCmd, value);
-    }
+    public IntSelectionField    CueID      { get; set; }
 
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.CommandData.CueId        = this.CueID.Choice;
-        this.CommandData.Action       = (int)Enum.Parse(typeof(ActionTypes),  this.Action.Choice );
-        this.CommandData.Channel      = (int)Enum.Parse(typeof(ChannelTypes), this.Channel.Choice);
-        this.CommandData.Source       = (int)Enum.Parse(typeof(SourceTypes),  this.Source.Choice );
-        this.CommandData.FadeDuration = (int)this.FadeDuration.Value;
-    }
+    public NumEntryField FadeDuration { get; set; }
+    public NumEntryField Unk          { get; set; }
 
-    public enum ActionTypes : int
-    {
-        None = 0,
-        Play = 1,
-        Stop = 2
-    }
+    public BiDict<string, int> ActionTypes = new BiDict<string, int>
+    (
+        new Dictionary<string, int>
+        {
+            {"None", 0},
+            {"Play", 1},
+            {"Stop", 2},
+        }
+    );
 
-    public enum ChannelTypes : int
-    {
-        Default = 0,
-        Stereo  = 1,
-        Left    = 2,
-        Right   = 3
-    }
-
-    public enum SourceTypes : int
-    {
-        None   = 0,
-        BGM    = 1,
-        System = 2,
-        SFX    = 3
-    }
+    public BiDict<string, int> SourceTypes = new BiDict<string, int>
+    (
+        new Dictionary<string, int>
+        {
+            {"None",   0},
+            {"BGM",    1},
+            {"System", 2},
+            {"SFX",    3},
+        }
+    );
 }

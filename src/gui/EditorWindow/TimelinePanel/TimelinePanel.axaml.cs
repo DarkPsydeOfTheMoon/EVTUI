@@ -232,7 +232,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
             (StackPanel)LogicalExtensions.GetLogicalParent(
                 (StackPanel)LogicalExtensions.GetLogicalParent(
                     ((Button)sender))))).Content;
-        ViewModel!.PlayCueFromSource(cmd.Source.Choice, cmd.CueID.Choice, 1);
+        ViewModel!.PlayCueFromSource(cmd.SourceType.Choice, cmd.CueID.Choice, 1);
     }
 
     public void PlayVoiceTrack(object sender, RoutedEventArgs e)

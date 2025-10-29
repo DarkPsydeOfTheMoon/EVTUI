@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+
+using ReactiveUI;
 
 using static EVTUI.ViewModels.FieldUtils;
 
@@ -10,9 +13,12 @@ public class FOD_ : Generic
     {
         this.LongName = "Field: Object Placement";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x00000003));
+        this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
         this.ActionType = new StringSelectionField("Mode", this.Editable, this.ActionTypes.Backward[this.CommandData.EnableFieldObject], this.ActionTypes.Keys);
+        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.EnableFieldObject = this.ActionTypes.Forward[this.ActionType.Choice]);
         this.ObjectIndex = new NumEntryField("Field Object Index", this.Editable, this.CommandData.ObjectIndex, -1, 65535, 1);
+        this.WhenAnyValue(_ => _.ObjectIndex.Value).Subscribe(_ => this.CommandData.ObjectIndex = (int)this.ObjectIndex.Value);
 
     }
 
@@ -20,15 +26,6 @@ public class FOD_ : Generic
 
     public StringSelectionField ActionType  { get; set; }
     public NumEntryField        ObjectIndex { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.Command.ObjectId = this.AssetID.Choice;
-
-        this.CommandData.EnableFieldObject = this.ActionTypes.Forward[this.ActionType.Choice];
-        this.CommandData.ObjectIndex       = (int)this.ObjectIndex.Value;
-    }
 
     public BiDict<string, uint> ActionTypes = new BiDict<string, uint>
     (

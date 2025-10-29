@@ -1550,8 +1550,12 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding CueID}"/>
-        <ContentControl Content="{Binding Action}"/>
-        <ContentControl Content="{Binding Enable}"/>
+        <ContentControl Content="{Binding ActionType}"/>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Unk}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 
@@ -1560,7 +1564,7 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <ContentControl Content="{Binding Action}"/>
+        <ContentControl Content="{Binding ActionType}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -1579,16 +1583,20 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <ContentControl Content="{Binding Action}"/>
-        <ContentControl Content="{Binding Source}"/>
-        <ContentControl Content="{Binding FadeDuration}"/>
-        <ContentControl Content="{Binding Channel}" IsVisible="{Binding IsPlayCmd}"/>
-        <StackPanel Classes="preview" IsVisible="{Binding IsPlayCmd}">
+        <ContentControl Content="{Binding SourceType}"/>
+        <ContentControl Content="{Binding ActionType}"/>
+        <StackPanel Classes="preview" IsVisible="{c:Binding 'ActionType.Choice == \'Play\''}">
           <ContentControl Content="{Binding CueID}"/>
           <Button Click="PlaySFXTrack" ToolTip.Tip="Play/Pause Selected Track">
             <PathIcon Data="{StaticResource video_play_pause_regular}" />
           </Button>
         </StackPanel>
+        <ContentControl Content="{Binding FadeDuration}"/>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Unk}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 

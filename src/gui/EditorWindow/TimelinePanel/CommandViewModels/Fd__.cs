@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using ReactiveUI;
+
 using static EVTUI.ViewModels.FieldUtils;
 
 namespace EVTUI.ViewModels.TimelineCommands;
@@ -12,22 +14,16 @@ public class Fd__ : Generic
         this.LongName = "Fade";
 
         this.FadeMode = new StringSelectionField("Fade Mode", this.Editable, this.FadeModes.Backward[this.CommandData.FadeMode], this.FadeModes.Keys);
+        this.WhenAnyValue(_ => _.FadeMode.Choice).Subscribe(_ => this.CommandData.FadeMode = this.FadeModes.Forward[this.FadeMode.Choice]);
         this.FadeType = new StringSelectionField("Fade Type", this.Editable, this.FadeTypes.Backward[this.CommandData.FadeType], this.FadeTypes.Keys);
+        this.WhenAnyValue(_ => _.FadeType.Choice).Subscribe(_ => this.CommandData.FadeType = this.FadeTypes.Forward[this.FadeType.Choice]);
         this.UnkBool = new BoolChoiceField("Unknown", this.Editable, this.CommandData.UnkBool != 0);
+        this.WhenAnyValue(_ => _.UnkBool.Value).Subscribe(_ => this.CommandData.UnkBool = Convert.ToByte(this.UnkBool.Value));
     }
 
     public StringSelectionField FadeMode { get; set; }
     public StringSelectionField FadeType { get; set; }
     public BoolChoiceField      UnkBool  { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-
-        this.CommandData.FadeMode = this.FadeModes.Forward[this.FadeMode.Choice];
-        this.CommandData.FadeType = this.FadeTypes.Forward[this.FadeType.Choice];
-        this.CommandData.UnkBool = Convert.ToByte(this.UnkBool.Value);
-    }
 
     public BiDict<string, byte> FadeModes = new BiDict<string, byte>
     (

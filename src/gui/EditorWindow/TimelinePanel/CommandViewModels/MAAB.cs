@@ -1,3 +1,7 @@
+using System;
+
+using ReactiveUI;
+
 using static EVTUI.ViewModels.FieldUtils;
 
 namespace EVTUI.ViewModels.TimelineCommands;
@@ -8,8 +12,10 @@ public class MAAB : Generic
     {
         this.LongName = "Model: Attachment Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
+        this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
         this.ChildAssetID = new IntSelectionField("Attached Asset ID", this.Editable, this.CommandData.ChildObjectId, config.EventManager.AssetIDs);
+        this.WhenAnyValue(_ => _.ChildAssetID.Choice).Subscribe(_ => this.CommandData.ChildObjectId = this.ChildAssetID.Choice);
 
         // animations
         this.FirstAnimation = new AnimationWidget(config, this.ChildAssetID, this.CommandData.FirstAnimation, this.CommandData.Flags, $"First Animation", extInd:4);
@@ -23,15 +29,4 @@ public class MAAB : Generic
     // animations
     public AnimationWidget FirstAnimation  { get; set; }
     public AnimationWidget SecondAnimation { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.Command.ObjectId = this.AssetID.Choice;
-
-        this.CommandData.ChildObjectId = this.ChildAssetID.Choice;
-
-        //this.FirstAnimation.SaveChanges();
-        //this.SecondAnimation.SaveChanges();
-    }
 }

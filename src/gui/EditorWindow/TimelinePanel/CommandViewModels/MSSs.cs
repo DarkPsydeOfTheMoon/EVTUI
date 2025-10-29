@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+
+using ReactiveUI;
 
 using static EVTUI.ViewModels.FieldUtils;
 
@@ -10,18 +13,14 @@ public class MSSs : Generic
     {
         this.LongName = "Model: \"Shoe\" Visibility";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
+        this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
+
         this.ShoeLayer = new StringSelectionField("Active \"Shoe\" Node Name Prefix", this.Editable, this.ShoeLayers.Backward[this.CommandData.ShoeLayerIndex], this.ShoeLayers.Keys);
+        this.WhenAnyValue(_ => _.ShoeLayer.Choice).Subscribe(_ => this.CommandData.ShoeLayerIndex = this.ShoeLayers.Forward[this.ShoeLayer.Choice]);
     }
 
     public IntSelectionField AssetID { get; set; }
     public StringSelectionField ShoeLayer { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.Command.ObjectId = this.AssetID.Choice;
-        this.CommandData.ShoeLayerIndex = this.ShoeLayers.Forward[this.ShoeLayer.Choice];
-    }
 
     public BiDict<string, uint> ShoeLayers = new BiDict<string, uint>
     (

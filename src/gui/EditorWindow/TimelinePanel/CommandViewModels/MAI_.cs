@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
+using ReactiveUI;
+
 using static EVTUI.ViewModels.FieldUtils;
 
 namespace EVTUI.ViewModels.TimelineCommands;
@@ -12,6 +14,7 @@ public class MAI_ : Generic
     {
         this.LongName = "Model: Idle Animation";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
+        this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
         this.Animations = new ObservableCollection<AnimationWidget>();
         for (int i=0; i<10; i++)
@@ -21,13 +24,4 @@ public class MAI_ : Generic
     public IntSelectionField AssetID { get; set; }
 
     public ObservableCollection<AnimationWidget> Animations { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.Command.ObjectId = this.AssetID.Choice;
-
-        //foreach (AnimationWidget animation in this.Animations)
-        //    animation.SaveChanges();
-    }
 }

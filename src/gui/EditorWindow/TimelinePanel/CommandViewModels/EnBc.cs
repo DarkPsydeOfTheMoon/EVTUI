@@ -1,3 +1,7 @@
+using System;
+
+using ReactiveUI;
+
 namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnBc : Generic
@@ -6,13 +10,8 @@ public class EnBc : Generic
     {
         this.LongName = "Environment: Background Color";
         this.BackgroundColor = new ColorSelectionField("Background Color", this.Editable, this.CommandData.RGBA);
+        this.WhenAnyValue(_ => _.BackgroundColor.SelectedColor).Subscribe(_ => this.CommandData.RGBA = this.BackgroundColor.ToUInt32());
     }
 
     public ColorSelectionField BackgroundColor    { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.CommandData.RGBA = this.BackgroundColor.ToUInt32();
-    }
 }
