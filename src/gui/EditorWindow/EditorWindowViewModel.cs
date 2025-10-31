@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using EVTUI;
 
@@ -28,24 +29,24 @@ public class EditorWindowViewModel : ViewModelBase
         this.audioPanelVM    = new AudioPanelViewModel(this.Config);
     }
 
-    public void SaveMod(string which)
+    public async Task SaveMod(string which)
     {
         switch (which)
         {
             case "EVT":
-                this.Config.SaveModdedFiles(true, false, false, false);
+                await this.Config.SaveModdedFiles(true, false, false, false);
                 break;
             case "ECS":
-                this.Config.SaveModdedFiles(false, true, false, false);
+                await this.Config.SaveModdedFiles(false, true, false, false);
                 break;
             case "BMD":
-                this.Config.SaveModdedFiles(false, false, true, false);
+                await this.Config.SaveModdedFiles(false, false, true, false);
                 break;
             case "BF":
-                this.Config.SaveModdedFiles(false, false, false, true);
+                await this.Config.SaveModdedFiles(false, false, false, true);
                 break;
             case null:
-                this.Config.SaveModdedFiles(true, true, true, true);
+                await this.Config.SaveModdedFiles(true, true, true, true);
                 break;
             default:
                 break;

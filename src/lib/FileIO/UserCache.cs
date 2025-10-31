@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using YamlDotNet.Serialization;
-
 using System.Diagnostics;
+using System.IO;
+using System.Threading;
+
+using YamlDotNet.Serialization;
 
 namespace EVTUI;
 
@@ -22,6 +23,7 @@ Preferences: {}";
                                .EnsureRoundtrip()
                                .Build();
     private static IDeserializer Deserializer = new DeserializerBuilder().Build();
+    private static ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
@@ -44,22 +46,37 @@ Preferences: {}";
         Trace.Listeners.Add(Logger);
         Trace.AutoFlush = true;
 
-        TextReader yamlStream;
-        if (File.Exists(UserCacheFile))
-            // TODO: handle a failed read without just overwriting, as the below code inelegantly does
-            // e.g., just return null and let App.axaml.cs handle it and show a popup....
+        if (rwLock.TryEnterReadLock(2000))
+        {
             try
             {
-                yamlStream = new StreamReader(UserCacheFile);
+                TextReader yamlStream;
+                if (File.Exists(UserCacheFile))
+                    // TODO: handle a failed read without just overwriting, as the below code inelegantly does
+                    // e.g., just return null and let App.axaml.cs handle it and show a popup....
+                    try
+                    {
+                        yamlStream = new StreamReader(UserCacheFile);
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.TraceError(ex.ToString());
+                        yamlStream = new StringReader(DefaultYaml);
+                    }
+                else
+                    yamlStream = new StringReader(DefaultYaml);
+                return Deserialize(yamlStream.ReadToEnd());
             }
-            catch (Exception ex)
+            finally
             {
-                Trace.TraceError(ex.ToString());
-                yamlStream = new StringReader(DefaultYaml);
+                rwLock.ExitReadLock();
             }
+        }
         else
-            yamlStream = new StringReader(DefaultYaml);
-        return Deserialize(yamlStream.ReadToEnd());
+        {
+            Trace.TraceError("Failed to acquire UserCache read lock after 2s.");
+            throw new IOException("Failed to acquire UserCache read lock after 2s.");
+        }
     }
 
     public static User Deserialize(string yaml)
@@ -69,8 +86,37 @@ Preferences: {}";
 
     public static void SaveToYaml(User user)
     {
-        using (TextWriter writer = File.CreateText(UserCacheFile))
-            writer.Write(Serialize(user));
+        if (rwLock.TryEnterWriteLock(2000))
+        {
+            try
+            {
+                for (int numTries = 0; numTries < 10; numTries++)
+                {
+                    try
+                    {
+                        using (TextWriter writer = File.CreateText(UserCacheFile))
+                            writer.Write(Serialize(user));
+                        return;
+                    }
+                    catch (IOException)
+                    {
+                        Thread.Sleep(100);
+                    }
+                }
+                // let's hope that one failure isn't catastrophic lol, so warning instead of error
+                // -- comments i will live to regret in five months
+                Trace.TraceWarning("Failed to update UserCache after 10 tries.");
+            }
+            finally
+            {
+                rwLock.ExitWriteLock();
+            }
+        }
+        else
+        {
+            Trace.TraceError("Failed to acquire UserCache write lock after 2s.");
+            throw new IOException("Failed to acquire UserCache write lock after 2s.");
+        }
     }
 
     public static string Serialize(User user)
