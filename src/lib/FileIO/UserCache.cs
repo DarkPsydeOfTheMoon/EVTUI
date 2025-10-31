@@ -83,6 +83,7 @@ Preferences: {}";
                 Thread.Sleep(50);
             }
         }
+        throw new IOException("UserCache wasn't able to be updated after 10 tries.");
     }
 
     public static string Serialize(User user)
