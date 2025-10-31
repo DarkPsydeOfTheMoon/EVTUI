@@ -23,7 +23,7 @@ public partial class EditorWindow : Window
     {
         try
         {
-            ((EditorWindowViewModel)DataContext).SaveMod(((MenuItem)sender).Name);
+            await ((EditorWindowViewModel)DataContext).SaveMod(((MenuItem)sender).Name);
             await Utils.RaiseModal(this, "Saved successfully!");
         }
         catch (IOException ex)
