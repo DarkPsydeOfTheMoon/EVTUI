@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 using static EVTUI.Utils;
 
@@ -79,10 +80,10 @@ public class DataManager
         this.ClearCache();
     }
 
-    public void LoadProject(int ind)
+    public async Task LoadProject(int ind)
     {
         // ActiveProject and ActiveGame should both be set
-        this.ProjectManager.LoadProject(ind);
+        await this.ProjectManager.LoadProject(ind);
         this.ModPath = this.ProjectManager.ActiveProject.Mod.Path;
         this.CpkPath = this.ProjectManager.ActiveGame.Path;
         this.ReadOnly = false;
@@ -93,10 +94,10 @@ public class DataManager
             Directory.CreateDirectory(this.WorkingPath);
     }
 
-    public void LoadGameReadOnly(int ind)
+    public async Task LoadGameReadOnly(int ind)
     {
         // ActiveGame should be set, ActiveProject should be null
-        this.ProjectManager.LoadGameReadOnly(ind);
+        await this.ProjectManager.LoadGameReadOnly(ind);
         this.ModPath = null;
         this.CpkPath = this.ProjectManager.ActiveGame.Path;
         this.ReadOnly = true;
@@ -107,7 +108,7 @@ public class DataManager
             Directory.CreateDirectory(this.WorkingPath);
     }
 
-    public bool LoadEvent(int majorId, int minorId)
+    public async Task<bool> LoadEvent(int majorId, int minorId)
     {
         // this shouldn't happen
         if (!this.ReadOnly && !this.ProjectLoaded)
@@ -115,7 +116,7 @@ public class DataManager
 
         bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.VanillaExtractionPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.CpkDecryptionFunctionName);
         if (success)
-            this.ProjectManager.LoadEvent(majorId, minorId);
+            await this.ProjectManager.LoadEvent(majorId, minorId);
         this.EventLoaded = success;
 
         this.ScriptManager.PopulateWorkingDir(this.WorkingPath, this.VanillaExtractionPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.EmulatedFileDir, this.EventManager.BmdPaths, this.EventManager.BfPaths, this.ProjectManager.ActiveGame.Type);
@@ -166,17 +167,17 @@ public class DataManager
         CPKExtract.ClearDirectory(this.WorkingPathBase);
     }
 
-    public void SaveBF()
+    public async Task SaveBF()
     {
-        this.ScriptManager.SaveScript("BF", this.WorkingPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.HasFramework("BFEmulator") ? this.ProjectManager.EmulatedFileDir : null);
+        this.ScriptManager.SaveScript("BF", this.WorkingPath, this.ProjectManager.ModdedFileDir, (await this.ProjectManager.HasFramework("BFEmulator")) ? this.ProjectManager.EmulatedFileDir : null);
     }
 
-    public void SaveBMD()
+    public async Task SaveBMD()
     {
-        this.ScriptManager.SaveScript("BMD", this.WorkingPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.HasFramework("BMDEmulator") ? this.ProjectManager.EmulatedFileDir : null);
+        this.ScriptManager.SaveScript("BMD", this.WorkingPath, this.ProjectManager.ModdedFileDir, (await this.ProjectManager.HasFramework("BMDEmulator")) ? this.ProjectManager.EmulatedFileDir : null);
     }
 
-    public void SaveModdedFiles(bool evt, bool ecs, bool bmd, bool bf)
+    public async Task SaveModdedFiles(bool evt, bool ecs, bool bmd, bool bf)
     {
         if (this.ReadOnly)
             return;
@@ -204,10 +205,10 @@ public class DataManager
         }
 
         if (bmd)
-            this.SaveBMD();
+            await this.SaveBMD();
 
         if (bf)
-            this.SaveBF();
+            await this.SaveBF();
     }
 
 }

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using ReactiveUI;
 //using ReactiveUI.Fody.Helpers;
@@ -295,16 +296,16 @@ public class ConfigurationPanelViewModel : ViewModelBase
         return true;
     }
 
-    public int TrySetModDir(string maybedir)
+    public async Task<int> TrySetModDir(string maybedir)
     {
-        if (this.Config.ProjectManager.ModPathAlreadyUsed(maybedir))
+        if (await this.Config.ProjectManager.ModPathAlreadyUsed(maybedir))
             return 1;
         this.newProjectConfig.ModPath = maybedir;
         OnPropertyChanged(nameof(DisplayModPath));
         return 0;
     }
 
-    public int TryCreateProject()
+    public async Task<int> TryCreateProject()
     {
         if (this.newProjectConfig.Name is null || this.newProjectConfig.Name == "")
             return 1;
@@ -313,17 +314,17 @@ public class ConfigurationPanelViewModel : ViewModelBase
         if (this.newProjectConfig.ModPath is null || this.newProjectConfig.ModPath == "")
             return 3;
 
-        if (!this.Config.ProjectManager.TryUpdateProjects(this.newProjectConfig))
+        if (!(await this.Config.ProjectManager.TryUpdateProjects(this.newProjectConfig)))
             return 4;
 
-        this.Config.LoadProject(0);
+        await this.Config.LoadProject(0);
         if (this.Config.ProjectManager.ActiveProject is null)
             return 5;
 
         return 0;
     }
 
-    public int TryUseCPKDir(string cpkdir, string gametype)
+    public async Task<int> TryUseCPKDir(string cpkdir, string gametype)
     {
         if (cpkdir is null)
         {
@@ -334,19 +335,19 @@ public class ConfigurationPanelViewModel : ViewModelBase
             if (!this.TrySetCPKs(this.GameSelection.Path))
                 return 3;
             if (this.Config.ReadOnly)
-                this.Config.LoadGameReadOnly(this.GameSelection.Ind);
+                await this.Config.LoadGameReadOnly(this.GameSelection.Ind);
         }
         else
         {
             if (!this.TrySetCPKs(cpkdir))
                 return 3;
             if (this.Config.ReadOnly)
-                this.Config.ProjectManager.UpdateReadOnlyCPKs(cpkdir, gametype, "");
+                await this.Config.ProjectManager.UpdateReadOnlyCPKs(cpkdir, gametype, "");
         }
         return 0;
     }
 
-    public int TryLoadProject()
+    public async Task<int> TryLoadProject()
     {
         if (this.ProjectSelection is null)
             return 1;
@@ -356,14 +357,14 @@ public class ConfigurationPanelViewModel : ViewModelBase
         if (!this.TrySetCPKs(this.ProjectSelection.GamePath))
             return 3;
 
-        this.Config.LoadProject(this.ProjectSelection.Ind);
+        await this.Config.LoadProject(this.ProjectSelection.Ind);
         if (this.Config.ProjectManager.ActiveProject is null)
             return 4;
 
         return 0;
     }
 
-    public int TryDeleteProject(DisplayableProject project)
+    public async Task<int> TryDeleteProject(DisplayableProject project)
     {
         if (this.Config.CheckIfProjOpen(project.ModPath) || !(this.Config.ProjectManager.ActiveGame is null && this.Config.ProjectManager.ActiveProject is null && this.Config.ProjectManager.ActiveEvent is null))
             return 1;
@@ -371,8 +372,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
         this.ProjectSelection = null;
         this.ProjectList.Remove(project);
 
-        bool success = this.Config.ProjectManager.DeleteProject(project.Ind);
-        if (success)
+        if (await this.Config.ProjectManager.DeleteProject(project.Ind))
             return 0;
         else
         {
@@ -445,7 +445,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
         this.EventList = eventList;
     }
 
-    public int TryLoadEvent(bool fromSelection)
+    public async Task<int> TryLoadEvent(bool fromSelection)
     {
         if (fromSelection)
         {
@@ -459,8 +459,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
 
         try
         {
-            bool validLoadAttempt = this.Config.LoadEvent((int)this.EventMajorId, (int)this.EventMinorId);
-            if (!validLoadAttempt)
+            if (!(await this.Config.LoadEvent((int)this.EventMajorId, (int)this.EventMinorId)))
                 return 2;
             else if (!this.Config.EventLoaded)
                 return 3;

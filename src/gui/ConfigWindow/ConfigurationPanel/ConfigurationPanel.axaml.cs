@@ -70,7 +70,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
 
             if (dirs.Count > 0)
             {
-                switch (ViewModel!.TrySetModDir(dirs[0].Path.LocalPath))
+                switch (await ViewModel!.TrySetModDir(dirs[0].Path.LocalPath))
                 {
                     case 0:
                         break;
@@ -94,7 +94,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
     {
         try
         {
-            switch (ViewModel!.TryCreateProject())
+            switch (await ViewModel!.TryCreateProject())
             {
                 case 0:
                     this.GoToEventPage();
@@ -134,7 +134,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
     {
         try
         {
-            switch (ViewModel!.TryUseCPKDir(null, null))
+            switch (await ViewModel!.TryUseCPKDir(null, null))
             {
                 case 0:
                     if (ViewModel!.ConfigType == "read-only")
@@ -174,7 +174,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
 
             if (dirs.Count > 0)
             {
-                switch (ViewModel!.TryUseCPKDir(dirs[0].Path.LocalPath, ViewModel!.newProjectConfig.GameType))
+                switch (await ViewModel!.TryUseCPKDir(dirs[0].Path.LocalPath, ViewModel!.newProjectConfig.GameType))
                 {
                     case 0:
                         if (ViewModel!.ConfigType == "read-only")
@@ -210,7 +210,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
     {
         try
         {
-            switch (ViewModel!.TryLoadProject())
+            switch (await ViewModel!.TryLoadProject())
             {
                 case 0:
                     this.topLevel.Title = $"EVTUI ({ViewModel!.Config.ProjectManager.ActiveProject.Name})";
@@ -255,7 +255,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
             int? check = await Utils.RaiseDoubleCheck(this.topLevel, $"Are you sure you want to delete the project \"{project.Name}\"?\n(This will not delete any files, only EVTUI's metadata about the project.)", "Yes", "No");
             if (check == 0)
             {
-                switch (ViewModel!.TryDeleteProject(project))
+                switch (await ViewModel!.TryDeleteProject(project))
                 {
                     case 0:
                         await Utils.RaiseModal(this.topLevel, $"Successfully deleted the project \"{project.Name}\".");
@@ -288,7 +288,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         try
         {
             this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
-            switch (ViewModel!.TryLoadEvent(true))
+            switch (await ViewModel!.TryLoadEvent(true))
             {
                 case 0:
                     this.topLevel.Close(0);
@@ -327,7 +327,7 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
         try
         {
             this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
-            switch (ViewModel!.TryLoadEvent(false))
+            switch (await ViewModel!.TryLoadEvent(false))
             {
                 case 0:
                     this.topLevel.Close(0);

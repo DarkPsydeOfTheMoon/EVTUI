@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace EVTUI;
 
@@ -48,6 +50,9 @@ public class Framework
 public class ProjectManager
 {
 
+    private static readonly SemaphoreSlim objSemaphore = new SemaphoreSlim(1, 1);
+    private static readonly SemaphoreSlim fileSemaphore = new SemaphoreSlim(1, 1);
+
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
@@ -80,33 +85,60 @@ public class ProjectManager
         this.UserData = userData;
     }
 
-    private void SaveUserCache()
+    private async Task SaveUserCache()
     {
-        UserCache.SaveToYaml(this.UserData);
-    }
-
-    public bool HasFramework(string name)
-    {
-        lock (this.UserData)
+        await fileSemaphore.WaitAsync();
+        try
         {
-            return this.ActiveProject.Frameworks.ContainsKey(name) && this.ActiveProject.Frameworks[name];
+            UserCache.SaveToYaml(this.UserData);
+        }
+        finally
+        {
+            fileSemaphore.Release();
         }
     }
 
-    public bool ModPathAlreadyUsed(string modPath)
+    private bool _hasFramework(string name)
     {
-        lock (this.UserData)
+        return this.ActiveProject.Frameworks.ContainsKey(name) && this.ActiveProject.Frameworks[name];
+    }
+    public async Task<bool> HasFramework(string name)
+    {
+        await objSemaphore.WaitAsync();
+        try
         {
-            foreach (Project oldProject in this.UserData.Projects)
-                if (oldProject.Mod.Path == modPath)
-                    return true;
-            return false;
+            return this._hasFramework(name);
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public bool TryUpdateProjects(NewProjectConfig config)
+    private bool _modPathAlreadyUsed(string modPath)
     {
-        lock (this.UserData)
+        foreach (Project oldProject in this.UserData.Projects)
+            if (oldProject.Mod.Path == modPath)
+                return true;
+        return false;
+    }
+    public async Task<bool> ModPathAlreadyUsed(string modPath)
+    {
+        await objSemaphore.WaitAsync();
+        try
+        {
+            return this._modPathAlreadyUsed(modPath);
+        }
+        finally
+        {
+            objSemaphore.Release();
+        }
+    }
+
+    public async Task<bool> TryUpdateProjects(NewProjectConfig config)
+    {
+        await objSemaphore.WaitAsync();
+        try
         {
             // create the game object if it doesn't already exist
             if (!(this.UserData.Games).Exists(game => game.Path == config.GamePath))
@@ -120,7 +152,7 @@ public class ProjectManager
             }
 
             // just gonna treat these as one for error catching purposes... sure hope i don't regret this later when debugging
-            if (this.ModPathAlreadyUsed(config.ModPath) || !Directory.Exists(config.GamePath))
+            if (this._modPathAlreadyUsed(config.ModPath) || !Directory.Exists(config.GamePath))
                 return false;
 
             ModSettings mod = new ModSettings();
@@ -140,16 +172,21 @@ public class ProjectManager
             project.Events     = new EventCollections();
 
             this.UserData.Projects.Insert(0, project);
-            this.SaveUserCache();
+            await this.SaveUserCache();
 
             return true;
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
     // there's probably a better way to handle these errors...
-    public void LoadProject(int projInd)
+    public async Task LoadProject(int projInd)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             if (projInd < 0 || projInd >= this.UserData.Projects.Count || this.UserData.Projects.Count <= 0)
                 throw new Exception("User project data is corrupted.");
@@ -180,43 +217,53 @@ public class ProjectManager
                 throw new Exception("Game specified for project doesn't exist.");
 
             this.ModdedFileDir = this.ActiveProject.Mod.Path;
-            if (this.HasFramework("P5REssentials"))
+            if (this._hasFramework("P5REssentials"))
                 this.ModdedFileDir = Path.Combine(this.ModdedFileDir, "P5REssentials", "CPK");
             if (!Directory.Exists(this.ModdedFileDir))
                 Directory.CreateDirectory(this.ModdedFileDir);
 
-            if (this.HasFramework("BFEmulator") || this.HasFramework("BMDEmulator"))
+            if (this._hasFramework("BFEmulator") || this._hasFramework("BMDEmulator"))
             {
                 this.EmulatedFileDir = Path.Combine(this.ActiveProject.Mod.Path, "FEmulator");
                 if (!Directory.Exists(this.EmulatedFileDir))
                     Directory.CreateDirectory(this.EmulatedFileDir);
-                if (this.HasFramework("BFEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BF")))
+                if (this._hasFramework("BFEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BF")))
                     Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BF"));
-                if (this.HasFramework("BMDEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BMD")))
+                if (this._hasFramework("BMDEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BMD")))
                     Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BMD"));
             }
             else
                 this.EmulatedFileDir = null;
 
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public bool DeleteProject(int projInd)
+    public async Task<bool> DeleteProject(int projInd)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             if (projInd < 0 || projInd >= this.UserData.Projects.Count || this.UserData.Projects.Count <= 0)
                 return false;
             this.UserData.Projects.RemoveAt(projInd);
-            this.SaveUserCache();
+            await this.SaveUserCache();
+            return true;
         }
-        return true;
+        finally
+        {
+            objSemaphore.Release();
+        }
     }
 
-    public void LoadGameReadOnly(int gameInd)
+    public async Task LoadGameReadOnly(int gameInd)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             if (gameInd < 0 || gameInd >= this.UserData.Games.Count || this.UserData.Games.Count <= 0)
                 throw new Exception("User game path data is corrupted.");
@@ -226,7 +273,7 @@ public class ProjectManager
                 GameSettings game = this.UserData.Games[gameInd];
                 this.UserData.Games.RemoveAt(gameInd);
                 this.UserData.Games.Insert(0, game);
-                this.SaveUserCache();
+                await this.SaveUserCache();
             }
 
             this.ActiveGame      = this.UserData.Games[0];
@@ -234,11 +281,16 @@ public class ProjectManager
             this.ModdedFileDir   = null;
             this.EmulatedFileDir = null;
         }
+        finally
+        {
+            objSemaphore.Release();
+        }
     }
 
-    public void LoadEvent(int majorId, int minorId)
+    public async Task LoadEvent(int majorId, int minorId)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             if (!(this.ActiveProject is null))
             {
@@ -248,7 +300,7 @@ public class ProjectManager
                 newEvent.MinorId = minorId;
                 this.ActiveProject.Events.Recent.Insert(0, newEvent);
                 this.ActiveEvent = newEvent;
-                this.SaveUserCache();
+                await this.SaveUserCache();
             }
 
             if (!(this.ActiveGame is null))
@@ -259,50 +311,75 @@ public class ProjectManager
                 newEvent.MinorId = minorId;
                 this.ActiveGame.Events.Recent.Insert(0, newEvent);
                 this.ActiveEvent = newEvent;
-                this.SaveUserCache();
+                await this.SaveUserCache();
             }
         }
+        finally
+        {
+            objSemaphore.Release();
+        }
     }
 
-    public void SetProjectName(int ind, string name)
+    public async Task SetProjectName(int ind, string name)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             this.UserData.Projects[ind].Name = name;
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetProjectNotes(int ind, string notes)
+    public async Task SetProjectNotes(int ind, string notes)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             this.UserData.Projects[ind].Notes = notes;
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetProjectFramework(int ind, string key, bool val)
+    public async Task SetProjectFramework(int ind, string key, bool val)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             this.UserData.Projects[ind].Frameworks[key] = val;
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetProjectLoadOrder(int ind, List<string> loadOrder)
+    public async Task SetProjectLoadOrder(int ind, List<string> loadOrder)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             this.UserData.Projects[ind].LoadOrder = loadOrder;
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetProjectPin(Project project, int majorId, int minorId, bool hasPin)
+    public async Task SetProjectPin(Project project, int majorId, int minorId, bool hasPin)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             (project.Events.Pinned).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
             if (hasPin)
@@ -311,14 +388,19 @@ public class ProjectManager
                 newEvent.MajorId = majorId;
                 newEvent.MinorId = minorId;
                 project.Events.Pinned.Insert(0, newEvent);
-                this.SaveUserCache();
+                await this.SaveUserCache();
             }
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetGamePin(GameSettings game, int majorId, int minorId, bool hasPin)
+    public async Task SetGamePin(GameSettings game, int majorId, int minorId, bool hasPin)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             (game.Events.Pinned).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
             if (hasPin)
@@ -327,14 +409,19 @@ public class ProjectManager
                 newEvent.MajorId = majorId;
                 newEvent.MinorId = minorId;
                 game.Events.Pinned.Insert(0, newEvent);
-                this.SaveUserCache();
+                await this.SaveUserCache();
             }
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetProjectEventNotes(int ind, int majorId, int minorId, string notes)
+    public async Task SetProjectEventNotes(int ind, int majorId, int minorId, string notes)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             (this.UserData.Projects[ind].Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
             if (notes != "")
@@ -345,13 +432,18 @@ public class ProjectManager
                 updatedEvent.Text    = notes;
                 this.UserData.Projects[ind].Events.Notes.Insert(0, updatedEvent);
             }
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetProjectEventNotes(Project project, int majorId, int minorId, string notes)
+    public async Task SetProjectEventNotes(Project project, int majorId, int minorId, string notes)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             (project.Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
             if (notes != "")
@@ -362,22 +454,32 @@ public class ProjectManager
                 updatedEvent.Text    = notes;
                 project.Events.Notes.Insert(0, updatedEvent);
             }
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetGameNotes(int ind, string notes)
+    public async Task SetGameNotes(int ind, string notes)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             this.UserData.Games[ind].Notes = notes;
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetGameEventNotes(int ind, int majorId, int minorId, string notes)
+    public async Task SetGameEventNotes(int ind, int majorId, int minorId, string notes)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             (this.UserData.Games[ind].Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
             if (notes != "")
@@ -388,13 +490,18 @@ public class ProjectManager
                 updatedEvent.Text    = notes;
                 this.UserData.Games[ind].Events.Notes.Insert(0, updatedEvent);
             }
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void SetGameEventNotes(GameSettings game, int majorId, int minorId, string notes)
+    public async Task SetGameEventNotes(GameSettings game, int majorId, int minorId, string notes)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             (game.Events.Notes).RemoveAll(evt => evt.MajorId == majorId && evt.MinorId == minorId);
             if (notes != "")
@@ -405,13 +512,18 @@ public class ProjectManager
                 updatedEvent.Text    = notes;
                 game.Events.Notes.Insert(0, updatedEvent);
             }
-            this.SaveUserCache();
+            await this.SaveUserCache();
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 
-    public void UpdateReadOnlyCPKs(string path, string type, string notes)
+    public async Task UpdateReadOnlyCPKs(string path, string type, string notes)
     {
-        lock (this.UserData)
+        await objSemaphore.WaitAsync();
+        try
         {
             (this.UserData.Games).RemoveAll(game => game.Path == path && game.Type == type);
             GameSettings newGame = new GameSettings();
@@ -420,8 +532,12 @@ public class ProjectManager
             newGame.Notes = notes;
             newGame.Events = new EventCollections();
             this.UserData.Games.Insert(0, newGame);
-            this.SaveUserCache();
+            await this.SaveUserCache();
             this.ActiveGame = newGame;
+        }
+        finally
+        {
+            objSemaphore.Release();
         }
     }
 

@@ -70,20 +70,22 @@ Preferences: {}";
 
     public static void SaveToYaml(User user)
     {
-        for (int numTries = 0; numTries < 10; numTries++)
-        {
-            try
-            {
+//        for (int numTries = 0; numTries < 10; numTries++)
+//        {
+//            try
+//            {
                 using (TextWriter writer = File.CreateText(UserCacheFile))
                     writer.Write(Serialize(user));
-                return;
-            }
-            catch (IOException)
-            {
-                Thread.Sleep(50);
-            }
-        }
-        throw new IOException("UserCache wasn't able to be updated after 10 tries.");
+//                return;
+//            }
+//            catch (IOException)
+//            {
+//                Thread.Sleep(100);
+//            }
+//        }
+//        // maybe I'll leave this out and hope that one failure isn't catastrophic lol
+//        // -- comments i will live to regret in five months
+//        throw new IOException("UserCache wasn't able to be updated after 10 tries.");
     }
 
     public static string Serialize(User user)
