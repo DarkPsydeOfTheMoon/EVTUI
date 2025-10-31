@@ -69,8 +69,19 @@ Preferences: {}";
 
     public static void SaveToYaml(User user)
     {
-        using (TextWriter writer = File.CreateText(UserCacheFile))
-            writer.Write(Serialize(user));
+        for (int numTries = 0; numTries < 10; numTries++)
+        {
+            try
+            {
+                using (TextWriter writer = File.CreateText(UserCacheFile))
+                    writer.Write(Serialize(user));
+                return;
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(50);
+            }
+        }
     }
 
     public static string Serialize(User user)

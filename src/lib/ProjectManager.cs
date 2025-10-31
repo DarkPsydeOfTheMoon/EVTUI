@@ -82,10 +82,7 @@ public class ProjectManager
 
     private void SaveUserCache()
     {
-        lock (this.UserData)
-        {
-            UserCache.SaveToYaml(this.UserData);
-        }
+        UserCache.SaveToYaml(this.UserData);
     }
 
     public bool HasFramework(string name)
