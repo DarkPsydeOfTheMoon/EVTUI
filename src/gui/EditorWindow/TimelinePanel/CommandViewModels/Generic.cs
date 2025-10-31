@@ -25,8 +25,6 @@ public class Generic : ReactiveObject
     public Basics           Basics { get; set; }
 
     public int Size { get; }
-
-    public void SaveChanges() {}
 }
 
 public class Basics : ReactiveObject

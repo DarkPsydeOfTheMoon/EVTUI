@@ -76,31 +76,6 @@ public class CMD_ : Generic
     public NumRangeField        BlurStrength     { get; set; }
     public StringSelectionField BlurType         { get; set; }
 
-    /*public new void SaveChanges()
-    {
-        base.SaveChanges();
-
-        this.CommandData.Flags[4] = this.EnableDOF.Value;
-
-        this.CommandData.ViewportCoordinates[0] = (float)this.ViewportX.Value;
-        this.CommandData.ViewportCoordinates[1] = (float)this.ViewportY.Value;
-        this.CommandData.ViewportCoordinates[2] = (float)this.ViewportZ.Value;
-
-        this.CommandData.ViewportRotation[0] = (float)this.ViewportYaw.Value;
-        this.CommandData.ViewportRotation[1] = (float)this.ViewportPitch.Value;
-        this.CommandData.ViewportRotation[2] = (float)this.ViewportRoll.Value;
-
-        this.CommandData.AngleOfView = (float)this.AngleOfView.Value;
-        //this.CommandData.InterpolationParameters = this.InterpolationSettings.Compose();
-
-        this.CommandData.FocalPlaneDistance = (float)this.FocalDistance.Value;
-        this.CommandData.NearBlurSurface = (float)this.NearBlurDistance.Value;
-        this.CommandData.FarBlurSurface = (float)this.FarBlurDistance.Value;
-
-        this.CommandData.BlurStrength = (float)this.BlurStrength.Value;
-        this.CommandData.BlurType = this.BlurTypes.Forward[this.BlurType.Choice];
-    }*/
-
     public BiDict<string, uint> BlurTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>

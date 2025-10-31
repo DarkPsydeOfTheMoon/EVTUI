@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using ReactiveUI;
+
 using static EVTUI.ViewModels.FieldUtils;
 
 namespace EVTUI.ViewModels.TimelineCommands;
@@ -12,20 +14,31 @@ public class CSEc : Generic
         this.LongName = "Camera: Load From Asset";
 
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.CommandData.AssetId, config.EventManager.AssetIDsOfType(0x00000009));
+        this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.CommandData.AssetId = this.AssetID.Choice);
         this.EnableEditing = new BoolChoiceField("Enable Editing?", this.Editable, this.CommandData.Flags[0]);
+        this.WhenAnyValue(_ => _.EnableEditing.Value).Subscribe(_ => this.CommandData.Flags[0] = this.EnableEditing.Value);
 
         // message
         this.EnableMessageTypes = new BoolChoiceField("Specify Message Position Type?", this.Editable, this.CommandData.Flags[3]);
+        this.WhenAnyValue(_ => _.EnableMessageTypes.Value).Subscribe(_ => this.CommandData.Flags[3] = this.EnableMessageTypes.Value);
         this.EnableMessageCoordinates = new BoolChoiceField("Directly Specify Message Coordinates?", this.Editable, this.CommandData.Flags[4]);
+        this.WhenAnyValue(_ => _.EnableMessageCoordinates.Value).Subscribe(_ => this.CommandData.Flags[4] = this.EnableMessageCoordinates.Value);
         this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, this.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], this.MessageCoordinateTypes.Keys);
+        this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = this.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]);
         this.MessageX = new NumRangeField("X Coordinate", this.Editable, this.CommandData.MessageCoordinates[0], -9999, 9999, 1);
+        this.WhenAnyValue(_ => _.MessageX.Value).Subscribe(_ => this.CommandData.MessageCoordinates[0] = (float)this.MessageX.Value);
         this.MessageY = new NumRangeField("Y Coordinate", this.Editable, this.CommandData.MessageCoordinates[1], -9999, 9999, 1);
+        this.WhenAnyValue(_ => _.MessageY.Value).Subscribe(_ => this.CommandData.MessageCoordinates[1] = (float)this.MessageY.Value);
 
         // unknown
         this.UnkBool1 = new BoolChoiceField("Unknown #1", this.Editable, this.CommandData.Flags[2]);
+        this.WhenAnyValue(_ => _.UnkBool1.Value).Subscribe(_ => this.CommandData.Flags[2] = this.UnkBool1.Value);
         this.UnkBool2 = new BoolChoiceField("Unknown #2", this.Editable, this.CommandData.Flags[5]);
+        this.WhenAnyValue(_ => _.UnkBool2.Value).Subscribe(_ => this.CommandData.Flags[5] = this.UnkBool2.Value);
         this.UnkBool3 = new BoolChoiceField("Unknown #3", this.Editable, this.CommandData.UnkBool != 0);
+        this.WhenAnyValue(_ => _.UnkBool3.Value).Subscribe(_ => this.CommandData.UnkBool = Convert.ToByte(this.UnkBool3.Value));
         this.UnkEnum = new NumEntryField("Unknown #4", this.Editable, this.CommandData.UnkEnum, 0, 2, 1);
+        this.WhenAnyValue(_ => _.UnkEnum.Value).Subscribe(_ => this.CommandData.UnkEnum = (byte)this.UnkEnum.Value);
     }
 
     public IntSelectionField AssetID       { get; set; }
@@ -43,26 +56,6 @@ public class CSEc : Generic
     public BoolChoiceField UnkBool2 { get; set; }
     public BoolChoiceField UnkBool3 { get; set; }
     public NumEntryField   UnkEnum  { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-
-        this.CommandData.Flags[0] = this.EnableEditing.Value;
-        this.CommandData.Flags[2] = this.UnkBool1.Value;
-        this.CommandData.Flags[3] = this.EnableMessageTypes.Value;
-        this.CommandData.Flags[4] = this.EnableMessageCoordinates.Value;
-        this.CommandData.Flags[5] = this.UnkBool2.Value;
-
-        this.CommandData.AssetId = this.AssetID.Choice;
-
-        this.CommandData.MessageCoordinateType = this.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice];
-        this.CommandData.MessageCoordinates[0] = (float)this.MessageX.Value;
-        this.CommandData.MessageCoordinates[1] = (float)this.MessageY.Value;
-
-        this.CommandData.UnkBool           = Convert.ToByte(this.UnkBool3.Value);
-        this.CommandData.UnkEnum           = (byte)this.UnkEnum.Value;
-    }
 
     public BiDict<string, uint> MessageCoordinateTypes = new BiDict<string, uint>
     (

@@ -25,15 +25,6 @@ public class MRgs : Generic
     public StringSelectionField Display { get; set; }
     public StringSelectionField Scene   { get; set; }
 
-    /*public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.Command.ObjectId = this.AssetID.Choice;
-
-        this.CommandData.DisplayType = this.DisplayTypes.Forward[this.Display.Choice];
-        this.CommandData.Scene = this.SceneTypes.Forward[this.Scene.Choice];
-    }*/
-
     public BiDict<string, uint> DisplayTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>

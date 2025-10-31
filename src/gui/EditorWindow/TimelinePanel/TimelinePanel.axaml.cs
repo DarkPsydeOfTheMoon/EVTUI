@@ -204,10 +204,15 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
 
     public void PopulateCommandEditor(object sender, RoutedEventArgs e)
     {
+        bool actuallyJustClearIt = (((Button)sender).Classes.Contains("selected"));
+
         ViewModel!.UnsetActiveCommand(true);
         CommandEditor.Content = null;
         foreach (Button b in Scrolly.GetVisualDescendants().OfType<Button>())
             b.Classes.Remove("selected");
+
+        if (actuallyJustClearIt)
+            return;
 
         ((Button)sender).Classes.Add("selected");
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent((Button)sender)).Content;
