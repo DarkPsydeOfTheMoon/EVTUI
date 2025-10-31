@@ -34,7 +34,7 @@ public partial class EditorWindow : Window
         catch (Exception ex)
         {
             Trace.TraceError(ex.ToString());
-            await Utils.RaiseModal(this, "Failed to save due to unhandled exception: '" + ex.ToString() + "'");
+            await Utils.RaiseModal(this, $"Failed to save due to unhandled exception:\n{ex.ToString()}");
         }
     }
 

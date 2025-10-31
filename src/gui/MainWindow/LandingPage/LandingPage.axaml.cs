@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Reactive;
 using System.Threading.Tasks;
@@ -130,17 +131,41 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
 
     private async void NewProjectClicked(object? sender, PointerReleasedEventArgs e)
     {
-        await this.RaiseConfigModal("new-proj");
+        try
+        {
+            await this.RaiseConfigModal("new-proj");
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"New project configuration failed with an error:\n{ex.ToString()}");
+        }
     }
 
     private async void OpenProjectClicked(object? sender, PointerReleasedEventArgs e)
     {
-        await this.RaiseConfigModal("open-proj");
+        try
+        {
+            await this.RaiseConfigModal("open-proj");
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Project loading configuration failed with an error:\n{ex.ToString()}");
+        }
     }
 
     private async void ReadOnlyClicked(object? sender, PointerReleasedEventArgs e)
     {
-        await this.RaiseConfigModal("read-only");
+        try
+        {
+            await this.RaiseConfigModal("read-only");
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Read-only configuration failed with an error:\n{ex.ToString()}");
+        }
     }
 
     private void ExitClicked(object? sender, PointerReleasedEventArgs e)
