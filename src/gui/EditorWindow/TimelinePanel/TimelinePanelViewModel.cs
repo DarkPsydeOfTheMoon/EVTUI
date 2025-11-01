@@ -65,7 +65,7 @@ public class Timeline : ReactiveObject
         this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", !dataManager.ReadOnly, (int)evt.CinemascopeStartingFrame, 0, 9999, 1);
 
         this.WhenAnyValue(x => x.CinemascopeEnabled.Value).Subscribe(x => evt.Flags[8] = this.CinemascopeEnabled.Value);
-        this.WhenAnyValue(x => x.CinemascopeAnimationEnabled.Value).Subscribe(x => evt.Flags[9] = this.CinemascopeEnabled.Value);
+        this.WhenAnyValue(x => x.CinemascopeAnimationEnabled.Value).Subscribe(x => evt.Flags[9] = this.CinemascopeAnimationEnabled.Value);
         this.WhenAnyValue(x => x.CinemascopeStartingFrame.Value).Subscribe(x => evt.CinemascopeStartingFrame = (short)x);
 
         // env

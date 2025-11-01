@@ -1614,18 +1614,8 @@
 
 <Grid>
   <DockPanel DataContext="{Binding TimelineContent}">
-    <!--ToggleButton>
-      <ToggleButton.Styles>
-        <Style Selector="ToggleButton">
-          <Style Selector="^:checked > ScrollViewer">
-            <Setter Property="IsVisible" Value="True"/>
-          </Style>
-          <Style Selector="^:unchecked > ScrollViewer">
-            <Setter Property="IsVisible" Value="false"/>
-          </Style>
-        </Style>
-      </ToggleButton.Styles-->
-    <Expander DockPanel.Dock="Left" ExpandDirection="Right" VerticalAlignment="Stretch" IsExpanded="true" MaxWidth="600" Padding="0" CornerRadius="0" MinWidth="0" BorderThickness="0" HorizontalAlignment="Center" HorizontalContentAlignment="Center">
+    <!-- TODO lol -->
+    <!--Expander DockPanel.Dock="Left" ExpandDirection="Right" VerticalAlignment="Stretch" IsExpanded="true" MaxWidth="600" Padding="0" CornerRadius="0" MinWidth="0" BorderThickness="0" HorizontalAlignment="Center" HorizontalContentAlignment="Center">
       <Expander.Styles>
         <Style Selector="Border#ExpanderContent">
           <Setter Property="BorderThickness" Value="0"/>
@@ -1645,18 +1635,15 @@
           <Setter Property="Margin" Value="0"/>
         </Style>
       </Expander.Styles>
-      <!--Border Cursor="RightSide" BorderBrush="red" BorderThickness="0,0,5,0"-->
-      <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" Padding="5" Margin="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
-        <!--ContentControl Name="CommandEditor" Content="{Binding ActiveCommand}"/-->
-        <ContentControl Name="CommandEditor"/>
-        <!--ContentControl Name="CommandEditor" Content="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).ActiveCommand}"/-->
-      </ScrollViewer>
-      <!--/Border-->
+      <Border Cursor="RightSide" BorderBrush="red" BorderThickness="0,0,5,0">
+        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" Padding="5" Margin="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+          <ContentControl Name="CommandEditor"/>
+        </ScrollViewer>
+      </Border>
     </Expander>
-    <!--/ToggleButton-->
     <Expander DockPanel.Dock="Top" ExpandDirection="Down" HorizontalAlignment="Stretch" IsExpanded="true" MaxHeight="400">
       <TextBlock Text="hiiiii"/>
-    </Expander>
+    </Expander-->
     <DockPanel DockPanel.Dock="Top">
       <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
         <Button Classes="accented" Click="ShowAllCategories" CornerRadius="5,0,0,5">
@@ -1895,8 +1882,9 @@
                   </ItemsControl.Styles>
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                      <!--Button Flyout="{StaticResource CommandFlyout}"-->
-                      <Button Click="PopulateCommandEditor"
+                      <!-- TODO lol -->
+                      <!--Button Click="PopulateCommandEditor"-->
+                      <Button Flyout="{StaticResource CommandFlyout}"
                        Classes.inactive="{Binding !IsInPlayRange}"
                        HorizontalAlignment="Center"
                        Width="{c:Binding 60 + 85*(Duration-1)}">

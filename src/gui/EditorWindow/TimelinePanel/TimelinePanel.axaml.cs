@@ -197,12 +197,11 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         target.Classes.Add("selected");
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(((Flyout)sender).Target)).Content;
         ViewModel!.SetActiveCommand(cmd);
-        //((Flyout)sender).Content = ViewModel!.ActiveCommand;
-        CommandEditor.Content = ViewModel!.ActiveCommand;
-        //CommandEditor.IsExpanded = true;
+        ((Flyout)sender).Content = ViewModel!.ActiveCommand;
     }
 
-    public void PopulateCommandEditor(object sender, RoutedEventArgs e)
+    // TODO lol
+    /*public void PopulateCommandEditor(object sender, RoutedEventArgs e)
     {
         bool actuallyJustClearIt = (((Button)sender).Classes.Contains("selected"));
 
@@ -217,18 +216,16 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         ((Button)sender).Classes.Add("selected");
         CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent((Button)sender)).Content;
         ViewModel!.SetActiveCommand(cmd);
-        //((Flyout)sender).Content = ViewModel!.ActiveCommand;
         CommandEditor.Content = ViewModel!.ActiveCommand;
         //CommandEditor.IsExpanded = true;
-    }
+    }*/
 
     public void ClearFlyout(object sender, EventArgs e)
     {
         Button target = (Button)((Flyout)sender).Target;
         target.Classes.Remove("selected");
         ViewModel!.UnsetActiveCommand(true);
-        //((Flyout)sender).Content = null;
-        CommandEditor.Content = null;
+        ((Flyout)sender).Content = null;
     }
 
     public void PlaySFXTrack(object sender, RoutedEventArgs e)
