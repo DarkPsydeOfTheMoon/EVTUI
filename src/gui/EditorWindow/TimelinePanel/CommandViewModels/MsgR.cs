@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MsgR : Generic
 {
-    public MsgR(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public MsgR(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Dialogue Turn";
 
@@ -14,6 +14,7 @@ public class MsgR : Generic
         this.HasMessage = new BoolChoiceField("Includes Message?", this.Editable, (((this.CommandData.MessageMode) & 1) == 1));
         this.HasSelection = new BoolChoiceField("Includes Selection?", this.Editable, (((this.CommandData.MessageMode >> 1) & 1) == 1));
         this.IsSubtitle = new BoolChoiceField("Is Subtitle?", this.Editable, (((this.CommandData.MessageMode >> 2) & 1) == 1));
+        this.WhenAnyValue(_ => _.HasMessage.Value, _ => _.HasSelection.Value, _ => _.IsSubtitle.Value).Subscribe(_ => this.CommandData.MessageMode = (Convert.ToInt32(this.IsSubtitle.Value) << 2) + (Convert.ToInt32(this.HasSelection.Value) << 1) + Convert.ToInt32(this.HasMessage.Value));
 
         string msgId = config.ScriptManager.GetTurnName(this.CommandData.MessageIndex);
         this.MessageID = new StringSelectionField("Message ID", this.Editable, msgId, config.ScriptManager.MsgNames);
@@ -24,6 +25,7 @@ public class MsgR : Generic
             int newMsgIndex = config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
             if (config.ScriptManager.MsgNames.Contains(config.ScriptManager.GetTurnName(newMsgIndex)))
                 this.MessageBlock = new MessagePreview(config, newMsgIndex);
+            this.CommandData.MessageIndex = this.Config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
         });
 
         string selId = config.ScriptManager.GetTurnName(this.CommandData.SelIndex);
@@ -35,6 +37,7 @@ public class MsgR : Generic
             int newSelIndex = config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
             if (config.ScriptManager.SelNames.Contains(config.ScriptManager.GetTurnName(newSelIndex)))
                 this.SelectionBlock = new SelectionPreview(config, newSelIndex);
+            this.CommandData.SelIndex = this.Config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
         });
 
         this.Config = config;
@@ -60,19 +63,5 @@ public class MsgR : Generic
     {
         get => _selectionBlock;
         set => this.RaiseAndSetIfChanged(ref _selectionBlock, value);
-    }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.CommandData.MessageMode = (Convert.ToInt32(this.IsSubtitle.Value) << 2) + (Convert.ToInt32(this.HasSelection.Value) << 1) + Convert.ToInt32(this.HasMessage.Value);
-        if (!(this.MessageID is null))
-            this.CommandData.MessageIndex = this.Config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
-        if (!(this.SelectionID is null))
-            this.CommandData.SelIndex = this.Config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
-        if (!(this.MessageBlock is null))
-            this.MessageBlock.SaveChanges();
-        if (!(this.SelectionBlock is null))
-            this.SelectionBlock.SaveChanges();
     }
 }

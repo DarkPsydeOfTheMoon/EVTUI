@@ -1,32 +1,29 @@
 using System;
 using System.Collections.Generic;
 
+using ReactiveUI;
+
 using static EVTUI.ViewModels.FieldUtils;
 
 namespace EVTUI.ViewModels.TimelineCommands;
 
 public class ERgs : Generic
 {
-    public ERgs(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public ERgs(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Effect: Registry";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x01000002));
+        this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
+
         this.Display = new StringSelectionField("Display", this.Editable, this.DisplayTypes.Backward[this.CommandData.DisplayType], this.DisplayTypes.Keys);
+        this.WhenAnyValue(_ => _.Display.Choice).Subscribe(_ => this.CommandData.DisplayType = this.DisplayTypes.Forward[this.Display.Choice]);
         this.Scene = new StringSelectionField("Scene", this.Editable, this.SceneTypes.Backward[this.CommandData.Scene], this.SceneTypes.Keys);
+        this.WhenAnyValue(_ => _.Scene.Choice).Subscribe(_ => this.CommandData.Scene = this.SceneTypes.Forward[this.Scene.Choice]);
     }
 
     public IntSelectionField    AssetID { get; set; }
     public StringSelectionField Display { get; set; }
     public StringSelectionField Scene   { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-        this.Command.ObjectId = this.AssetID.Choice;
-
-        this.CommandData.DisplayType = this.DisplayTypes.Forward[this.Display.Choice];
-        this.CommandData.Scene = this.SceneTypes.Forward[this.Scene.Choice];
-    }
 
     public BiDict<string, uint> DisplayTypes = new BiDict<string, uint>
     (

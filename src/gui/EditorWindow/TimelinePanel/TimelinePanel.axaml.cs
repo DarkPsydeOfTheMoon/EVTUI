@@ -11,6 +11,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
+using Avalonia.VisualTree;
 
 using ReactiveUI;
 
@@ -199,6 +200,26 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         ((Flyout)sender).Content = ViewModel!.ActiveCommand;
     }
 
+    // TODO lol
+    /*public void PopulateCommandEditor(object sender, RoutedEventArgs e)
+    {
+        bool actuallyJustClearIt = (((Button)sender).Classes.Contains("selected"));
+
+        ViewModel!.UnsetActiveCommand(true);
+        CommandEditor.Content = null;
+        foreach (Button b in Scrolly.GetVisualDescendants().OfType<Button>())
+            b.Classes.Remove("selected");
+
+        if (actuallyJustClearIt)
+            return;
+
+        ((Button)sender).Classes.Add("selected");
+        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent((Button)sender)).Content;
+        ViewModel!.SetActiveCommand(cmd);
+        CommandEditor.Content = ViewModel!.ActiveCommand;
+        //CommandEditor.IsExpanded = true;
+    }*/
+
     public void ClearFlyout(object sender, EventArgs e)
     {
         Button target = (Button)((Flyout)sender).Target;
@@ -213,7 +234,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
             (StackPanel)LogicalExtensions.GetLogicalParent(
                 (StackPanel)LogicalExtensions.GetLogicalParent(
                     ((Button)sender))))).Content;
-        ViewModel!.PlayCueFromSource(cmd.Source.Choice, cmd.CueID.Choice, 1);
+        ViewModel!.PlayCueFromSource(cmd.SourceType.Choice, cmd.CueID.Choice, 1);
     }
 
     public void PlayVoiceTrack(object sender, RoutedEventArgs e)

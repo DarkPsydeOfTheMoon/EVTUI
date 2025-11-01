@@ -5,6 +5,7 @@
              xmlns:c="clr-namespace:CalcBinding;assembly=CalcBindingAva"
              xmlns:rxui="http://reactiveui.net"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:sys="using:System"
              xmlns:vm="using:EVTUI.ViewModels"
              xmlns:cmds="using:EVTUI.ViewModels.TimelineCommands"
              xmlns:views="using:EVTUI.Views"
@@ -1549,8 +1550,12 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding CueID}"/>
-        <ContentControl Content="{Binding Action}"/>
-        <ContentControl Content="{Binding Enable}"/>
+        <ContentControl Content="{Binding ActionType}"/>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Unk}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 
@@ -1559,7 +1564,7 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <ContentControl Content="{Binding Action}"/>
+        <ContentControl Content="{Binding ActionType}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -1578,16 +1583,20 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <ContentControl Content="{Binding Action}"/>
-        <ContentControl Content="{Binding Source}"/>
-        <ContentControl Content="{Binding FadeDuration}"/>
-        <ContentControl Content="{Binding Channel}" IsVisible="{Binding IsPlayCmd}"/>
-        <StackPanel Classes="preview" IsVisible="{Binding IsPlayCmd}">
+        <ContentControl Content="{Binding SourceType}"/>
+        <ContentControl Content="{Binding ActionType}"/>
+        <StackPanel Classes="preview" IsVisible="{c:Binding 'ActionType.Choice == \'Play\''}">
           <ContentControl Content="{Binding CueID}"/>
           <Button Click="PlaySFXTrack" ToolTip.Tip="Play/Pause Selected Track">
             <PathIcon Data="{StaticResource video_play_pause_regular}" />
           </Button>
         </StackPanel>
+        <ContentControl Content="{Binding FadeDuration}"/>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding Unk}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 
@@ -1605,6 +1614,36 @@
 
 <Grid>
   <DockPanel DataContext="{Binding TimelineContent}">
+    <!-- TODO lol -->
+    <!--Expander DockPanel.Dock="Left" ExpandDirection="Right" VerticalAlignment="Stretch" IsExpanded="true" MaxWidth="600" Padding="0" CornerRadius="0" MinWidth="0" BorderThickness="0" HorizontalAlignment="Center" HorizontalContentAlignment="Center">
+      <Expander.Styles>
+        <Style Selector="Border#ExpanderContent">
+          <Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+        <Style Selector="ToggleButton">
+          <Setter Property="Margin" Value="0"/>
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style Selector="Border#ExpandCollapseChevronBorder">
+          <Setter Property="Margin" Value="0"/>
+          <Setter Property="Height" Value="{x:Static sys:Double.NaN}"/>
+          <Setter Property="Width" Value="{x:Static sys:Double.NaN}"/>
+        </Style>
+        <Style Selector="Expander ToggleButton TextBlock">
+          <Setter Property="Margin" Value="0"/>
+        </Style>
+      </Expander.Styles>
+      <Border Cursor="RightSide" BorderBrush="red" BorderThickness="0,0,5,0">
+        <ScrollViewer VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" Padding="5" Margin="0" Background="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}">
+          <ContentControl Name="CommandEditor"/>
+        </ScrollViewer>
+      </Border>
+    </Expander>
+    <Expander DockPanel.Dock="Top" ExpandDirection="Down" HorizontalAlignment="Stretch" IsExpanded="true" MaxHeight="400">
+      <TextBlock Text="hiiiii"/>
+    </Expander-->
     <DockPanel DockPanel.Dock="Top">
       <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
         <Button Classes="accented" Click="ShowAllCategories" CornerRadius="5,0,0,5">
@@ -1843,6 +1882,8 @@
                   </ItemsControl.Styles>
                   <ItemsControl.ItemTemplate>
                     <DataTemplate>
+                      <!-- TODO lol -->
+                      <!--Button Click="PopulateCommandEditor"-->
                       <Button Flyout="{StaticResource CommandFlyout}"
                        Classes.inactive="{Binding !IsInPlayRange}"
                        HorizontalAlignment="Center"

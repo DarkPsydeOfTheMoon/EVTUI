@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+
+using ReactiveUI;
 
 using static EVTUI.ViewModels.FieldUtils;
 
@@ -6,33 +9,47 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CMD_ : Generic
 {
-    public CMD_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public CMD_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Camera: Coordinate Movement";
 
         this.AngleOfView = new NumRangeField("Angle of View", this.Editable, this.CommandData.AngleOfView, 1, 180, 1);
+        this.WhenAnyValue(_ => _.AngleOfView.Value).Subscribe(_ => this.CommandData.AngleOfView = (float)this.AngleOfView.Value);
 
         // viewport target position
         this.ViewportX = new NumRangeField("X", this.Editable, this.CommandData.ViewportCoordinates[0], -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.ViewportX.Value).Subscribe(_ => this.CommandData.ViewportCoordinates[0] = (float)this.ViewportX.Value);
         this.ViewportY = new NumRangeField("Y", this.Editable, this.CommandData.ViewportCoordinates[1], -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.ViewportY.Value).Subscribe(_ => this.CommandData.ViewportCoordinates[1] = (float)this.ViewportY.Value);
         this.ViewportZ = new NumRangeField("Z", this.Editable, this.CommandData.ViewportCoordinates[2], -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.ViewportZ.Value).Subscribe(_ => this.CommandData.ViewportCoordinates[2] = (float)this.ViewportZ.Value);
 
         // viewport target rotation
         // i may have yaw and pitch switched around here, dunno
         this.ViewportYaw = new NumRangeField("Yaw", this.Editable, this.CommandData.ViewportRotation[0], -180, 180, 1);
+        this.WhenAnyValue(_ => _.ViewportYaw.Value).Subscribe(_ => this.CommandData.ViewportRotation[0] = (float)this.ViewportYaw.Value);
         this.ViewportPitch = new NumRangeField("Pitch", this.Editable, this.CommandData.ViewportRotation[1], -180, 180, 1);
+        this.WhenAnyValue(_ => _.ViewportPitch.Value).Subscribe(_ => this.CommandData.ViewportRotation[1] = (float)this.ViewportPitch.Value);
         this.ViewportRoll = new NumRangeField("Roll", this.Editable, this.CommandData.ViewportRotation[2], -180, 180, 1);
+        this.WhenAnyValue(_ => _.ViewportRoll.Value).Subscribe(_ => this.CommandData.ViewportRotation[2] = (float)this.ViewportRoll.Value);
 
         // interpolation
         this.InterpolationSettings = new InterpolationParameters(this.CommandData.InterpolationParameters, this.Editable);
+        this.WhenAnyValue(_ => _.InterpolationSettings.InterpolationType.Choice, _ => _.InterpolationSettings.SlopeInType.Choice, _ => _.InterpolationSettings.SlopeOutType.Choice).Subscribe(_ => this.CommandData.InterpolationParameters = this.InterpolationSettings.Compose());
 
         // focus/blur
         this.EnableDOF = new BoolChoiceField("Enable Depth-Of-Field?", this.Editable, this.CommandData.Flags[4]);
+        this.WhenAnyValue(_ => _.EnableDOF.Value).Subscribe(_ => this.CommandData.Flags[4] = this.EnableDOF.Value);
         this.FocalDistance = new NumRangeField("Focal Distance", this.Editable, this.CommandData.FocalPlaneDistance, 0, 999999, 1);
+        this.WhenAnyValue(_ => _.FocalDistance.Value).Subscribe(_ => this.CommandData.FocalPlaneDistance = (float)this.FocalDistance.Value);
         this.NearBlurDistance = new NumRangeField("Near Blur Distance", this.Editable, this.CommandData.NearBlurSurface, 0, 999999, 1);
+        this.WhenAnyValue(_ => _.NearBlurDistance.Value).Subscribe(_ => this.CommandData.NearBlurSurface = (float)this.NearBlurDistance.Value);
         this.FarBlurDistance = new NumRangeField("Far Blur Distance", this.Editable, this.CommandData.FarBlurSurface, 0, 999999, 1);
+        this.WhenAnyValue(_ => _.FarBlurDistance.Value).Subscribe(_ => this.CommandData.FarBlurSurface = (float)this.FarBlurDistance.Value);
         this.BlurStrength = new NumRangeField("Blur Strength", this.Editable, this.CommandData.BlurStrength, 0.5, 1, 0.01);
+        this.WhenAnyValue(_ => _.BlurStrength.Value).Subscribe(_ => this.CommandData.BlurStrength = (float)this.BlurStrength.Value);
         this.BlurType = new StringSelectionField("Blur Type", this.Editable, this.BlurTypes.Backward[this.CommandData.BlurType], this.BlurTypes.Keys);
+        this.WhenAnyValue(_ => _.BlurType.Choice).Subscribe(_ => this.CommandData.BlurType = this.BlurTypes.Forward[this.BlurType.Choice]);
 
     }
 
@@ -58,31 +75,6 @@ public class CMD_ : Generic
     public NumRangeField        FarBlurDistance  { get; set; }
     public NumRangeField        BlurStrength     { get; set; }
     public StringSelectionField BlurType         { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-
-        this.CommandData.Flags[4] = this.EnableDOF.Value;
-
-        this.CommandData.ViewportCoordinates[0] = (float)this.ViewportX.Value;
-        this.CommandData.ViewportCoordinates[1] = (float)this.ViewportY.Value;
-        this.CommandData.ViewportCoordinates[2] = (float)this.ViewportZ.Value;
-
-        this.CommandData.ViewportRotation[0] = (float)this.ViewportYaw.Value;
-        this.CommandData.ViewportRotation[1] = (float)this.ViewportPitch.Value;
-        this.CommandData.ViewportRotation[2] = (float)this.ViewportRoll.Value;
-
-        this.CommandData.AngleOfView = (float)this.AngleOfView.Value;
-        this.CommandData.InterpolationParameters = this.InterpolationSettings.Compose();
-
-        this.CommandData.FocalPlaneDistance = (float)this.FocalDistance.Value;
-        this.CommandData.NearBlurSurface = (float)this.NearBlurDistance.Value;
-        this.CommandData.FarBlurSurface = (float)this.FarBlurDistance.Value;
-
-        this.CommandData.BlurStrength = (float)this.BlurStrength.Value;
-        this.CommandData.BlurType = this.BlurTypes.Forward[this.BlurType.Choice];
-    }
 
     public BiDict<string, uint> BlurTypes = new BiDict<string, uint>
     (

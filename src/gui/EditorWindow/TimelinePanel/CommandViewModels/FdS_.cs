@@ -1,30 +1,26 @@
 using System;
 using System.Collections.Generic;
 
+using ReactiveUI;
+
 using static EVTUI.ViewModels.FieldUtils;
 
 namespace EVTUI.ViewModels.TimelineCommands;
 
 public class FdS_ : Generic
 {
-    public FdS_(DataManager config, SerialCommand command, object commandData) : base(config, command, commandData)
+    public FdS_(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
         this.LongName = "Fade (Simple)";
 
         this.FadeType = new StringSelectionField("Fade Type", this.Editable, this.BasicFadeTypes.Backward[this.CommandData.FadeType], this.BasicFadeTypes.Keys);
+        this.WhenAnyValue(_ => _.FadeType.Choice).Subscribe(_ => this.CommandData.FadeType = this.BasicFadeTypes.Forward[this.FadeType.Choice]);
         this.UnkBool = new BoolChoiceField("Unknown", this.Editable, this.CommandData.UnkBool != 0);
+        this.WhenAnyValue(_ => _.UnkBool.Value).Subscribe(_ => this.CommandData.UnkBool = Convert.ToByte(this.UnkBool.Value));
     }
 
     public StringSelectionField FadeType { get; set; }
     public BoolChoiceField      UnkBool  { get; set; }
-
-    public new void SaveChanges()
-    {
-        base.SaveChanges();
-
-        this.CommandData.FadeType = this.BasicFadeTypes.Forward[this.FadeType.Choice];
-        this.CommandData.UnkBool = Convert.ToByte(this.UnkBool.Value);
-    }
 
     public BiDict<string, uint> BasicFadeTypes = new BiDict<string, uint>
     (
