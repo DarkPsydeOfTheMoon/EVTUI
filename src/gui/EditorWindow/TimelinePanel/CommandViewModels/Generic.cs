@@ -9,22 +9,22 @@ public class Generic : ReactiveObject
 {
     public Generic(DataManager config, CommandPointer cmd)
     {
-        this.LongName    = cmd.Command.CommandCode;
         this.Command     = cmd.Command;
         this.CommandData = cmd.CommandData;
-        this.Editable    = !config.ReadOnly;
+        
+        this.LongName    = cmd.Command.CommandCode;
+        this.Size        = cmd.Command.DataSize.Value;
         this.Basics      = new Basics(config, cmd);
-
-        this.Size = cmd.Command.DataSize;
+        this.Editable    = !config.ReadOnly;
     }
 
-    public string           LongName    { get; set; }
     protected SerialCommand Command;
     protected dynamic       CommandData;
-    public bool             Editable { get; }
-    public Basics           Basics { get; set; }
 
-    public int Size { get; }
+    public string LongName { get; set; }
+    public int    Size     { get; }
+    public Basics Basics   { get; set; }
+    public bool   Editable { get; }
 }
 
 public class Basics : ReactiveObject

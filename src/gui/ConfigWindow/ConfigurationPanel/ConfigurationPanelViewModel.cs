@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using ReactiveUI;
 //using ReactiveUI.Fody.Helpers;
@@ -295,94 +296,91 @@ public class ConfigurationPanelViewModel : ViewModelBase
         return true;
     }
 
-    public (int Status, string Message) TrySetModDir(string maybedir)
+    public async Task<int> TrySetModDir(string maybedir)
     {
-        if (this.Config.ProjectManager.ModPathAlreadyUsed(maybedir))
-            return (1, "Selected mod directory is used in another project and cannot be reused.");
+        if (await this.Config.ProjectManager.ModPathAlreadyUsed(maybedir))
+            return 1;
         this.newProjectConfig.ModPath = maybedir;
         OnPropertyChanged(nameof(DisplayModPath));
-        return (0, null);
+        return 0;
     }
 
-    public (int Status, string Message) TryCreateProject()
+    public async Task<int> TryCreateProject()
     {
         if (this.newProjectConfig.Name is null || this.newProjectConfig.Name == "")
-            return (1, "Project name hasn't been set.");
+            return 1;
         if (this.newProjectConfig.GamePath is null || this.newProjectConfig.GamePath == "")
-            return (1, "Game (CPK) folder hasn't been set.");
+            return 2;
         if (this.newProjectConfig.ModPath is null || this.newProjectConfig.ModPath == "")
-            return (1, "Mod folder hasn't been set.");
+            return 3;
 
-        bool projectSuccess = this.Config.ProjectManager.TryUpdateProjects(this.newProjectConfig);
-        if (!projectSuccess)
-            return (1, "Something is wrong with the provided folders. Project could not be created.");
+        if (!(await this.Config.ProjectManager.TryUpdateProjects(this.newProjectConfig)))
+            return 4;
 
-        this.Config.LoadProject(0);
-
+        await this.Config.LoadProject(0);
         if (this.Config.ProjectManager.ActiveProject is null)
-            return (1, "Failed to load project for some reason.");
+            return 5;
 
-        return (0, $"Loaded project \"{this.Config.ProjectManager.ActiveProject.Name}\"!");
+        return 0;
     }
 
-    public (int Status, string Message) TryUseCPKDir(string cpkdir, string gametype)
+    public async Task<int> TryUseCPKDir(string cpkdir, string gametype)
     {
         if (cpkdir is null)
         {
             if (this.GameSelection is null)
-                return (1, "No CPK folder selected.");
+                return 1;
             if (this.GameSelection.Path is null)
-                return (1, "CPK folder selection is invalid.");
+                return 2;
             if (!this.TrySetCPKs(this.GameSelection.Path))
-                return (1, "No CPKs in selected folder.");
+                return 3;
             if (this.Config.ReadOnly)
-                this.Config.LoadGameReadOnly(this.GameSelection.Ind);
+                await this.Config.LoadGameReadOnly(this.GameSelection.Ind);
         }
         else
         {
             if (!this.TrySetCPKs(cpkdir))
-                return (1, "No CPKs in selected folder.");
+                return 3;
             if (this.Config.ReadOnly)
-                this.Config.ProjectManager.UpdateReadOnlyCPKs(cpkdir, gametype, "");
+                await this.Config.ProjectManager.UpdateReadOnlyCPKs(cpkdir, gametype, "");
         }
-        return (0, null);
+        return 0;
     }
 
-    public (int Status, string Message) TryLoadProject()
+    public async Task<int> TryLoadProject()
     {
         if (this.ProjectSelection is null)
-            return (1, "No project selected.");
+            return 1;
         if (this.ProjectSelection.GamePath is null)
-            return (1, "Project has no game path set.");
+            return 2;
 
         if (!this.TrySetCPKs(this.ProjectSelection.GamePath))
-            return (1, "No CPKs in selected folder.");
+            return 3;
 
-        this.Config.LoadProject(this.ProjectSelection.Ind);
+        await this.Config.LoadProject(this.ProjectSelection.Ind);
         if (this.Config.ProjectManager.ActiveProject is null)
-            return (1, "No project loaded.");
+            return 4;
 
-        return (0, $"Loaded project \"{this.Config.ProjectManager.ActiveProject.Name}\"!");
+        return 0;
     }
 
-    public (int Status, string Message) TryDeleteProject(DisplayableProject project)
+    public async Task<int> TryDeleteProject(DisplayableProject project)
     {
         if (this.Config.CheckIfProjOpen(project.ModPath) || !(this.Config.ProjectManager.ActiveGame is null && this.Config.ProjectManager.ActiveProject is null && this.Config.ProjectManager.ActiveEvent is null))
-            return (1, $"Couldn't delete the project \"{project.Name}\" because it appears to be open. Close any open editors for the project if you really want to delete it.");
+            return 1;
 
         this.ProjectSelection = null;
         this.ProjectList.Remove(project);
 
-        bool success = this.Config.ProjectManager.DeleteProject(project.Ind);
-        if (success)
-            return (0, $"Successfully deleted the project \"{project.Name}\".");
+        if (await this.Config.ProjectManager.DeleteProject(project.Ind))
+            return 0;
         else
         {
             // in case we cleared it from the view but it didn't actually delete lol
             this.ProjectList.Clear();
             for (int i=0; i<this.Config.AllProjects.Count; i++)
                 this.ProjectList.Add(new DisplayableProject(this.Config, i));
-            return (1, $"Couldn't delete the project \"{project.Name}\".");
+            return 2;
         }
     }
 
@@ -447,12 +445,12 @@ public class ConfigurationPanelViewModel : ViewModelBase
         this.EventList = eventList;
     }
 
-    public (int Status, string Message) TryLoadEvent(bool fromSelection)
+    public async Task<int> TryLoadEvent(bool fromSelection)
     {
         if (fromSelection)
         {
             if (this.EventSelection is null)
-                return (1, "No event selected.");
+                return 1;
             this.EventMajorId = this.EventSelection.MajorId;
             this.EventMinorId = this.EventSelection.MinorId;
             OnPropertyChanged(nameof(this.EventMajorId));
@@ -461,27 +459,26 @@ public class ConfigurationPanelViewModel : ViewModelBase
 
         try
         {
-            bool validLoadAttempt = this.Config.LoadEvent((int)this.EventMajorId, (int)this.EventMinorId);
-            if (!validLoadAttempt)
-                return (1, "Must have a loaded project or be in read-only mode to load an event.");
+            if (!(await this.Config.LoadEvent((int)this.EventMajorId, (int)this.EventMinorId)))
+                return 2;
             else if (!this.Config.EventLoaded)
-                return (1, $"Event E{this.EventMajorId:000}_{this.EventMinorId:000} does not exist and could not be loaded.");
+                return 3;
         }
         catch (IOException ex)
         {
             Trace.TraceError(ex.ToString());
-            return (1, "Failed to load event because the game files are in use.\nIf the game is currently open, close it before trying again.");
+            return 4;
         }
-        catch (Exception ex)
+        /*catch (Exception ex)
         {
             Trace.TraceError(ex.ToString());
             return (1, "Failed to extract EVT due to unhandled exception: '" + ex.ToString() + "'");
-        }
+        }*/
 
         if (this.Config.ActiveEventId is null)
-            return (1, "No event loaded.");
+            return 5;
 
-        return (0, $"Loaded event {this.Config.ActiveEventId}!");
+        return 0;
     }
 
 }
