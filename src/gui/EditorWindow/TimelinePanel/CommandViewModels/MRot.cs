@@ -21,15 +21,15 @@ public class MRot : Generic
         this.YawEnabled = new BoolChoiceField("Enable Yaw?", this.Editable, this.CommandData.Flags[0]);
         this.WhenAnyValue(_ => _.YawEnabled.Value).Subscribe(_ => this.CommandData.Flags[0] = this.YawEnabled.Value);
         this.YawDegrees = new NumRangeField("Yaw", this.Editable, this.CommandData.Rotation[0], -180, 180, 1);
-        this.WhenAnyValue(_ => _.YawDegrees).Subscribe(_ => this.CommandData.Rotation[0] = (float)this.YawDegrees.Value);
+        this.WhenAnyValue(_ => _.YawDegrees.Value).Subscribe(_ => this.CommandData.Rotation[0] = (float)this.YawDegrees.Value);
         this.PitchEnabled = new BoolChoiceField("Enable Pitch?", this.Editable, this.CommandData.Flags[1]);
         this.WhenAnyValue(_ => _.PitchEnabled.Value).Subscribe(_ => this.CommandData.Flags[1] = this.PitchEnabled.Value);
         this.PitchDegrees = new NumRangeField("Pitch", this.Editable, this.CommandData.Rotation[1], -180, 180, 1);
-        this.WhenAnyValue(_ => _.PitchDegrees).Subscribe(_ => this.CommandData.Rotation[1] = (float)this.PitchDegrees.Value);
+        this.WhenAnyValue(_ => _.PitchDegrees.Value).Subscribe(_ => this.CommandData.Rotation[1] = (float)this.PitchDegrees.Value);
         this.RollEnabled = new BoolChoiceField("Enable Roll?", this.Editable, this.CommandData.Flags[2]);
         this.WhenAnyValue(_ => _.RollEnabled.Value).Subscribe(_ => this.CommandData.Flags[2] = this.RollEnabled.Value);
         this.RollDegrees = new NumRangeField("Roll", this.Editable, this.CommandData.Rotation[2], -180, 180, 1);
-        this.WhenAnyValue(_ => _.RollDegrees).Subscribe(_ => this.CommandData.Rotation[2] = (float)this.RollDegrees.Value);
+        this.WhenAnyValue(_ => _.RollDegrees.Value).Subscribe(_ => this.CommandData.Rotation[2] = (float)this.RollDegrees.Value);
         this.CustomRotationAnimationsEnabled = new BoolChoiceField("Customize Rotation Animations?", this.Editable, this.CommandData.Flags[12]);
         this.WhenAnyValue(_ => _.CustomRotationAnimationsEnabled.Value).Subscribe(_ => this.CommandData.Flags[12] = this.CustomRotationAnimationsEnabled.Value);
 
