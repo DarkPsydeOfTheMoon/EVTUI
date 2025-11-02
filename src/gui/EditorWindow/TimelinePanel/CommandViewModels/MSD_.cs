@@ -27,13 +27,13 @@ public class MSD_ : Generic
 
         // rotation
         this.RotationEnabled = new BoolChoiceField("Enabled?", this.Editable, !this.CommandData.Flags[1]);
-        this.WhenAnyValue(_ => _.RollDegrees.Value).Subscribe(_ => this.CommandData.Rotation[2] = (float)this.RollDegrees.Value);
+        this.WhenAnyValue(_ => _.RotationEnabled.Value).Subscribe(_ => this.CommandData.Flags[1] = !this.RotationEnabled.Value);
         this.PitchDegrees = new NumRangeField("Pitch", this.Editable, this.CommandData.Rotation[0], -180, 180, 1);
         this.WhenAnyValue(_ => _.PitchDegrees.Value).Subscribe(_ => this.CommandData.Rotation[0] = (float)this.PitchDegrees.Value);
         this.YawDegrees = new NumRangeField("Yaw", this.Editable, this.CommandData.Rotation[1], -180, 180, 1);
         this.WhenAnyValue(_ => _.YawDegrees.Value).Subscribe(_ => this.CommandData.Rotation[1] = (float)this.YawDegrees.Value);
         this.RollDegrees = new NumRangeField("Roll", this.Editable, this.CommandData.Rotation[2], -180, 180, 1);
-        this.WhenAnyValue(_ => _.RotationEnabled.Value).Subscribe(_ => this.CommandData.Flags[1] = !this.RotationEnabled.Value);
+        this.WhenAnyValue(_ => _.RollDegrees.Value).Subscribe(_ => this.CommandData.Rotation[2] = (float)this.RollDegrees.Value);
 
         // waiting animation
         this.WaitingAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.WaitingAnimation, this.CommandData.Flags, $"Idle Animation", enabledInd:0, extInd:2, enabledFlip:true);
