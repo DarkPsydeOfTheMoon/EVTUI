@@ -470,13 +470,17 @@ public class ScriptManager
             File.WriteAllText(outPath+ext, this.ScriptTexts["BMD"][fileBase][ext]);
                 
         MessageScriptCompiler compiler = new MessageScriptCompiler(FormatVersion.Version1BigEndian, this.Encoding);
+        //MessageScriptCompiler compiler = new MessageScriptCompiler(FormatVersion.Version1, this.Encoding);
         compiler.Library = LibraryLookup.GetLibrary(this.GameName);
         AppLogListener listener = new AppLogListener();
         compiler.AddListener(listener);
         try
         {
             MessageScript msgScript = new MessageScript(FormatVersion.Version1BigEndian, this.Encoding);
+            //MessageScript msgScript = new MessageScript(FormatVersion.Version1, this.Encoding);
             bool success = compiler.TryCompile(this.ScriptTexts["BMD"][fileBase][".msg"], out msgScript);
+            // TODO... get emulation actually working here!
+            //bool success = compiler.TryCompileWithImports(this.ScriptTexts["BMD"][fileBase][".msg"], List<string> imports, out msgScript);
             this.BMDFiles[fileBase] = new BMD();
             byte[] newBytes = ((MemoryStream)msgScript.ToBinary().ToStream()).ToArray();
             this.BMDFiles[fileBase].FromBytes(newBytes);
@@ -536,11 +540,13 @@ public class ScriptManager
         {
             // TODO: should detect the version from the vanilla extracted file...?
             // orrrr output version just depends on game type?
-            FlowScriptCompiler compiler = new FlowScriptCompiler(FlowFormatVersion.Version1BigEndian);
+            FlowScriptCompiler compiler = new FlowScriptCompiler(FlowFormatVersion.Version3BigEndian);
             compiler.Encoding = this.Encoding;
             compiler.Library = LibraryLookup.GetLibrary(this.GameName);
+            // no idea why this tracing bool alone is set to true by default, but it is ANNOYING!!!
+            compiler.EnableProcedureTracing = false;
             compiler.AddListener(listener);
-            FlowScript flowScript = new FlowScript(FlowFormatVersion.Version1BigEndian);
+            FlowScript flowScript = new FlowScript(FlowFormatVersion.Version3BigEndian);
             bool success = compiler.TryCompile(this.ScriptTexts["BF"][fileBase][".flow"], out flowScript);
             byte[] newBytes = ((MemoryStream)flowScript.ToBinary().ToStream()).ToArray();
             //this.BFFiles[fileBase] = new BF();
