@@ -256,6 +256,15 @@ public class Timeline : ReactiveObject
         }
     }
 
+    public void InsertFrames(int afterFrame, int numberFrames)
+    {
+        this.FrameDuration.Value += numberFrames;
+        foreach (Category cat in this.Categories)
+            foreach (CommandPointer cmd in cat.Commands.ToList())
+                if (cmd.Frame > afterFrame)
+                    cat.MoveCommand(cmd, cmd.Frame + numberFrames);
+    }
+
     public void AddCommand(CommandPointer newCmd)
     {
         int catInd = Timeline.CodeToCategory(newCmd.Code, newCmd.IsAudioCmd);
@@ -487,6 +496,8 @@ public class CommandPointer : ViewModelBase
         this.Command     = ((isAudioCmd) ? config.EventManager.EventSoundCommands : config.EventManager.EventCommands)[cmdIndex];
         this.CommandData = ((isAudioCmd) ? config.EventManager.EventSoundCommandData : config.EventManager.EventCommandData)[cmdIndex];
         this.CommandType = Type.GetType($"EVTUI.ViewModels.TimelineCommands.{code}");
+
+        this.WhenAnyValue(_ => _.Frame).Subscribe(_ => this.Command.FrameStart = this.Frame);
     }
 
     public string Code       { get; }
@@ -507,7 +518,6 @@ public class CommandPointer : ViewModelBase
         }
     }
 
-    //public int Frame { get; }
     private int _frame;
     public int Frame
     {
@@ -580,7 +590,14 @@ public class TimelinePanelViewModel : ViewModelBase
         this.SharedClipboard = clipboard;
     }
 
-	public void SetAddableCodes(Category category)
+    public void InsertFrames(int afterFrame, int numberFrames)
+    {
+        this.TimelineContent.InsertFrames(afterFrame, numberFrames);
+        if (!(this.ActiveCommand is null) && this.ActiveCommand.Basics.StartingFrame.Value > afterFrame)
+            this.ActiveCommand.Basics.StartingFrame.Value += numberFrames;
+    }
+
+    public void SetAddableCodes(Category category)
     {
         this.AddableCodes.Clear();
         foreach (string code in this.Config.EventManager.AddableCodes)
