@@ -1728,7 +1728,7 @@
     </DockPanel>
     <Grid>
       <ScrollViewer Name="FramesScroller" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="153,0,16,16" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}">
-        <ItemsControl ItemsSource="{Binding Frames}" Name="FramesHaver">
+        <ItemsControl ItemsSource="{Binding Frames}" Name="FramesHaver" PointerPressed="LogPosition">
           <ItemsControl.Styles>
             <Style Selector="ItemsControl > ContentPresenter:nth-child(even) > Border">
               <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
@@ -1749,6 +1749,12 @@
               <Setter Property="Foreground" Value="{DynamicResource SystemAccentColor}"/>
             </Style>
           </ItemsControl.Styles>
+          <ItemsControl.ContextMenu>
+            <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
+              <MenuItem Header="Insert Empty Frames" Click="OpenInsertFramesModal" />
+              <MenuItem Header="Clear Frames" Click="OpenClearFramesModal" />
+            </ContextMenu>
+          </ItemsControl.ContextMenu> 
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <StackPanel Orientation="Horizontal" Spacing="5"/>
@@ -1846,8 +1852,10 @@
                  Classes.hide="{Binding !IsOpen}" Background="Transparent">
                   <ItemsControl.ContextMenu>
                     <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
-                      <MenuItem Header="New" Click="OpenModal" />
+                      <MenuItem Header="New" Click="OpenAddCodeModal" />
                       <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).SharedClipboard.HasCopiedCommand}" />
+                      <MenuItem Header="Insert Empty Frames" Click="OpenInsertFramesModal" />
+                      <MenuItem Header="Clear Frames" Click="OpenClearFramesModal" />
                     </ContextMenu>
                   </ItemsControl.ContextMenu> 
                   <ItemsControl.ItemsPanel>
@@ -1909,40 +1917,121 @@
       </ScrollViewer>
     </Grid>
   </DockPanel>
-  <DockPanel Background="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}" IsVisible="{Binding $parent[views:TimelinePanel].ModalIsOpen}">
-    <Border
-     Background="{DynamicResource SystemChromeMediumLowColor}"
-     BorderThickness="5"
-     CornerRadius="5"
-     HorizontalAlignment="Center"
-     Padding="10"
-     VerticalAlignment="Center">
-    <StackPanel
-     HorizontalAlignment="Center"
-     Spacing="10"
-     VerticalAlignment="Center">
-      <Button Classes="popupclose" Click="CloseModal" HorizontalAlignment="Right">
-        <PathIcon Data="{StaticResource dismiss_regular}" />
-      </Button>
-      <TextBlock Classes="formtitle" Text="Add New Command"/>
-      <Separator Classes="formtitle"/>
-      <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="5">
-      <ComboBox
-       HorizontalAlignment="Center"
-       ItemsSource="{Binding AddableCodes}"
-       SelectedItem="{Binding $parent[views:TimelinePanel].AddCode}"
-       IsEnabled="{Binding !Config.ReadOnly}"
-       MinWidth="100"
-       MaxDropDownHeight="300"/>
-      <Button Click="NewCommand"
-       HorizontalAlignment="Center"
-       IsEnabled="{Binding $parent[views:TimelinePanel].AddCodeIsSelected}">
-        Add
-      </Button>
+  <Grid Name="Modal" Background="{DynamicResource SystemControlPageBackgroundMediumAltMediumBrush}" IsVisible="false">
+    <Grid.Styles>
+      <Style Selector="Border.ModalContainer">
+        <Setter Property="IsVisible" Value="false"/>
+        <Setter Property="Background" Value="{DynamicResource SystemChromeMediumLowColor}"/>
+        <Setter Property="BorderThickness" Value="5"/>
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+      </Style>
+      <Style Selector="StackPanel.ModalContainer">
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Spacing" Value="10"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+      </Style>
+      <Style Selector="StackPanel.LineContainer">
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="Spacing" Value="5"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+      </Style>
+    </Grid.Styles>
+    <Border Name="AddCodeModal" Classes="ModalContainer">
+      <StackPanel Classes="ModalContainer">
+        <Button Classes="popupclose" Click="CloseAddCodeModal" HorizontalAlignment="Right">
+          <PathIcon Data="{StaticResource dismiss_regular}" />
+        </Button>
+        <TextBlock Classes="formtitle" Text="Add New Command"/>
+        <Separator Classes="formtitle"/>
+        <StackPanel Classes="field">
+          <ComboBox Name="AddCode"
+           HorizontalAlignment="Center"
+           ItemsSource="{Binding AddableCodes}"
+           SelectedIndex="0"
+           IsEnabled="{Binding !Config.ReadOnly}"
+           MinWidth="100"
+           MaxDropDownHeight="300"/>
+          <Button Click="NewCommand" HorizontalAlignment="Center">Add</Button>
+        </StackPanel>
       </StackPanel>
-    </StackPanel>
     </Border>
-  </DockPanel>
+    <Border Name="InsertFramesModal" Classes="ModalContainer">
+      <StackPanel Classes="ModalContainer">
+        <Button Classes="popupclose" Click="CloseInsertFramesModal" HorizontalAlignment="Right">
+          <PathIcon Data="{StaticResource dismiss_regular}" />
+        </Button>
+        <TextBlock Classes="formtitle" Text="Insert Empty Frames"/>
+        <Separator Classes="formtitle"/>
+        <StackPanel Classes="field">
+          <TextBlock Classes="fieldtitle" Text="After Frame"/>
+          <NumericUpDown Name="AfterFrame"
+           Minimum="0"
+           Maximum="{c:Binding (TimelineContent.FrameDuration.Value - 1)}"
+           Increment="1"
+           Value="0"
+           AllowSpin="true"
+           HorizontalAlignment="Center"
+           IsEnabled="{Binding !Config.ReadOnly}"
+           MinWidth="100"/>
+        </StackPanel>
+        <StackPanel Classes="field">
+          <TextBlock Classes="fieldtitle" Text="Number of New Frames"/>
+          <NumericUpDown Name="InsertFrames"
+           Minimum="1"
+           Maximum="{c:Binding (TimelineContent.FrameDuration.UpperLimit - TimelineContent.FrameDuration.Value)}"
+           Increment="1"
+           Value="1"
+           AllowSpin="true"
+           HorizontalAlignment="Center"
+           IsEnabled="{Binding !Config.ReadOnly}"
+           MinWidth="100"/>
+        </StackPanel>
+        <Button Click="NewFrames" HorizontalAlignment="Center">Insert</Button>
+      </StackPanel>
+    </Border>
+    <Border Name="ClearFramesModal" Classes="ModalContainer">
+      <StackPanel Classes="ModalContainer">
+        <Button Classes="popupclose" Click="CloseClearFramesModal" HorizontalAlignment="Right">
+          <PathIcon Data="{StaticResource dismiss_regular}" />
+        </Button>
+        <TextBlock Classes="formtitle" Text="Clear Frames"/>
+        <Separator Classes="formtitle"/>
+        <StackPanel Classes="field">
+          <TextBlock Classes="fieldtitle" Text="Delete Cleared Frames?"/>
+          <CheckBox Name="DeleteFrames" IsChecked="True"/>
+        </StackPanel>
+        <StackPanel Classes="field">
+          <TextBlock Classes="fieldtitle" Text="Starting Frame"/>
+          <NumericUpDown Name="StartingFrame" ValueChanged="EnforceEndingMinimum"
+           Minimum="0"
+           Maximum="{c:Binding (TimelineContent.FrameDuration.Value - 1)}"
+           Increment="1"
+           Value="0"
+           AllowSpin="true"
+           HorizontalAlignment="Center"
+           IsEnabled="{Binding !Config.ReadOnly}"
+           MinWidth="100"/>
+        </StackPanel>
+        <StackPanel Classes="field">
+          <TextBlock Classes="fieldtitle" Text="Ending Frame"/>
+          <NumericUpDown Name="EndingFrame"
+           Minimum="{Binding #StartingFrame.Value}"
+           Maximum="{c:Binding (TimelineContent.FrameDuration.Value - 1)}"
+           Increment="1"
+           Value="0"
+           AllowSpin="true"
+           HorizontalAlignment="Center"
+           IsEnabled="{Binding !Config.ReadOnly}"
+           MinWidth="100"/>
+        </StackPanel>
+        <Button Click="ClearFrames" HorizontalAlignment="Center">Clear</Button>
+      </StackPanel>
+    </Border>
+  </Grid>
 </Grid>
 
 </rxui:ReactiveUserControl>

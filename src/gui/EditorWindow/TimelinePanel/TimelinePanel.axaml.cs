@@ -23,6 +23,8 @@ namespace EVTUI.Views;
 public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>, INotifyPropertyChanged
 {
 
+    private Window topLevel;
+
     // INotifyPropertyChanged Implementation
     new public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -74,31 +76,6 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         }
     }
 
-    private string _addCode;
-    public string AddCode
-    {
-        get => _addCode;
-        set
-        {
-            _addCode = value;
-            OnPropertyChanged(nameof(AddCode));
-            OnPropertyChanged(nameof(AddCodeIsSelected));
-        }
-    }
-
-    public bool AddCodeIsSelected { get => !(this.AddCode is null); }
-
-    private bool _modalIsOpen = false;
-    public bool ModalIsOpen
-    {
-        get => _modalIsOpen;
-        set
-        {
-            _modalIsOpen = value;
-            OnPropertyChanged(nameof(ModalIsOpen));
-        }
-    }
-
     private List<double> FramePositions;
 
     private int LastFrameClicked;
@@ -108,6 +85,10 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         InitializeComponent();
         this.WhenActivated(d =>
         {
+            var tl = TopLevel.GetTopLevel(this);
+            if (tl is null) throw new NullReferenceException();
+            this.topLevel = (Window)tl;
+
             // TODO: move this to a method that can be run upon update
             // like if a frame is added or deleted
             this.FramePositions = new List<double>();
@@ -121,6 +102,63 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         Frame frame = (Frame)((ContentPresenter)LogicalExtensions.GetLogicalParent(
             (Border)sender)).Content;
         ViewModel!.TimelineContent.TryToggleFrameMarker(frame.Index);
+    }
+
+    public void OpenInsertFramesModal(object sender, RoutedEventArgs e)
+    {
+        AfterFrame.Value = this.LastFrameClicked;
+        Modal.IsVisible = true;
+        InsertFramesModal.IsVisible = true;
+    }
+
+    public void NewFrames(object sender, RoutedEventArgs e)
+    {
+        this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
+        ViewModel!.InsertFrames((int)AfterFrame.Value, (int)InsertFrames.Value);
+        AfterFrame.Value = 0;
+        Modal.IsVisible = false;
+        InsertFramesModal.IsVisible = false;
+        this.topLevel.Cursor = Cursor.Default;
+    }
+
+    public void CloseInsertFramesModal(object sender, RoutedEventArgs e)
+    {
+        AfterFrame.Value = 0;
+        Modal.IsVisible = false;
+        InsertFramesModal.IsVisible = false;
+    }
+
+    public void OpenClearFramesModal(object sender, RoutedEventArgs e)
+    {
+        StartingFrame.Value = this.LastFrameClicked;
+        EndingFrame.Value = this.LastFrameClicked;
+        Modal.IsVisible = true;
+        ClearFramesModal.IsVisible = true;
+    }
+
+    public void EnforceEndingMinimum(object sender, NumericUpDownValueChangedEventArgs e)
+    {
+        if (!(EndingFrame is null) && EndingFrame.Value < StartingFrame.Value)
+            EndingFrame.Value = StartingFrame.Value;
+    }
+
+    public void ClearFrames(object sender, RoutedEventArgs e)
+    {
+        this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
+        ViewModel!.ClearFrames((int)StartingFrame.Value, (int)EndingFrame.Value, (bool)DeleteFrames.IsChecked);
+        StartingFrame.Value = 0;
+        EndingFrame.Value = 0;
+        Modal.IsVisible = false;
+        ClearFramesModal.IsVisible = false;
+        this.topLevel.Cursor = Cursor.Default;
+    }
+
+    public void CloseClearFramesModal(object sender, RoutedEventArgs e)
+    {
+        StartingFrame.Value = 0;
+        EndingFrame.Value = 0;
+        Modal.IsVisible = false;
+        ClearFramesModal.IsVisible = false;
     }
 
     public void DeleteCommand(object sender, RoutedEventArgs e)
@@ -166,28 +204,33 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         ViewModel!.PasteCommand(this.LastFrameClicked);
     }
 
-    public void OpenModal(object sender, RoutedEventArgs e)
+    public void OpenAddCodeModal(object sender, RoutedEventArgs e)
     {
         Category category = (Category)(((ItemsControl)LogicalExtensions.GetLogicalParent(
             (Control)(((Popup)LogicalExtensions.GetLogicalParent(
                 (ContextMenu)LogicalExtensions.GetLogicalParent(
                     (MenuItem)sender))).PlacementTarget))).DataContext);
         ViewModel!.SetAddableCodes(category);
-        this.ModalIsOpen = true;
+        AddCode.SelectedIndex = 0;
+        Modal.IsVisible = true;
+        AddCodeModal.IsVisible = true;
     }
 
-    public void CloseModal(object sender, RoutedEventArgs e)
+    public void CloseAddCodeModal(object sender, RoutedEventArgs e)
     {
-        this.ModalIsOpen = false;
+        Modal.IsVisible = false;
+        AddCodeModal.IsVisible = false;
+        AddCode.SelectedIndex = 0;
     }
 
     public void NewCommand(object sender, RoutedEventArgs e)
     {
-        if (!(this.AddCode is null))
+        if (!(String.IsNullOrEmpty(AddCode.SelectedItem.ToString())))
         {
-            ViewModel!.NewCommand(this.AddCode, this.LastFrameClicked);
-            this.ModalIsOpen = false;
-            this.AddCode = null;
+            ViewModel!.NewCommand(AddCode.SelectedItem.ToString(), this.LastFrameClicked);
+            Modal.IsVisible = false;
+            AddCodeModal.IsVisible = false;
+            AddCode.SelectedIndex = 0;
         }
     }
 
@@ -205,7 +248,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     {
         bool actuallyJustClearIt = (((Button)sender).Classes.Contains("selected"));
 
-        ViewModel!.UnsetActiveCommand(true);
+        ViewModel!.UnsetActiveCommand();
         CommandEditor.Content = null;
         foreach (Button b in Scrolly.GetVisualDescendants().OfType<Button>())
             b.Classes.Remove("selected");
@@ -224,7 +267,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     {
         Button target = (Button)((Flyout)sender).Target;
         target.Classes.Remove("selected");
-        ViewModel!.UnsetActiveCommand(true);
+        ViewModel!.UnsetActiveCommand();
         ((Flyout)sender).Content = null;
     }
 
@@ -259,9 +302,9 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     {
         if (LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")).Count() != this.FramePositions.Count)
         {
-    	    this.FramePositions = new List<double>();
-    	    foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
-    		    this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
+            this.FramePositions = new List<double>();
+            foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
+                this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
         }
 
         double newValue = this.FramePositions[(int)e.NewValue];

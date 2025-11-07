@@ -86,7 +86,7 @@ public class Timeline : ReactiveObject
         this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, evt.FrameRate, 1, 255, 1);
         this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, evt.FrameCount, 0, 99999, 1);
         this.StartingFrameEnabled = new BoolChoiceField("Set Delayed Starting Frame?", !dataManager.ReadOnly, evt.Flags[0]);
-        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, evt.StartingFrame, 0, 9999, 1);
+        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, evt.StartingFrame, 0, 99999, 1);
 
         this.WhenAnyValue(x => x.FrameRate.Value).Subscribe(x => evt.FrameRate = (byte)this.FrameRate.Value);
         // (the rest of the WhenAnyValues are below)
@@ -253,6 +253,38 @@ public class Timeline : ReactiveObject
         {
             this.MarkedFrames.Add(frameInd);
             this.Frames[frameInd].IsMarked = true;
+        }
+    }
+
+    public void InsertFrames(int afterFrame, int numberFrames)
+    {
+        this.FrameDuration.Value += numberFrames;
+        foreach (Category cat in this.Categories)
+            foreach (CommandPointer cmd in cat.Commands.ToList())
+                if (cmd.Frame > afterFrame)
+                {
+                    cat.MoveCommand(cmd, cmd.Frame + numberFrames);
+                    cmd.IsInPlayRange = (cmd.Frame >= this.StartingFrameEntry.Value && cmd.Frame < this.FrameDuration.Value);
+                }
+    }
+
+    public void ClearFrames(int startingFrame, int endingFrame, bool deleteFrames)
+    {
+        foreach (Category cat in this.Categories)
+            foreach (CommandPointer cmd in cat.Commands.ToList())
+                if (cmd.Frame >= startingFrame && cmd.Frame <= endingFrame)
+                    cat.DeleteCommand(cmd);
+
+        if (deleteFrames)
+        {
+            this.FrameDuration.Value -= 1 + endingFrame - startingFrame;
+            foreach (Category cat in this.Categories)
+                foreach (CommandPointer cmd in cat.Commands.ToList())
+                    if (cmd.Frame > endingFrame)
+                    {
+                        cat.MoveCommand(cmd, cmd.Frame - (1 + endingFrame - startingFrame));
+                        cmd.IsInPlayRange = (cmd.Frame >= this.StartingFrameEntry.Value && cmd.Frame < this.FrameDuration.Value);
+                    }
         }
     }
 
@@ -487,6 +519,8 @@ public class CommandPointer : ViewModelBase
         this.Command     = ((isAudioCmd) ? config.EventManager.EventSoundCommands : config.EventManager.EventCommands)[cmdIndex];
         this.CommandData = ((isAudioCmd) ? config.EventManager.EventSoundCommandData : config.EventManager.EventCommandData)[cmdIndex];
         this.CommandType = Type.GetType($"EVTUI.ViewModels.TimelineCommands.{code}");
+
+        this.WhenAnyValue(_ => _.Frame).Subscribe(_ => this.Command.FrameStart = this.Frame);
     }
 
     public string Code       { get; }
@@ -507,7 +541,6 @@ public class CommandPointer : ViewModelBase
         }
     }
 
-    //public int Frame { get; }
     private int _frame;
     public int Frame
     {
@@ -580,7 +613,25 @@ public class TimelinePanelViewModel : ViewModelBase
         this.SharedClipboard = clipboard;
     }
 
-	public void SetAddableCodes(Category category)
+    public void InsertFrames(int afterFrame, int numberFrames)
+    {
+        this.TimelineContent.InsertFrames(afterFrame, numberFrames);
+        if (!(this.ActiveCommand is null) && this.ActiveCommand.Basics.StartingFrame.Value > afterFrame)
+            this.ActiveCommand.Basics.StartingFrame.Value += numberFrames;
+    }
+
+    public void ClearFrames(int startingFrame, int endingFrame, bool deleteFrames)
+    {
+        if (!(this.ActiveCommand is null) && this.ActiveCommand.Basics.StartingFrame.Value >= startingFrame && this.ActiveCommand.Basics.StartingFrame.Value <= endingFrame)
+            this.UnsetActiveCommand();
+
+        this.TimelineContent.ClearFrames(startingFrame, endingFrame, deleteFrames);
+
+        if (deleteFrames && !(this.ActiveCommand is null) && this.ActiveCommand.Basics.StartingFrame.Value > endingFrame)
+            this.ActiveCommand.Basics.StartingFrame.Value -= 1 + endingFrame - startingFrame;
+    }
+
+    public void SetAddableCodes(Category category)
     {
         this.AddableCodes.Clear();
         foreach (string code in this.Config.EventManager.AddableCodes)
@@ -605,15 +656,10 @@ public class TimelinePanelViewModel : ViewModelBase
         });
     }
 
-    public void UnsetActiveCommand(bool saveFirst)
+    public void UnsetActiveCommand()
     {
         this._activeCommandPointer = null;
         this._activeCategory = null;;
-        //if (!this.Config.ReadOnly && saveFirst && !(this.ActiveCommand is null))
-        //    this.ActiveCommand.SaveChanges();
-            //((typeof(this._activeCommandPointer.CommandType))this.ActiveCommand).SaveChanges();
-            //(this.ActiveCommand as this._activeCommandPointer.CommandType).SaveChanges();
-            //(Convert.ChangeType(this.ActiveCommand, this._activeCommandPointer.CommandType)).SaveChanges();
         this.ActiveCommand = null;
     }
 
