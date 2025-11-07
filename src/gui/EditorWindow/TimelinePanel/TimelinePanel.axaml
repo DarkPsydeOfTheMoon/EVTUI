@@ -1727,8 +1727,8 @@
       </StackPanel>
     </DockPanel>
     <Grid>
-      <ScrollViewer Name="FramesScroller" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="153,0,16,16" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" PointerPressed="LogPosition">
-        <ItemsControl ItemsSource="{Binding Frames}" Name="FramesHaver">
+      <ScrollViewer Name="FramesScroller" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" Margin="153,0,16,16" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}">
+        <ItemsControl ItemsSource="{Binding Frames}" Name="FramesHaver" PointerPressed="LogPosition">
           <ItemsControl.Styles>
             <Style Selector="ItemsControl > ContentPresenter:nth-child(even) > Border">
               <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumLowBrush}"/>
@@ -1752,6 +1752,7 @@
           <ItemsControl.ContextMenu>
             <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
               <MenuItem Header="Insert Empty Frames" Click="OpenInsertFramesModal" />
+              <MenuItem Header="Clear Frames" Click="OpenClearFramesModal" />
             </ContextMenu>
           </ItemsControl.ContextMenu> 
           <ItemsControl.ItemsPanel>
@@ -1854,6 +1855,7 @@
                       <MenuItem Header="New" Click="OpenAddCodeModal" />
                       <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).SharedClipboard.HasCopiedCommand}" />
                       <MenuItem Header="Insert Empty Frames" Click="OpenInsertFramesModal" />
+                      <MenuItem Header="Clear Frames" Click="OpenClearFramesModal" />
                     </ContextMenu>
                   </ItemsControl.ContextMenu> 
                   <ItemsControl.ItemsPanel>
@@ -1967,7 +1969,8 @@
         <StackPanel Classes="field">
           <TextBlock Classes="fieldtitle" Text="After Frame"/>
           <NumericUpDown Name="AfterFrame"
-           Minimum="1"
+           Minimum="0"
+           Maximum="{c:Binding (TimelineContent.FrameDuration.Value - 1)}"
            Increment="1"
            Value="0"
            AllowSpin="true"
@@ -1979,6 +1982,7 @@
           <TextBlock Classes="fieldtitle" Text="Number of New Frames"/>
           <NumericUpDown Name="InsertFrames"
            Minimum="1"
+           Maximum="{c:Binding (TimelineContent.FrameDuration.UpperLimit - TimelineContent.FrameDuration.Value)}"
            Increment="1"
            Value="1"
            AllowSpin="true"
@@ -1987,6 +1991,44 @@
            MinWidth="100"/>
         </StackPanel>
         <Button Click="NewFrames" HorizontalAlignment="Center">Insert</Button>
+      </StackPanel>
+    </Border>
+    <Border Name="ClearFramesModal" Classes="ModalContainer">
+      <StackPanel Classes="ModalContainer">
+        <Button Classes="popupclose" Click="CloseClearFramesModal" HorizontalAlignment="Right">
+          <PathIcon Data="{StaticResource dismiss_regular}" />
+        </Button>
+        <TextBlock Classes="formtitle" Text="Clear Frames"/>
+        <Separator Classes="formtitle"/>
+        <StackPanel Classes="field">
+          <TextBlock Classes="fieldtitle" Text="Delete Cleared Frames?"/>
+          <CheckBox Name="DeleteFrames" IsChecked="True"/>
+        </StackPanel>
+        <StackPanel Classes="field">
+          <TextBlock Classes="fieldtitle" Text="Starting Frame"/>
+          <NumericUpDown Name="StartingFrame" ValueChanged="EnforceEndingMinimum"
+           Minimum="0"
+           Maximum="{c:Binding (TimelineContent.FrameDuration.Value - 1)}"
+           Increment="1"
+           Value="0"
+           AllowSpin="true"
+           HorizontalAlignment="Center"
+           IsEnabled="{Binding !Config.ReadOnly}"
+           MinWidth="100"/>
+        </StackPanel>
+        <StackPanel Classes="field">
+          <TextBlock Classes="fieldtitle" Text="Ending Frame"/>
+          <NumericUpDown Name="EndingFrame"
+           Minimum="{Binding #StartingFrame.Value}"
+           Maximum="{c:Binding (TimelineContent.FrameDuration.Value - 1)}"
+           Increment="1"
+           Value="0"
+           AllowSpin="true"
+           HorizontalAlignment="Center"
+           IsEnabled="{Binding !Config.ReadOnly}"
+           MinWidth="100"/>
+        </StackPanel>
+        <Button Click="ClearFrames" HorizontalAlignment="Center">Clear</Button>
       </StackPanel>
     </Border>
   </Grid>

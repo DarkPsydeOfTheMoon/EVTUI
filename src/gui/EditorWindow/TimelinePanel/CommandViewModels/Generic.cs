@@ -36,9 +36,9 @@ public class Basics : ReactiveObject
 
         this.WaitOnCommand = new BoolChoiceField("Wait while frame is stopped?", this.Editable, this.Command.Flags[1]);
         this.WhenAnyValue(_ => _.WaitOnCommand.Value).Subscribe(_ => this.Command.Flags[1] = this.WaitOnCommand.Value);
-        this.StartingFrame = new NumEntryField("Starting Frame", this.Editable, this.Command.FrameStart, 0, 999999, 1);
+        this.StartingFrame = new NumEntryField("Starting Frame", this.Editable, this.Command.FrameStart, 0, 99999, 1);
         this.WhenAnyValue(_ => _.StartingFrame.Value).Subscribe(_ => this.Command.FrameStart = (int)this.StartingFrame.Value);
-        this.FrameCount = new NumEntryField("Frame Duration", this.Editable, this.Command.FrameDuration, 0, 999999, 1);
+        this.FrameCount = new NumEntryField("Frame Duration", this.Editable, this.Command.FrameDuration, 0, 99999, 1);
         this.WhenAnyValue(_ => _.FrameCount.Value).Subscribe(_ => this.Command.FrameDuration = (int)this.FrameCount.Value);
 
         this.ForceSkipCommand = new BoolChoiceField("Force-skip command?", this.Editable, this.Command.Flags[0]);

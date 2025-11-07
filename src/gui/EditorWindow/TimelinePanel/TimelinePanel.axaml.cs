@@ -128,6 +128,39 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         InsertFramesModal.IsVisible = false;
     }
 
+    public void OpenClearFramesModal(object sender, RoutedEventArgs e)
+    {
+        StartingFrame.Value = this.LastFrameClicked;
+        EndingFrame.Value = this.LastFrameClicked;
+        Modal.IsVisible = true;
+        ClearFramesModal.IsVisible = true;
+    }
+
+    public void EnforceEndingMinimum(object sender, NumericUpDownValueChangedEventArgs e)
+    {
+        if (!(EndingFrame is null) && EndingFrame.Value < StartingFrame.Value)
+            EndingFrame.Value = StartingFrame.Value;
+    }
+
+    public void ClearFrames(object sender, RoutedEventArgs e)
+    {
+        this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
+        ViewModel!.ClearFrames((int)StartingFrame.Value, (int)EndingFrame.Value, (bool)DeleteFrames.IsChecked);
+        StartingFrame.Value = 0;
+        EndingFrame.Value = 0;
+        Modal.IsVisible = false;
+        ClearFramesModal.IsVisible = false;
+        this.topLevel.Cursor = Cursor.Default;
+    }
+
+    public void CloseClearFramesModal(object sender, RoutedEventArgs e)
+    {
+        StartingFrame.Value = 0;
+        EndingFrame.Value = 0;
+        Modal.IsVisible = false;
+        ClearFramesModal.IsVisible = false;
+    }
+
     public void DeleteCommand(object sender, RoutedEventArgs e)
     {
         Button target = (Button)LogicalExtensions.GetLogicalParent(
@@ -215,7 +248,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     {
         bool actuallyJustClearIt = (((Button)sender).Classes.Contains("selected"));
 
-        ViewModel!.UnsetActiveCommand(true);
+        ViewModel!.UnsetActiveCommand();
         CommandEditor.Content = null;
         foreach (Button b in Scrolly.GetVisualDescendants().OfType<Button>())
             b.Classes.Remove("selected");
@@ -234,7 +267,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     {
         Button target = (Button)((Flyout)sender).Target;
         target.Classes.Remove("selected");
-        ViewModel!.UnsetActiveCommand(true);
+        ViewModel!.UnsetActiveCommand();
         ((Flyout)sender).Content = null;
     }
 
