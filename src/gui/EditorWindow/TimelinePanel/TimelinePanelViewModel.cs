@@ -258,8 +258,6 @@ public class Timeline : ReactiveObject
 
     public void InsertFrames(int afterFrame, int numberFrames)
     {
-        //_frameCount = (int)this.FrameDuration.Value;
-        //_startingFrame = (int)this.StartingFrameEntry.Value;
         this.FrameDuration.Value += numberFrames;
         foreach (Category cat in this.Categories)
             foreach (CommandPointer cmd in cat.Commands.ToList())
