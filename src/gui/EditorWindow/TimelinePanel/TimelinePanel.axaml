@@ -519,6 +519,15 @@
       </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type cmds:Cht_}">
+      <StackPanel Classes="form">
+        <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
+        <Separator Classes="formtitle"/>
+        <ContentControl Content="{Binding Basics}"/>
+        <ContentControl Content="{Binding ChatMode}"/>
+      </StackPanel>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type cmds:EAlp}">
       <StackPanel Classes="form">
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
@@ -1471,15 +1480,61 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <ContentControl Content="{Binding IsSubtitle}"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding HasMessage}"/>
-        <ContentControl Content="{Binding MessageID}" IsVisible="{Binding HasMessage.Value}"/>
-        <ContentControl Content="{Binding MessageBlock}" IsVisible="{Binding HasMessage.Value}"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding HasSelection}"/>
-        <ContentControl Content="{Binding SelectionID}" IsVisible="{Binding HasSelection.Value}"/>
-        <ContentControl Content="{Binding SelectionBlock}" IsVisible="{Binding HasSelection.Value}"/>
+        <ContentControl Content="{Binding DisplayAsSubtitle}"/>
+        <ContentControl Content="{Binding MessageEnabled}"/>
+        <ContentControl Content="{Binding SelectionEnabled}"/>
+        <Expander Header="Message" IsVisible="{Binding MessageEnabled.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding MessageID}"/>
+            <ContentControl Content="{Binding MessageBlock}"/>
+            <ContentControl Content="{Binding EnableMessageCoordinates}"/>
+            <ContentControl Content="{Binding MessageCoordinateType}" IsVisible="{Binding !EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageX}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageY}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Selection" IsVisible="{Binding SelectionEnabled.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding SelectionID}"/>
+            <ContentControl Content="{Binding SelectionBlock}"/>
+            <ContentControl Content="{Binding SelectionStorage}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkBool1}"/>
+            <ContentControl Content="{Binding UnkBool2}"/>
+            <ContentControl Content="{Binding UnkBool3}"/>
+            <ContentControl Content="{Binding UnkBool4}"/>
+            <ContentControl Content="{Binding UnkBool5}"/>
+            <ContentControl Content="{Binding UnkBool6}"/>
+            <ContentControl Content="{Binding UnkBool7}"/>
+            <ContentControl Content="{Binding UnkEnum}"/>
+            <ContentControl Content="{Binding UnkFloat}"/>
+            <ContentControl Content="{Binding RoyalUnkFloat1}"/>
+            <ContentControl Content="{Binding RoyalUnkFloat2}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Entries" IsExpanded="false">
+          <ItemsControl ItemsSource="{Binding Entries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Classes="form" Margin="0 10 0 0">
+                  <Expander Header="{Binding Name}">
+                    <StackPanel Classes="form">
+                      <ContentControl Content="{Binding Enabled}"/>
+                      <StackPanel Classes="form" IsVisible="{Binding Enabled.Value}">
+                        <ContentControl Content="{Binding UnkShort1}"/>
+                        <ContentControl Content="{Binding UnkShort2}"/>
+                        <ContentControl Content="{Binding UnkFloat}"/>
+                      </StackPanel>
+                    </StackPanel>
+                  </Expander>
+                </StackPanel>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 
@@ -1488,15 +1543,33 @@
         <TextBlock Classes="formtitle" Text="{Binding LongName}"/>
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
-        <ContentControl Content="{Binding IsSubtitle}"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding HasMessage}"/>
-        <ContentControl Content="{Binding MessageID}" IsVisible="{Binding HasMessage.Value}"/>
-        <ContentControl Content="{Binding MessageBlock}" IsVisible="{Binding HasMessage.Value}"/>
-        <Separator Classes="formsubtitle"/>
-        <ContentControl Content="{Binding HasSelection}"/>
-        <ContentControl Content="{Binding SelectionID}" IsVisible="{Binding HasSelection.Value}"/>
-        <ContentControl Content="{Binding SelectionBlock}" IsVisible="{Binding HasSelection.Value}"/>
+        <ContentControl Content="{Binding DisplayAsSubtitle}"/>
+        <ContentControl Content="{Binding MessageEnabled}"/>
+        <ContentControl Content="{Binding SelectionEnabled}"/>
+        <Expander Header="Message" IsVisible="{Binding MessageEnabled.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding MessageID}"/>
+            <ContentControl Content="{Binding MessageBlock}"/>
+            <ContentControl Content="{Binding EnableMessageCoordinates}"/>
+            <ContentControl Content="{Binding MessageCoordinateType}" IsVisible="{Binding !EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageX}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+            <ContentControl Content="{Binding MessageY}" IsVisible="{Binding EnableMessageCoordinates.Value}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Selection" IsVisible="{Binding SelectionEnabled.Value}">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding SelectionID}"/>
+            <ContentControl Content="{Binding SelectionBlock}"/>
+            <ContentControl Content="{Binding SelectionStorage}"/>
+          </StackPanel>
+        </Expander>
+        <Expander Header="Unknown">
+          <StackPanel Classes="form">
+            <ContentControl Content="{Binding UnkBool1}"/>
+            <ContentControl Content="{Binding UnkBool2}"/>
+            <ContentControl Content="{Binding UnkFloat}"/>
+          </StackPanel>
+        </Expander>
       </StackPanel>
     </DataTemplate>
 

@@ -167,6 +167,8 @@ public class EVT : ISerializable
         if (this.Flags[12])
         {
             this.PointerToEventBmdPath.Validate((int)rw.RelativeTell(), rw.IsParselike());
+            if (this.PointerToEventBmdPath.Value != (int)rw.RelativeTell())
+                rw.RelativeSeek(this.PointerToEventBmdPath.Value, 0);
             this.EventBmdPathLength.Validate(48, rw.IsParselike());
             if (rw.IsParselike())
                 this.EventBmdPath = this.EventBmdPath.PadRight(48, '\0').Substring(0, 48);
@@ -181,6 +183,8 @@ public class EVT : ISerializable
         if (this.Flags[14])
         {
             this.PointerToEventBfPath.Validate((int)rw.RelativeTell(), rw.IsParselike());
+            if (this.PointerToEventBfPath.Value != (int)rw.RelativeTell())
+                rw.RelativeSeek(this.PointerToEventBfPath.Value, 0);
             this.EventBfPathLength.Validate(48, rw.IsParselike());
             if (rw.IsParselike())
                 this.EventBfPath = this.EventBfPath.PadRight(48, '\0').Substring(0, 48);

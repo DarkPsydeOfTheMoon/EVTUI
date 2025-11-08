@@ -290,3 +290,17 @@ public class MagicString : ISerializable
             throw new Exception($"Magic string ({this.ActualValue}) doesn't match expected string ({this.ExpectedValue})");
     }
 }
+
+public class SerialMsgEntry : ISerializable
+{
+    public Int16 UnkShort1 = -1;
+    public UInt16 UnkShort2 = 10;
+    public float UnkFloat = 1.0F;
+
+    public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
+    {
+        rw.RwInt16(ref this.UnkShort1);
+        rw.RwUInt16(ref this.UnkShort2);
+        rw.RwFloat32(ref this.UnkFloat);
+    }
+}

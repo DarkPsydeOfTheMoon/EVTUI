@@ -25,6 +25,31 @@ public class Generic : ReactiveObject
     public int    Size     { get; }
     public Basics Basics   { get; set; }
     public bool   Editable { get; }
+
+    public BiDict<string, uint> BlurTypes = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"5x5 Gaussian Filter",  0},
+            {"2-Iteration Gaussian", 1},
+            {"3-Iteration Gaussian", 2},
+            {"5-Iteration Gaussian", 3},
+            {"7-Iteration Gaussian", 4},
+        }
+    );
+
+    public BiDict<string, uint> MessageCoordinateTypes = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"Top Left",      0},
+            {"Top Center",    1},
+            {"Top Right",     2},
+            {"Bottom Left",   3},
+            {"Bottom Center", 4},
+            {"Bottom Right",  5},
+        }
+    );
 }
 
 public class Basics : ReactiveObject
@@ -57,6 +82,8 @@ public class Basics : ReactiveObject
             this.ConditionalIndex.UpperLimit = null;
             if (x == "Reference Global Count")
                 this.ConditionalIndex.UpperLimit = 382;
+            if (x == "Reference Local Data")
+                this.ConditionalIndex.UpperLimit = 99;
             this.ConditionalValue.LowerLimit = null;
             this.ConditionalValue.UpperLimit = null;
             if (x == "Reference Global Bitflag")

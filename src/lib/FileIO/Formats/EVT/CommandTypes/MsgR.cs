@@ -11,24 +11,32 @@ public partial class CommandTypes
     {
         public const int DataSize = 32;
 
-        public Int32 MessageMode;
-        public Int32 MessageIndex;
-        public Int32 SelIndex;
-        public Int32 EvtLocalDataIdSelStorage;
+        public Bitfield32 Flags = new Bitfield32(1);
 
-        public float[] UNK_FLOAT = new float[3];
-        public Int32[] UNK_INT32 = new Int32[1];
+        public UInt32 MessageIndex;
+        public UInt32 SelectIndex;
+
+        public UInt32 EvtLocalDataIdSelStorage;
+
+        public UInt32 MessageCoordinateType = 4;
+        public float[] MessageCoordinates = new[] { 375.0F, 528.0F };
+        public float UnkFloat;
 
         public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
         {
-            rw.RwInt32(ref this.MessageMode);              // same bit field as Msg_
-            rw.RwInt32(ref this.MessageIndex);             // should be shown as 0 through the BMD file's number of messages
-            rw.RwInt32(ref this.SelIndex);                 // should be shown as 0 through the BMD file's number of messages... iirc
-            rw.RwInt32(ref this.EvtLocalDataIdSelStorage); // same as in Msg_ but only ever seems to be 0 or 1 since MsgR is rarer
-            rw.RwInt32(ref this.UNK_INT32[0]);             // same as Msg_; observed values: 4, 5, 3
-            rw.RwFloat32(ref this.UNK_FLOAT[0]);           // same as Msg_
-            rw.RwFloat32(ref this.UNK_FLOAT[1]);           // same as Msg_
-            rw.RwFloat32(ref this.UNK_FLOAT[2]);           // same as Msg_
+            rw.RwObj(ref this.Flags);
+
+            rw.RwUInt32(ref this.MessageIndex);
+            rw.RwUInt32(ref this.SelectIndex);
+
+            rw.RwUInt32(ref this.EvtLocalDataIdSelStorage);
+
+            if ((int)args["dataSize"] > 16)
+            {
+                rw.RwUInt32(ref this.MessageCoordinateType);
+                rw.RwFloat32s(ref this.MessageCoordinates, 2);
+                rw.RwFloat32(ref this.UnkFloat);
+            }
         }
     }
 }
