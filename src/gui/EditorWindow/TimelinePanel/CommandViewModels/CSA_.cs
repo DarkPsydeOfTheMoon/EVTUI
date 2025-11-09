@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 using ReactiveUI;
 
-using static EVTUI.ViewModels.FieldUtils;
-
 namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CSA_ : Generic
@@ -113,29 +111,4 @@ public class CSA_ : Generic
     public BoolChoiceField UnkBool { get; set; }
     public NumEntryField   UnkEnum { get; set; }
     public NumEntryField   UnkInd  { get; set; }
-
-    public BiDict<string, uint> BlurTypes = new BiDict<string, uint>
-    (
-        new Dictionary<string, uint>
-        {
-            {"5x5 Gaussian Filter",  0},
-            {"2-Iteration Gaussian", 1},
-            {"3-Iteration Gaussian", 2},
-            {"5-Iteration Gaussian", 3},
-            {"7-Iteration Gaussian", 4},
-        }
-    );
-
-    public BiDict<string, uint> MessageCoordinateTypes = new BiDict<string, uint>
-    (
-        new Dictionary<string, uint>
-        {
-            {"Top Left",      0},
-            {"Top Center",    1},
-            {"Top Right",     2},
-            {"Bottom Left",   3},
-            {"Bottom Center", 4},
-            {"Bottom Right",  5},
-        }
-    );
 }

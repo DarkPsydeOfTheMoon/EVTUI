@@ -8,48 +8,84 @@ public class MsgR : Generic
 {
     public MsgR(DataManager config, CommandPointer cmd) : base(config, cmd)
     {
-        this.LongName = "Dialogue Turn";
+        this.LongName = "Message (by Index)";
 
-        // there are more fields (0, 1, 2; 4, 5, 8) but I don't know what they do yet....
-        this.HasMessage = new BoolChoiceField("Includes Message?", this.Editable, (((this.CommandData.MessageMode) & 1) == 1));
-        this.HasSelection = new BoolChoiceField("Includes Selection?", this.Editable, (((this.CommandData.MessageMode >> 1) & 1) == 1));
-        this.IsSubtitle = new BoolChoiceField("Is Subtitle?", this.Editable, (((this.CommandData.MessageMode >> 2) & 1) == 1));
-        this.WhenAnyValue(_ => _.HasMessage.Value, _ => _.HasSelection.Value, _ => _.IsSubtitle.Value).Subscribe(_ => this.CommandData.MessageMode = (Convert.ToInt32(this.IsSubtitle.Value) << 2) + (Convert.ToInt32(this.HasSelection.Value) << 1) + Convert.ToInt32(this.HasMessage.Value));
+        this.DisplayAsSubtitle = new BoolChoiceField("Display As Subtitle?", this.Editable, this.CommandData.Flags[2]);
+        this.WhenAnyValue(_ => _.DisplayAsSubtitle.Value).Subscribe(_ => this.CommandData.Flags[2] = this.DisplayAsSubtitle.Value);
 
-        string msgId = config.ScriptManager.GetTurnName(this.CommandData.MessageIndex);
+        // message
+        this.MessageEnabled = new BoolChoiceField("Enable Message?", this.Editable, this.CommandData.Flags[0]);
+        this.WhenAnyValue(_ => _.MessageEnabled.Value).Subscribe(_ => this.CommandData.Flags[0] = this.MessageEnabled.Value);
+        this.EnableMessageCoordinates = new BoolChoiceField("Directly Specify Message Coordinates?", this.Editable, this.CommandData.Flags[5]);
+        this.WhenAnyValue(_ => _.EnableMessageCoordinates.Value).Subscribe(_ => this.CommandData.Flags[5] = this.EnableMessageCoordinates.Value);
+        this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, this.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], this.MessageCoordinateTypes.Keys);
+        this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = this.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]);
+        this.MessageX = new NumRangeField("X Coordinate", this.Editable, this.CommandData.MessageCoordinates[0], -9999, 9999, 1);
+        this.WhenAnyValue(_ => _.MessageX.Value).Subscribe(_ => this.CommandData.MessageCoordinates[0] = (float)this.MessageX.Value);
+        this.MessageY = new NumRangeField("Y Coordinate", this.Editable, this.CommandData.MessageCoordinates[1], -9999, 9999, 1);
+        this.WhenAnyValue(_ => _.MessageY.Value).Subscribe(_ => this.CommandData.MessageCoordinates[1] = (float)this.MessageY.Value);
+
+        // selection
+        this.SelectionEnabled = new BoolChoiceField("Enable Selection?", this.Editable, this.CommandData.Flags[1]);
+        this.WhenAnyValue(_ => _.SelectionEnabled.Value).Subscribe(_ => this.CommandData.Flags[1] = this.SelectionEnabled.Value);
+        this.SelectionStorage = new NumEntryField("Local Data Storage ID", this.Editable, this.CommandData.EvtLocalDataIdSelStorage, 0, 99, 1);
+        this.WhenAnyValue(_ => _.SelectionStorage.Value).Subscribe(_ => this.CommandData.EvtLocalDataIdSelStorage = (uint)this.SelectionStorage.Value);
+
+        // unknown
+        this.UnkBool1 = new BoolChoiceField("Unknown #1", this.Editable, this.CommandData.Flags[4]);
+        this.WhenAnyValue(_ => _.UnkBool1.Value).Subscribe(_ => this.CommandData.Flags[4] = this.UnkBool1.Value);
+        this.UnkBool2 = new BoolChoiceField("Unknown #3", this.Editable, this.CommandData.Flags[8]);
+        this.WhenAnyValue(_ => _.UnkBool2.Value).Subscribe(_ => this.CommandData.Flags[8] = this.UnkBool2.Value);
+        this.UnkFloat = new NumRangeField("Unknown #10", this.Editable, this.CommandData.UnkFloat, -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.UnkFloat.Value).Subscribe(_ => this.CommandData.UnkFloat = (float)this.UnkFloat.Value);
+
+        // shenanigans lol
+        string msgId = config.ScriptManager.GetTurnName((int)this.CommandData.MessageIndex);
         this.MessageID = new StringSelectionField("Message ID", this.Editable, msgId, config.ScriptManager.MsgNames);
         if (config.ScriptManager.MsgNames.Contains(this.MessageID.Choice))
-            this.MessageBlock = new MessagePreview(config, this.CommandData.MessageIndex);
+            this.MessageBlock = new MessagePreview(config, (int)this.CommandData.MessageIndex);
         this.WhenAnyValue(x => x.MessageID.Choice).Subscribe(x =>
         {
             int newMsgIndex = config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
             if (config.ScriptManager.MsgNames.Contains(config.ScriptManager.GetTurnName(newMsgIndex)))
                 this.MessageBlock = new MessagePreview(config, newMsgIndex);
-            this.CommandData.MessageIndex = this.Config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
+            this.CommandData.MessageIndex = (uint)config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
         });
 
-        string selId = config.ScriptManager.GetTurnName(this.CommandData.SelIndex);
+        string selId = config.ScriptManager.GetTurnName((int)this.CommandData.SelectIndex);
         this.SelectionID = new StringSelectionField("Selection ID", this.Editable, selId, config.ScriptManager.SelNames);
         if (config.ScriptManager.SelNames.Contains(this.SelectionID.Choice))
-            _selectionBlock = new SelectionPreview(config, this.CommandData.SelIndex);
+            _selectionBlock = new SelectionPreview(config, (int)this.CommandData.SelectIndex);
         this.WhenAnyValue(x => x.SelectionID.Choice).Subscribe(x =>
         {
-            int newSelIndex = config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
-            if (config.ScriptManager.SelNames.Contains(config.ScriptManager.GetTurnName(newSelIndex)))
-                this.SelectionBlock = new SelectionPreview(config, newSelIndex);
-            this.CommandData.SelIndex = this.Config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
+            int newSelectIndex = config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
+            if (config.ScriptManager.SelNames.Contains(config.ScriptManager.GetTurnName(newSelectIndex)))
+                this.SelectionBlock = new SelectionPreview(config, newSelectIndex);
+            this.CommandData.SelectIndex = (uint)config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
         });
-
-        this.Config = config;
     }
 
-    private DataManager Config;
+    public BoolChoiceField DisplayAsSubtitle { get; set; }
 
-    public BoolChoiceField      HasMessage   { get; set; }
-    public BoolChoiceField      HasSelection { get; set; }
-    public BoolChoiceField      IsSubtitle   { get; set; }
-    public StringSelectionField MessageID    { get; set; }
-    public StringSelectionField SelectionID  { get; set; }
+    // message
+    public BoolChoiceField      MessageEnabled           { get; set; }
+    public BoolChoiceField      EnableMessageCoordinates { get; set; }
+    public StringSelectionField MessageCoordinateType    { get; set; }
+    public NumRangeField        MessageX                 { get; set; }
+    public NumRangeField        MessageY                 { get; set; }
+
+    // selection
+    public BoolChoiceField SelectionEnabled { get; set; }
+    public NumEntryField   SelectionStorage { get; set; }
+
+    // unknown
+    public BoolChoiceField UnkBool1 { get; set; }
+    public BoolChoiceField UnkBool2 { get; set; }
+    public NumRangeField   UnkFloat { get; set; }
+
+    // shenanigans lol
+    public StringSelectionField MessageID   { get; set; }
+    public StringSelectionField SelectionID { get; set; }
 
     private MessagePreview _messageBlock;
     public MessagePreview MessageBlock

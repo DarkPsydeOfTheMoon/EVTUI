@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 using ReactiveUI;
 
-using static EVTUI.ViewModels.FieldUtils;
-
 namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CMD_ : Generic
@@ -75,16 +73,4 @@ public class CMD_ : Generic
     public NumRangeField        FarBlurDistance  { get; set; }
     public NumRangeField        BlurStrength     { get; set; }
     public StringSelectionField BlurType         { get; set; }
-
-    public BiDict<string, uint> BlurTypes = new BiDict<string, uint>
-    (
-        new Dictionary<string, uint>
-        {
-            {"5x5 Gaussian Filter",  0},
-            {"2-Iteration Gaussian", 1},
-            {"3-Iteration Gaussian", 2},
-            {"5-Iteration Gaussian", 3},
-            {"7-Iteration Gaussian", 4},
-        }
-    );
 }

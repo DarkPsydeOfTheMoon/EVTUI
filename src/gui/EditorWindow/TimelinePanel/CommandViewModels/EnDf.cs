@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 using ReactiveUI;
 
-using static EVTUI.ViewModels.FieldUtils;
-
 namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnDf : Generic
@@ -44,16 +42,4 @@ public class EnDf : Generic
 
     // unknown
     public NumEntryField Unk { get; set; }
-
-    public BiDict<string, uint> BlurTypes = new BiDict<string, uint>
-    (
-        new Dictionary<string, uint>
-        {
-            {"5x5 Gaussian Filter",  0},
-            {"2-Iteration Gaussian", 1},
-            {"3-Iteration Gaussian", 2},
-            {"5-Iteration Gaussian", 3},
-            {"7-Iteration Gaussian", 4},
-        }
-    );
 }
