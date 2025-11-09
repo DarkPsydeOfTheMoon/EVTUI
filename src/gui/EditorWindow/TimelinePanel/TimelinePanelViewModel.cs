@@ -258,7 +258,12 @@ public class Timeline : ReactiveObject
 
     public void InsertFrames(int afterFrame, int numberFrames)
     {
+        // if starting frame follows new frames, shift it
+        if (this.StartingFrameEntry.Value > afterFrame)
+            this.StartingFrameEntry.Value += afterFrame;
+        // increase the total frame duration
         this.FrameDuration.Value += numberFrames;
+        // shift all commands coming after the new frames
         foreach (Category cat in this.Categories)
             foreach (CommandPointer cmd in cat.Commands.ToList())
                 if (cmd.Frame > afterFrame)
@@ -266,18 +271,50 @@ public class Timeline : ReactiveObject
                     cat.MoveCommand(cmd, cmd.Frame + numberFrames);
                     cmd.IsInPlayRange = (cmd.Frame >= this.StartingFrameEntry.Value && cmd.Frame < this.FrameDuration.Value);
                 }
+        // first delete all frame markers coming after the new frames...
+        List<int> frames = MarkedFrames.ToList();
+        foreach (int frame in frames)
+            if (frame > afterFrame)
+            {
+                this.MarkedFrames.Remove(frame);
+                this.Frames[frame].IsMarked = false;
+            }
+        // ...and then put them back in, shifted
+        foreach (int frame in frames)
+            if (frame > afterFrame)
+            {
+                this.MarkedFrames.Add(frame + numberFrames);
+                this.Frames[frame + numberFrames].IsMarked = true;
+            }
     }
 
     public void ClearFrames(int startingFrame, int endingFrame, bool deleteFrames)
     {
+        // delete all commands within the range
         foreach (Category cat in this.Categories)
             foreach (CommandPointer cmd in cat.Commands.ToList())
                 if (cmd.Frame >= startingFrame && cmd.Frame <= endingFrame)
                     cat.DeleteCommand(cmd);
+        // remove all marked frames within the range
+        List<int> frames = MarkedFrames.ToList();
+        foreach (int frame in frames)
+            if (frame >= startingFrame && frame <= endingFrame)
+            {
+                this.MarkedFrames.Remove(frame);
+                this.Frames[frame].IsMarked = false;
+            }
 
         if (deleteFrames)
         {
+            // if starting frame follows new frames, shift it (back)
+            if (this.StartingFrameEntry.Value > endingFrame)
+                this.StartingFrameEntry.Value -= 1 + endingFrame - startingFrame;
+            // if starting frame is within deleted frames...
+            else if (this.StartingFrameEntry.Value >= startingFrame && this.StartingFrameEntry.Value <= endingFrame)
+                    this.StartingFrameEntry.Value = startingFrame;
+            // decrease the total frame duration
             this.FrameDuration.Value -= 1 + endingFrame - startingFrame;
+            // shift (back) all commands coming after the new frames
             foreach (Category cat in this.Categories)
                 foreach (CommandPointer cmd in cat.Commands.ToList())
                     if (cmd.Frame > endingFrame)
@@ -285,6 +322,20 @@ public class Timeline : ReactiveObject
                         cat.MoveCommand(cmd, cmd.Frame - (1 + endingFrame - startingFrame));
                         cmd.IsInPlayRange = (cmd.Frame >= this.StartingFrameEntry.Value && cmd.Frame < this.FrameDuration.Value);
                     }
+            // first delete all frame markers coming after the new frames...
+            foreach (int frame in frames)
+                if (frame > endingFrame)
+                {
+                    this.MarkedFrames.Remove(frame);
+                    this.Frames[frame].IsMarked = false;
+                }
+            // ...and then put them back in, shifted (back)
+            foreach (int frame in frames)
+                if (frame > endingFrame)
+                {
+                    this.MarkedFrames.Add(frame - (1 + endingFrame - startingFrame));
+                    this.Frames[frame - (1 + endingFrame - startingFrame)].IsMarked = true;
+                }
         }
     }
 
