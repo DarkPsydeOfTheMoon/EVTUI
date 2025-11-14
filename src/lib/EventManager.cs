@@ -96,8 +96,17 @@ public class EventManager
                 }
             this.AcwbPaths.Add((acbPath, awbPath));
         }
-        this.BfPaths  = cpkEVTContents.Value.bfPaths;
-        this.BmdPaths = cpkEVTContents.Value.bmdPaths;
+        if (this.SerialEvent.Flags[12])
+            this.BmdPaths = CPKExtract.ExtractMatchingFiles(this.CpkList, this.SerialEvent.EventBmdPath.Replace("\0", ""), this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
+        else
+            // derive this from IDs within EVT instead...?
+            this.BmdPaths = cpkEVTContents.Value.bmdPaths;
+
+        if (this.SerialEvent.Flags[14])
+            this.BfPaths = CPKExtract.ExtractMatchingFiles(this.CpkList, this.SerialEvent.EventBfPath.Replace("\0", ""), this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
+        else
+            // derive this from IDs within EVT instead...?
+            this.BfPaths = cpkEVTContents.Value.bfPaths;
 
         return true;
     }

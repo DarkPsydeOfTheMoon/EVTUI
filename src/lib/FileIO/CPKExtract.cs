@@ -44,7 +44,7 @@ public static class CPKExtract
         if (!String.IsNullOrEmpty(ExistingFolder))
             Parallel.ForEach(Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories), ModPath =>
             {
-                if (filePattern.IsMatch(ModPath))
+                if (filePattern.IsMatch(ModPath) && new FileInfo(ModPath).Length > 0)
                     matches.Add(ModPath);
             });
 
