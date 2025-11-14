@@ -373,7 +373,7 @@ public class Timeline : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _startingFrame, value);
     }
 
-    private int                       _maxMarks;
+    private int                      _maxMarks;
     public ObservableCollection<int> MarkedFrames;
 
     public ObservableCollection<Frame>    Frames     { get; set; }

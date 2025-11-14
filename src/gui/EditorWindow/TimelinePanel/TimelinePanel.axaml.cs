@@ -300,6 +300,10 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
 
     public void JumpToFrame(object sender, NumericUpDownValueChangedEventArgs e)
     {
+        // dumb workaround for new avalonia having this run before whenactivated
+        if (this.topLevel is null)
+            return;
+
         if (LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")).Count() != this.FramePositions.Count)
         {
             this.FramePositions = new List<double>();

@@ -170,7 +170,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
     public DataManager Config { get; }
     public string      ConfigType;
 
-    public NewProjectConfig newProjectConfig { get; set; }
+    public NewProjectConfig newProjectConfig { get; set; } = new NewProjectConfig();
 
     public string DisplayCPKPath { get => (this.newProjectConfig.GamePath is null) ? "(none)" : this.newProjectConfig.GamePath; }
     public string DisplayModPath { get => (this.newProjectConfig.ModPath is null) ? "(none)" : this.newProjectConfig.ModPath; }

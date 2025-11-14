@@ -1853,15 +1853,15 @@
           </ItemsControl.Styles>
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-              <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,16,0"/>
+              <StackPanel Orientation="Vertical" Spacing="5"/>
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
               <Border CornerRadius="5,0,0,5"
-                 Classes.show="{Binding IsOpen}"
-                 Classes.hide="{Binding !IsOpen}">
-                <DockPanel MinHeight="40" Height="{c:Binding (IsOpen) ? 60*MaxInOneFrame + 20 : 40}" VerticalAlignment="Center" HorizontalAlignment="Stretch">
+               Classes.show="{Binding IsOpen}"
+               Classes.hide="{Binding !IsOpen}">
+                <DockPanel MinHeight="40" VerticalAlignment="Center" HorizontalAlignment="Stretch" Height="{c:Binding (double)((IsOpen) ? 60*MaxInOneFrame + 20 : 40)}">
                   <ToggleButton IsChecked="{Binding IsOpen}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" DockPanel.Dock="Left" CornerRadius="0">
                     <ToggleButton.Styles>
                       <Style Selector="ToggleButton">
@@ -1911,8 +1911,19 @@
         </ItemsControl>
       </ScrollViewer>
       <ScrollViewer Name="Scrolly" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="153,37,16,0" Offset="{Binding $parent[views:TimelinePanel].HPos, Mode=TwoWay}" AllowAutoHide="false">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" Margin="0,0,0,16" PointerPressed="LogPosition">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Hidden" Offset="{Binding $parent[views:TimelinePanel].VPos, Mode=TwoWay}" PointerPressed="LogPosition">
           <ItemsControl ItemsSource="{Binding Categories}" VerticalAlignment="Stretch">
+            <ItemsControl.Styles>
+              <Style Selector="Canvas">
+                <Setter Property="Width" Value="{c:Binding 85*FrameCount - 5}"/>
+              </Style>
+              <Style Selector="ItemsControl.hide Canvas">
+                <Setter Property="Height" Value="40"/>
+              </Style>
+              <Style Selector="ItemsControl.show Canvas">
+                <Setter Property="Height" Value="{c:Binding 60*MaxInOneFrame + 20}"/>
+              </Style>
+            </ItemsControl.Styles>
             <ItemsControl.ItemsPanel>
               <ItemsPanelTemplate>
                 <StackPanel Orientation="Vertical" Spacing="5"/>
@@ -1933,11 +1944,11 @@
                   </ItemsControl.ContextMenu> 
                   <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                      <Canvas MinHeight="40" Height="{c:Binding (IsOpen) ? 60*MaxInOneFrame + 20 : 40}" Width="{c:Binding 85*FrameCount - 5}" Classes.open="{Binding IsOpen}" Classes.closed="{Binding !IsOpen}" HorizontalAlignment="Left"/>
+                      <Canvas MinHeight="40" HorizontalAlignment="Left"/>
                     </ItemsPanelTemplate>
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.Styles>
-                    <Style Selector="ItemsControl > ContentPresenter" x:DataType="vm:CommandPointer">
+                    <Style Selector="ItemsControl > ContentPresenter">
                       <Setter Property="Canvas.Left" Value="{c:Binding 85*Frame + 10}"/>
                     </Style>
                     <Style Selector="ItemsControl.show > ContentPresenter">
@@ -1954,10 +1965,10 @@
                       <Setter Property="Height" Value="20"/>
                       <Setter Property="IsEnabled" Value="false"/>
                     </Style>
-                    <Style Selector="ItemsControl.show ContentPresenter > Button > TextBlock">
+                    <Style Selector="ItemsControl.show > ContentPresenter > Button > TextBlock">
                       <Setter Property="IsVisible" Value="true"/>
                     </Style>
-                    <Style Selector="ItemsControl.hide ContentPresenter > Button > TextBlock">
+                    <Style Selector="ItemsControl.hide > ContentPresenter > Button > TextBlock">
                       <Setter Property="IsVisible" Value="false"/>
                     </Style>
                   </ItemsControl.Styles>
