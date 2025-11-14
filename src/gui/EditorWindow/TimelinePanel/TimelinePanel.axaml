@@ -1853,7 +1853,7 @@
           </ItemsControl.Styles>
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
-              <StackPanel Orientation="Vertical" Spacing="5" Margin="0,0,16,0"/>
+              <StackPanel Orientation="Vertical" Spacing="5"/>
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
