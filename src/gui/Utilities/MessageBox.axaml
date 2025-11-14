@@ -5,7 +5,7 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="EVTUI.Views.MessageBox">
   <StackPanel Margin="20" VerticalAlignment="Center">
-    <TextBox Name="ModalText" HorizontalAlignment="Center" Margin="20" Height="400" Width="800" IsReadOnly="true"/>
+    <TextBox Name="ModalText" HorizontalAlignment="Center" Margin="20" MaxHeight="400" MaxWidth="800" IsReadOnly="true"/>
     <Button Name="OKButton" Content="OK" Click="ClickHandler" Background="{DynamicResource SystemAccentColor}" HorizontalAlignment="Center" Padding="10" Margin="20" Focusable="True"/>
   </StackPanel>
 </UserControl>
