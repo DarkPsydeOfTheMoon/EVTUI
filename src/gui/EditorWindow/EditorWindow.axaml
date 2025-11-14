@@ -189,21 +189,21 @@
       </Button>
     </StackPanel>
     <TabControl Margin="5" DockPanel.Dock="Bottom">
-      <TabItem Header="Timeline">
+      <TabItem Header="Timeline"><Panel>
         <views:TimelinePanel DataContext="{Binding timelinePanelVM}" Padding="10"/>
-      </TabItem>
-      <TabItem Header="Assets">
+      </Panel></TabItem>
+      <TabItem Header="Assets"><Panel>
         <views:AssetsPanel DataContext="{Binding assetsPanelVM}" Padding="10"/>
-      </TabItem>
-      <TabItem Header="Audio">
+      </Panel></TabItem>
+      <TabItem Header="Audio"><Panel>
         <views:AudioPanel DataContext="{Binding audioPanelVM}" Padding="10"/>
-      </TabItem>
-      <TabItem Header="Scripts">
+      </Panel></TabItem>
+      <TabItem Header="Scripts"><Panel>
         <views:ScriptPanel DataContext="{Binding scriptPanelVM}" Padding="10"/>
-      </TabItem>
-      <TabItem Header="Render" Margin="5">
+      </Panel></TabItem>
+      <TabItem Header="Render" Margin="5"><Panel>
         <TextBlock Text="Coming soon..." />
-      </TabItem>
+      </Panel></TabItem>
     </TabControl>
   </DockPanel>
 
