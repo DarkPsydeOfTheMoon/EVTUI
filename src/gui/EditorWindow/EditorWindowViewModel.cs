@@ -1,9 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 using EVTUI;
 
 namespace EVTUI.ViewModels;
+
+public class CommonViewModels
+{
+    public CommonViewModels(DataManager dataManager)
+    {
+        this.Assets = new ObservableCollection<AssetViewModel>();
+        foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
+            this.Assets.Add(new AssetViewModel(obj, dataManager.ReadOnly));
+
+        this.Timeline = new TimelineViewModel(dataManager);
+    }
+
+    public ObservableCollection<AssetViewModel> Assets { get; set; }
+    public TimelineViewModel Timeline { get; set; }
+}
 
 public class EditorWindowViewModel : ViewModelBase
 {
@@ -12,6 +29,7 @@ public class EditorWindowViewModel : ViewModelBase
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
     public DataManager            Config          { get; }
+    public CommonViewModels       CommonVMs       { get; }
     public AssetsPanelViewModel   assetsPanelVM   { get; }
     public TimelinePanelViewModel timelinePanelVM { get; }
     public ScriptPanelViewModel   scriptPanelVM   { get; }
@@ -23,8 +41,9 @@ public class EditorWindowViewModel : ViewModelBase
     public EditorWindowViewModel(DataManager dataManager, Clipboard clipboard)
     {
         this.Config          = dataManager;
-        this.assetsPanelVM   = new AssetsPanelViewModel(this.Config);
-        this.timelinePanelVM = new TimelinePanelViewModel(this.Config, clipboard);
+        this.CommonVMs       = new CommonViewModels(this.Config);
+        this.assetsPanelVM   = new AssetsPanelViewModel(this.Config, this.CommonVMs);
+        this.timelinePanelVM = new TimelinePanelViewModel(this.Config, this.CommonVMs, clipboard);
         this.scriptPanelVM   = new ScriptPanelViewModel(this.Config);
         this.audioPanelVM    = new AudioPanelViewModel(this.Config);
     }

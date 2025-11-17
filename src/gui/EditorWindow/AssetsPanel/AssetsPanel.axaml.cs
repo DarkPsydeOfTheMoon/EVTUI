@@ -98,20 +98,14 @@ public partial class AssetsPanel : ReactiveUserControl<AssetsPanelViewModel>, IN
 
     public void DuplicateAsset(object sender, RoutedEventArgs e)
     {
-        Asset asset = (Asset)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>((MenuItem)sender).Content);
+        AssetViewModel asset = (AssetViewModel)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>((MenuItem)sender).Content);
         ViewModel!.DuplicateAsset(asset);
     }
 
     public void DeleteAsset(object sender, RoutedEventArgs e)
     {
-        Asset asset = (Asset)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>((MenuItem)sender).Content);
+        AssetViewModel asset = (AssetViewModel)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>((MenuItem)sender).Content);
         ViewModel!.DeleteAsset(asset);
-    }
-
-    public void SaveChanges(object sender, EventArgs e)
-    {
-        Asset asset = (Asset)(LogicalExtensions.FindLogicalAncestorOfType<ContentPresenter>(((Flyout)sender).Target).Content);
-        asset.SaveChanges();
     }
 
 }
