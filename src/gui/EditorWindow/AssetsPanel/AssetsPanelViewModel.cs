@@ -61,14 +61,14 @@ public class AssetsPanelViewModel : ViewModelBase
     public void AddAsset(string type)
     {
         SerialObject newObj = this.Config.EventManager.SerialEvent.NewObject(AssetViewModel.ObjectTypes.Forward[type]);
-        this.Assets.Add(new AssetViewModel(newObj, this.Config.ReadOnly));
+        this.Assets.Add(new AssetViewModel(this.Config, newObj));
         this.SortAssets();
     }
 
     public void DuplicateAsset(AssetViewModel asset)
     {
         SerialObject newObj = this.Config.EventManager.SerialEvent.DuplicateObject(asset.Obj);
-        this.Assets.Add(new AssetViewModel(newObj, this.Config.ReadOnly));
+        this.Assets.Add(new AssetViewModel(this.Config, newObj));
         this.SortAssets();
     }
 

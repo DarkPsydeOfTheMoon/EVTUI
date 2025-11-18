@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 using ReactiveUI;
 
@@ -10,10 +12,11 @@ namespace EVTUI.ViewModels;
 public class AssetViewModel : ViewModelBase
 {
 
-    public AssetViewModel(SerialObject obj, bool readOnly)
+    public AssetViewModel(DataManager config, SerialObject obj)
     {
+        this.Config = config;
         this.Obj = obj;
-        this.Editable = !readOnly;
+        this.Editable = !this.Config.ReadOnly;
 
         this.ObjectID = new NumEntryField("Asset ID", false, obj.Id, 0, 9999, 1);
         this.WhenAnyValue(x => x.ObjectID.Value).Subscribe(x => this.Obj.Id = (int)this.ObjectID.Value);
@@ -264,11 +267,15 @@ public class AssetViewModel : ViewModelBase
             this.WhenAnyValue(x => x.ExtAddAnimID.Value).Subscribe(x => this.Obj.ExtAddMotionNo = (int)this.ExtAddAnimID.Value);
         }
 
+        this.UpdatePaths();
+
         // TODO: add this in only for applicable asset types
         // i don't feel like doing it now lol
         //this.BaseAnimPreview = new AnimationWidget(config, new IntSelectionField("Asset ID", false, obj.Id, new List<int>(){obj.Id}), new AnimationStruct(startingFrame:null, interpolatedFrames:null), new Bitfield(1), null, enabledInd:0, extInd:1);
 
     }
+
+    protected DataManager Config;
 
     public bool Editable { get; set; }
 
@@ -288,9 +295,79 @@ public class AssetViewModel : ViewModelBase
 
     public bool IncludeSubordinateResources { get => !(this.BaseAnimID is null) || !(this.ExtBaseAnimID is null) || !(this.ExtAddAnimID is null) || !(this.IsCommon is null); }
 
+    public bool IsModel { get => AssetViewModel.modelTypes.Contains(this.ObjectType.Choice); }
+
+    protected static HashSet<string> modelTypes = new HashSet<string>() {"Field", "Enemy", "SymShadow", "Item", "ResourceTableNPC", "Character", "FieldCharacter", "FieldObject", "Persona"};
+
+    public ObservableCollection<string> ModelPaths;
+    public ObservableCollection<string> BaseAnimPaths;
+    public ObservableCollection<string> ExtBaseAnimPaths;
+    public ObservableCollection<string> AddAnimPaths;
+    public ObservableCollection<string> ExtAddAnimPaths;
+
+    public string ActiveModelPath       { get => this.ModelPaths[0];       }
+    public string ActiveBaseAnimPath    { get => this.BaseAnimPaths[0];    }
+    public string ActiveExtBaseAnimPath { get => this.ExtBaseAnimPaths[0]; }
+    public string ActiveAddAnimPath     { get => this.AddAnimPaths[0];     }
+    public string ActiveExtAddAnimPath  { get => this.ExtAddAnimPaths[0];  }
+
     //public AnimationWidget BaseAnimPreview { get; set; }
 
     public SerialObject Obj { get; set; }
+
+    public void UpdatePaths()
+    {
+        this.UpdateModelPaths();
+
+        this.BaseAnimPaths = new ObservableCollection<string>();
+        this.ExtBaseAnimPaths = new ObservableCollection<string>();
+        this.AddAnimPaths = new ObservableCollection<string>();
+        this.ExtAddAnimPaths = new ObservableCollection<string>();
+        if (this.ObjectType.Choice == "Character")
+        {
+            foreach (string path in this.UpdateAnimPaths(false, false))
+                this.BaseAnimPaths.Add(path);
+            foreach (string path in this.UpdateAnimPaths(false, true))
+                this.ExtBaseAnimPaths.Add(path);
+            foreach (string path in this.UpdateAnimPaths(true, false))
+                this.AddAnimPaths.Add(path);
+            foreach (string path in this.UpdateAnimPaths(true, true))
+                this.ExtAddAnimPaths.Add(path);
+        }
+    }
+
+    public void UpdateModelPaths()
+    {
+        this.ModelPaths = new ObservableCollection<string>();
+        string pattern = "";
+        switch (this.ObjectType.Choice)
+        {
+            case "Character":
+                if (this.MinorID.Value == 0)
+                   pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_00._{this.SubID.Value:00}\\.GMD";
+                else
+                    if (this.SubID.Value == 0)
+                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_..\\.GMD";
+                    else
+                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_{this.SubID.Value:00}\\.GMD";
+                break;
+            default:
+                Trace.TraceWarning($"Unknown asset type: {this.ObjectType.Choice}");
+                break;
+        }
+
+        if (pattern != "")
+            foreach (string path in this.Config.ExtractMatchingFiles(pattern))
+            {
+                Console.WriteLine(path);
+                this.ModelPaths.Add(path);
+            }
+    }
+
+    public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims)
+    {
+        return new List<string>();
+    }
 
     public static BiDict<string, int> ObjectTypes = new BiDict<string, int>
     (

@@ -19,10 +19,10 @@ public class SceneModel
     protected AnimationPack GAP;
     protected Stopwatch animationStopwatch = new Stopwatch();  // I think we need one per currently-playing animation...
 
-    protected AnimationPack BaseAnimationPack;
-    protected AnimationPack ExtBaseAnimationPack;
-    protected AnimationPack AddAnimationPack;
-    protected AnimationPack ExtAddAnimationPack;
+    public AnimationPack BaseAnimationPack;
+    public AnimationPack ExtBaseAnimationPack;
+    public AnimationPack AddAnimationPack;
+    public AnimationPack ExtAddAnimationPack;
 
     protected (bool IsExt, int Idx)? BaseAnimInfo;
     protected (bool IsExt, int Idx)?[] AddAnimInfo = new (bool IsExt, int Idx)?[8];
@@ -33,6 +33,11 @@ public class SceneModel
         this.GAP = GAP;
         // If we need to loads GAPS on a per-model basis, we can put
         // the external GAPs here instead of having a global list.
+    }
+
+    public SceneModel(string modelPath)
+    {
+        this.LoadModel(modelPath);
     }
 
     public SceneModel(DataManager config, SerialObject obj)
@@ -307,6 +312,7 @@ public class SceneManager
     ///////////////////////////////
     public void teardown()
     {
+        Console.WriteLine("!!!");
         foreach (int objectID in this.sceneModels.Keys)
             this.sceneModels[objectID].Dispose();
         this.sceneModels.Clear();
@@ -323,6 +329,11 @@ public class SceneManager
     /////////////////////////////////////
     // *** Model Memory Management *** //
     /////////////////////////////////////
+    public void LoadObject(int objectID, string modelPath)
+    {
+        this.sceneModels[objectID] = new SceneModel(modelPath);
+    }
+
     public void LoadObjects(DataManager config, int[] objectIDs)
     {
         ////////////////////////////

@@ -3,21 +3,35 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
+using ReactiveUI;
+
 using EVTUI;
 
 namespace EVTUI.ViewModels;
 
-public class CommonViewModels
+public class CommonViewModels : ReactiveObject
 {
     public CommonViewModels(DataManager dataManager)
     {
         this.Assets = new ObservableCollection<AssetViewModel>();
         foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
-            this.Assets.Add(new AssetViewModel(obj, dataManager.ReadOnly));
+            this.Assets.Add(new AssetViewModel(dataManager, obj));
 
         this.Timeline = new TimelineViewModel(dataManager);
 
         this.Render = new GFDRenderingPanelViewModel();
+        this.WhenAnyValue(x => x.Render.ReadyToRender).Subscribe(x =>
+        {
+            if (x)
+            {
+                foreach (AssetViewModel asset in this.Assets)
+                    //if (asset.IsModel)
+                    if (asset.ObjectType.Choice == "Character")
+                        this.Render.AddModel(asset);
+            }
+            else
+                this.Render.sceneManager.teardown();
+        });
     }
 
     public ObservableCollection<AssetViewModel> Assets   { get; set; }

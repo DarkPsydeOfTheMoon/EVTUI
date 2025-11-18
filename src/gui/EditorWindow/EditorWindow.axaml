@@ -202,7 +202,8 @@
         <views:ScriptPanel DataContext="{Binding scriptPanelVM}" Padding="10"/>
       </Panel></TabItem>
       <TabItem Header="Render" Margin="5"><Panel>
-        <TextBlock Text="Coming soon..." />
+        <!--TextBlock Text="Coming soon..." /-->
+        <views:GFDRenderingPanel DataContext="{Binding CommonVMs.Render}" Width="800" Height="600"/>
       </Panel></TabItem>
     </TabControl>
   </DockPanel>
