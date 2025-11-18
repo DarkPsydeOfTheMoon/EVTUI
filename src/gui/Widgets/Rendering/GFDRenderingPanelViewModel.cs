@@ -20,8 +20,9 @@ public class GFDRenderingPanelViewModel : ViewModelBase
 
     public double width;
     public double height;
-    public SceneManager sceneManager { get; set; } = new SceneManager();
     GLShaderProgram glShaderProgram;
+
+    public SceneManager sceneManager { get; set; } = new SceneManager();
 
     private bool _readyToRender = false;
     public bool ReadyToRender
@@ -67,4 +68,20 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         foreach (var scenemodel in this.sceneManager.sceneModels.Values)
             scenemodel.Draw(this.glShaderProgram, this.sceneManager.activeCamera);
     }
+
+    /////////////////////////////
+    // *** Setup Functions *** //
+    /////////////////////////////
+    public void AddModel(AssetViewModel asset)
+    {
+        int objectID = (int)asset.ObjectID.Value;
+        Console.WriteLine(asset.ObjectID.Value);
+        Console.WriteLine(asset.ObjectType.Choice);
+        this.sceneManager.LoadObject(objectID, asset.ActiveModelPath);
+        //this.sceneManager.sceneModels[objectID].BaseAnimationPack = this.sceneManager.sceneModels[objectID].TryLoadAnimationPack(asset.ActiveBaseAnimPath);
+        //this.sceneManager.sceneModels[objectID].ExtBaseAnimationPack = this.sceneManager.sceneModels[objectID].TryLoadAnimationPack(asset.ActiveExtBaseAnimPath);
+        //this.sceneManager.sceneModels[objectID].AddAnimationPack = this.sceneManager.sceneModels[objectID].TryLoadAnimationPack(asset.ActiveAddAnimPath);
+        //this.sceneManager.sceneModels[objectID].ExtAddAnimationPack = this.sceneManager.sceneModels[objectID].TryLoadAnimationPack(asset.ActiveExtAddAnimPath);
+    }
+
 }
