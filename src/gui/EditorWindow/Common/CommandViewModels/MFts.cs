@@ -8,7 +8,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MFts : Generic
 {
-    public MFts(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public MFts(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Model: Footsteps";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);

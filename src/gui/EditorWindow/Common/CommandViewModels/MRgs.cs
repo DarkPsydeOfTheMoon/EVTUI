@@ -9,7 +9,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MRgs : Generic
 {
-    public MRgs(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public MRgs(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Model: Registry";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);

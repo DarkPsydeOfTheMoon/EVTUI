@@ -39,12 +39,7 @@ public class AssetsPanelViewModel : ViewModelBase
     public AssetsPanelViewModel(DataManager dataManager, CommonViewModels commonVMs)
     {
         this.Config = dataManager;
-
         this.Assets = commonVMs.Assets;
-        //this.Assets = new ObservableCollection<AssetViewModel>();
-        //EVT evt = (EVT)dataManager.EventManager.SerialEvent;
-        //foreach (SerialObject obj in evt.Objects)
-        //    this.Assets.Add(new AssetViewModel(obj, this.Config.ReadOnly));
         this.SortAssets();
     }
 

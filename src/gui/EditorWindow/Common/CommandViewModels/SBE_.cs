@@ -10,7 +10,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class SBE_ : Generic
 {
-    public SBE_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public SBE_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Sounds: Field Noise";
 

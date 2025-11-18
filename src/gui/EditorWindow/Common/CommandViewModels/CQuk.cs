@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CQuk : Generic
 {
-    public CQuk(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public CQuk(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Camera: Quake Effect";
 

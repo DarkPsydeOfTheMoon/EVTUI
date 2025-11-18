@@ -7,7 +7,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class Generic : ReactiveObject
 {
-    public Generic(DataManager config, CommandPointer cmd)
+    public Generic(DataManager config, CommonViewModels commonVMs, CommandPointer cmd)
     {
         this.Command     = cmd.Command;
         this.CommandData = cmd.CommandData;

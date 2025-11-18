@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class FrJ_ : Generic
 {
-    public FrJ_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public FrJ_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Frame Jump";
 

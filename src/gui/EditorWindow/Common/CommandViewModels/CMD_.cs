@@ -7,7 +7,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CMD_ : Generic
 {
-    public CMD_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public CMD_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Camera: Coordinate Movement";
 

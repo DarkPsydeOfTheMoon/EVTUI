@@ -14,6 +14,7 @@ public class TimelinePanelViewModel : ViewModelBase
     public DataManager Config { get; }
     public Clipboard SharedClipboard { get; }
 
+    public CommonViewModels Common { get; }
     public TimelineViewModel TimelineContent { get; set; }
     public TimelineCommands.Generic ActiveCommand { get; set; }
     protected CommandPointer _activeCommandPointer;
@@ -27,6 +28,7 @@ public class TimelinePanelViewModel : ViewModelBase
     public TimelinePanelViewModel(DataManager dataManager, CommonViewModels commonVMs, Clipboard clipboard)
     {
         this.Config          = dataManager;
+        this.Common          = commonVMs;
         this.TimelineContent = commonVMs.Timeline;
         this.SharedClipboard = clipboard;
     }
@@ -62,9 +64,9 @@ public class TimelinePanelViewModel : ViewModelBase
         this._activeCommandPointer = cmd;
         this._activeCategory = this.TimelineContent.Categories[TimelineViewModel.CodeToCategory(cmd.Code, false)];
         if (cmd.CommandType is null)
-            this.ActiveCommand = new TimelineCommands.Generic(this.Config, cmd);
+            this.ActiveCommand = new TimelineCommands.Generic(this.Config, this.Common, cmd);
         else
-            this.ActiveCommand = (TimelineCommands.Generic)Activator.CreateInstance(cmd.CommandType, new object[] { this.Config, cmd });
+            this.ActiveCommand = (TimelineCommands.Generic)Activator.CreateInstance(cmd.CommandType, new object[] { this.Config, this.Common, cmd });
 
         this.WhenAnyValue(x => x.ActiveCommand.Basics.StartingFrame.Value).Subscribe(x => {
             this._activeCategory.MoveCommand(this._activeCommandPointer, (int)this.ActiveCommand.Basics.StartingFrame.Value);

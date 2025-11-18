@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnOl : Generic
 {
-    public EnOl(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public EnOl(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Environment: Outline";
 

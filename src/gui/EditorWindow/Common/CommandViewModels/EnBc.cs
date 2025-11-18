@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnBc : Generic
 {
-    public EnBc(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public EnBc(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Environment: Background Color";
         this.BackgroundColor = new ColorSelectionField("Background Color", this.Editable, this.CommandData.RGBA);

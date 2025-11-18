@@ -16,10 +16,13 @@ public class CommonViewModels
             this.Assets.Add(new AssetViewModel(obj, dataManager.ReadOnly));
 
         this.Timeline = new TimelineViewModel(dataManager);
+
+        this.Render = new GFDRenderingPanelViewModel();
     }
 
-    public ObservableCollection<AssetViewModel> Assets { get; set; }
-    public TimelineViewModel Timeline { get; set; }
+    public ObservableCollection<AssetViewModel> Assets   { get; set; }
+    public TimelineViewModel                    Timeline { get; set; }
+    public GFDRenderingPanelViewModel           Render   { get; set; }
 }
 
 public class EditorWindowViewModel : ViewModelBase

@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnPh : Generic
 {
-    public EnPh(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public EnPh(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Environment: Physics";
 

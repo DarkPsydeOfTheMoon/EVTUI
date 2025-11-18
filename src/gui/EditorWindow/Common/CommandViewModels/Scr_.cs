@@ -7,7 +7,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class Scr_ : Generic
 {
-    public Scr_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public Scr_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Script: Run Procedure";
         //this.ProcedureIndex = new IntSelectionField("Procedure Index", this.Editable, this.CommandData.ProcedureIndex, new List<int>{this.CommandData.ProcedureIndex});

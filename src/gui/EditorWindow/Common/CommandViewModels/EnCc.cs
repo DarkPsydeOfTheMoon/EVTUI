@@ -9,7 +9,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnCc : Generic
 {
-    public EnCc(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public EnCc(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Environment: Color Correction";
 

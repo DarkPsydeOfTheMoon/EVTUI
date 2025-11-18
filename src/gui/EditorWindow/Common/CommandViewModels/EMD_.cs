@@ -11,7 +11,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EMD_ : Generic
 {
-    public EMD_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public EMD_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Effect: Movement";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x01000002));

@@ -9,7 +9,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnFD : Generic
 {
-    public EnFD(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public EnFD(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Environment: Fog Distance";
 

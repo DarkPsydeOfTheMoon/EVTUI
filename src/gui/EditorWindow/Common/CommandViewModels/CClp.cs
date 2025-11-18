@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CClp : Generic
 {
-    public CClp(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public CClp(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Camera: Clipping Distance";
 

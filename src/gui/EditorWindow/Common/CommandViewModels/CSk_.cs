@@ -9,7 +9,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CSk_ : Generic
 {
-    public CSk_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public CSk_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Camera: Shaking Effect (Old)";
 

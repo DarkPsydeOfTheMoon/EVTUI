@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class MsgR : Generic
 {
-    public MsgR(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public MsgR(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Message (by Index)";
 

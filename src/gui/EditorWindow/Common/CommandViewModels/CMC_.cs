@@ -9,7 +9,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CMC_ : Generic
 {
-    public CMC_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public CMC_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Camera: Character-Centric Movement";
 

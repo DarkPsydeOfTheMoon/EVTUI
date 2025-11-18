@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CAR_ : Generic
 {
-    public CAR_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public CAR_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Camera: Reset Animation";
 

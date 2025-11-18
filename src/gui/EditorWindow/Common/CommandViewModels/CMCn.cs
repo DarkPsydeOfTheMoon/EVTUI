@@ -9,7 +9,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CMCn : Generic
 {
-    public CMCn(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public CMCn(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Camera: Continuous Movement";
 

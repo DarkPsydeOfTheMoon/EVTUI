@@ -6,7 +6,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CSDD : Generic
 {
-    public CSDD(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public CSDD(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Camera: Placement (Old)";
 

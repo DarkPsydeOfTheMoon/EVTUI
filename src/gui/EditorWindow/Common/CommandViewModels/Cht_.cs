@@ -9,7 +9,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class Cht_ : Generic
 {
-    public Cht_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public Cht_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Message: Chat Mode";
 

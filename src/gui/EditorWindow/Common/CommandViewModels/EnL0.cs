@@ -8,7 +8,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class EnL0 : Generic
 {
-    public EnL0(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public EnL0(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Environment: Lighting (Objects)";
 

@@ -10,7 +10,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class Snd_ : Generic
 {
-    public Snd_(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public Snd_(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Sounds: Play Cue";
 

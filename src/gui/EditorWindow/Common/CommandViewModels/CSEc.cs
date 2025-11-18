@@ -7,7 +7,7 @@ namespace EVTUI.ViewModels.TimelineCommands;
 
 public class CSEc : Generic
 {
-    public CSEc(DataManager config, CommandPointer cmd) : base(config, cmd)
+    public CSEc(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Camera: Load From Asset";
 
