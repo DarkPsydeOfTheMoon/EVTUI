@@ -305,11 +305,11 @@ public class AssetViewModel : ViewModelBase
     public ObservableCollection<string> AddAnimPaths;
     public ObservableCollection<string> ExtAddAnimPaths;
 
-    public string ActiveModelPath       { get => this.ModelPaths[0];       }
-    public string ActiveBaseAnimPath    { get => this.BaseAnimPaths[0];    }
-    public string ActiveExtBaseAnimPath { get => this.ExtBaseAnimPaths[0]; }
-    public string ActiveAddAnimPath     { get => this.AddAnimPaths[0];     }
-    public string ActiveExtAddAnimPath  { get => this.ExtAddAnimPaths[0];  }
+    public string ActiveModelPath       { get => (this.ModelPaths.Count > 0) ? this.ModelPaths[0]: null; }
+    public string ActiveBaseAnimPath    { get => (this.BaseAnimPaths.Count > 0) ? this.BaseAnimPaths[0] : null;}
+    public string ActiveExtBaseAnimPath { get => (this.ExtBaseAnimPaths.Count > 0) ? this.ExtBaseAnimPaths[0] : null; }
+    public string ActiveAddAnimPath     { get => (this.AddAnimPaths.Count > 0) ? this.AddAnimPaths[0] : null; }
+    public string ActiveExtAddAnimPath  { get => (this.ExtAddAnimPaths.Count > 0) ? this.ExtAddAnimPaths[0] : null; }
 
     //public AnimationWidget BaseAnimPreview { get; set; }
 
@@ -351,6 +351,12 @@ public class AssetViewModel : ViewModelBase
                     else
                         pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_{this.SubID.Value:00}\\.GMD";
                 break;
+            case "Item":
+                pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GMD";
+                break;
+            case "Field":
+                pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value}\\.GFS";
+                break;
             default:
                 Trace.TraceWarning($"Unknown asset type: {this.ObjectType.Choice}");
                 break;
@@ -366,7 +372,65 @@ public class AssetViewModel : ViewModelBase
 
     public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims)
     {
-        return new List<string>();
+        string animType = (isExtAnims) ? "A" : "B";
+        int animId = (isExtAnims) ? (int)this.ExtBaseAnimID.Value : (int)this.BaseAnimID.Value;
+        string pattern = "";
+        //string backoff = "";
+        bool backoff = true;
+        List<string> ret = new List<string>();
+
+        if (animId == -1)
+            return ret;
+
+        while (backoff) // && animId <= 9999)
+        {
+            switch (this.ObjectType.Choice)
+            {
+                case "Character":
+                    if (isBlendAnims)
+                    {
+                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EMT{this.MajorID.Value:0000}\\.GAP";
+                        //pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_{animId:000}A\\.GAP";
+                        backoff = false;
+                    }
+                    else
+                    {
+                        if (this.IsCommon.Value)
+                            //MODEL/CHARACTER/COMMON_ANIM/ACMN0001.GAP
+                            pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]COMMON_ANIM[\\\\/]{animType}CMN{animId:0000}\\.GAP";
+                        else
+                        {
+                            pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_{animId:000}\\.GAP";
+                            ///backoff = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_001\\.GAP";
+                        }
+                        backoff = (animId < 9999);
+                    }
+                    break;
+                case "Item":
+                    // yes, it's the GMD itself. for items, that's where animations are also stored
+                    pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GMD";
+                    backoff = false;
+                    break;
+                default:
+                    Trace.TraceWarning($"Unknown asset type: {this.ObjectType.Choice}");
+                    break;
+            }
+
+            Console.WriteLine(pattern);
+            if (pattern == "")
+                break;
+            else
+                ret = this.Config.ExtractMatchingFiles(pattern);
+                //if (ret.Count == 0 && backoff != "")
+                //    ret = this.Config.ExtractMatchingFiles(backoff);
+
+            if (ret.Count > 0)
+                break;
+            else
+                animId += 30;
+        }
+
+        return ret;
     }
 
     public static BiDict<string, int> ObjectTypes = new BiDict<string, int>

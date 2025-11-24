@@ -26,8 +26,9 @@ public class CommonViewModels : ReactiveObject
             {
                 foreach (AssetViewModel asset in this.Assets)
                     //if (asset.IsModel)
-                    if (asset.ObjectType.Choice == "Character")
-                        this.Render.AddModel(asset);
+                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field") // || asset.ObjectType.Choice == "Item")
+                        this.Render.AddModel(asset, this.Timeline);
+                this.Render.PlaceCamera(this.Timeline);
             }
             else
                 this.Render.sceneManager.teardown();

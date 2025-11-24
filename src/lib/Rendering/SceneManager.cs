@@ -9,6 +9,9 @@ using GFDLibrary.Common;
 using GFDLibrary.Rendering.OpenGL;
 using GFDLibrary.Textures;
 
+using GFDLibrary.Models;
+using GFDLibrary.Utilities;
+
 using OpenTK.Graphics.OpenGL;
 
 namespace EVTUI;
@@ -191,8 +194,27 @@ public class SceneModel
         // } );
         ////////////////////////////
 
+        /*Vector3 translation = new Vector3(-46.620338439941406f, 0f, 659.7936401367188f);
+        Vector3 rotation = new Vector3(MathHelper.DegreesToRadians(0f), MathHelper.DegreesToRadians(15f), MathHelper.DegreesToRadians(0f));
+        // Calculate current transform
+        //var transform = Matrix4x4.CreateFromQuaternion( glmodel.EulerToQuat(rotation) ) * Matrix4x4.CreateScale( new Vector3(0, 0, 0) );
+        //transform.Translation = translation;
+        glmodel.BaseTranslation = translation;
+        glmodel.BaseRotation = rotation;*/
+
         this.model = glmodel;
         this.GAP = model.AnimationPack;
+    }
+
+    public void SetPosition(float[] position, float[] rotation)
+    {
+        //Console.WriteLine($"{position[0]}, {position[1]}, {position[2]}");
+        //Console.WriteLine($"{rotation[0]}, {rotation[1]}, {rotation[2]}");
+        if (!(position is null))
+            this.model.BaseTranslation = new Vector3(position[0], position[1], position[2]);
+        if (!(rotation is null))
+            this.model.BaseRotation = new Vector3(MathHelper.DegreesToRadians(rotation[0]), MathHelper.DegreesToRadians(rotation[1]), MathHelper.DegreesToRadians(rotation[2]));
+        //this.StartAnimTimer();
     }
 
     public AnimationPack TryLoadAnimationPack(string filepath)
@@ -216,6 +238,8 @@ public class SceneModel
             else if (!isExt && !(this.BaseAnimationPack is null) && idx < this.BaseAnimationPack.Animations.Count)
             {
                 this.LoadAnimation(this.BaseAnimationPack.Animations[idx]);
+                Console.WriteLine(this.BaseAnimationPack.Animations[idx].Controllers[0].ToString());
+                Console.WriteLine(this.BaseAnimationPack.Animations[idx].Controllers[0].Layers[0].KeyType);
                 this.StartAnimTimer();
             }
             else
@@ -267,6 +291,17 @@ public class SceneManager
         new OpenTK.Mathematics.Vector3(0, -80, -100), 
         new OpenTK.Mathematics.Vector3(0, 0, 0)
     );
+    /*GLPerspectiveCamera fallbackCamera = new GLPerspectiveCamera(
+        0.01f, 60000.0f, (float)45.0f, 16.0f/9.0f,
+        // translation 
+        new OpenTK.Mathematics.Vector3(0, 0, 0),
+        // offset
+        new OpenTK.Mathematics.Vector3(201.96661376953125f, -79.48107147216797f, -1014.8367309570312f), 
+        // modelTranslation
+        new OpenTK.Mathematics.Vector3(0, 0, 0),
+        // modelRotation
+        new OpenTK.Mathematics.Vector3(MathHelper.DegreesToRadians(-10.33485221862793f), MathHelper.DegreesToRadians(39.77937316894531f), MathHelper.DegreesToRadians(0f))
+    );*/
 
     GLPerspectiveCamera closeupCamera = new GLPerspectiveCamera(
         0.01f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
@@ -312,7 +347,6 @@ public class SceneManager
     ///////////////////////////////
     public void teardown()
     {
-        Console.WriteLine("!!!");
         foreach (int objectID in this.sceneModels.Keys)
             this.sceneModels[objectID].Dispose();
         this.sceneModels.Clear();
@@ -453,5 +487,25 @@ public class SceneManager
             this.activeCamera = fallbackCamera;
         else
             this.activeCamera = this.cameras[camera_index];
+    }
+
+    public void PlaceCamera(float[] position, float[] rotation, float angleOfView)
+    {
+        Console.WriteLine($"{position[0]}, {position[1]}, {position[2]}");
+        Console.WriteLine($"{rotation[0]}, {rotation[1]}, {rotation[2]}");
+        Console.WriteLine(angleOfView);
+        this.activeCamera = new GLPerspectiveCamera(
+            0.01f, 60000.0f, angleOfView, 16.0f/9.0f,
+            // translation 
+            new OpenTK.Mathematics.Vector3(0, 0, 0),
+            // offset
+            //new OpenTK.Mathematics.Vector3(201.96661376953125f, -79.48107147216797f, -1014.8367309570312f), 
+            new OpenTK.Mathematics.Vector3(-position[0], -position[1], -position[2]), 
+            // modelTranslation
+            new OpenTK.Mathematics.Vector3(0, 0, 0),
+            // modelRotation
+            //new OpenTK.Mathematics.Vector3(MathHelper.DegreesToRadians(-10.33485221862793f), MathHelper.DegreesToRadians(39.77937316894531f), MathHelper.DegreesToRadians(0f))
+            new OpenTK.Mathematics.Vector3(MathHelper.DegreesToRadians(-rotation[1]), MathHelper.DegreesToRadians(-rotation[0]), MathHelper.DegreesToRadians(-rotation[2]))
+        );
     }
 }

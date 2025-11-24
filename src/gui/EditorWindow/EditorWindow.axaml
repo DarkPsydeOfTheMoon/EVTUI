@@ -203,7 +203,8 @@
       </Panel></TabItem>
       <TabItem Header="Render" Margin="5"><Panel>
         <!--TextBlock Text="Coming soon..." /-->
-        <views:GFDRenderingPanel DataContext="{Binding CommonVMs.Render}" Width="800" Height="600"/>
+        <!--views:GFDRenderingPanel DataContext="{Binding CommonVMs.Render}" Width="1200" Height="675"/-->
+        <views:GFDRenderingPanel DataContext="{Binding CommonVMs.Render}" Width="800" Height="450"/>
       </Panel></TabItem>
     </TabControl>
   </DockPanel>
