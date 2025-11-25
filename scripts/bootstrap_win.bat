@@ -9,11 +9,20 @@ git submodule update --init --recursive
 
 echo Applying patch to GFDLibrary...
 cd external/GFD-Studio
+git reset --hard HEAD
+git submodule update --init
+git submodule sync
 git apply --reject --whitespace=fix ../../patches/GFD-Studio.patch
+
 cd ..
+
 echo Applying patch to Atlus-Script-Tools...
 cd Atlus-Script-Tools
+git reset --hard HEAD
+git submodule update --init
+git submodule sync
 git apply --reject --whitespace=fix ../../patches/Atlus-Script-Tools.patch
+
 cd ..
 cd ..
 
