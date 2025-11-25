@@ -31,8 +31,8 @@ public class FOD_ : Generic
     (
         new Dictionary<string, uint>
         {
-            {"Hide", 0},
-            {"Show", 1},
+            {"Show", 0},
+            {"Hide", 1},
         }
     );
 

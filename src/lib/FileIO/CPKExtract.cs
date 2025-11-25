@@ -41,11 +41,12 @@ public static class CPKExtract
         Regex filePattern = new Regex(filePatternString, RegexOptions.IgnoreCase);
         List<string> matches = new List<string>();
 
-        Parallel.ForEach(Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories), ModPath =>
-        {
-            if (filePattern.IsMatch(ModPath))
-                matches.Add(ModPath);
-        });
+        if (!String.IsNullOrEmpty(ExistingFolder))
+            Parallel.ForEach(Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories), ModPath =>
+            {
+                if (filePattern.IsMatch(ModPath))
+                    matches.Add(ModPath);
+            });
 
         KnownDecryptionFunction decryptionFunctionIndex;
         InPlaceDecryptionFunction decryptionFunction = null;
@@ -213,7 +214,8 @@ public static class CPKExtract
         retval.bmdPaths.Sort();
 
         // overwrite paths to extracted (vanilla) files with files from mod
-        Parallel.ForEach(Directory.GetFiles(existingFolder, "*.*", SearchOption.AllDirectories), ModPath => { maybePickFile(ModPath, true); });
+        if (!String.IsNullOrEmpty(existingFolder))
+            Parallel.ForEach(Directory.GetFiles(existingFolder, "*.*", SearchOption.AllDirectories), ModPath => { maybePickFile(ModPath, true); });
 
         if (!evtFound)
             return null;
