@@ -11,6 +11,8 @@ namespace EVTUI.ViewModels;
 
 public class GFDRenderingPanelViewModel : ViewModelBase
 {
+    protected DataManager Config;
+
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
@@ -23,7 +25,7 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     public double height;
     GLShaderProgram glShaderProgram;
 
-    public SceneManager sceneManager { get; set; } = new SceneManager();
+    public SceneManager sceneManager { get; set; } // = new SceneManager();
 
     private bool _readyToRender = false;
     public bool ReadyToRender
@@ -32,8 +34,11 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _readyToRender, value);
     }
     
-    public GFDRenderingPanelViewModel(float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f)
+    public GFDRenderingPanelViewModel(DataManager config, float r = 0.0f, float g = 0.0f, float b = 0.0f, float a = 0.0f)
     {
+        this.Config = config;
+        this.sceneManager = new SceneManager(this.Config);
+
         this.r = r;
         this.g = g;
         this.b = b;
@@ -86,12 +91,6 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     public void AddModel(AssetViewModel asset, TimelineViewModel timeline)
     {
         int objectID = (int)asset.ObjectID.Value;
-        Console.WriteLine(asset.ObjectID.Value);
-        Console.WriteLine(asset.ObjectType.Choice);
-        Console.WriteLine(asset.ActiveBaseAnimPath);
-        Console.WriteLine(asset.ActiveExtBaseAnimPath);
-        Console.WriteLine(asset.ActiveAddAnimPath);
-        Console.WriteLine(asset.ActiveExtAddAnimPath);
 
         if (String.IsNullOrEmpty(asset.ActiveModelPath))
         {
@@ -99,7 +98,7 @@ public class GFDRenderingPanelViewModel : ViewModelBase
             return;
         }
 
-        this.sceneManager.LoadObject(objectID, asset.ActiveModelPath);
+        this.sceneManager.LoadObject(objectID, asset.ActiveModelPath, asset.ActiveTextureBinPath, (asset.ObjectType.Choice == "Field"));
         if (!String.IsNullOrEmpty(asset.ActiveBaseAnimPath))
             this.sceneManager.sceneModels[objectID].BaseAnimationPack = this.sceneManager.sceneModels[objectID].TryLoadAnimationPack(asset.ActiveBaseAnimPath);
         if (!String.IsNullOrEmpty(asset.ActiveExtBaseAnimPath))

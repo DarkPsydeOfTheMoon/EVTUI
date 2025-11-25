@@ -13,7 +13,7 @@ public class MAA_ : Generic
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
         this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
-        this.TrackNumber = new NumEntryField("Track Number", this.Editable, this.CommandData.TrackNumber, 0, 7, 1);
+        this.TrackNumber = new NumEntryField("Track Number", this.Editable, this.CommandData.TrackNumber, 1, 7, 1);
         this.WhenAnyValue(_ => _.TrackNumber.Value).Subscribe(_ => this.CommandData.TrackNumber = (int)this.TrackNumber.Value);
         this.DebugFrameForward = new BoolChoiceField("Frame Forward", this.Editable, this.CommandData.Flags[31]);
         this.WhenAnyValue(_ => _.DebugFrameForward.Value).Subscribe(_ => this.CommandData.Flags[31] = this.DebugFrameForward.Value);

@@ -81,7 +81,7 @@ index d535d24..6b3072e 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLModel.cs b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-index daee18f..c9fb129 100644
+index daee18f..eec93c7 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLModel.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLModel.cs
 @@ -6,7 +6,7 @@ using System.Numerics;
@@ -101,10 +101,34 @@ index daee18f..c9fb129 100644
  
          public GLModel( ModelPack modelPack, MaterialTextureCreator textureCreator )
          {
-@@ -48,6 +49,79 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -33,6 +34,7 @@ namespace GFDLibrary.Rendering.OpenGL
+             Materials = modelPack.Materials?.ToDictionary( x => x.Key, y => GLBaseMaterial.CreateGLMaterial( y.Value, textureCreator ) ) ??
+                         new Dictionary<string, GLBaseMaterial>();
+ 
++            //List<GLNode> newNodes = new List<GLNode>();
+             foreach ( var glNode in Nodes )
+             {
+                 glNode.Parent = Nodes.FirstOrDefault( x => x.Node == glNode.Node.Parent );
+@@ -41,6 +43,14 @@ namespace GFDLibrary.Rendering.OpenGL
+ 
+                 foreach ( var attachment in glNode.Node.Attachments )
+                 {
++                    // TODO: further attempts to get field objects to work
++                    //if ( attachment.Type == NodeAttachmentType.Model)
++                    //    foreach (var newNode in ((NodeModelAttachment)attachment).Model.Nodes)
++                    //        newNodes.Add(new GLNode(newNode));
++                    //else if ( attachment.Type == NodeAttachmentType.ModelPack )
++                    //    foreach (var newNode in ((NodeModelPackAttachment)attachment).Model.Nodes)
++                    //        newNodes.Add(new GLNode(newNode));
++
+                     if ( attachment.Type != NodeAttachmentType.Mesh )
+                         continue;
+ 
+@@ -48,6 +58,80 @@ namespace GFDLibrary.Rendering.OpenGL
                      glNode.Meshes.Add( glMesh );
                  }
              }
++            //Nodes.AddRange(newNodes);
 +
 +            BlendAnimations = new Dictionary<int, Animation>();
 +        }
@@ -154,7 +178,7 @@ index daee18f..c9fb129 100644
 +            return res;
 +        }
 +
-+        Quaternion EulerToQuat( Vector3 e )
++        public Quaternion EulerToQuat( Vector3 e )
 +        {
 +            var x = e.X / 2;
 +            var y = e.Y / 2;
@@ -181,7 +205,7 @@ index daee18f..c9fb129 100644
          }
  
          public void LoadAnimation( Animation animation )
-@@ -94,6 +168,47 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -94,6 +178,47 @@ namespace GFDLibrary.Rendering.OpenGL
              }
          }
  
@@ -229,16 +253,18 @@ index daee18f..c9fb129 100644
          private GLShaderProgram GetTargetShader(ShaderRegistry shaderRegistry, GLMesh glMesh, Matrix4 view, Matrix4 projection, HashSet<ResourceType> shaderPrograms )
          {
              if ( typeof( GLMetaphorMaterial ).IsInstanceOfType( glMesh.Material )
-@@ -117,7 +232,7 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -117,8 +242,9 @@ namespace GFDLibrary.Rendering.OpenGL
  
          public void Draw( DrawContext context )
          {
 -            if ( Animation != null )
 +            if ( !NoActiveAnimations() )
                  AnimateNodes( context.AnimationTime );
++
              context.ShaderRegistry.mDefaultShader.Use();
              context.ShaderRegistry.mDefaultShader.SetUniform( "uView", context.Camera.View );
-@@ -138,7 +253,7 @@ namespace GFDLibrary.Rendering.OpenGL
+             context.ShaderRegistry.mDefaultShader.SetUniform( "uProjection", context.Camera.Projection );
+@@ -138,13 +264,16 @@ namespace GFDLibrary.Rendering.OpenGL
                  {
                      var glMesh = glNode.Meshes[i];
  
@@ -247,7 +273,16 @@ index daee18f..c9fb129 100644
                      {
                          var oldGlMesh = glMesh;
                          glMesh = glNode.Meshes[i] = new GLMesh( oldGlMesh.Mesh, glNode.WorldTransform, ModelPack.Model.Bones, Nodes, Materials );
-@@ -162,7 +277,7 @@ namespace GFDLibrary.Rendering.OpenGL
+                         oldGlMesh.Dispose();
+                     }
+                     GLShaderProgram targetShader = GetTargetShader( context.ShaderRegistry, glMesh, context.Camera.View, context.Camera.Projection, shaderProgramsInUse );
++                    // very clumsy way to make material-less/texture-less stuff (e.g., bounding boxes) not show up in the render... surely there's a better way...
++                    if (!glMesh.Material.HasDiffuseTexture && !glMesh.Material.HasNormalTexture && !glMesh.Material.HasSpecularTexture && !glMesh.Material.HasReflectionTexture && !glMesh.Material.HasHighlightTexture && !glMesh.Material.HasGlowTexture && !glMesh.Material.HasNightTexture && !glMesh.Material.HasDetailTexture && !glMesh.Material.HasShadowTexture && !glMesh.Material.HasTexture10)
++                        continue;
+                     if ( !glMesh.Material.IsMaterialTransparent() ) // If opaque
+                     {
+                         if ( glMesh.Mesh != null )
+@@ -162,7 +291,7 @@ namespace GFDLibrary.Rendering.OpenGL
              GL.Enable( EnableCap.Blend );
  
              // Sort transparent objects based on their distance from the camera
@@ -256,7 +291,7 @@ index daee18f..c9fb129 100644
  
              // Disable depth mask
              GL.DepthMask( false );
-@@ -197,59 +312,79 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -197,59 +326,79 @@ namespace GFDLibrary.Rendering.OpenGL
          }
  
  
@@ -412,7 +447,7 @@ index 3835e28..bdcd43a 100644
  namespace GFDLibrary.Rendering.OpenGL
  {
 diff --git a/GFDLibrary.Rendering.OpenGL/GLPerspectiveCamera.cs b/GFDLibrary.Rendering.OpenGL/GLPerspectiveCamera.cs
-index b356c83..b5da266 100644
+index b356c83..d15cd3f 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLPerspectiveCamera.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLPerspectiveCamera.cs
 @@ -1,5 +1,5 @@
@@ -422,6 +457,15 @@ index b356c83..b5da266 100644
  
  namespace GFDLibrary.Rendering.OpenGL
  {
+@@ -26,7 +26,7 @@ namespace GFDLibrary.Rendering.OpenGL
+         /// Gets or sets the camera offset from the model.
+         /// </summary>
+         public Vector3 Offset { get; set; }
+-        protected GLPerspectiveCamera( float zNear, float zFar, float fieldOfView, float aspectRatio,
++        public GLPerspectiveCamera( float zNear, float zFar, float fieldOfView, float aspectRatio,
+             Vector3 translation, Vector3 offset,
+             Vector3 modelTranslation, Vector3 modelRotation )
+             : base( translation, zNear, zFar )
 diff --git a/GFDLibrary.Rendering.OpenGL/GLShaderProgram.cs b/GFDLibrary.Rendering.OpenGL/GLShaderProgram.cs
 index 22cdcb9..f8ca23c 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLShaderProgram.cs
@@ -464,6 +508,49 @@ index dbcd9b1..ea2d93b 100644
    <ItemGroup>
      <Folder Include="Animations\Conversion\" />
    </ItemGroup>
+diff --git a/GFDLibrary/Models/NodeAttachment.cs b/GFDLibrary/Models/NodeAttachment.cs
+index 4cc6b16..b6f15d7 100644
+--- a/GFDLibrary/Models/NodeAttachment.cs
++++ b/GFDLibrary/Models/NodeAttachment.cs
+@@ -39,6 +39,8 @@ namespace GFDLibrary.Models
+                     return new NodeEplLeafAttachment( ( EplLeaf )resource );
+                 case ResourceType.Morph:
+                     return new NodeMorphAttachment( ( Morph )resource );
++                case ResourceType.ModelPack:
++                    return new NodeModelPackAttachment( ( ModelPack ) resource );
+                 default:
+                     throw new ArgumentOutOfRangeException( nameof( resource ), "Unsupported resource type" );
+             }
+@@ -114,6 +116,20 @@ namespace GFDLibrary.Models
+         }
+     }
+ 
++    public sealed class NodeModelPackAttachment : NodeAttachment
++    {
++        public Model Model { get; set; }
++
++        public NodeModelPackAttachment() : base( NodeAttachmentType.ModelPack ) { }
++
++        public NodeModelPackAttachment( ModelPack modelPack ) : base( NodeAttachmentType.ModelPack ) => Model = modelPack.Model;
++
++        public override Resource GetValue()
++        {
++            return Model;
++        }
++    }
++
+     /*
+     public sealed class NodeMeshAttachment : NodeAttachment
+     {
+@@ -239,5 +255,6 @@ namespace GFDLibrary.Models
+         Epl = 7,
+         EplLeaf = 8,
+         Morph = 9,
++        ModelPack = 10,
+     }
+-}
+\ No newline at end of file
++}
 diff --git a/GFDLibrary/ResourceVersion.cs b/GFDLibrary/ResourceVersion.cs
 index 35b0863..802085b 100644
 --- a/GFDLibrary/ResourceVersion.cs

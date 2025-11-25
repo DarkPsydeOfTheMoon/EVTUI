@@ -19,14 +19,14 @@ public class CommonViewModels : ReactiveObject
 
         this.Timeline = new TimelineViewModel(dataManager);
 
-        this.Render = new GFDRenderingPanelViewModel();
+        this.Render = new GFDRenderingPanelViewModel(dataManager);
         this.WhenAnyValue(x => x.Render.ReadyToRender).Subscribe(x =>
         {
             if (x)
             {
                 foreach (AssetViewModel asset in this.Assets)
                     //if (asset.IsModel)
-                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field") // || asset.ObjectType.Choice == "Item")
+                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item")
                         this.Render.AddModel(asset, this.Timeline);
                 this.Render.PlaceCamera(this.Timeline);
             }
