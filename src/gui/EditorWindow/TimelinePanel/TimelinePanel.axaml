@@ -2054,7 +2054,7 @@
           <TextBlock Classes="fieldtitle" Text="After Frame"/>
           <NumericUpDown Name="AfterFrame"
            Minimum="0"
-           Maximum="{c:Binding (TimelineContent.FrameDuration.Value - 1)}"
+           Maximum="{c:Binding TimelineContent.FrameCount-1}"
            Increment="1"
            Value="0"
            AllowSpin="true"
@@ -2066,7 +2066,7 @@
           <TextBlock Classes="fieldtitle" Text="Number of New Frames"/>
           <NumericUpDown Name="InsertFrames"
            Minimum="1"
-           Maximum="{c:Binding (TimelineContent.FrameDuration.UpperLimit - TimelineContent.FrameDuration.Value)}"
+           Maximum="{c:Binding (TimelineContent.FrameDuration.UpperLimit - TimelineContent.FrameCount)}"
            Increment="1"
            Value="1"
            AllowSpin="true"
@@ -2092,7 +2092,7 @@
           <TextBlock Classes="fieldtitle" Text="Starting Frame"/>
           <NumericUpDown Name="StartingFrame" ValueChanged="EnforceEndingMinimum"
            Minimum="0"
-           Maximum="{c:Binding (TimelineContent.FrameDuration.Value - 1)}"
+           Maximum="{c:Binding TimelineContent.FrameCount-1}"
            Increment="1"
            Value="0"
            AllowSpin="true"
@@ -2104,7 +2104,7 @@
           <TextBlock Classes="fieldtitle" Text="Ending Frame"/>
           <NumericUpDown Name="EndingFrame"
            Minimum="{Binding #StartingFrame.Value}"
-           Maximum="{c:Binding (TimelineContent.FrameDuration.Value - 1)}"
+           Maximum="{c:Binding TimelineContent.FrameCount-1}"
            Increment="1"
            Value="0"
            AllowSpin="true"

@@ -277,14 +277,16 @@ public class Timeline : ReactiveObject
             if (frame > afterFrame)
             {
                 this.MarkedFrames.Remove(frame);
-                this.Frames[frame].IsMarked = false;
+                if (frame > 0 && frame < this.Frames.Count)
+                    this.Frames[frame].IsMarked = false;
             }
         // ...and then put them back in, shifted
         foreach (int frame in frames)
             if (frame > afterFrame)
             {
                 this.MarkedFrames.Add(frame + numberFrames);
-                this.Frames[frame + numberFrames].IsMarked = true;
+                if ((frame + numberFrames) > 0 && (frame + numberFrames) < this.Frames.Count)
+                    this.Frames[frame + numberFrames].IsMarked = true;
             }
     }
 
@@ -301,7 +303,9 @@ public class Timeline : ReactiveObject
             if (frame >= startingFrame && frame <= endingFrame)
             {
                 this.MarkedFrames.Remove(frame);
-                this.Frames[frame].IsMarked = false;
+                // shouldn't really need this check here, but why not
+                if (frame > 0 && frame < this.Frames.Count)
+                    this.Frames[frame].IsMarked = false;
             }
 
         if (deleteFrames)
@@ -327,14 +331,16 @@ public class Timeline : ReactiveObject
                 if (frame > endingFrame)
                 {
                     this.MarkedFrames.Remove(frame);
-                    this.Frames[frame].IsMarked = false;
+                    if (frame > 0 && frame < this.Frames.Count)
+                        this.Frames[frame].IsMarked = false;
                 }
             // ...and then put them back in, shifted (back)
             foreach (int frame in frames)
                 if (frame > endingFrame)
                 {
                     this.MarkedFrames.Add(frame - (1 + endingFrame - startingFrame));
-                    this.Frames[frame - (1 + endingFrame - startingFrame)].IsMarked = true;
+                    if ((frame - (1 + endingFrame - startingFrame)) > 0 && (frame - (1 + endingFrame - startingFrame)) < this.Frames.Count)
+                        this.Frames[frame - (1 + endingFrame - startingFrame)].IsMarked = true;
                 }
         }
     }
