@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 
 using Avalonia;
@@ -271,13 +272,31 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         ((Flyout)sender).Content = null;
     }
 
-    public void PlaySFXTrack(object sender, RoutedEventArgs e)
+    public async void PlaySFXTrack(object sender, RoutedEventArgs e)
     {
-        Snd_ cmd = (Snd_)((ContentPresenter)LogicalExtensions.GetLogicalParent(
+        /*Snd_ cmd = (Snd_)((ContentPresenter)LogicalExtensions.GetLogicalParent(
             (StackPanel)LogicalExtensions.GetLogicalParent(
                 (StackPanel)LogicalExtensions.GetLogicalParent(
                     ((Button)sender))))).Content;
-        ViewModel!.PlayCueFromSource(cmd.SourceType.Choice, cmd.CueID.Choice, 1);
+        ViewModel!.PlayCueFromSource(cmd.SourceType.Choice, cmd.CueID.Choice, 1);*/
+        try
+        {
+            if (!(ViewModel!.ActiveCommand is null))
+            {
+                Snd_ cmd = (Snd_)ViewModel!.ActiveCommand;
+                ViewModel!.PlayCueFromSource(cmd.SourceType.Choice, (int)cmd.CueID.Value, 1);
+            }
+        }
+        catch (KeyNotFoundException ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, "Cue ID not found in selected ACB.");
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to play audio due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
     public void PlayVoiceTrack(object sender, RoutedEventArgs e)
