@@ -25,7 +25,7 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     public double height;
     GLShaderProgram glShaderProgram;
 
-    public SceneManager sceneManager { get; set; } // = new SceneManager();
+    public SceneManager sceneManager { get; set; }
 
     private bool _readyToRender = false;
     public bool ReadyToRender

@@ -155,50 +155,19 @@ public class SceneModel
             throw new FileNotFoundException($"Model file '{modelpath}' does not exist.");
 
         var model = GFDLibrary.Api.FlatApi.LoadModel(modelpath);
-        GLModel glmodel = null;
+        Archive fieldtex = null;
+        if (!String.IsNullOrEmpty(texturepath))
+            fieldtex = new Archive(texturepath);
 
-        if (!isField || String.IsNullOrEmpty(texturepath))
+        GLModel glmodel = new GLModel(model, ( material, textureName ) =>
         {
-
-        glmodel = new GLModel(model, ( material, textureName ) =>
-        {
-            if ( model.Textures.TryGetTexture( textureName, out var texture ) )
-            {
-                return new GLTexture( texture );
-            }
-            else
-            {
-                Trace.TraceWarning( $"tTexture '{textureName}' used by material '{material.Name}' is missing" );
-                return new GLTexture(Texture.CreateDefaultTexture(textureName));
-            }
-        } );
-
-        }
-        else
-        {
-
-        bool mIsFieldModel = isField;
-        Archive mFieldTextures = new Archive(texturepath);
-
-        ////////////////////////////
-        // TODO:
-        ////////////////////////////
-        // The below has been nicked from GFD Studio, which should correctly handle external texture bins.
-        // In order to implement this, we need to integrate the `mIsFieldModel` and `mFieldTextures`
-        // variables somehow into the scene management workflow.
-        // (This should be possible by relying on object/asset types to tell you whether something is a field model.)
-        glmodel = new GLModel(model, ( material, textureName ) =>
-        {
-            if ( mIsFieldModel && mFieldTextures.TryOpenFile( textureName, out var textureStream ) )
+            if ( isField && !(fieldtex is null) && fieldtex.TryOpenFile( textureName, out var textureStream ) )
             {
                 using ( textureStream )
                 {
-                    //var texture = new FieldTexturePS3( textureStream );
-                    //return new GLTexture( texture );
                     using (var memStream = new MemoryStream())
                     {
                         textureStream.CopyTo(memStream);
-                        //return outStream.ToArray();
                         var texture = new Texture(textureName, TextureFormat.DDS, memStream.ToArray());
                         return new GLTexture( texture );
                     }
@@ -211,12 +180,10 @@ public class SceneModel
             else
             {
                 Trace.TraceWarning( $"tTexture '{textureName}' used by material '{material.Name}' is missing" );
+                return new GLTexture(Texture.CreateDefaultTexture(textureName));
             }
 
-            return null;
         } );
-        ////////////////////////////
-        }
 
         this.model = glmodel;
         this.GAP = model.AnimationPack;
@@ -310,7 +277,7 @@ public class SceneModel
             int majorId = 0;
             int minorId = 0;
             int resId = 0;
-            string helperId = "*";
+            //string helperId = "*";
             if (node.Node.Properties.ContainsKey("fldLayoutOfModel_major"))
                 //majorId = node.Node.Properties["fldLayoutOfModel_major"].ToUserPropertyString();
                 majorId = (int)node.Node.Properties["fldLayoutOfModel_major"].GetValue();
@@ -360,17 +327,6 @@ public class SceneManager
         new OpenTK.Mathematics.Vector3(0, -80, -100), 
         new OpenTK.Mathematics.Vector3(0, 0, 0)
     );
-    /*GLPerspectiveCamera fallbackCamera = new GLPerspectiveCamera(
-        0.01f, 60000.0f, (float)45.0f, 16.0f/9.0f,
-        // translation 
-        new OpenTK.Mathematics.Vector3(0, 0, 0),
-        // offset
-        new OpenTK.Mathematics.Vector3(201.96661376953125f, -79.48107147216797f, -1014.8367309570312f), 
-        // modelTranslation
-        new OpenTK.Mathematics.Vector3(0, 0, 0),
-        // modelRotation
-        new OpenTK.Mathematics.Vector3(MathHelper.DegreesToRadians(-10.33485221862793f), MathHelper.DegreesToRadians(39.77937316894531f), MathHelper.DegreesToRadians(0f))
-    );*/
 
     GLPerspectiveCamera closeupCamera = new GLPerspectiveCamera(
         0.01f, 1000.0f, (float)45.0f, 4.0f/3.0f, 

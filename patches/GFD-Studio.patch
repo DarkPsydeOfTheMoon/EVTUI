@@ -81,7 +81,7 @@ index d535d24..6b3072e 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLModel.cs b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-index daee18f..eec93c7 100644
+index daee18f..07dae6e 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLModel.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLModel.cs
 @@ -6,7 +6,7 @@ using System.Numerics;
@@ -205,7 +205,7 @@ index daee18f..eec93c7 100644
          }
  
          public void LoadAnimation( Animation animation )
-@@ -94,6 +178,47 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -94,6 +178,44 @@ namespace GFDLibrary.Rendering.OpenGL
              }
          }
  
@@ -217,12 +217,9 @@ index daee18f..eec93c7 100644
 +            foreach ( var glNode in Nodes )
 +            {
 +                int nodeControllerIndex = glNode.BlendControllerIndices.IndexOf( index );
-+                List<AnimationController>? controller = null;
++                List<AnimationController> controller = new List<AnimationController>();
 +                if (nodeControllerIndex == -1)
-+                {
-+                    glNode.BlendControllers.Add( new List<AnimationController>() );
-+                    controller = glNode.BlendControllers.Last();
-+                }
++                    glNode.BlendControllers.Add( controller );
 +                else
 +                {
 +                    controller = glNode.BlendControllers[nodeControllerIndex];
@@ -253,7 +250,7 @@ index daee18f..eec93c7 100644
          private GLShaderProgram GetTargetShader(ShaderRegistry shaderRegistry, GLMesh glMesh, Matrix4 view, Matrix4 projection, HashSet<ResourceType> shaderPrograms )
          {
              if ( typeof( GLMetaphorMaterial ).IsInstanceOfType( glMesh.Material )
-@@ -117,8 +242,9 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -117,8 +239,9 @@ namespace GFDLibrary.Rendering.OpenGL
  
          public void Draw( DrawContext context )
          {
@@ -264,7 +261,7 @@ index daee18f..eec93c7 100644
              context.ShaderRegistry.mDefaultShader.Use();
              context.ShaderRegistry.mDefaultShader.SetUniform( "uView", context.Camera.View );
              context.ShaderRegistry.mDefaultShader.SetUniform( "uProjection", context.Camera.Projection );
-@@ -138,13 +264,16 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -138,13 +261,16 @@ namespace GFDLibrary.Rendering.OpenGL
                  {
                      var glMesh = glNode.Meshes[i];
  
@@ -282,7 +279,7 @@ index daee18f..eec93c7 100644
                      if ( !glMesh.Material.IsMaterialTransparent() ) // If opaque
                      {
                          if ( glMesh.Mesh != null )
-@@ -162,7 +291,7 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -162,7 +288,7 @@ namespace GFDLibrary.Rendering.OpenGL
              GL.Enable( EnableCap.Blend );
  
              // Sort transparent objects based on their distance from the camera
@@ -291,7 +288,7 @@ index daee18f..eec93c7 100644
  
              // Disable depth mask
              GL.DepthMask( false );
-@@ -197,59 +326,79 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -197,59 +323,79 @@ namespace GFDLibrary.Rendering.OpenGL
          }
  
  
