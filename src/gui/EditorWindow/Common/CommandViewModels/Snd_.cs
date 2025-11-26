@@ -17,8 +17,11 @@ public class Snd_ : Generic
         this.ActionType = new StringSelectionField("Action", this.Editable, this.ActionTypes.Backward[this.CommandData.Action], this.ActionTypes.Keys);
         this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Action = this.ActionTypes.Forward[this.ActionType.Choice]);
 
-        this.CueID = new IntSelectionField("Cue ID", this.Editable, this.CommandData.CueId, config.AudioManager.CueIds.ConvertAll(x => (int)x));
-        this.WhenAnyValue(_ => _.CueID.Choice).Subscribe(_ => this.CommandData.CueId = this.CueID.Choice);
+        // TODO: temporarily (?) making this numeric entry until audio frameworks (i.e., ryo) are supported
+        //this.CueID = new IntSelectionField("Cue ID", this.Editable, this.CommandData.CueId, config.AudioManager.CueIds.ConvertAll(x => (int)x));
+        //this.WhenAnyValue(_ => _.CueID.Choice).Subscribe(_ => this.CommandData.CueId = this.CueID.Choice);
+        this.CueID = new NumEntryField("CueID", this.Editable, this.CommandData.CueId, 0, 99999, 1);
+        this.WhenAnyValue(_ => _.CueID.Value).Subscribe(_ => this.CommandData.CueId = (int)this.CueID.Value);
 
         this.SourceType = new StringSelectionField("Source", this.Editable,  this.SourceTypes.Backward[this.CommandData.Source], this.SourceTypes.Keys);
         config.AudioManager.SetActiveACBType(this.SourceType.Choice);
@@ -27,9 +30,9 @@ public class Snd_ : Generic
             this.CommandData.Source = this.SourceTypes.Forward[this.SourceType.Choice];
             config.AudioManager.SetActiveACBType(x);
             // shenanigans to avoid not-an-object issues when old cueId is not in new set
-            if (!config.AudioManager.CueIds.Contains((uint)this.CueID.Choice))
-                this.CueID.Choice = 0;
-            this.CueID.Choices = new ObservableCollection<int>(config.AudioManager.CueIds.ConvertAll(x => (int)x));
+            //if (!config.AudioManager.CueIds.Contains((uint)this.CueID.Choice))
+            //    this.CueID.Choice = 0;
+            //this.CueID.Choices = new ObservableCollection<int>(config.AudioManager.CueIds.ConvertAll(x => (int)x));
         });
 
         this.FadeDuration = new NumEntryField("Fade Duration (ms)", this.Editable, this.CommandData.FadeDuration, 0, 120, 1);
@@ -42,7 +45,8 @@ public class Snd_ : Generic
     public StringSelectionField SourceType { get; set; }
     public StringSelectionField ActionType { get; set; }
 
-    public IntSelectionField    CueID      { get; set; }
+    //public IntSelectionField    CueID      { get; set; }
+    public NumEntryField        CueID      { get; set; }
 
     public NumEntryField FadeDuration { get; set; }
     public NumEntryField Unk          { get; set; }
