@@ -353,6 +353,7 @@ public class SerialObject : ISerializable
     public Int32 ExtBaseMotionNo  = -1;
     public Int32 ExtAddMotionNo   = -1;
     public Int32 UnkBool;
+
     public ConstUInt32 UNUSED_UINT32 = new ConstUInt32(0);
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget

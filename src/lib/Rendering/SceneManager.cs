@@ -4,10 +4,15 @@ using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 
+using GFDLibrary;
+
 using GFDLibrary.Animations;
 using GFDLibrary.Common;
 using GFDLibrary.Rendering.OpenGL;
 using GFDLibrary.Textures;
+
+using GFDLibrary.Models;
+using GFDLibrary.Utilities;
 
 using OpenTK.Graphics.OpenGL;
 
@@ -15,14 +20,15 @@ namespace EVTUI;
 
 public class SceneModel
 {
+    protected DataManager Config;
     protected GLModel model;
     protected AnimationPack GAP;
     protected Stopwatch animationStopwatch = new Stopwatch();  // I think we need one per currently-playing animation...
 
-    protected AnimationPack BaseAnimationPack;
-    protected AnimationPack ExtBaseAnimationPack;
-    protected AnimationPack AddAnimationPack;
-    protected AnimationPack ExtAddAnimationPack;
+    public AnimationPack BaseAnimationPack;
+    public AnimationPack ExtBaseAnimationPack;
+    public AnimationPack AddAnimationPack;
+    public AnimationPack ExtAddAnimationPack;
 
     protected (bool IsExt, int Idx)? BaseAnimInfo;
     protected (bool IsExt, int Idx)?[] AddAnimInfo = new (bool IsExt, int Idx)?[8];
@@ -35,12 +41,18 @@ public class SceneModel
         // the external GAPs here instead of having a global list.
     }
 
+    public SceneModel(DataManager config, string modelPath, string texturePath, bool isField=false)
+    {
+        this.Config = config;
+        this.LoadModel(modelPath, texturePath, isField);
+    }
+
     public SceneModel(DataManager config, SerialObject obj)
     {
         List<string> assetPaths = config.EventManager.GetAssetPaths(obj.Id);
         if (assetPaths.Count > 0)
         {
-            this.LoadModel(assetPaths[0]);
+            this.LoadModel(assetPaths[0], null);
 
             List<string> baseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, false);
             if (baseAnimPaths.Count > 0)
@@ -137,15 +149,31 @@ public class SceneModel
         this.Draw(shaderProgram, camera, (float)(this.animationStopwatch.ElapsedMilliseconds)/1000.0f);
     }
 
-    private void LoadModel(string filepath)
+    private void LoadModel(string modelpath, string texturepath, bool isField=false)
     {
-        if (!File.Exists(filepath))
-            throw new FileNotFoundException($"Model file '{filepath}' does not exist.");
-        
-        var model = GFDLibrary.Api.FlatApi.LoadModel(filepath);
-        var glmodel = new GLModel(model, ( material, textureName ) =>
+        if (!File.Exists(modelpath))
+            throw new FileNotFoundException($"Model file '{modelpath}' does not exist.");
+
+        var model = GFDLibrary.Api.FlatApi.LoadModel(modelpath);
+        Archive fieldtex = null;
+        if (!String.IsNullOrEmpty(texturepath))
+            fieldtex = new Archive(texturepath);
+
+        GLModel glmodel = new GLModel(model, ( material, textureName ) =>
         {
-            if ( model.Textures.TryGetTexture( textureName, out var texture ) )
+            if ( isField && !(fieldtex is null) && fieldtex.TryOpenFile( textureName, out var textureStream ) )
+            {
+                using ( textureStream )
+                {
+                    using (var memStream = new MemoryStream())
+                    {
+                        textureStream.CopyTo(memStream);
+                        var texture = new Texture(textureName, TextureFormat.DDS, memStream.ToArray());
+                        return new GLTexture( texture );
+                    }
+                }
+            }
+            else if ( model.Textures.TryGetTexture( textureName, out var texture ) )
             {
                 return new GLTexture( texture );
             }
@@ -154,40 +182,35 @@ public class SceneModel
                 Trace.TraceWarning( $"tTexture '{textureName}' used by material '{material.Name}' is missing" );
                 return new GLTexture(Texture.CreateDefaultTexture(textureName));
             }
+
         } );
-
-        ////////////////////////////
-        // TODO:
-        ////////////////////////////
-        // The below has been nicked from GFD Studio, which should correctly handle external texture bins.
-        // In order to implement this, we need to integrate the `mIsFieldModel` and `mFieldTextures`
-        // variables somehow into the scene management workflow.
-        // (This should be possible by relying on object/asset types to tell you whether something is a field model.)
-        // var glmodel = new GLModel(model, ( material, textureName ) =>
-        // {
-        //     if ( mIsFieldModel && mFieldTextures.TryOpenFile( textureName, out var textureStream ) )
-        //     {
-        //         using ( textureStream )
-        //         {
-        //             var texture = new FieldTexturePS3( textureStream );
-        //             return new GLTexture( texture );
-        //         }
-        //     }
-        //     else if ( model.Textures.TryGetTexture( textureName, out var texture ) )
-        //     {
-        //         return new GLTexture( texture );
-        //     }
-        //     else
-        //     {
-        //         Trace.TraceWarning( $"tTexture '{textureName}' used by material '{material.Name}' is missing" );
-        //     }
-
-        //     return null;
-        // } );
-        ////////////////////////////
 
         this.model = glmodel;
         this.GAP = model.AnimationPack;
+
+        // TODO
+        //if (isField)
+        //    this.LoadAttachedModels();
+    }
+
+    public void SetPosition(float[] position, float[] rotation)
+    {
+        Animation pos = new Animation();
+        pos.Controllers.Add(new AnimationController());
+        pos.Controllers[0].TargetKind = TargetKind.Node;
+        pos.Controllers[0].TargetId = 0;
+        pos.Controllers[0].TargetName = this.model.Nodes[0].Node.Name;
+        pos.Controllers[0].Layers.Add(new AnimationLayer());
+        pos.Controllers[0].Layers[0].KeyType = KeyType.NodePRS;
+
+        PRSKey key = new PRSKey(KeyType.NodePRS);
+        if (!(position is null))
+            key.Position = new Vector3(position[0], position[1], position[2]);
+        if (!(rotation is null))
+            key.Rotation = this.model.EulerToQuat(new Vector3(MathHelper.DegreesToRadians(rotation[0]), MathHelper.DegreesToRadians(rotation[1]), MathHelper.DegreesToRadians(rotation[2])));
+        pos.Controllers[0].Layers[0].Keys.Add(key);
+
+        this.LoadBlendAnimation(pos, 0);
     }
 
     public AnimationPack TryLoadAnimationPack(string filepath)
@@ -246,11 +269,53 @@ public class SceneModel
             }
         }
     }
+
+    public void LoadAttachedModels()
+    {
+        foreach (GLNode node in this.model.Nodes)
+        {
+            int majorId = 0;
+            int minorId = 0;
+            int resId = 0;
+            //string helperId = "*";
+            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_major"))
+                //majorId = node.Node.Properties["fldLayoutOfModel_major"].ToUserPropertyString();
+                majorId = (int)node.Node.Properties["fldLayoutOfModel_major"].GetValue();
+            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_minor"))
+                //minorId = node.Node.Properties["fldLayoutOfModel_minor"].ToUserPropertyString();
+                minorId = (int)node.Node.Properties["fldLayoutOfModel_minor"].GetValue();
+            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
+                //resId = node.Node.Properties["fldLayoutOfModel_resId"].ToUserPropertyString();
+                resId = (int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue();
+            //if (node.Node.Properties.ContainsKey("gfdHelperID"))
+            //    helperId = node.Node.Properties["gfdHelperID"].ToUserPropertyString();
+
+            if (majorId > 0 && minorId > 0)
+            {
+                string pattern = $"MODEL/FIELD_TEX/OBJECT/M{majorId:000}_{minorId:000}.GMD";
+                //Console.WriteLine($"{node.Node.Name}, {pattern}, {resId}, {helperId}");
+                List<string> matches = this.Config.ExtractMatchingFiles(pattern);
+                if (matches.Count > 0)
+                {
+                    Console.WriteLine(matches[0]);
+                    var resource = Resource.Load(matches[0]);
+                    Console.WriteLine(resource.ResourceType);
+                    // doesn't work because it's ResourceType.ModelPack, not ResourceType.Model...
+                    // I added some rudimentary handling but still nothing shows up (because GLModel only renders mesh attachments, lol, so fair enough)
+                    node.Node.Attachments.Add(NodeAttachment.Create(resource));
+                }
+            }
+        }
+
+    }
+
 }
 
 
 public class SceneManager
 {
+    protected DataManager Config;
+
     public Dictionary<int, SceneModel> sceneModels = new Dictionary<int, SceneModel>();
     public List<AnimationPack>   externalGAPs = [];
     List<GLPerspectiveCamera>    cameras      = [];
@@ -272,8 +337,9 @@ public class SceneManager
 
     public GLPerspectiveCamera activeCamera;
 
-    public SceneManager()
+    public SceneManager(DataManager config)
     {
+        this.Config = config;
         this.activeCamera = fallbackCamera;
     }
 
@@ -323,6 +389,11 @@ public class SceneManager
     /////////////////////////////////////
     // *** Model Memory Management *** //
     /////////////////////////////////////
+    public void LoadObject(int objectID, string modelPath, string texturePath, bool isField=false)
+    {
+        this.sceneModels[objectID] = new SceneModel(this.Config, modelPath, texturePath, isField);
+    }
+
     public void LoadObjects(DataManager config, int[] objectIDs)
     {
         ////////////////////////////
@@ -442,5 +513,20 @@ public class SceneManager
             this.activeCamera = fallbackCamera;
         else
             this.activeCamera = this.cameras[camera_index];
+    }
+
+    public void PlaceCamera(float[] position, float[] rotation, float angleOfView)
+    {
+        this.activeCamera = new GLPerspectiveCamera(
+            0.01f, 60000.0f, angleOfView, 16.0f/9.0f,
+            // translation 
+            new OpenTK.Mathematics.Vector3(0, 0, 0),
+            // offset
+            new OpenTK.Mathematics.Vector3(-position[0], -position[1], -position[2]), 
+            // modelTranslation
+            new OpenTK.Mathematics.Vector3(0, 0, 0),
+            // modelRotation
+            new OpenTK.Mathematics.Vector3(MathHelper.DegreesToRadians(-rotation[1]), MathHelper.DegreesToRadians(-rotation[0]), MathHelper.DegreesToRadians(-rotation[2]))
+        );
     }
 }

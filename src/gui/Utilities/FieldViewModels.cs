@@ -302,7 +302,7 @@ public class AnimationWidget : ViewModelBase
             this.WhenAnyValue(_ => _.AnimationWeight.Value).Subscribe(_ => _animation.Weight = (float)this.AnimationWeight.Value);
         }
 
-        this.AnimationPreviewVM = new GFDRenderingPanelViewModel();
+        this.AnimationPreviewVM = new GFDRenderingPanelViewModel(config);
         this.WhenAnyValue(x => x.AnimationPreviewVM.ReadyToRender).Subscribe(x =>
         {
             if (x)
@@ -367,7 +367,7 @@ public class ModelPreviewWidget : ViewModelBase
         _config = config;
         _modelID = modelID;
 
-        this.ModelPreviewVM = new GFDRenderingPanelViewModel();
+        this.ModelPreviewVM = new GFDRenderingPanelViewModel(config);
 
         this.WhenAnyValue(x => x.ModelPreviewVM.ReadyToRender).Subscribe(x =>
         {

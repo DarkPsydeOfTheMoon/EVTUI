@@ -167,6 +167,11 @@ public class DataManager
         CPKExtract.ClearDirectory(this.WorkingPathBase);
     }
 
+    public List<string> ExtractMatchingFiles(string pattern)
+    {
+        return CPKExtract.ExtractMatchingFiles(this.CpkList, pattern, this.ProjectManager.ModdedFileDir, this.VanillaExtractionPath, this.ProjectManager.CpkDecryptionFunctionName);
+    }
+
     public async Task SaveBF()
     {
         this.ScriptManager.SaveScript("BF", this.WorkingPath, this.ProjectManager.ModdedFileDir, (await this.ProjectManager.HasFramework("BFEmulator")) ? this.ProjectManager.EmulatedFileDir : null);

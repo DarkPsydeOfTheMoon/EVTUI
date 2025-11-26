@@ -102,7 +102,7 @@
                 <StackPanel DockPanel.Dock="Right" Spacing="5" Margin="5">
                   <Button Classes="action" ToolTip.Tip="Details">
                     <Button.Flyout>
-                      <Flyout Closed="SaveChanges">
+                      <Flyout>
                         <StackPanel Classes="form">
 
                           <TextBlock Classes="formtitle" Text="{Binding ObjectType.Choice}"/>
