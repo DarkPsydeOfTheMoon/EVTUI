@@ -83,7 +83,7 @@ public class TimelineViewModel : ReactiveObject
 
         // frames
         this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, evt.FrameRate, 1, 255, 1);
-        this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, evt.FrameCount, 0, 99999, 1);
+        this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, evt.FrameCount, 1, 99999, 1);
         this.StartingFrameEnabled = new BoolChoiceField("Set Delayed Starting Frame?", !dataManager.ReadOnly, evt.Flags[0]);
         this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, evt.StartingFrame, 0, 99999, 1);
 
@@ -169,29 +169,19 @@ public class TimelineViewModel : ReactiveObject
             string code = dataManager.EventManager.EventSoundCommands[j].CommandCode;
             int i = dataManager.EventManager.EventSoundCommands[j].FrameStart;
             int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
-            //if (i >= 0 && i < this.Frames.Count)
-            //{
-                CommandPointer newCmd = new CommandPointer(dataManager, code, true, j, i, len, (i >= _startingFrame && i < _frameCount));
-                int catInd = TimelineViewModel.CodeToCategory(code, true);
-                //if (catInd > -1)
-                this.Categories[catInd].AddCommand(newCmd);
-                this.Categories[catInd].IsOpen = true;
-            //}
+            CommandPointer newCmd = new CommandPointer(dataManager, code, true, j, i, len, (i >= _startingFrame && i < _frameCount));
+            this.AddCommand(newCmd, sort: false);
         }
         for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
         {
             string code = dataManager.EventManager.EventCommands[j].CommandCode;
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
             int len = dataManager.EventManager.EventCommands[j].FrameDuration;
-            //if (i >= 0 && i < this.Frames.Count)
-            //{
-                CommandPointer newCmd = new CommandPointer(dataManager, code, false, j, i, len, (i >= _startingFrame && i < _frameCount));
-                int catInd = TimelineViewModel.CodeToCategory(code, false);
-                //if (catInd > -1)
-                this.Categories[catInd].AddCommand(newCmd);
-                this.Categories[catInd].IsOpen = true;
-            //}
+            CommandPointer newCmd = new CommandPointer(dataManager, code, false, j, i, len, (i >= _startingFrame && i < _frameCount));
+            this.AddCommand(newCmd, sort: false);
         }
+        foreach (Category _cat in this.Categories)
+            _cat.SortCommands();
     }
 
     public static int CodeToCategory(string code, bool isAudio)
@@ -344,11 +334,16 @@ public class TimelineViewModel : ReactiveObject
         }
     }
 
-    public void AddCommand(CommandPointer newCmd)
+    public void AddCommand(CommandPointer newCmd, bool sort = true)
     {
         int catInd = TimelineViewModel.CodeToCategory(newCmd.Code, newCmd.IsAudioCmd);
         if (catInd > -1)
+        {
             this.Categories[catInd].AddCommand(newCmd);
+            if (sort)
+                this.Categories[catInd].SortCommands();
+            this.Categories[catInd].IsOpen = true;
+        }
     }
 
     public void DeleteCommand(CommandPointer cmd)
@@ -483,6 +478,9 @@ public class Category : ViewModelBase
         if (this.CommandsPerFrame[newCmd.Frame] > this.MaxInOneFrame)
             this.MaxInOneFrame = this.CommandsPerFrame[newCmd.Frame];
         this.Commands.Add(newCmd);
+        // this could really slow things down, but it doesn't seem to??
+        // but on principle I'll do this elsewhere, see the Timeline AddCommand that calls this
+        //this.SortCommands();
     }
 
     public void DeleteCommand(CommandPointer cmd)
@@ -531,7 +529,6 @@ public class Category : ViewModelBase
             OnPropertyChanged(nameof(FrameCount));
         }
     }
-
 
     private int _maxInOneFrame;
     public int MaxInOneFrame
