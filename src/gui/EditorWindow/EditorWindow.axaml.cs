@@ -38,11 +38,37 @@ public partial class EditorWindow : Window
         }
     }
 
-    private void ToggleTheme(object? sender, RoutedEventArgs e)
+    private async void ToggleTheme(object? sender, RoutedEventArgs e)
     {
-        if (Application.Current!.RequestedThemeVariant == ThemeVariant.Dark)
-            Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
-        else
-            Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
+        try
+        {
+            if (Application.Current!.RequestedThemeVariant == ThemeVariant.Dark)
+                Application.Current!.RequestedThemeVariant = ThemeVariant.Light;
+            else
+                Application.Current!.RequestedThemeVariant = ThemeVariant.Dark;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this, $"Failed to toggle theme due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    private async void NormalizeDegrees(object? sender, NumericUpDownValueChangedEventArgs e)
+    {
+        try
+        {
+            if (!(e.NewValue is null))
+            {
+                // why in the actual hell is % remainder and not modulo in C#. microsoft meet me in the denny's parking lot.
+                decimal val = (((decimal)e.NewValue % 360) + 360) % 360;
+                ((NumericUpDown)e.Source).Value = (val > 180) ? val - 360 : val;
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this, $"Failed to normalize degree value due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 }

@@ -15,7 +15,7 @@ public partial class CommandTypes
 
         public UInt32 InterpolationType;
         public UInt32 NumControlGroups = 1;
-        public float[,] Targets = new float[24,3];
+        public float[][] Targets = Enumerable.Range(0, 24).Select(i => new float[3]).ToArray();
 
         public Bitfield32 Flags = new Bitfield32();
 
@@ -42,8 +42,7 @@ public partial class CommandTypes
             // where does the position get stored if not here, you ask? lmao idk. ancient evts...
             if ((int)args["dataSize"] == 384)
                 for (int i=0; i<24; i++)
-                    for (int j=0; j<3; j++)
-                        rw.RwFloat32(ref this.Targets[i,j]);
+                    rw.RwFloat32s(ref this.Targets[i], 3);
 
             rw.RwObj(ref this.Flags);
             rw.RwFloat32(ref this.MovementSpeed);

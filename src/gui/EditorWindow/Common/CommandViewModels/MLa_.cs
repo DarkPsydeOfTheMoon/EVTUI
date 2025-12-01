@@ -36,12 +36,7 @@ public class MLa_ : Generic
         this.WhenAnyValue(_ => _.TargetType.Choice).Subscribe(_ => this.CommandData.TargetType = this.TargetTypes.Forward[this.TargetType.Choice]);
 
         // coordinate lookat
-        this.X = new NumRangeField("X", this.Editable, this.CommandData.Target[0], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.X.Value).Subscribe(_ => this.CommandData.Target[0] = (float)this.X.Value);
-        this.Y = new NumRangeField("Y", this.Editable, this.CommandData.Target[1], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.Y.Value).Subscribe(_ => this.CommandData.Target[1] = (float)this.Y.Value);
-        this.Z = new NumRangeField("Z", this.Editable, this.CommandData.Target[2], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.Z.Value).Subscribe(_ => this.CommandData.Target[2] = (float)this.Z.Value);
+        this.TargetPosition = new Position3D("Target Coordinates", this.Editable, this.CommandData.Target);
 
         // bone lookat
         this.TargetModelID = new NumEntryField("Target Model ID", this.Editable, this.CommandData.TargetModelID, 0, 999, 1);
@@ -69,9 +64,7 @@ public class MLa_ : Generic
     public StringSelectionField TargetType           { get; set; }
 
     // coordinate lookat
-    public NumRangeField X { get; set; }
-    public NumRangeField Y { get; set; }
-    public NumRangeField Z { get; set; }
+    public Position3D TargetPosition { get; set; }
 
     // bone lookat
     public NumEntryField TargetModelID { get; set; }

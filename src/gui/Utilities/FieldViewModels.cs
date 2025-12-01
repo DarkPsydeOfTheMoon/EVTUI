@@ -26,9 +26,16 @@ public class NumEntryField : FieldBase
 {
     public NumEntryField(string name, bool editable, dynamic val, dynamic? lowerLimit, dynamic? upperLimit, dynamic increment) : base(name, editable)
     {
+        if (Double.IsNaN(val) || Double.IsInfinity(val))
+            val = 0;
+        if (lowerLimit is null)
+            lowerLimit = Decimal.MinValue;
+        if (upperLimit is null)
+            upperLimit = Decimal.MaxValue;
+
         _value          = (decimal?)val;
-        this.LowerLimit = (decimal?)lowerLimit;
-        this.UpperLimit = (decimal?)upperLimit;
+        _lowerLimit     = (decimal?)lowerLimit;
+        _upperLimit     = (decimal?)upperLimit;
         this.Increment  = (decimal)increment;
     }
 
@@ -94,6 +101,9 @@ public class NumRangeField : FieldBase
 {
     public NumRangeField(string name, bool editable, dynamic val, dynamic lowerLimit, dynamic upperLimit, dynamic? increment) : base(name, editable)
     {
+        if (Double.IsNaN(val) || Double.IsInfinity(val))
+            val = 0;
+
         _value          = (decimal?)val;
         this.LowerLimit = (decimal)lowerLimit;
         this.UpperLimit = (decimal)upperLimit;
@@ -225,106 +235,117 @@ public class AnimationWidget : ViewModelBase
 {
     public AnimationWidget(DataManager config, IntSelectionField modelID, AnimationStruct animation, BitfieldBase bitfield, string name, int? enabledInd = null, int? extInd = null, int? frameBlendingInd = null, bool enabledFlip = false, bool extFlip = false, bool frameBlendingFlip = false, bool loopFlip = false, int? trackNum = null)
     {
-        _config = config;
         _modelID = modelID;
-        _bitfield = bitfield;
-        _animation = animation;
-
-        _enabledInd = enabledInd;
-        _extInd = extInd;
-        _frameBlendingInd = frameBlendingInd;
-
-        _enabledFlip = enabledFlip;
-        _extFlip = extFlip;
-        _frameBlendingFlip = frameBlendingFlip;
-        _loopFlip = loopFlip;
 
         this.Name = name;
         this.Editable = !config.ReadOnly;
 
-        if (!(_enabledInd is null))
+        if (enabledInd is null)
+            this.AnimationEnabled = new BoolChoiceField("", false, true);
+        else
         {
-            this.AnimationEnabled = new BoolChoiceField("Enabled?", this.Editable, (_enabledFlip) ? (!_bitfield[(int)_enabledInd]) : (_bitfield[(int)_enabledInd]));
-            this.WhenAnyValue(_ => _.AnimationEnabled.Value).Subscribe(_ => _bitfield[(int)_enabledInd] = (_enabledFlip) ? (!this.AnimationEnabled.Value) : (this.AnimationEnabled.Value));
+            this.AnimationEnabled = new BoolChoiceField("Enabled?", this.Editable, (enabledFlip) ? (!bitfield[(int)enabledInd]) : (bitfield[(int)enabledInd]));
+            this.WhenAnyValue(_ => _.AnimationEnabled.Value).Subscribe(_ => bitfield[(int)enabledInd] = (enabledFlip) ? (!this.AnimationEnabled.Value) : (this.AnimationEnabled.Value));
         }
 
-        if (!(_extInd is null))
+        if (extInd is null)
+            this.AnimationFromExt = new BoolChoiceField("", false, false);
+        else
         {
-            this.AnimationFromExt = new BoolChoiceField("From ext?", this.Editable, (_extFlip) ? (!_bitfield[(int)_extInd]) : (_bitfield[(int)_extInd]));
-            this.WhenAnyValue(_ => _.AnimationFromExt.Value).Subscribe(_ => _bitfield[(int)_extInd] = (_extFlip) ? (!this.AnimationFromExt.Value) : (this.AnimationFromExt.Value));
+            this.AnimationFromExt = new BoolChoiceField("From ext?", this.Editable, (extFlip) ? (!bitfield[(int)extInd]) : (bitfield[(int)extInd]));
+            this.WhenAnyValue(_ => _.AnimationFromExt.Value).Subscribe(_ => bitfield[(int)extInd] = (extFlip) ? (!this.AnimationFromExt.Value) : (this.AnimationFromExt.Value));
         }
 
-        if (!(_frameBlendingInd is null))
+        if (frameBlendingInd is null)
+            this.AnimationFrameBlendingEnabled = new BoolChoiceField("", false, false);
+        else
         {
-            this.AnimationFrameBlendingEnabled = new BoolChoiceField("Frame Blending Enabled?", this.Editable, (_frameBlendingFlip) ? (!_bitfield[(int)_frameBlendingInd]) : (_bitfield[(int)_frameBlendingInd]));
-            this.WhenAnyValue(_ => _.AnimationFrameBlendingEnabled.Value).Subscribe(_ => _bitfield[(int)_frameBlendingInd] = (_frameBlendingFlip) ? (!this.AnimationFrameBlendingEnabled.Value) : (this.AnimationFrameBlendingEnabled.Value));
+            this.AnimationFrameBlendingEnabled = new BoolChoiceField("Frame Blending Enabled?", this.Editable, (frameBlendingFlip) ? (!bitfield[(int)frameBlendingInd]) : (bitfield[(int)frameBlendingInd]));
+            this.WhenAnyValue(_ => _.AnimationFrameBlendingEnabled.Value).Subscribe(_ => bitfield[(int)frameBlendingInd] = (frameBlendingFlip) ? (!this.AnimationFrameBlendingEnabled.Value) : (this.AnimationFrameBlendingEnabled.Value));
         }
 
-        if (_animation.IncludeLoopBool)
+        if (animation.IncludeLoopBool)
         {
-            this.AnimationLoopBool = new BoolChoiceField("Loop Playback?", this.Editable, (_loopFlip) ? (_animation.LoopBool == 0) : (_animation.LoopBool != 0));
-            this.WhenAnyValue(_ => _.AnimationLoopBool.Value).Subscribe(_ => _animation.LoopBool = Convert.ToUInt32((_loopFlip) ? (!this.AnimationLoopBool.Value) : (this.AnimationLoopBool.Value)));
+            this.AnimationLoopBool = new BoolChoiceField("Loop Playback?", this.Editable, (loopFlip) ? (animation.LoopBool == 0) : (animation.LoopBool != 0));
+            this.WhenAnyValue(_ => _.AnimationLoopBool.Value).Subscribe(_ => animation.LoopBool = Convert.ToUInt32((loopFlip) ? (!this.AnimationLoopBool.Value) : (this.AnimationLoopBool.Value)));
         }
+        else
+            this.AnimationLoopBool = new BoolChoiceField("", false, true);
 
-        if (_animation.IncludeIndex)
+        if (animation.IncludeIndex)
         {
-            this.AnimationID = new NumEntryField("Animation ID", this.Editable, _animation.Index, 0, 59, 1);
-            this.WhenAnyValue(_ => _.AnimationID.Value).Subscribe(_ => _animation.Index = (uint)this.AnimationID.Value);
+            this.AnimationID = new NumEntryField("Animation ID", this.Editable, animation.Index, 0, 59, 1);
+            this.WhenAnyValue(_ => _.AnimationID.Value).Subscribe(_ => animation.Index = (uint)this.AnimationID.Value);
         }
+        else
+            this.AnimationID = new NumEntryField("", false, 0, 0, 0, 0);
 
-        if (_animation.IncludeStartingFrame)
+        if (animation.IncludeStartingFrame)
         {
-            this.AnimationStartingFrame = new NumEntryField("Starting Frame", this.Editable, _animation.StartingFrame, 0, 99999, 1);
-            this.WhenAnyValue(_ => _.AnimationStartingFrame.Value).Subscribe(_ => _animation.StartingFrame = (uint)this.AnimationStartingFrame.Value);
+            this.AnimationStartingFrame = new NumEntryField("Starting Frame", this.Editable, animation.StartingFrame, 0, 99999, 1);
+            this.WhenAnyValue(_ => _.AnimationStartingFrame.Value).Subscribe(_ => animation.StartingFrame = (uint)this.AnimationStartingFrame.Value);
         }
+        else
+            this.AnimationStartingFrame = new NumEntryField("", false, 0, 0, 0, 0);
 
-        if (_animation.IncludeEndingFrame)
+        if (animation.IncludeEndingFrame)
         {
-            this.AnimationEndingFrame = new NumEntryField("Ending Frame", this.Editable, _animation.EndingFrame, 0, 99999, 1);
-            this.WhenAnyValue(_ => _.AnimationEndingFrame.Value).Subscribe(_ => _animation.EndingFrame = (uint)this.AnimationEndingFrame.Value);
+            this.AnimationEndingFrame = new NumEntryField("Ending Frame", this.Editable, animation.EndingFrame, 0, 99999, 1);
+            this.WhenAnyValue(_ => _.AnimationEndingFrame.Value).Subscribe(_ => animation.EndingFrame = (uint)this.AnimationEndingFrame.Value);
         }
+        else
+            this.AnimationEndingFrame = new NumEntryField("", false, 0, 0, 0, 0);
 
-        if (_animation.IncludeInterpolatedFrames)
+        if (animation.IncludeInterpolatedFrames)
         {
-            this.AnimationInterpolatedFrames = new NumEntryField("Interpolated Frames", this.Editable, _animation.InterpolatedFrames, 0, 100, 1);
-            this.WhenAnyValue(_ => _.AnimationInterpolatedFrames.Value).Subscribe(_ => _animation.InterpolatedFrames = (uint)this.AnimationInterpolatedFrames.Value);
+            this.AnimationInterpolatedFrames = new NumEntryField("Interpolated Frames", this.Editable, animation.InterpolatedFrames, 0, 100, 1);
+            this.WhenAnyValue(_ => _.AnimationInterpolatedFrames.Value).Subscribe(_ => animation.InterpolatedFrames = (uint)this.AnimationInterpolatedFrames.Value);
         }
+        else
+            this.AnimationInterpolatedFrames = new NumEntryField("", false, 0, 0, 0, 0);
 
-        if (_animation.IncludePlaybackSpeed)
+        if (animation.IncludePlaybackSpeed)
         {
-            this.AnimationPlaybackSpeed = new NumEntryField("Playback Speed", this.Editable, _animation.PlaybackSpeed, 0, 10, 0.1);
-            this.WhenAnyValue(_ => _.AnimationPlaybackSpeed.Value).Subscribe(_ => _animation.PlaybackSpeed = (float)this.AnimationPlaybackSpeed.Value);
+            this.AnimationPlaybackSpeed = new NumEntryField("Playback Speed", this.Editable, animation.PlaybackSpeed, 0, 10, 0.1);
+            this.WhenAnyValue(_ => _.AnimationPlaybackSpeed.Value).Subscribe(_ => animation.PlaybackSpeed = (float)this.AnimationPlaybackSpeed.Value);
         }
+        else
+            this.AnimationPlaybackSpeed = new NumEntryField("", false, 0, 0, 0, 0);
 
-        if (_animation.IncludeWeight)
+        if (animation.IncludeWeight)
         {
-            this.AnimationWeight = new NumEntryField("Weight", this.Editable, _animation.Weight, 0, 1, 0.01);
-            this.WhenAnyValue(_ => _.AnimationWeight.Value).Subscribe(_ => _animation.Weight = (float)this.AnimationWeight.Value);
+            this.AnimationWeight = new NumEntryField("Weight", this.Editable, animation.Weight, 0, 1, 0.01);
+            this.WhenAnyValue(_ => _.AnimationWeight.Value).Subscribe(_ => animation.Weight = (float)this.AnimationWeight.Value);
         }
+        else
+            this.AnimationWeight = new NumEntryField("", false, 0, 0, 0, 0);
 
         this.AnimationPreviewVM = new GFDRenderingPanelViewModel(config);
-        this.WhenAnyValue(x => x.AnimationPreviewVM.ReadyToRender).Subscribe(x =>
+        if (!(extInd is null) && animation.IncludeIndex)
         {
-            if (x)
+            this.WhenAnyValue(x => x.AnimationPreviewVM.ReadyToRender).Subscribe(x =>
             {
-                this.AnimationPreviewVM.sceneManager.LoadObjects(_config, new int[] {_objectID});
-                if (trackNum is null)
-                    this.AnimationPreviewVM.sceneManager.LoadBaseAnimation(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value);
-                else
-                    this.AnimationPreviewVM.sceneManager.LoadAddAnimationTrack(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value, (int)trackNum);
-            }
-            else 
-                this.AnimationPreviewVM.sceneManager.teardown();
-        });
+                if (x)
+                {
+                    this.AnimationPreviewVM.sceneManager.LoadObjects(config, new int[] {_objectID});
+                    if (trackNum is null)
+                        this.AnimationPreviewVM.sceneManager.LoadBaseAnimation(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value);
+                    else
+                        this.AnimationPreviewVM.sceneManager.LoadAddAnimationTrack(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value, (int)trackNum);
+                }
+                else 
+                    this.AnimationPreviewVM.sceneManager.teardown();
+            });
 
-        this.WhenAnyValue(y => y.AnimationID.Value, y => y.AnimationFromExt.Value).Subscribe(y =>
-        {
-            if (this.AnimationPreviewVM.ReadyToRender)
-                if (trackNum is null)
-                    this.AnimationPreviewVM.sceneManager.LoadBaseAnimation(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value);
-                else
-                    this.AnimationPreviewVM.sceneManager.LoadAddAnimationTrack(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value, (int)trackNum);
-        });
+            this.WhenAnyValue(y => y.AnimationID.Value, y => y.AnimationFromExt.Value).Subscribe(y =>
+            {
+                if (this.AnimationPreviewVM.ReadyToRender)
+                    if (trackNum is null)
+                        this.AnimationPreviewVM.sceneManager.LoadBaseAnimation(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value);
+                    else
+                        this.AnimationPreviewVM.sceneManager.LoadAddAnimationTrack(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value, (int)trackNum);
+            });
+        }
     }
 
     public GFDRenderingPanelViewModel AnimationPreviewVM { get; set; }
@@ -347,24 +368,12 @@ public class AnimationWidget : ViewModelBase
 
     protected IntSelectionField _modelID;
     private int _objectID { get => (int)_modelID.Choice; }
-
-    protected DataManager _config;
-    protected BitfieldBase _bitfield;
-    public AnimationStruct _animation;
-    protected int? _enabledInd;
-    protected int? _extInd;
-    protected int? _frameBlendingInd;
-    protected bool _enabledFlip;
-    protected bool _extFlip;
-    protected bool _frameBlendingFlip;
-    protected bool _loopFlip;
 }
 
 public class ModelPreviewWidget : ViewModelBase
 {
     public ModelPreviewWidget(DataManager config, IntSelectionField modelID)
     {
-        _config = config;
         _modelID = modelID;
 
         this.ModelPreviewVM = new GFDRenderingPanelViewModel(config);
@@ -372,7 +381,7 @@ public class ModelPreviewWidget : ViewModelBase
         this.WhenAnyValue(x => x.ModelPreviewVM.ReadyToRender).Subscribe(x =>
         {
             if (x)
-                this.ModelPreviewVM.sceneManager.LoadObjects(_config, new int[] {_objectID});
+                this.ModelPreviewVM.sceneManager.LoadObjects(config, new int[] {_objectID});
             else
                 this.ModelPreviewVM.sceneManager.teardown();
         });
@@ -382,8 +391,6 @@ public class ModelPreviewWidget : ViewModelBase
 
     protected IntSelectionField _modelID;
     private int _objectID { get => (int)_modelID.Choice; }
-
-    protected DataManager _config;
 }
 
 public class InterpolationParameters : ViewModelBase
@@ -435,22 +442,19 @@ public class InterpolationParameters : ViewModelBase
     );
 }
 
-public class Target : ViewModelBase
+public class Position3D : ViewModelBase
 {
-    public Target(DataManager config, object commandData, int groupInd, bool isActive)
+    public Position3D(string name, bool editable, float[] position)
     {
-        this.CommandData = commandData;
+        _name = name;
+        this.Editable = editable;
 
-        this.Editable = !config.ReadOnly;
-        this.Idx = groupInd;
-        _isActive = isActive;
-
-        this.X = new NumRangeField("X", this.Editable, this.CommandData.Targets[this.Idx,0], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.X.Value).Subscribe(_ => this.CommandData.Targets[this.Idx,0] = (float)this.X.Value);
-        this.Y = new NumRangeField("Y", this.Editable, this.CommandData.Targets[this.Idx,1], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.Y.Value).Subscribe(_ => this.CommandData.Targets[this.Idx,1] = (float)this.Y.Value);
-        this.Z = new NumRangeField("Z", this.Editable, this.CommandData.Targets[this.Idx,2], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.Z.Value).Subscribe(_ => this.CommandData.Targets[this.Idx,2] = (float)this.Z.Value);
+        this.X = new NumRangeField("X", this.Editable, position[0], -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.X.Value).Subscribe(_ => position[0] = (float)this.X.Value);
+        this.Y = new NumRangeField("Y", this.Editable, position[1], -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.Y.Value).Subscribe(_ => position[1] = (float)this.Y.Value);
+        this.Z = new NumRangeField("Z", this.Editable, position[2], -99999, 99999, 1);
+        this.WhenAnyValue(_ => _.Z.Value).Subscribe(_ => position[2] = (float)this.Z.Value);
     }
 
     public NumRangeField X { get; set; }
@@ -458,19 +462,78 @@ public class Target : ViewModelBase
     public NumRangeField Z { get; set; }
 
     public bool   Editable { get; }
-    public int    Idx      { get; }
-    public string Name     { get => $"Position #{this.Idx+1}"; }
 
-    private bool _isActive;
-    public bool IsActive
+    private string _name;
+    public string Name
     {
-        get => _isActive;
+        get => _name;
         set
         {
-            this.RaiseAndSetIfChanged(ref _isActive, value);
-            OnPropertyChanged(nameof(IsActive));
+            this.RaiseAndSetIfChanged(ref _name, value);
+            OnPropertyChanged(nameof(Name));
         }
     }
+}
 
-    protected dynamic CommandData;
+public class DegreeField : NumRangeField { public DegreeField(string name, bool editable, float val) : base(name, editable, val, -180, 180, 1) {} }
+public class RotationWidget : ViewModelBase
+{
+    public RotationWidget(DataManager config, float[] rotation, BitfieldBase bitfield, int pitchInd = 0, int yawInd = 1, int rollInd = 2, int? enabledInd = null, int? pitchEnabledInd = null, int? yawEnabledInd = null, int? rollEnabledInd = null, bool enabledFlip = false, bool pitchEnabledFlip = false, bool yawEnabledFlip = false, bool rollEnabledFlip = false, string name = "Rotation (Degrees)")
+    {
+        this.Name = name;
+        this.Editable = !config.ReadOnly;
+
+        if (enabledInd is null)
+            this.RotationEnabled = new BoolChoiceField("", false, true);
+        else
+        {
+            this.RotationEnabled = new BoolChoiceField("Enabled?", this.Editable, enabledFlip ? !bitfield[(int)enabledInd] : bitfield[(int)enabledInd]);
+            this.WhenAnyValue(_ => _.RotationEnabled.Value).Subscribe(_ => bitfield[(int)enabledInd] = enabledFlip ? !this.RotationEnabled.Value : this.RotationEnabled.Value);
+        }
+
+        if (pitchEnabledInd is null)
+            this.PitchEnabled = new BoolChoiceField("", false, true);
+        else
+        {
+            this.PitchEnabled = new BoolChoiceField("Pitch Enabled?", this.Editable, pitchEnabledFlip ? !bitfield[(int)pitchEnabledInd] : bitfield[(int)pitchEnabledInd]);
+            this.WhenAnyValue(_ => _.PitchEnabled.Value).Subscribe(_ => bitfield[(int)pitchEnabledInd] = pitchEnabledFlip ? !this.PitchEnabled.Value : this.PitchEnabled.Value);
+        }
+
+        if (yawEnabledInd is null)
+            this.YawEnabled = new BoolChoiceField("", false, true);
+        else
+        {
+            this.YawEnabled = new BoolChoiceField("Yaw Enabled?", this.Editable, yawEnabledFlip ? !bitfield[(int)yawEnabledInd] : bitfield[(int)yawEnabledInd]);
+            this.WhenAnyValue(_ => _.YawEnabled.Value).Subscribe(_ => bitfield[(int)yawEnabledInd] = yawEnabledFlip ? !this.YawEnabled.Value : this.YawEnabled.Value);
+        }
+
+        if (rollEnabledInd is null)
+            this.RollEnabled = new BoolChoiceField("", false, true);
+        else
+        {
+            this.RollEnabled = new BoolChoiceField("Roll Enabled?", this.Editable, rollEnabledFlip ? !bitfield[(int)rollEnabledInd] : bitfield[(int)rollEnabledInd]);
+            this.WhenAnyValue(_ => _.RollEnabled.Value).Subscribe(_ => bitfield[(int)rollEnabledInd] = rollEnabledFlip ? !this.RollEnabled.Value : this.RollEnabled.Value);
+        }
+
+        this.PitchDegrees = new DegreeField("Pitch", this.Editable, rotation[pitchInd]);
+        this.WhenAnyValue(_ => _.PitchDegrees.Value).Subscribe(_ => rotation[pitchInd] = (float)this.PitchDegrees.Value);
+
+        this.YawDegrees = new DegreeField("Yaw", this.Editable, rotation[yawInd]);
+        this.WhenAnyValue(_ => _.YawDegrees.Value).Subscribe(_ => rotation[yawInd] = (float)this.YawDegrees.Value);
+
+        this.RollDegrees = new DegreeField("Roll", this.Editable, rotation[rollInd]);
+        this.WhenAnyValue(_ => _.RollDegrees.Value).Subscribe(_ => rotation[rollInd] = (float)this.RollDegrees.Value);
+    }
+
+    public string Name     { get; }
+    public bool   Editable { get; }
+
+    public BoolChoiceField RotationEnabled { get; set; }
+    public BoolChoiceField PitchEnabled    { get; set; }
+    public BoolChoiceField YawEnabled      { get; set; }
+    public BoolChoiceField RollEnabled     { get; set; }
+
+    public DegreeField PitchDegrees { get; set; }
+    public DegreeField YawDegrees   { get; set; }
+    public DegreeField RollDegrees  { get; set; }
 }

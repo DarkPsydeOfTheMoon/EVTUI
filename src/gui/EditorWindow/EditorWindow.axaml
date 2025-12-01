@@ -138,6 +138,26 @@
       </StackPanel>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type vm:DegreeField}">
+      <StackPanel Classes="field">
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <NumericUpDown
+          Increment="{Binding Increment}"
+          Value="{Binding Value}"
+          IsEnabled="{Binding Editable}"
+          AllowSpin="true"
+          VerticalAlignment="Center"
+          ValueChanged="NormalizeDegrees"/>
+        <Slider
+          Minimum="{Binding LowerLimit}"
+          Maximum="{Binding UpperLimit}"
+          TickFrequency="{Binding Increment}" IsSnapToTickEnabled="{Binding Increment}"
+          Value="{Binding Value}"
+          IsEnabled="{Binding Editable}"
+          Width="200"/>
+      </StackPanel>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:NumRangeField}">
       <StackPanel Classes="field">
         <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>

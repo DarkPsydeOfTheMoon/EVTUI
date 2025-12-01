@@ -98,178 +98,330 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         });
     }
 
-    public void ToggleMarker(object sender, PointerReleasedEventArgs e)
+    public async void ToggleMarker(object sender, PointerReleasedEventArgs e)
     {
-        Frame frame = (Frame)((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (Border)sender)).Content;
-        ViewModel!.TimelineContent.TryToggleFrameMarker(frame.Index);
-    }
-
-    public void OpenInsertFramesModal(object sender, RoutedEventArgs e)
-    {
-        AfterFrame.Value = this.LastFrameClicked;
-        Modal.IsVisible = true;
-        InsertFramesModal.IsVisible = true;
-    }
-
-    public void NewFrames(object sender, RoutedEventArgs e)
-    {
-        this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
-        ViewModel!.InsertFrames((int)AfterFrame.Value, (int)InsertFrames.Value);
-        AfterFrame.Value = 0;
-        Modal.IsVisible = false;
-        InsertFramesModal.IsVisible = false;
-        this.topLevel.Cursor = Cursor.Default;
-    }
-
-    public void CloseInsertFramesModal(object sender, RoutedEventArgs e)
-    {
-        AfterFrame.Value = 0;
-        Modal.IsVisible = false;
-        InsertFramesModal.IsVisible = false;
-    }
-
-    public void OpenClearFramesModal(object sender, RoutedEventArgs e)
-    {
-        StartingFrame.Value = this.LastFrameClicked;
-        EndingFrame.Value = this.LastFrameClicked;
-        Modal.IsVisible = true;
-        ClearFramesModal.IsVisible = true;
-    }
-
-    public void EnforceEndingMinimum(object sender, NumericUpDownValueChangedEventArgs e)
-    {
-        if (!(EndingFrame is null) && EndingFrame.Value < StartingFrame.Value)
-            EndingFrame.Value = StartingFrame.Value;
-    }
-
-    public void ClearFrames(object sender, RoutedEventArgs e)
-    {
-        this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
-        ViewModel!.ClearFrames((int)StartingFrame.Value, (int)EndingFrame.Value, (bool)DeleteFrames.IsChecked);
-        StartingFrame.Value = 0;
-        EndingFrame.Value = 0;
-        Modal.IsVisible = false;
-        ClearFramesModal.IsVisible = false;
-        this.topLevel.Cursor = Cursor.Default;
-    }
-
-    public void CloseClearFramesModal(object sender, RoutedEventArgs e)
-    {
-        StartingFrame.Value = 0;
-        EndingFrame.Value = 0;
-        Modal.IsVisible = false;
-        ClearFramesModal.IsVisible = false;
-    }
-
-    public void DeleteCommand(object sender, RoutedEventArgs e)
-    {
-        Button target = (Button)LogicalExtensions.GetLogicalParent(
-            (Control)(((Popup)LogicalExtensions.GetLogicalParent(
-                (ContextMenu)LogicalExtensions.GetLogicalParent(
-                    (MenuItem)sender))).PlacementTarget));
-        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-        ViewModel!.DeleteCommand(cmd);
-    }
-
-    public void CopyCommand(object sender, RoutedEventArgs e)
-    {
-        Button target = (Button)LogicalExtensions.GetLogicalParent(
-            (Control)(((Popup)LogicalExtensions.GetLogicalParent(
-                (ContextMenu)LogicalExtensions.GetLogicalParent(
-                    (MenuItem)sender))).PlacementTarget));
-        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-        ViewModel!.CopyCommand(cmd, false);
-    }
-
-    public void CutCommand(object sender, RoutedEventArgs e)
-    {
-        Button target = (Button)LogicalExtensions.GetLogicalParent(
-            (Control)(((Popup)LogicalExtensions.GetLogicalParent(
-                (ContextMenu)LogicalExtensions.GetLogicalParent(
-                    (MenuItem)sender))).PlacementTarget));
-        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-        ViewModel!.CopyCommand(cmd, true);
-    }
-
-    private void LogPosition(object? sender, PointerPressedEventArgs e)
-    {
-        var point = e.GetCurrentPoint(sender as Control);
-        // boy, it sure feels silly to have to calculate it this way
-        // ...but it is what it is!
-        this.LastFrameClicked = (int)(point.Position.X / 85);
-    }
-
-    public void PasteCommand(object sender, RoutedEventArgs e)
-    {
-        ViewModel!.PasteCommand(this.LastFrameClicked);
-    }
-
-    public void OpenAddCodeModal(object sender, RoutedEventArgs e)
-    {
-        Category category = (Category)(((ItemsControl)LogicalExtensions.GetLogicalParent(
-            (Control)(((Popup)LogicalExtensions.GetLogicalParent(
-                (ContextMenu)LogicalExtensions.GetLogicalParent(
-                    (MenuItem)sender))).PlacementTarget))).DataContext);
-        ViewModel!.SetAddableCodes(category);
-        AddCode.SelectedIndex = 0;
-        Modal.IsVisible = true;
-        AddCodeModal.IsVisible = true;
-    }
-
-    public void CloseAddCodeModal(object sender, RoutedEventArgs e)
-    {
-        Modal.IsVisible = false;
-        AddCodeModal.IsVisible = false;
-        AddCode.SelectedIndex = 0;
-    }
-
-    public void NewCommand(object sender, RoutedEventArgs e)
-    {
-        if (!(String.IsNullOrEmpty(AddCode.SelectedItem.ToString())))
+        try
         {
-            ViewModel!.NewCommand(AddCode.SelectedItem.ToString(), this.LastFrameClicked);
+            Frame frame = (Frame)((ContentPresenter)LogicalExtensions.GetLogicalParent(
+                (Border)sender)).Content;
+            ViewModel!.TimelineContent.TryToggleFrameMarker(frame.Index);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to toggle frame marker due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void OpenInsertFramesModal(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            AfterFrame.Value = this.LastFrameClicked;
+            Modal.IsVisible = true;
+            InsertFramesModal.IsVisible = true;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to open menu for inserting frames due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void NewFrames(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
+            ViewModel!.InsertFrames((int)AfterFrame.Value, (int)InsertFrames.Value);
+            AfterFrame.Value = 0;
+            Modal.IsVisible = false;
+            InsertFramesModal.IsVisible = false;
+            this.topLevel.Cursor = Cursor.Default;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to insert frames due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void CloseInsertFramesModal(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            AfterFrame.Value = 0;
+            Modal.IsVisible = false;
+            InsertFramesModal.IsVisible = false;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to close menu for inserting frames due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void OpenClearFramesModal(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            StartingFrame.Value = this.LastFrameClicked;
+            EndingFrame.Value = this.LastFrameClicked;
+            Modal.IsVisible = true;
+            ClearFramesModal.IsVisible = true;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to open menu for clearing frames due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void EnforceEndingMinimum(object sender, NumericUpDownValueChangedEventArgs e)
+    {
+        try
+        {
+            if (!(EndingFrame is null) && EndingFrame.Value < StartingFrame.Value)
+                EndingFrame.Value = StartingFrame.Value;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to enforce frame range due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void ClearFrames(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            this.topLevel.Cursor = new Cursor(StandardCursorType.Wait);
+            ViewModel!.ClearFrames((int)StartingFrame.Value, (int)EndingFrame.Value, (bool)DeleteFrames.IsChecked);
+            StartingFrame.Value = 0;
+            EndingFrame.Value = 0;
+            Modal.IsVisible = false;
+            ClearFramesModal.IsVisible = false;
+            this.topLevel.Cursor = Cursor.Default;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to clear frames due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void CloseClearFramesModal(object sender, RoutedEventArgs e)
+    {
+       try
+       {
+            StartingFrame.Value = 0;
+            EndingFrame.Value = 0;
+            Modal.IsVisible = false;
+            ClearFramesModal.IsVisible = false;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to close menu for clearing frames due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void DeleteCommand(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Button target = (Button)LogicalExtensions.GetLogicalParent(
+                (Control)(((Popup)LogicalExtensions.GetLogicalParent(
+                    (ContextMenu)LogicalExtensions.GetLogicalParent(
+                        (MenuItem)sender))).PlacementTarget));
+            CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
+            ViewModel!.DeleteCommand(cmd);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to delete command due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void CopyCommand(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Button target = (Button)LogicalExtensions.GetLogicalParent(
+                (Control)(((Popup)LogicalExtensions.GetLogicalParent(
+                    (ContextMenu)LogicalExtensions.GetLogicalParent(
+                        (MenuItem)sender))).PlacementTarget));
+            CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
+            ViewModel!.CopyCommand(cmd, false);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to copy command due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void CutCommand(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Button target = (Button)LogicalExtensions.GetLogicalParent(
+                (Control)(((Popup)LogicalExtensions.GetLogicalParent(
+                    (ContextMenu)LogicalExtensions.GetLogicalParent(
+                        (MenuItem)sender))).PlacementTarget));
+            CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
+            ViewModel!.CopyCommand(cmd, true);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to cut command due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    private async void LogPosition(object? sender, PointerPressedEventArgs e)
+    {
+        try
+        {
+            var point = e.GetCurrentPoint(sender as Control);
+            // boy, it sure feels silly to have to calculate it this way
+            // ...but it is what it is!
+            this.LastFrameClicked = (int)(point.Position.X / 85);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to log position due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void PasteCommand(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            ViewModel!.PasteCommand(this.LastFrameClicked);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to paste command due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void OpenAddCodeModal(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Category category = (Category)(((ItemsControl)LogicalExtensions.GetLogicalParent(
+                (Control)(((Popup)LogicalExtensions.GetLogicalParent(
+                    (ContextMenu)LogicalExtensions.GetLogicalParent(
+                        (MenuItem)sender))).PlacementTarget))).DataContext);
+            ViewModel!.SetAddableCodes(category);
+            AddCode.SelectedIndex = 0;
+            Modal.IsVisible = true;
+            AddCodeModal.IsVisible = true;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to open menu for adding commands due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void CloseAddCodeModal(object sender, RoutedEventArgs e)
+    {
+        try
+        {
             Modal.IsVisible = false;
             AddCodeModal.IsVisible = false;
             AddCode.SelectedIndex = 0;
         }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to close menu for adding commands due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
-    public void PopulateFlyout(object sender, EventArgs e)
+    public async void NewCommand(object sender, RoutedEventArgs e)
     {
-        Button target = (Button)((Flyout)sender).Target;
-        target.Classes.Add("selected");
-        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(((Flyout)sender).Target)).Content;
-        ViewModel!.SetActiveCommand(cmd);
-        ((Flyout)sender).Content = ViewModel!.ActiveCommand;
+        try
+        {
+            if (!(String.IsNullOrEmpty(AddCode.SelectedItem.ToString())))
+            {
+                ViewModel!.NewCommand(AddCode.SelectedItem.ToString(), this.LastFrameClicked);
+                Modal.IsVisible = false;
+                AddCodeModal.IsVisible = false;
+                AddCode.SelectedIndex = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to add new command due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void PopulateFlyout(object sender, EventArgs e)
+    {
+        try
+        {
+            Button target = (Button)((Flyout)sender).Target;
+            target.Classes.Add("selected");
+            CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(((Flyout)sender).Target)).Content;
+            ViewModel!.SetActiveCommand(cmd);
+            ((Flyout)sender).Content = ViewModel!.ActiveCommand;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to open command editor due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
     // TODO lol
-    /*public void PopulateCommandEditor(object sender, RoutedEventArgs e)
+    /*public async void PopulateCommandEditor(object sender, RoutedEventArgs e)
     {
-        bool actuallyJustClearIt = (((Button)sender).Classes.Contains("selected"));
+        try
+        {
+            bool actuallyJustClearIt = (((Button)sender).Classes.Contains("selected"));
 
-        ViewModel!.UnsetActiveCommand();
-        CommandEditor.Content = null;
-        foreach (Button b in Scrolly.GetVisualDescendants().OfType<Button>())
-            b.Classes.Remove("selected");
+            ViewModel!.UnsetActiveCommand();
+            CommandEditor.Content = null;
+            foreach (Button b in Scrolly.GetVisualDescendants().OfType<Button>())
+                b.Classes.Remove("selected");
 
-        if (actuallyJustClearIt)
-            return;
+            if (actuallyJustClearIt)
+                return;
 
-        ((Button)sender).Classes.Add("selected");
-        CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent((Button)sender)).Content;
-        ViewModel!.SetActiveCommand(cmd);
-        CommandEditor.Content = ViewModel!.ActiveCommand;
-        //CommandEditor.IsExpanded = true;
+            ((Button)sender).Classes.Add("selected");
+            CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent((Button)sender)).Content;
+            ViewModel!.SetActiveCommand(cmd);
+            CommandEditor.Content = ViewModel!.ActiveCommand;
+            //CommandEditor.IsExpanded = true;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to open command editor due to unhandled exception:\n{ex.ToString()}");
+        }
     }*/
 
-    public void ClearFlyout(object sender, EventArgs e)
+    public async void ClearFlyout(object sender, EventArgs e)
     {
-        Button target = (Button)((Flyout)sender).Target;
-        target.Classes.Remove("selected");
-        ViewModel!.UnsetActiveCommand();
-        ((Flyout)sender).Content = null;
+        try
+        {
+            Button target = (Button)((Flyout)sender).Target;
+            target.Classes.Remove("selected");
+            ViewModel!.UnsetActiveCommand();
+            ((Flyout)sender).Content = null;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to close command editor due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
     public async void PlaySFXTrack(object sender, RoutedEventArgs e)
@@ -299,52 +451,92 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         }
     }
 
-    public void PlayVoiceTrack(object sender, RoutedEventArgs e)
+    public async void PlayVoiceTrack(object sender, RoutedEventArgs e)
     {
-        PagePreview page = (PagePreview)((ContentPresenter)LogicalExtensions.GetLogicalParent(
-            (StackPanel)LogicalExtensions.GetLogicalParent(
-                ((Button)sender)))).Content;
-        if (!(page.Source is null) && !(page.CueID is null))
-            ViewModel!.PlayCueFromSource((string)page.Source, (int)page.CueID, 1);
-    }
-
-    public void CloseMe(object sender, RoutedEventArgs e)
-    {
-        Popup flyout = (Popup)LogicalExtensions.GetLogicalParent(
-            (FlyoutPresenter)LogicalExtensions.GetLogicalParent(
-                (StackPanel)LogicalExtensions.GetLogicalParent(
-                    ((Button)sender))));
-        flyout.Close();
-    }
-
-    public void JumpToFrame(object sender, NumericUpDownValueChangedEventArgs e)
-    {
-        // dumb workaround for new avalonia having this run before whenactivated
-        if (this.topLevel is null)
-            return;
-
-        if (LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")).Count() != this.FramePositions.Count)
+        try
         {
-            this.FramePositions = new List<double>();
-            foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
-                this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
+            PagePreview page = (PagePreview)((ContentPresenter)LogicalExtensions.GetLogicalParent(
+                (StackPanel)LogicalExtensions.GetLogicalParent(
+                    ((Button)sender)))).Content;
+            if (!(page.Source is null) && !(page.CueID is null))
+                ViewModel!.PlayCueFromSource((string)page.Source, (int)page.CueID, 1);
         }
-
-        double newValue = this.FramePositions[(int)e.NewValue];
-        if (newValue > this.Scrolly.Extent.Width - this.Scrolly.Bounds.Width)
-            newValue = this.Scrolly.Extent.Width - this.Scrolly.Bounds.Width;
-        this.HPos = this.HPos.WithX(newValue);
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to play dialogue due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
-    public void ShowAllCategories(object sender, RoutedEventArgs e)
+    public async void CloseMe(object sender, RoutedEventArgs e)
     {
-        foreach (Category cat in ViewModel!.TimelineContent.Categories)
-           cat.IsOpen = true;
+        try
+        {
+            Popup flyout = (Popup)LogicalExtensions.GetLogicalParent(
+                (FlyoutPresenter)LogicalExtensions.GetLogicalParent(
+                    (StackPanel)LogicalExtensions.GetLogicalParent(
+                        ((Button)sender))));
+            flyout.Close();
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to close preview due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
-    public void HideAllCategories(object sender, RoutedEventArgs e)
+    public async void JumpToFrame(object sender, NumericUpDownValueChangedEventArgs e)
     {
-        foreach (Category cat in ViewModel!.TimelineContent.Categories)
-           cat.IsOpen = false;
+        try
+        {
+            // dumb workaround for new avalonia having this run before whenactivated
+            if (this.topLevel is null)
+                return;
+
+            if (LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")).Count() != this.FramePositions.Count)
+            {
+                this.FramePositions = new List<double>();
+                foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
+                    this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
+            }
+
+            double newValue = this.FramePositions[(int)e.NewValue];
+            if (newValue > this.Scrolly.Extent.Width - this.Scrolly.Bounds.Width)
+                newValue = this.Scrolly.Extent.Width - this.Scrolly.Bounds.Width;
+            this.HPos = this.HPos.WithX(newValue);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to jump to frame due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void ShowAllCategories(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            foreach (Category cat in ViewModel!.TimelineContent.Categories)
+               cat.IsOpen = true;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to show all categories due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void HideAllCategories(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            foreach (Category cat in ViewModel!.TimelineContent.Categories)
+               cat.IsOpen = false;
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to hide all categories due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 }
