@@ -171,9 +171,6 @@ public class TimelineViewModel : ReactiveObject
             int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
             CommandPointer newCmd = new CommandPointer(dataManager, code, true, j, i, len, (i >= _startingFrame && i < _frameCount));
             this.AddCommand(newCmd, sort: false);
-            //int catInd = TimelineViewModel.CodeToCategory(code, true);
-            //this.Categories[catInd].AddCommand(newCmd);
-            //this.Categories[catInd].IsOpen = true;
         }
         for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
         {
@@ -182,9 +179,6 @@ public class TimelineViewModel : ReactiveObject
             int len = dataManager.EventManager.EventCommands[j].FrameDuration;
             CommandPointer newCmd = new CommandPointer(dataManager, code, false, j, i, len, (i >= _startingFrame && i < _frameCount));
             this.AddCommand(newCmd, sort: false);
-            //int catInd = TimelineViewModel.CodeToCategory(code, false);
-            //this.Categories[catInd].AddCommand(newCmd);
-            //this.Categories[catInd].IsOpen = true;
         }
         foreach (Category _cat in this.Categories)
             _cat.SortCommands();
