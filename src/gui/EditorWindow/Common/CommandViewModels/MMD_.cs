@@ -32,14 +32,14 @@ public class MMD_ : Generic
         this.WhenAnyValue(_ => _.FinalSpeedType.Choice).Subscribe(_ => this.CommandData.FinalSpeedType = this.SpeedTypes.Forward[this.FinalSpeedType.Choice]);
 
         this.NumControlGroups = new NumEntryField("Control Groups", this.Editable, this.CommandData.NumControlGroups, 1, 8, 1);
-        this.Targets = new ObservableCollection<Target>();
-        for (int i=0; i<this.CommandData.Targets.GetLength(0); i++)
-            this.Targets.Add(new Target(config, this.CommandData, i, (i < this.NumControlGroups.Value)));
+        this.Positions = new ObservableCollection<Position3D>();
+        for (int i=0; i<this.CommandData.Targets.Length; i++)
+            this.Positions.Add(new Position3D($"Position #{i+1}", this.Editable, this.CommandData.Targets[i]));
         this.WhenAnyValue(x => x.NumControlGroups.Value).Subscribe(x =>
         {
             this.CommandData.NumControlGroups = (uint)this.NumControlGroups.Value;
-            foreach (Target target in this.Targets)
-                target.IsActive = (target.Idx < x);
+            for (int i=0; i<this.Positions.Count; i++)
+                this.Positions[i].Name = (i < this.NumControlGroups.Value) ? $"Position #{i+1}" : "";
         });
 
         // animations
@@ -62,7 +62,7 @@ public class MMD_ : Generic
     public StringSelectionField FinalSpeedType           { get; set; }
     public NumEntryField        NumControlGroups         { get; set; }
 
-    public ObservableCollection<Target> Targets { get; set; }
+    public ObservableCollection<Position3D> Positions { get; set; }
 
     // animations
     public AnimationWidget MovingAnimation { get; set; }

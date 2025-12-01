@@ -25,22 +25,10 @@ public class CSA_ : Generic
         this.EnableCorrectionParameters = new BoolChoiceField("Enable Viewport Updates?", this.Editable, this.CommandData.Flags[1]);
         this.WhenAnyValue(_ => _.EnableCorrectionParameters.Value).Subscribe(_ => this.CommandData.Flags[1] = this.EnableCorrectionParameters.Value);
 
-        // viewport target position
-        this.ViewportX = new NumRangeField("X", this.Editable, this.CommandData.ViewportCoordinates[0], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.ViewportX.Value).Subscribe(_ => this.CommandData.ViewportCoordinates[0] = (float)this.ViewportX.Value);
-        this.ViewportY = new NumRangeField("Y", this.Editable, this.CommandData.ViewportCoordinates[1], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.ViewportY.Value).Subscribe(_ => this.CommandData.ViewportCoordinates[1] = (float)this.ViewportY.Value);
-        this.ViewportZ = new NumRangeField("Z", this.Editable, this.CommandData.ViewportCoordinates[2], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.ViewportZ.Value).Subscribe(_ => this.CommandData.ViewportCoordinates[2] = (float)this.ViewportZ.Value);
-
-        // viewport target rotation
+        // viewport
+        this.Position = new Position3D("Viewport Coordinates", this.Editable, this.CommandData.ViewportCoordinates);
         // i may have yaw and pitch switched around here, dunno
-        this.ViewportYaw = new NumRangeField("Yaw", this.Editable, this.CommandData.ViewportRotation[0], -180, 180, 1);
-        this.WhenAnyValue(_ => _.ViewportYaw.Value).Subscribe(_ => this.CommandData.ViewportRotation[0] = (float)this.ViewportYaw.Value);
-        this.ViewportPitch = new NumRangeField("Pitch", this.Editable, this.CommandData.ViewportRotation[1], -180, 180, 1);
-        this.WhenAnyValue(_ => _.ViewportPitch.Value).Subscribe(_ => this.CommandData.ViewportRotation[1] = (float)this.ViewportPitch.Value);
-        this.ViewportRoll = new NumRangeField("Roll", this.Editable, this.CommandData.ViewportRotation[2], -180, 180, 1);
-        this.WhenAnyValue(_ => _.ViewportRoll.Value).Subscribe(_ => this.CommandData.ViewportRotation[2] = (float)this.ViewportRoll.Value);
+        this.Rotation = new RotationWidget(config, this.CommandData.ViewportRotation, this.CommandData.Flags, yawInd: 0, pitchInd: 1, name: "Viewport Rotation (Degrees)");
 
         // focus/blur
         this.EnableDOF = new BoolChoiceField("Enable Depth-Of-Field?", this.Editable, this.CommandData.Flags[2]);
@@ -83,15 +71,9 @@ public class CSA_ : Generic
     public BoolChoiceField   LoopBool                   { get; set; }
     public BoolChoiceField   EnableCorrectionParameters { get; set; }
 
-    // viewport target position
-    public NumRangeField ViewportX { get; set; }
-    public NumRangeField ViewportY { get; set; }
-    public NumRangeField ViewportZ { get; set; }
-
-    // viewport target rotation
-    public NumRangeField ViewportYaw   { get; set; }
-    public NumRangeField ViewportPitch { get; set; }
-    public NumRangeField ViewportRoll  { get; set; }
+    // viewport
+    public Position3D     Position { get; set; }
+    public RotationWidget Rotation { get; set; }
 
     // focus/blur
     public BoolChoiceField      EnableDOF        { get; set; }

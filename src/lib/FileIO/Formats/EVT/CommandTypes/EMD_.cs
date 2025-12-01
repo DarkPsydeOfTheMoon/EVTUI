@@ -14,7 +14,7 @@ public partial class CommandTypes
 
         public UInt32 InterpolationType;
         public UInt32 NumControlGroups = 1;
-        public float[,] Targets = new float[24,3];
+        public float[][] Targets = Enumerable.Range(0, 24).Select(i => new float[3]).ToArray();
 
         public float MovementSpeed = 1.0F;
         public UInt32 UNK;
@@ -27,8 +27,7 @@ public partial class CommandTypes
             rw.RwUInt32(ref this.NumControlGroups);
 
             for (int i=0; i<24; i++)
-                for (int j=0; j<3; j++)
-                    rw.RwFloat32(ref this.Targets[i,j]);
+                rw.RwFloat32s(ref this.Targets[i], 3);
 
             rw.RwObj(ref this.UNUSED_UINT32[0], args);
 

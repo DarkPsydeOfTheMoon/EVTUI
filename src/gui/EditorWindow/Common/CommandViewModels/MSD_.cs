@@ -17,42 +17,17 @@ public class MSD_ : Generic
 
         this.ModelPreviewVM = new ModelPreviewWidget(config, this.AssetID);
 
-        // position
-        this.X = new NumRangeField("X", this.Editable, this.CommandData.Position[0], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.X.Value).Subscribe(_ => this.CommandData.Position[0] = (float)this.X.Value);
-        this.Y = new NumRangeField("Y", this.Editable, this.CommandData.Position[1], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.Y.Value).Subscribe(_ => this.CommandData.Position[1] = (float)this.Y.Value);
-        this.Z = new NumRangeField("Z", this.Editable, this.CommandData.Position[2], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.Z.Value).Subscribe(_ => this.CommandData.Position[2] = (float)this.Z.Value);
+        this.Position = new Position3D("Position", this.Editable, this.CommandData.Position);
+        this.Rotation = new RotationWidget(config, this.CommandData.Rotation, this.CommandData.Flags, pitchInd: 0, yawInd: 1, enabledInd: 1, enabledFlip: true);
 
-        // rotation
-        this.RotationEnabled = new BoolChoiceField("Enabled?", this.Editable, !this.CommandData.Flags[1]);
-        this.WhenAnyValue(_ => _.RotationEnabled.Value).Subscribe(_ => this.CommandData.Flags[1] = !this.RotationEnabled.Value);
-        this.PitchDegrees = new NumRangeField("Pitch", this.Editable, this.CommandData.Rotation[0], -180, 180, 1);
-        this.WhenAnyValue(_ => _.PitchDegrees.Value).Subscribe(_ => this.CommandData.Rotation[0] = (float)this.PitchDegrees.Value);
-        this.YawDegrees = new NumRangeField("Yaw", this.Editable, this.CommandData.Rotation[1], -180, 180, 1);
-        this.WhenAnyValue(_ => _.YawDegrees.Value).Subscribe(_ => this.CommandData.Rotation[1] = (float)this.YawDegrees.Value);
-        this.RollDegrees = new NumRangeField("Roll", this.Editable, this.CommandData.Rotation[2], -180, 180, 1);
-        this.WhenAnyValue(_ => _.RollDegrees.Value).Subscribe(_ => this.CommandData.Rotation[2] = (float)this.RollDegrees.Value);
-
-        // waiting animation
         this.WaitingAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.WaitingAnimation, this.CommandData.Flags, $"Idle Animation", enabledInd:0, extInd:2, enabledFlip:true);
     }
 
-    public IntSelectionField AssetID { get; set; }
+    public IntSelectionField  AssetID        { get; set; }
     public ModelPreviewWidget ModelPreviewVM { get; set; }
 
-    // position
-    public NumRangeField X { get; set; }
-    public NumRangeField Y { get; set; }
-    public NumRangeField Z { get; set; }
+    public Position3D      Position         { get; set; }
+    public RotationWidget  Rotation         { get; set; }
 
-    // rotation
-    public BoolChoiceField RotationEnabled { get; set; }
-    public NumRangeField   PitchDegrees    { get; set; }
-    public NumRangeField   YawDegrees      { get; set; }
-    public NumRangeField   RollDegrees     { get; set; }
-
-    // waiting animation
     public AnimationWidget WaitingAnimation { get; set; }
 }

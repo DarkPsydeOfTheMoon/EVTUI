@@ -20,20 +20,8 @@ public class MDt_ : Generic
 
         this.RemainInScene = new BoolChoiceField("Keep object in scene after detaching?", this.Editable, this.CommandData.Flags[3]);
         this.WhenAnyValue(_ => _.RemainInScene.Value).Subscribe(_ => this.CommandData.Flags[3] = this.RemainInScene.Value);
-
-        this.X = new NumRangeField("X", this.Editable, this.CommandData.Position[0], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.X.Value).Subscribe(_ => this.CommandData.Position[0] = (float)this.X.Value);
-        this.Y = new NumRangeField("Y", this.Editable, this.CommandData.Position[1], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.Y.Value).Subscribe(_ => this.CommandData.Position[1] = (float)this.Y.Value);
-        this.Z = new NumRangeField("Z", this.Editable, this.CommandData.Position[2], -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.Z.Value).Subscribe(_ => this.CommandData.Position[2] = (float)this.Z.Value);
-
-        this.Pitch = new NumRangeField("Pitch", this.Editable, this.CommandData.Rotation[0], -180, 180, 1);
-        this.WhenAnyValue(_ => _.Pitch.Value).Subscribe(_ => this.CommandData.Rotation[0] = (float)this.Pitch.Value);
-        this.Yaw = new NumRangeField("Yaw", this.Editable, this.CommandData.Rotation[1], -180, 180, 1);
-        this.WhenAnyValue(_ => _.Yaw.Value).Subscribe(_ => this.CommandData.Rotation[1] = (float)this.Yaw.Value);
-        this.Roll = new NumRangeField("Roll", this.Editable, this.CommandData.Rotation[2], -180, 180, 1);
-        this.WhenAnyValue(_ => _.Roll.Value).Subscribe(_ => this.CommandData.Rotation[2] = (float)this.Roll.Value);
+        this.Position = new Position3D("Detached Position", this.Editable, this.CommandData.Position);
+        this.Rotation = new RotationWidget(config, this.CommandData.Rotation, this.CommandData.Flags, pitchInd: 0, yawInd: 1, name: "Detached Rotation (Degrees)");
 
         this.UnkBool = new BoolChoiceField("Unknown", this.Editable, this.CommandData.Flags[4]);
         this.WhenAnyValue(_ => _.UnkBool.Value).Subscribe(_ => this.CommandData.Flags[4] = this.UnkBool.Value);
@@ -51,14 +39,8 @@ public class MDt_ : Generic
     public IntSelectionField ChildAssetID { get; set; }
 
     public BoolChoiceField RemainInScene { get; set; }
-
-    public NumRangeField X { get; set; }
-    public NumRangeField Y { get; set; }
-    public NumRangeField Z { get; set; }
-
-    public NumRangeField Pitch { get; set; }
-    public NumRangeField Yaw   { get; set; }
-    public NumRangeField Roll  { get; set; }
+    public Position3D      Position { get; set; }
+    public RotationWidget  Rotation { get; set; }
 
     public BoolChoiceField UnkBool { get; set; }
 }

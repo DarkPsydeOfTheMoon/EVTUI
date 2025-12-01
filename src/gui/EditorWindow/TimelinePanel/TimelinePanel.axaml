@@ -64,61 +64,59 @@
     <!-- FIELD TYPES -->
 
     <DataTemplate DataType="{x:Type vm:AnimationWidget}">
-      <StackPanel Classes="form" Margin="0 10 0 0">
-        <Expander Header="{Binding Name}">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding AnimationEnabled}"/>
-            <StackPanel Classes="form" IsVisible="{Binding AnimationEnabled.Value}">
-              <Button
-               Height="32"
-               HorizontalAlignment="Right"
-               Margin="5"
-               ToolTip.Tip="Preview + Edit"
-               Width="64">
-                <Button.Styles>
-                  <Style Selector="FlyoutPresenter">
-                    <Setter Property="MaxHeight" Value="800"/>
-                    <Setter Property="MaxWidth" Value="1200"/>
-                  </Style>
-                </Button.Styles>
-                <Button.Flyout>
-                  <Flyout>
-                    <StackPanel>
-                      <Button Classes="popupclose" Click="CloseMe">
-                        <PathIcon Data="{StaticResource dismiss_regular}" />
-                      </Button>
-                      <TextBlock Classes="formtitle" Text="Model Preview"/>
-                      <Separator Classes="formtitle"/>
-                      <StackPanel Orientation="Horizontal">
-                        <StackPanel Classes="form">
-                          <StackPanel Orientation="Horizontal" Spacing="30" HorizontalAlignment="Center">
-                            <ContentControl Content="{Binding AnimationID}"/>
-                            <ContentControl Content="{Binding AnimationFromExt}"/>
-                          </StackPanel>
-                          <views:GFDRenderingPanel DataContext="{Binding AnimationPreviewVM}" Width="800" Height="600"/>
+      <Expander Header="{Binding Name}">
+        <StackPanel Classes="form">
+          <ContentControl Content="{Binding AnimationEnabled}" IsVisible="{Binding AnimationEnabled.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          <StackPanel Classes="form" IsVisible="{Binding AnimationEnabled.Value}">
+            <Button
+             Height="32"
+             HorizontalAlignment="Right"
+             Margin="5"
+             ToolTip.Tip="Preview + Edit"
+             Width="64">
+              <Button.Styles>
+                <Style Selector="FlyoutPresenter">
+                  <Setter Property="MaxHeight" Value="800"/>
+                  <Setter Property="MaxWidth" Value="1200"/>
+                </Style>
+              </Button.Styles>
+              <Button.Flyout>
+                <Flyout>
+                  <StackPanel>
+                    <Button Classes="popupclose" Click="CloseMe">
+                      <PathIcon Data="{StaticResource dismiss_regular}" />
+                    </Button>
+                    <TextBlock Classes="formtitle" Text="Model Preview"/>
+                    <Separator Classes="formtitle"/>
+                    <StackPanel Orientation="Horizontal">
+                      <StackPanel Classes="form">
+                        <StackPanel Orientation="Horizontal" Spacing="30" HorizontalAlignment="Center">
+                          <ContentControl Content="{Binding AnimationID}" IsVisible="{Binding AnimationID.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                          <ContentControl Content="{Binding AnimationFromExt}" IsVisible="{Binding AnimationFromExt.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                         </StackPanel>
-                        <StackPanel Classes="form">
-                          <ContentControl Content="{Binding AnimationLoopBool}"/>
-                          <ContentControl Content="{Binding AnimationFrameBlendingEnabled}"/>
-                          <ContentControl Content="{Binding AnimationStartingFrame}"/>
-                          <ContentControl Content="{Binding AnimationEndingFrame}"/>
-                          <ContentControl Content="{Binding AnimationInterpolatedFrames}"/>
-                          <ContentControl Content="{Binding AnimationPlaybackSpeed}"/>
-                          <ContentControl Content="{Binding AnimationWeight}"/>
-                        </StackPanel>
+                        <views:GFDRenderingPanel DataContext="{Binding AnimationPreviewVM}" Width="800" Height="600"/>
+                      </StackPanel>
+                      <StackPanel Classes="form">
+                        <ContentControl Content="{Binding AnimationLoopBool}" IsVisible="{Binding AnimationLoopBool.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <ContentControl Content="{Binding AnimationFrameBlendingEnabled}" IsVisible="{Binding AnimationFrameBlendingEnabled.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <ContentControl Content="{Binding AnimationStartingFrame}" IsVisible="{Binding AnimationStartingFrame.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <ContentControl Content="{Binding AnimationEndingFrame}" IsVisible="{Binding AnimationEndingFrame.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <ContentControl Content="{Binding AnimationInterpolatedFrames}" IsVisible="{Binding AnimationInterpolatedFrames.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <ContentControl Content="{Binding AnimationPlaybackSpeed}" IsVisible="{Binding AnimationPlaybackSpeed.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <ContentControl Content="{Binding AnimationWeight}" IsVisible="{Binding AnimationWeight.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                       </StackPanel>
                     </StackPanel>
-                  </Flyout>
-                </Button.Flyout>
-                <StackPanel Orientation="Horizontal" Spacing="5">
-                  <PathIcon Data="{StaticResource eye_show_regular}" />
-                  <PathIcon Data="{StaticResource edit_regular}" />
-                </StackPanel>
-              </Button>
-            </StackPanel>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+              <StackPanel Orientation="Horizontal" Spacing="5">
+                <PathIcon Data="{StaticResource eye_show_regular}" />
+                <PathIcon Data="{StaticResource edit_regular}" />
+              </StackPanel>
+            </Button>
           </StackPanel>
-        </Expander>
-      </StackPanel>
+        </StackPanel>
+      </Expander>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:ModelPreviewWidget}">
@@ -155,6 +153,32 @@
           </StackPanel>
         </Expander>
       </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:Position3D}">
+      <Expander Header="{Binding Name}">
+        <StackPanel Classes="form">
+          <ContentControl Content="{Binding X}"/>
+          <ContentControl Content="{Binding Y}"/>
+          <ContentControl Content="{Binding Z}"/>
+        </StackPanel>
+      </Expander>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:RotationWidget}">
+      <Expander Header="{Binding Name}">
+        <StackPanel Classes="form">
+          <ContentControl Content="{Binding RotationEnabled}" IsVisible="{Binding RotationEnabled.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+          <StackPanel Classes="form" IsVisible="{Binding RotationEnabled.Value}">
+            <ContentControl Content="{Binding YawEnabled}" IsVisible="{Binding YawEnabled.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <ContentControl Content="{Binding PitchEnabled}" IsVisible="{Binding PitchEnabled.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <ContentControl Content="{Binding RollEnabled}" IsVisible="{Binding RollEnabled.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <ContentControl Content="{Binding YawDegrees}" IsVisible="{Binding YawEnabled.Value}"/>
+            <ContentControl Content="{Binding PitchDegrees}" IsVisible="{Binding PitchEnabled.Value}"/>
+            <ContentControl Content="{Binding RollDegrees}" IsVisible="{Binding RollEnabled.Value}"/>
+          </StackPanel>
+        </StackPanel>
+      </Expander>
     </DataTemplate>
 
     <!-- COMMAND TYPES -->
@@ -274,20 +298,8 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AngleOfView}"/>
-        <Expander Header="Target Viewport Coordinates">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding ViewportX}"/>
-            <ContentControl Content="{Binding ViewportY}"/>
-            <ContentControl Content="{Binding ViewportZ}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Target Viewport Rotation">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding ViewportYaw}"/>
-            <ContentControl Content="{Binding ViewportPitch}"/>
-            <ContentControl Content="{Binding ViewportRoll}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding Position}"/>
+        <ContentControl Content="{Binding Rotation}"/>
         <ContentControl Content="{Binding InterpolationSettings}"/>
         <Expander Header="Focus &amp; Blur">
           <StackPanel Classes="form">
@@ -327,20 +339,8 @@
         <ContentControl Content="{Binding StartingFrame}"/>
         <ContentControl Content="{Binding LoopBool}"/>
         <ContentControl Content="{Binding EnableCorrectionParameters}"/>
-        <Expander Header="Target Viewport Coordinates" IsVisible="{Binding EnableCorrectionParameters.Value}">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding ViewportX}"/>
-            <ContentControl Content="{Binding ViewportY}"/>
-            <ContentControl Content="{Binding ViewportZ}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Target Viewport Rotation" IsVisible="{Binding EnableCorrectionParameters.Value}">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding ViewportYaw}"/>
-            <ContentControl Content="{Binding ViewportPitch}"/>
-            <ContentControl Content="{Binding ViewportRoll}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding Position}" IsVisible="{Binding EnableCorrectionParameters.Value}"/>
+        <ContentControl Content="{Binding Rotation}" IsVisible="{Binding EnableCorrectionParameters.Value}"/>
         <Expander Header="Focus &amp; Blur" IsVisible="{c:Binding 'Size > 48'}">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding EnableDOF}"/>
@@ -377,20 +377,8 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AngleOfView}"/>
-        <Expander Header="Target Viewport Coordinates">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding ViewportX}"/>
-            <ContentControl Content="{Binding ViewportY}"/>
-            <ContentControl Content="{Binding ViewportZ}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Target Viewport Rotation">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding ViewportYaw}"/>
-            <ContentControl Content="{Binding ViewportPitch}"/>
-            <ContentControl Content="{Binding ViewportRoll}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding Position}"/>
+        <ContentControl Content="{Binding Rotation}"/>
         <Expander Header="Focus &amp; Blur" IsVisible="{c:Binding 'Size > 32'}">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding EnableDOF}"/>
@@ -432,20 +420,8 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AngleOfView}"/>
-        <Expander Header="Target Viewport Coordinates">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding ViewportX}"/>
-            <ContentControl Content="{Binding ViewportY}"/>
-            <ContentControl Content="{Binding ViewportZ}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Target Viewport Rotation">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding ViewportYaw}"/>
-            <ContentControl Content="{Binding ViewportPitch}"/>
-            <ContentControl Content="{Binding ViewportRoll}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding Position}"/>
+        <ContentControl Content="{Binding Rotation}"/>
         <Expander Header="Focus &amp; Blur">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding EnableDOF}"/>
@@ -559,10 +535,10 @@
             <ContentControl Content="{Binding InterpolationType}"/>
             <ContentControl Content="{Binding MovementSpeed}"/>
             <ContentControl Content="{Binding NumControlGroups}"/>
-            <ItemsControl ItemsSource="{Binding Targets}">
+            <ItemsControl ItemsSource="{Binding Positions}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <StackPanel Classes="form" IsVisible="{Binding IsActive}" Margin="0 10 0 0">
+                  <StackPanel Classes="form" IsVisible="{Binding Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Margin="0 10 0 0">
                     <Expander Header="{Binding Name}">
                       <StackPanel Classes="form">
                         <ContentControl Content="{Binding X}"/>
@@ -612,20 +588,8 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <Expander Header="Position">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding X}"/>
-            <ContentControl Content="{Binding Y}"/>
-            <ContentControl Content="{Binding Z}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Rotation (Degrees)">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding YawDegrees}"/>
-            <ContentControl Content="{Binding PitchDegrees}"/>
-            <ContentControl Content="{Binding RollDegrees}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding Position}"/>
+        <ContentControl Content="{Binding Rotation}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -960,20 +924,8 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <Expander Header="Offset">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding X}"/>
-            <ContentControl Content="{Binding Y}"/>
-            <ContentControl Content="{Binding Z}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Rotation">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding Yaw}"/>
-            <ContentControl Content="{Binding Pitch}"/>
-            <ContentControl Content="{Binding Roll}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding Position}"/>
+        <ContentControl Content="{Binding Rotation}"/>
         <Expander Header="Unknown">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding UnkBool}"/>
@@ -1108,20 +1060,8 @@
           <ContentControl Content="{Binding ChildAssetID}"/>
           <ContentControl Content="{Binding ChildModelPreviewVM}"/>
         </StackPanel>
-        <Expander Header="Offset (From Attachment Point)">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding XOffset}"/>
-            <ContentControl Content="{Binding YOffset}"/>
-            <ContentControl Content="{Binding ZOffset}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Rotation (Degrees)">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding Yaw}"/>
-            <ContentControl Content="{Binding Pitch}"/>
-            <ContentControl Content="{Binding Roll}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding Offset}"/>
+        <ContentControl Content="{Binding Rotation}"/>
         <Expander Header="Unknown">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding UnkBool}"/>
@@ -1144,20 +1084,8 @@
           <ContentControl Content="{Binding ChildModelPreviewVM}"/>
         </StackPanel>
         <ContentControl Content="{Binding InterpolationType}"/>
-        <Expander Header="Offset (From Attachment Point)">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding XOffset}"/>
-            <ContentControl Content="{Binding YOffset}"/>
-            <ContentControl Content="{Binding ZOffset}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Rotation (Degrees)">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding Yaw}"/>
-            <ContentControl Content="{Binding Pitch}"/>
-            <ContentControl Content="{Binding Roll}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding Offset}"/>
+        <ContentControl Content="{Binding Rotation}"/>
       </StackPanel>
     </DataTemplate>
 
@@ -1203,20 +1131,8 @@
           <ContentControl Content="{Binding ChildModelPreviewVM}"/>
         </StackPanel>
         <ContentControl Content="{Binding RemainInScene}"/>
-        <Expander Header="Detached Position" IsVisible="{Binding RemainInScene.Value}">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding X}"/>
-            <ContentControl Content="{Binding Y}"/>
-            <ContentControl Content="{Binding Z}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Detached Rotation (Degrees)" IsVisible="{Binding RemainInScene.Value}">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding Yaw}"/>
-            <ContentControl Content="{Binding Pitch}"/>
-            <ContentControl Content="{Binding Roll}"/>
-          </StackPanel>
-        </Expander>
+        <ContentControl Content="{Binding Position}" IsVisible="{Binding RemainInScene.Value}"/>
+        <ContentControl Content="{Binding Rotation}" IsVisible="{Binding RemainInScene.Value}"/>
         <Expander Header="Unknown">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding UnkBool}"/>
@@ -1287,13 +1203,7 @@
             <ContentControl Content="{Binding TorsoMovementEnabled}"/>
             <ContentControl Content="{Binding SlowTorsoMovement}" IsVisible="{Binding TorsoMovementEnabled.Value}"/>
             <ContentControl Content="{Binding TargetType}"/>
-            <Expander Header="Target Coordinates" IsVisible="{c:Binding 'TargetType.Choice == \'Coordinates\''}">
-              <StackPanel Classes="form">
-                <ContentControl Content="{Binding X}"/>
-                <ContentControl Content="{Binding Y}"/>
-                <ContentControl Content="{Binding Z}"/>
-              </StackPanel>
-            </Expander>
+            <ContentControl Content="{Binding TargetPosition}" IsVisible="{c:Binding 'TargetType.Choice == \'Coordinates\''}"/>
             <Expander Header="Target Model" IsVisible="{c:Binding 'TargetType.Choice == \'Model\''}">
               <StackPanel Classes="form">
                 <ContentControl Content="{Binding TargetModelID}"/>
@@ -1358,10 +1268,10 @@
             <ContentControl Content="{Binding FinalSpeedType}"/>
             <ContentControl Content="{Binding MovementSpeed}"/>
             <ContentControl Content="{Binding NumControlGroups}"/>
-            <ItemsControl ItemsSource="{Binding Targets}">
+            <ItemsControl ItemsSource="{Binding Positions}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <StackPanel Classes="form" IsVisible="{Binding IsActive}" Margin="0 10 0 0">
+                  <StackPanel Classes="form" IsVisible="{Binding Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" Margin="0 10 0 0">
                     <Expander Header="{Binding Name}">
                       <StackPanel Classes="form">
                         <ContentControl Content="{Binding X}"/>
@@ -1402,7 +1312,10 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <Expander Header="Rotation (Degrees)">
+        <ContentControl Content="{Binding InterpolationType}"/>
+        <ContentControl Content="{Binding CustomRotationAnimationsEnabled}"/>
+        <ContentControl Content="{Binding Rotation}"/>
+        <!--Expander Header="Rotation (Degrees)">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding InterpolationType}"/>
             <ContentControl Content="{Binding YawEnabled}"/>
@@ -1413,7 +1326,7 @@
             <ContentControl Content="{Binding RollDegrees}" IsVisible="{Binding RollEnabled.Value}"/>
             <ContentControl Content="{Binding CustomRotationAnimationsEnabled}"/>
           </StackPanel>
-        </Expander>
+        </Expander-->
         <ContentControl Content="{Binding RotatingAnimation}" IsVisible="{Binding CustomRotationAnimationsEnabled.Value}"/>
         <ContentControl Content="{Binding WaitingAnimation}" IsVisible="{Binding CustomRotationAnimationsEnabled.Value}"/>
         <Expander Header="Unknown">
@@ -1444,14 +1357,9 @@
           <ContentControl Content="{Binding AssetID}"/>
           <ContentControl Content="{Binding ModelPreviewVM}"/>
         </StackPanel>
-        <Expander Header="Position">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding X}"/>
-            <ContentControl Content="{Binding Y}"/>
-            <ContentControl Content="{Binding Z}"/>
-          </StackPanel>
-        </Expander>
-        <Expander Header="Rotation (Degrees)">
+        <ContentControl Content="{Binding Position}"/>
+        <ContentControl Content="{Binding Rotation}"/>
+        <!--Expander Header="Rotation (Degrees)">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding RotationEnabled}"/>
             <StackPanel Classes="form" IsVisible="{Binding RotationEnabled.Value}">
@@ -1460,7 +1368,7 @@
               <ContentControl Content="{Binding RollDegrees}"/>
             </StackPanel>
           </StackPanel>
-        </Expander>
+        </Expander-->
         <ContentControl Content="{Binding WaitingAnimation}"/>
       </StackPanel>
     </DataTemplate>
@@ -1932,6 +1840,7 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <ItemsControl ItemsSource="{Binding Commands}" MinHeight="40"
+                 Classes.commands="true"
                  Classes.show="{Binding IsOpen}"
                  Classes.hide="{Binding !IsOpen}" Background="Transparent">
                   <ItemsControl.ContextMenu>
@@ -1948,27 +1857,27 @@
                     </ItemsPanelTemplate>
                   </ItemsControl.ItemsPanel>
                   <ItemsControl.Styles>
-                    <Style Selector="ItemsControl > ContentPresenter">
+                    <Style Selector="ItemsControl.commands > ContentPresenter">
                       <Setter Property="Canvas.Left" Value="{c:Binding 85*Frame + 10}"/>
                     </Style>
-                    <Style Selector="ItemsControl.show > ContentPresenter">
+                    <Style Selector="ItemsControl.commands.show > ContentPresenter">
                       <Setter Property="Canvas.Top" Value="{c:Binding 60*PositionWithinFrame + 10}"/>
                     </Style>
-                    <Style Selector="ItemsControl.hide > ContentPresenter">
+                    <Style Selector="ItemsControl.commands.hide > ContentPresenter">
                       <Setter Property="Canvas.Top" Value="10"/>
                     </Style>
-                    <Style Selector="ItemsControl.show > ContentPresenter > Button">
+                    <Style Selector="ItemsControl.commands.show > ContentPresenter > Button">
                       <Setter Property="Height" Value="60"/>
                       <Setter Property="IsEnabled" Value="true"/>
                     </Style>
-                    <Style Selector="ItemsControl.hide > ContentPresenter > Button">
+                    <Style Selector="ItemsControl.commands.hide > ContentPresenter > Button">
                       <Setter Property="Height" Value="20"/>
                       <Setter Property="IsEnabled" Value="false"/>
                     </Style>
-                    <Style Selector="ItemsControl.show > ContentPresenter > Button > TextBlock">
+                    <Style Selector="ItemsControl.commands.show > ContentPresenter > Button > TextBlock">
                       <Setter Property="IsVisible" Value="true"/>
                     </Style>
-                    <Style Selector="ItemsControl.hide > ContentPresenter > Button > TextBlock">
+                    <Style Selector="ItemsControl.commands.hide > ContentPresenter > Button > TextBlock">
                       <Setter Property="IsVisible" Value="false"/>
                     </Style>
                   </ItemsControl.Styles>
