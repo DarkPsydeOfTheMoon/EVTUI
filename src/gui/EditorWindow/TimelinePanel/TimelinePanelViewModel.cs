@@ -120,7 +120,7 @@ public class TimelinePanelViewModel : ViewModelBase
         {
             int len = ((isAudio) ? this.Config.EventManager.EventSoundCommands : this.Config.EventManager.EventCommands)[newCmdIndex].FrameDuration;
             CommandPointer newCmd = new CommandPointer(this.Config, code, isAudio, newCmdIndex, frame, len, (frame >= TimelineContent.StartingFrame && frame < TimelineContent.FrameCount));
-            this.TimelineContent.Categories[TimelineViewModel.CodeToCategory(code, isAudio)].AddCommand(newCmd);
+            this.TimelineContent.AddCommand(newCmd);
         }
     }
 
