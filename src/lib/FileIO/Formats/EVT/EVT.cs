@@ -28,7 +28,7 @@ public class EVT : ISerializable
 
     public Bitfield32 Flags = new Bitfield32();
 
-    public Int32 FrameCount;
+    public Int32 FrameCount = 1;
     public byte FrameRate = 30;
     public byte InitScriptIndex;
     public Int16 StartingFrame;
