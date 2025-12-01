@@ -170,9 +170,10 @@ public class TimelineViewModel : ReactiveObject
             int i = dataManager.EventManager.EventSoundCommands[j].FrameStart;
             int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
             CommandPointer newCmd = new CommandPointer(dataManager, code, true, j, i, len, (i >= _startingFrame && i < _frameCount));
-            int catInd = TimelineViewModel.CodeToCategory(code, true);
-            this.Categories[catInd].AddCommand(newCmd);
-            this.Categories[catInd].IsOpen = true;
+            this.AddCommand(newCmd, sort: false);
+            //int catInd = TimelineViewModel.CodeToCategory(code, true);
+            //this.Categories[catInd].AddCommand(newCmd);
+            //this.Categories[catInd].IsOpen = true;
         }
         for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
         {
@@ -180,9 +181,10 @@ public class TimelineViewModel : ReactiveObject
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
             int len = dataManager.EventManager.EventCommands[j].FrameDuration;
             CommandPointer newCmd = new CommandPointer(dataManager, code, false, j, i, len, (i >= _startingFrame && i < _frameCount));
-            int catInd = TimelineViewModel.CodeToCategory(code, false);
-            this.Categories[catInd].AddCommand(newCmd);
-            this.Categories[catInd].IsOpen = true;
+            this.AddCommand(newCmd, sort: false);
+            //int catInd = TimelineViewModel.CodeToCategory(code, false);
+            //this.Categories[catInd].AddCommand(newCmd);
+            //this.Categories[catInd].IsOpen = true;
         }
         foreach (Category _cat in this.Categories)
             _cat.SortCommands();
@@ -338,13 +340,15 @@ public class TimelineViewModel : ReactiveObject
         }
     }
 
-    public void AddCommand(CommandPointer newCmd)
+    public void AddCommand(CommandPointer newCmd, bool sort = true)
     {
         int catInd = TimelineViewModel.CodeToCategory(newCmd.Code, newCmd.IsAudioCmd);
         if (catInd > -1)
         {
             this.Categories[catInd].AddCommand(newCmd);
-            this.Categories[catInd].SortCommands();
+            if (sort)
+                this.Categories[catInd].SortCommands();
+            this.Categories[catInd].IsOpen = true;
         }
     }
 
