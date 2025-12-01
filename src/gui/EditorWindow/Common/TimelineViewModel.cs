@@ -83,7 +83,7 @@ public class TimelineViewModel : ReactiveObject
 
         // frames
         this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, evt.FrameRate, 1, 255, 1);
-        this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, evt.FrameCount, 0, 99999, 1);
+        this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, evt.FrameCount, 1, 99999, 1);
         this.StartingFrameEnabled = new BoolChoiceField("Set Delayed Starting Frame?", !dataManager.ReadOnly, evt.Flags[0]);
         this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, evt.StartingFrame, 0, 99999, 1);
 
@@ -483,6 +483,7 @@ public class Category : ViewModelBase
         if (this.CommandsPerFrame[newCmd.Frame] > this.MaxInOneFrame)
             this.MaxInOneFrame = this.CommandsPerFrame[newCmd.Frame];
         this.Commands.Add(newCmd);
+        this.SortCommands();
     }
 
     public void DeleteCommand(CommandPointer cmd)
@@ -531,7 +532,6 @@ public class Category : ViewModelBase
             OnPropertyChanged(nameof(FrameCount));
         }
     }
-
 
     private int _maxInOneFrame;
     public int MaxInOneFrame
