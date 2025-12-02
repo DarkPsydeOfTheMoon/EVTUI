@@ -56,6 +56,7 @@
         <ComboBox Name="CompiledName"
          ItemsSource="{Binding ScriptNames}"
          SelectedItem="{Binding SelectedCompiledScriptName}"
+         SelectionChanged="NameSelectionChanged"
          Margin="10"
          MaxDropDownHeight="300"
          Width="NaN"/>
@@ -63,6 +64,7 @@
          IsEnabled="{Binding HasDecompiledFiles}"
          ItemsSource="{Binding ScriptExtNames}"
          SelectedItem="{Binding SelectedDecompiledScriptName}"
+         SelectionChanged="ExtSelectionChanged"
          Margin="10"
          MaxDropDownHeight="300"
          Width="NaN"/>
