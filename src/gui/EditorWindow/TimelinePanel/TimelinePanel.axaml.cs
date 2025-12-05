@@ -253,7 +253,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                     (ContextMenu)LogicalExtensions.GetLogicalParent(
                         (MenuItem)sender))).PlacementTarget));
             CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-            ViewModel!.CopyCommand(cmd, false);
+            ViewModel!.CopyCommand(cmd);
         }
         catch (Exception ex)
         {
@@ -271,7 +271,8 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
                     (ContextMenu)LogicalExtensions.GetLogicalParent(
                         (MenuItem)sender))).PlacementTarget));
             CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
-            ViewModel!.CopyCommand(cmd, true);
+            ViewModel!.CopyCommand(cmd);
+            ViewModel!.DeleteCommand(cmd);
         }
         catch (Exception ex)
         {

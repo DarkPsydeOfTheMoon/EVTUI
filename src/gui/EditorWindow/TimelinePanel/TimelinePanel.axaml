@@ -1846,7 +1846,7 @@
                   <ItemsControl.ContextMenu>
                     <ContextMenu IsEnabled="{Binding !$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly}">
                       <MenuItem Header="New" Click="OpenAddCodeModal" />
-                      <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).SharedClipboard.HasCopiedCommand}" />
+                      <MenuItem Header="Paste" Click="PasteCommand" IsEnabled="{Binding $parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).SharedClipboard.CopiedCommand, Converter={x:Static ObjectConverters.IsNotNull}}" />
                       <MenuItem Header="Insert Empty Frames" Click="OpenInsertFramesModal" />
                       <MenuItem Header="Clear Frames" Click="OpenClearFramesModal" />
                     </ContextMenu>
