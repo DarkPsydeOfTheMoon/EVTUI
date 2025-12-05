@@ -281,11 +281,8 @@ public class TimelineViewModel : ReactiveObject
 
     public void ClearFrames(int startingFrame, int endingFrame, bool deleteFrames)
     {
-        // delete all commands within the range
-        foreach (Category cat in this.Categories)
-            foreach (CommandPointer cmd in cat.Commands.ToList())
-                if (cmd.Frame >= startingFrame && cmd.Frame <= endingFrame)
-                    cat.DeleteCommand(cmd);
+        // delete all commands within the range ... in the TimelinePanelViewModel before this
+
         // remove all marked frames within the range
         List<int> frames = MarkedFrames.ToList();
         foreach (int frame in frames)
@@ -337,26 +334,20 @@ public class TimelineViewModel : ReactiveObject
     public void AddCommand(CommandPointer newCmd, bool sort = true)
     {
         int catInd = TimelineViewModel.CodeToCategory(newCmd.Code, newCmd.IsAudioCmd);
-        if (catInd > -1)
-        {
-            this.Categories[catInd].AddCommand(newCmd);
-            if (sort)
-                this.Categories[catInd].SortCommands();
-            this.Categories[catInd].IsOpen = true;
-        }
+        this.Categories[catInd].AddCommand(newCmd);
+        if (sort)
+            this.Categories[catInd].SortCommands();
+        this.Categories[catInd].IsOpen = true;
     }
 
     public void DeleteCommand(CommandPointer cmd)
     {
         int catInd = TimelineViewModel.CodeToCategory(cmd.Code, cmd.IsAudioCmd);
-        if (catInd > -1)
-        {
-            foreach (Category _cat in this.Categories)
-                foreach (CommandPointer _cmd in _cat.Commands)
-                    if (_cmd.IsAudioCmd == cmd.IsAudioCmd && _cmd.CmdIndex > cmd.CmdIndex)
-                        _cmd.CmdIndex -= 1;
-            this.Categories[catInd].DeleteCommand(cmd);
-        }
+        foreach (Category _cat in this.Categories)
+            foreach (CommandPointer _cmd in _cat.Commands)
+                if (_cmd.IsAudioCmd == cmd.IsAudioCmd && _cmd.CmdIndex > cmd.CmdIndex)
+                    _cmd.CmdIndex -= 1;
+        this.Categories[catInd].DeleteCommand(cmd);
     }
 
     private int _frameCount;

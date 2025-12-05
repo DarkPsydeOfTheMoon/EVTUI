@@ -1,5 +1,6 @@
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 using ReactiveUI;
 
@@ -44,6 +45,15 @@ public class TimelinePanelViewModel : ViewModelBase
     {
         if (!(this.ActiveCommand is null) && this.ActiveCommand.Basics.StartingFrame.Value >= startingFrame && this.ActiveCommand.Basics.StartingFrame.Value <= endingFrame)
             this.UnsetActiveCommand();
+
+        foreach (Category cat in this.TimelineContent.Categories)
+            foreach (CommandPointer cmd in cat.Commands.ToList())
+                if (cmd.Frame >= startingFrame && cmd.Frame <= endingFrame)
+                {
+                    bool success = this.Config.EventManager.DeleteCommand(cmd.CmdIndex, cmd.IsAudioCmd);
+                    if (success)
+                       this.TimelineContent.DeleteCommand(cmd);
+                }
 
         this.TimelineContent.ClearFrames(startingFrame, endingFrame, deleteFrames);
 
@@ -91,9 +101,9 @@ public class TimelinePanelViewModel : ViewModelBase
         return success;
     }
 
-    public void CopyCommand(CommandPointer cmd, bool deleteOriginal)
+    public void CopyCommand(CommandPointer cmd)
     {
-        this.SharedClipboard.CopyCommand(this, cmd, deleteOriginal);
+        this.SharedClipboard.CopyCommand(cmd);
     }
 
     public void PasteCommand(int frame)
@@ -107,8 +117,6 @@ public class TimelinePanelViewModel : ViewModelBase
         {
             CommandPointer newCmd = new CommandPointer(this.Config, this.SharedClipboard.CopiedCommand.Code, this.SharedClipboard.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.SharedClipboard.CopiedCommand.Duration, (frame >= TimelineContent.StartingFrame && frame < TimelineContent.FrameCount));
             this.TimelineContent.AddCommand(newCmd);
-            if (this.SharedClipboard.DeleteOriginal)
-                this.SharedClipboard.DeleteCommand();
         }
     }
 
