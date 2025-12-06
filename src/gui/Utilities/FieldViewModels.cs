@@ -10,21 +10,23 @@ namespace EVTUI.ViewModels;
 
 public class FieldBase : ViewModelBase
 {
-    public FieldBase(string name, bool editable)
+    public FieldBase(string name, bool editable, string info = "")
     {
         this.Name     = name;
         this.Editable = editable;
+        this.Info     = info;
     }
 
     public string Name     { get; }
     public bool   Editable { get; }
+    public string Info     { get; }
 }
 
 // ints/floats with open ranges
 // (to be numerical entry)
 public class NumEntryField : FieldBase
 {
-    public NumEntryField(string name, bool editable, dynamic val, dynamic? lowerLimit, dynamic? upperLimit, dynamic increment) : base(name, editable)
+    public NumEntryField(string name, bool editable, dynamic val, dynamic? lowerLimit, dynamic? upperLimit, dynamic increment, string info = "") : base(name, editable, info)
     {
         if (Double.IsNaN(val) || Double.IsInfinity(val))
             val = 0;
@@ -78,7 +80,7 @@ public class NumEntryField : FieldBase
 // TODO: enable inline non-string elements...?
 public class StringEntryField : FieldBase
 {
-    public StringEntryField(string name, bool editable, string text, int? maxLength) : base(name, editable)
+    public StringEntryField(string name, bool editable, string text, int? maxLength, string info = "") : base(name, editable, info)
     {
         _text     = text;
         MaxLength = maxLength;
@@ -99,7 +101,7 @@ public class StringEntryField : FieldBase
 // (to be sliders)
 public class NumRangeField : FieldBase
 {
-    public NumRangeField(string name, bool editable, dynamic val, dynamic lowerLimit, dynamic upperLimit, dynamic? increment) : base(name, editable)
+    public NumRangeField(string name, bool editable, dynamic val, dynamic lowerLimit, dynamic upperLimit, dynamic? increment, string info = "") : base(name, editable, info)
     {
         if (Double.IsNaN(val) || Double.IsInfinity(val))
             val = 0;
@@ -131,7 +133,7 @@ public class NumRangeField : FieldBase
 // (to be dropdowns)
 public class IntSelectionField : FieldBase
 {
-    public IntSelectionField(string name, bool editable, int choiceIndex, List<int> choices) : base(name, editable)
+    public IntSelectionField(string name, bool editable, int choiceIndex, List<int> choices, string info = "") : base(name, editable, info)
     {
         _choice = choiceIndex;
         _choices = new ObservableCollection<int>(choices);
@@ -156,7 +158,7 @@ public class IntSelectionField : FieldBase
 // (to be dropdowns)
 public class StringSelectionField : FieldBase
 {
-    public StringSelectionField(string name, bool editable, string choiceIndex, List<string> choices) : base(name, editable)
+    public StringSelectionField(string name, bool editable, string choiceIndex, List<string> choices, string info = "") : base(name, editable, info)
     {
         _choice = choiceIndex;
         _choices = new ObservableCollection<string>(choices);
@@ -184,7 +186,7 @@ public class StringSelectionField : FieldBase
 // (to be checkboxes)
 public class BoolChoiceField : FieldBase
 {
-    public BoolChoiceField(string name, bool editable, bool val) : base(name, editable)
+    public BoolChoiceField(string name, bool editable, bool val, string info = "") : base(name, editable, info)
     {
         _value = val;
     }
@@ -203,7 +205,7 @@ public class BoolChoiceField : FieldBase
 
 public class ColorSelectionField : FieldBase
 {
-    public ColorSelectionField(string name, bool editable, UInt32 rgba) : base(name, editable)
+    public ColorSelectionField(string name, bool editable, UInt32 rgba, string info = "") : base(name, editable, info)
     {
         _selectedColor = new Color(
             (byte)(rgba & 0xFF),

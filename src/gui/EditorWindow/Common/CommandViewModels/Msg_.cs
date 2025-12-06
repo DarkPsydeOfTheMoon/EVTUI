@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 using ReactiveUI;
 
@@ -71,7 +73,7 @@ public class Msg_ : Generic
         // shenanigans lol
         int msgIndex = config.ScriptManager.GetTurnIndex((short)this.CommandData.MessageMajorId, this.CommandData.MessageMinorId, this.CommandData.MessageSubId);
         string msgId = config.ScriptManager.GetTurnName(msgIndex);
-        this.MessageID = new StringSelectionField("Message ID", this.Editable, msgId, config.ScriptManager.MsgNames);
+        this.MessageID = new StringSelectionField("Message ID", this.Editable, msgId, config.ScriptManager.MsgNames.Where(x => msgPatt.IsMatch(x)).ToList(), info: "Messages must match the pattern XXX_NNN_N_N, where X are capital letters and N are numbers");
         if (!(config.ScriptManager.ActiveBMD is null))
         {
             if (config.ScriptManager.MsgNames.Contains(this.MessageID.Choice))
@@ -92,7 +94,7 @@ public class Msg_ : Generic
 
             int selIndex = config.ScriptManager.GetTurnIndex((short)this.CommandData.SelectMajorId, this.CommandData.SelectMinorId, this.CommandData.SelectSubId);
             string selId = config.ScriptManager.GetTurnName(selIndex);
-            this.SelectionID = new StringSelectionField("Selection ID", this.Editable, selId, config.ScriptManager.SelNames);
+            this.SelectionID = new StringSelectionField("Selection ID", this.Editable, selId, config.ScriptManager.SelNames.Where(x => selPatt.IsMatch(x)).ToList(), info: "Selections must match the pattern SEL_NNN_N_N, where N are numbers");
             if (config.ScriptManager.SelNames.Contains(this.SelectionID.Choice))
                 _selectionBlock = new SelectionPreview(config, selIndex);
             this.WhenAnyValue(x => x.SelectionID.Choice).Subscribe(x =>
@@ -110,6 +112,9 @@ public class Msg_ : Generic
             });
         }
     }
+
+    private static Regex msgPatt = new Regex("^[A-Z]+_[0-9][0-9][0-9]_[0-9]_[0-9]$");
+    private static Regex selPatt = new Regex("^[A-Z]+_[0-9][0-9][0-9]_[0-9]_[0-9]$");
 
     public BoolChoiceField DisplayAsSubtitle { get; set; }
     public BoolChoiceField ReferenceByIndex  { get; set; }
