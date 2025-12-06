@@ -106,6 +106,16 @@ public class TimelinePanelViewModel : ViewModelBase
         this.SharedClipboard.CopyCommand(cmd);
     }
 
+    public void CopyPosition(Position3D pos)
+    {
+        this.SharedClipboard.CopyPosition(pos);
+    }
+
+    public void CopyRotation(RotationWidget rot)
+    {
+        this.SharedClipboard.CopyRotation(rot);
+    }
+
     public void PasteCommand(int frame)
     {
         // this shouldn't happen because pasting is disabled if so, but...
@@ -118,6 +128,37 @@ public class TimelinePanelViewModel : ViewModelBase
             CommandPointer newCmd = new CommandPointer(this.Config, this.SharedClipboard.CopiedCommand.Code, this.SharedClipboard.CopiedCommand.IsAudioCmd, newCmdIndex, frame, this.SharedClipboard.CopiedCommand.Duration, (frame >= TimelineContent.StartingFrame && frame < TimelineContent.FrameCount));
             this.TimelineContent.AddCommand(newCmd);
         }
+    }
+
+    public void PastePosition(Position3D pos)
+    {
+        // this shouldn't happen because pasting is disabled if so, but...
+        if (this.SharedClipboard.CopiedPosition is null)
+            return;
+
+        pos.X.Value = this.SharedClipboard.CopiedPosition.X.Value;
+        pos.Y.Value = this.SharedClipboard.CopiedPosition.Y.Value;
+        pos.Z.Value = this.SharedClipboard.CopiedPosition.Z.Value;
+    }
+
+    public void PasteRotation(RotationWidget rot)
+    {
+        // this shouldn't happen because pasting is disabled if so, but...
+        if (this.SharedClipboard.CopiedRotation is null)
+            return;
+
+        if (rot.RotationEnabled.Editable)
+            rot.RotationEnabled.Value = this.SharedClipboard.CopiedRotation.RotationEnabled.Value;
+        if (rot.PitchEnabled.Editable)
+            rot.PitchEnabled.Value = this.SharedClipboard.CopiedRotation.PitchEnabled.Value;
+        if (rot.YawEnabled.Editable)
+            rot.YawEnabled.Value = this.SharedClipboard.CopiedRotation.YawEnabled.Value;
+        if (rot.RollEnabled.Editable)
+            rot.RollEnabled.Value = this.SharedClipboard.CopiedRotation.RollEnabled.Value;
+
+        rot.PitchDegrees.Value = this.SharedClipboard.CopiedRotation.PitchDegrees.Value;
+        rot.YawDegrees.Value = this.SharedClipboard.CopiedRotation.YawDegrees.Value;
+        rot.RollDegrees.Value = this.SharedClipboard.CopiedRotation.RollDegrees.Value;
     }
 
     public void NewCommand(string code, int frame)
