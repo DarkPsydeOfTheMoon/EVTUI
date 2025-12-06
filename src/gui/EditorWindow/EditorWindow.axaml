@@ -95,6 +95,9 @@
 
     <DataTemplate DataType="{x:Type vm:StringSelectionField}">
       <StackPanel Classes="field">
+        <TextBlock ToolTip.Tip="{Binding Info}" IsVisible="{Binding Info, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource info_regular}" Foreground="{DynamicResource SystemAccentColor}" Margin="0"/>
+        </TextBlock>
         <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
         <ComboBox
           ItemsSource="{Binding Choices}"
