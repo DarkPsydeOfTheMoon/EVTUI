@@ -414,13 +414,19 @@ public class ScriptManager
             return;
         foreach (string scriptType in this.ScriptTexts.Keys)
             foreach (string fileBase in this.ScriptTexts[scriptType].Keys)
+            {
+                Console.WriteLine(fileBase);
+                //Regex patt = new Regex($"{fileBase}$", RegexOptions.IgnoreCase),
                 foreach (string fileExt in this.ScriptTexts[scriptType][fileBase].Keys)
+                    // TODO: this breaks with custom CPK folder names... and also with case-sensitive names... blagh
+                    //foreach (string path in Directory.GetFiles(modDir, "*.*", SearchOption.AllDirectories))
                     // recommended format is dummy file in essentials + top-level femu
                     if (File.Exists(Path.Combine(modDir, fileBase)) && File.Exists(Path.Combine(emuDir, scriptType, Path.GetFileNameWithoutExtension(fileBase))+fileExt))
                         File.Copy(Path.Combine(emuDir, scriptType, Path.GetFileNameWithoutExtension(fileBase))+fileExt, this.BasePath(workingDir, fileBase)+fileExt, true);
                     // ...but full-path femu is also fine
                     else if (File.Exists(this.BasePath(Path.Combine(emuDir, scriptType), fileBase)+fileExt))
                         File.Copy(this.BasePath(Path.Combine(emuDir, scriptType), fileBase)+fileExt, this.BasePath(workingDir, fileBase)+fileExt, true);
+            }
     }
 
     public void RefreshScriptTexts(string targetDir)
