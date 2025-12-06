@@ -157,6 +157,19 @@
 
     <DataTemplate DataType="{x:Type vm:Position3D}">
       <Expander Header="{Binding Name}">
+        <Expander.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Copy" Click="CopyPosition"/>
+            <MenuItem Header="Paste" Click="PastePosition">
+              <MenuItem.IsEnabled>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                  <Binding Path="$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).SharedClipboard.CopiedPosition" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                  <Binding Path="!$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly"/>
+                </MultiBinding>
+              </MenuItem.IsEnabled>
+            </MenuItem>
+          </ContextMenu>
+        </Expander.ContextMenu> 
         <StackPanel Classes="form">
           <ContentControl Content="{Binding X}"/>
           <ContentControl Content="{Binding Y}"/>
@@ -167,6 +180,19 @@
 
     <DataTemplate DataType="{x:Type vm:RotationWidget}">
       <Expander Header="{Binding Name}">
+        <Expander.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Copy" Click="CopyRotation"/>
+            <MenuItem Header="Paste" Click="PasteRotation">
+              <MenuItem.IsEnabled>
+                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                  <Binding Path="$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).SharedClipboard.CopiedRotation" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                  <Binding Path="!$parent[views:TimelinePanel]((vm:TimelinePanelViewModel)DataContext).Config.ReadOnly"/>
+                </MultiBinding>
+              </MenuItem.IsEnabled>
+            </MenuItem>
+          </ContextMenu>
+        </Expander.ContextMenu> 
         <StackPanel Classes="form">
           <ContentControl Content="{Binding RotationEnabled}" IsVisible="{Binding RotationEnabled.Name, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
           <StackPanel Classes="form" IsVisible="{Binding RotationEnabled.Value}">

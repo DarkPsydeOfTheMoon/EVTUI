@@ -230,10 +230,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     {
         try
         {
-            Button target = (Button)LogicalExtensions.GetLogicalParent(
-                (Control)(((Popup)LogicalExtensions.GetLogicalParent(
-                    (ContextMenu)LogicalExtensions.GetLogicalParent(
-                        (MenuItem)sender))).PlacementTarget));
+            Button target = LogicalExtensions.FindLogicalAncestorOfType<Button>((MenuItem)sender, true);
             CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
             ViewModel!.DeleteCommand(cmd);
         }
@@ -248,10 +245,7 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     {
         try
         {
-            Button target = (Button)LogicalExtensions.GetLogicalParent(
-                (Control)(((Popup)LogicalExtensions.GetLogicalParent(
-                    (ContextMenu)LogicalExtensions.GetLogicalParent(
-                        (MenuItem)sender))).PlacementTarget));
+            Button target = LogicalExtensions.FindLogicalAncestorOfType<Button>((MenuItem)sender, true);
             CommandPointer cmd = (CommandPointer)((ContentPresenter)LogicalExtensions.GetLogicalParent(target)).Content;
             ViewModel!.CopyCommand(cmd);
         }
@@ -259,6 +253,36 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         {
             Trace.TraceError(ex.ToString());
             await Utils.RaiseModal(this.topLevel, $"Failed to copy command due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void CopyPosition(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Expander target = LogicalExtensions.FindLogicalAncestorOfType<Expander>((MenuItem)sender, true);
+            Position3D pos = (Position3D)target.DataContext;
+            ViewModel!.CopyPosition(pos);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to copy position due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void CopyRotation(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Expander target = LogicalExtensions.FindLogicalAncestorOfType<Expander>((MenuItem)sender, true);
+            RotationWidget rot = (RotationWidget)target.DataContext;
+            ViewModel!.CopyRotation(rot);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to copy rotation due to unhandled exception:\n{ex.ToString()}");
         }
     }
 
@@ -307,6 +331,36 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         {
             Trace.TraceError(ex.ToString());
             await Utils.RaiseModal(this.topLevel, $"Failed to paste command due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void PastePosition(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Expander target = LogicalExtensions.FindLogicalAncestorOfType<Expander>((MenuItem)sender, true);
+            Position3D pos = (Position3D)target.DataContext;
+            ViewModel!.PastePosition(pos);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to paste position due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void PasteRotation(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Expander target = LogicalExtensions.FindLogicalAncestorOfType<Expander>((MenuItem)sender, true);
+            RotationWidget rot = (RotationWidget)target.DataContext;
+            ViewModel!.PasteRotation(rot);
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to paste rotation due to unhandled exception:\n{ex.ToString()}");
         }
     }
 
