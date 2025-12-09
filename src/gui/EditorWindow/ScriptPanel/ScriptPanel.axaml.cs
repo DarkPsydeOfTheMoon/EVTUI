@@ -21,8 +21,6 @@ namespace EVTUI.Views;
 public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
 {
     private Window topLevel;
-    //private TextEditor _textEditor;
-    //private TextMate.Installation _textMateInstallation;
     private static RegistryOptions _registryOptions = new RegistryOptions(ThemeName.Monokai);
 
     private TextEditor            _msgTextEditor;
@@ -35,10 +33,6 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
 
     private IDisposable _subscription;
 
-    //private static RegistryOptions _registryOptions = new RegistryOptions(ThemeName.Monokai);
-    //private static string _jsonGrammar = _registryOptions.GetScopeByLanguageId("json");
-    //private string _cppGrammar = _registryOptions.GetScopeByLanguageId("cpp");
-
     public ScriptPanel()
     {
         InitializeComponent();
@@ -48,12 +42,10 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
             if (tl is null) throw new NullReferenceException();
             this.topLevel = (Window)tl;
 
-            //if (_textEditor is null)
             if (_msgTextEditor is null || _flowTextEditor is null)
             {
                 this.InitializeTextEditor();
                 this.UpdateTextEditor();
-                //this.WhenAnyValue(x => x._textEditor.Document.Text).Subscribe(x => ViewModel!.SelectedScriptContent = x );
             }
         });
     }
@@ -62,7 +54,6 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
     {
         try
         {
-            //if (!(_textEditor is null))
             if (!(EditorContainer.Content is null))
             {
                 ViewModel!.SelectedCompiledScriptName = (string)(CompiledName.SelectedItem);
@@ -82,7 +73,6 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
     {
         try
         {
-            //if (!(_textEditor is null))
             if (!(EditorContainer.Content is null))
                 this.UpdateTextEditor();
         }
@@ -108,16 +98,6 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
 
     public void InitializeTextEditor()
     {
-        //_textEditor = new TextEditor();
-        //// very goofy to have to do this here but I can't figure out the right XAML for it lolz
-        //_textEditor.TextArea.TextView.Margin = new Thickness(0, 0, 20, 0);
-        //_textEditor.IsReadOnly = !(ViewModel!.Editable);
-        //if (!(ViewModel!.Editable))
-        //    _textEditor.TextArea.Caret.CaretBrush = Brushes.Transparent;
-        //_textMateInstallation = _textEditor.InstallTextMate(_registryOptions);
-        //_textEditor.Document = new TextDocument("");
-        //EditorContainer.Content = _textEditor;
-
         _msgTextEditor = new TextEditor();
         // very goofy to have to do this here but I can't figure out the right XAML for it lolz
         _msgTextEditor.TextArea.TextView.Margin = new Thickness(0, 0, 20, 0);
@@ -137,23 +117,13 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
         _flowTextMateInstallation = _flowTextEditor.InstallTextMate(_registryOptions);
         _flowTextMateInstallation.SetGrammar(_cppGrammar);
         _flowTextEditor.Document = new TextDocument("");
-
-        //EditorContainer.Content = _textEditor;
     }
 
     public void UpdateTextEditor()
     {
-        //_textEditor.IsEnabled = ViewModel!.HasDecompiledFiles;
-        ////_textEditor.Document = new TextDocument(ViewModel!.SelectedScriptContent);
-        ////this.WhenAnyValue(x => x._textEditor.Document.Text).Subscribe(x => ViewModel!.SelectedScriptContent = x );
-        //_textEditor.Document.Text = ViewModel!.SelectedScriptContent;
-        //if (ViewModel!.HasDecompiledFiles)
-        //    _textMateInstallation.SetGrammar((ViewModel!.SelectedDecompiledScriptName.EndsWith(".msg")) ? _jsonGrammar : _cppGrammar);
-
         if (!(_subscription is null))
             _subscription.Dispose();
 
-        //if (ViewModel!.IsMsg[ViewModel!.SelectedCompiledScriptName])
         if (ViewModel!.SelectedDecompiledScriptName.EndsWith(".msg"))
         {
             _msgTextEditor.IsEnabled = ViewModel!.HasDecompiledFiles;
