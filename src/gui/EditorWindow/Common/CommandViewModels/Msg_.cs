@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 
 using ReactiveUI;
 
+using ImageMagick;
+
 namespace EVTUI.ViewModels.TimelineCommands;
 
 public class Msg_ : Generic
@@ -267,6 +269,14 @@ public class PagePreview : ReactiveObject
             this.CueID        = (((string Source, uint CueId))voiceTuple).CueId;
             this.HasVoiceLine = true;
         }
+
+        this.BustupPath = config.ScriptManager.GetTurnBustupPath(turnIndex, pageIndex);
+        if (!String.IsNullOrEmpty(this.BustupPath))
+            this.Bustup = config.ScriptManager.GetMainBustupImage(this.BustupPath);
+
+        this.CutinPath = config.ScriptManager.GetTurnCutinPath(turnIndex, pageIndex);
+        if (!String.IsNullOrEmpty(this.CutinPath))
+            this.Cutin = config.ScriptManager.GetMainCutinImage(this.CutinPath);
     }
 
     public StringEntryField     Dialogue    { get; set; }
@@ -274,6 +284,12 @@ public class PagePreview : ReactiveObject
     public string? Source   { get; set; }
     public uint?   CueID    { get; set; }
     public bool    Editable { get; }
+
+    public string?     BustupPath { get; set; }
+    public MagickImage Bustup     { get; set; }
+
+    public string?     CutinPath { get; set; }
+    public MagickImage Cutin     { get; set; }
 
 	// TODO: make this like... an observable/reactive derived property... idk how that works
     //public bool    HasVoiceLine { get { return (!(this.Source is null) && !(this.CueID is null)); } }

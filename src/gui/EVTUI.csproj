@@ -33,6 +33,7 @@
     <PackageReference Include="Avalonia.Xaml.Interactions" Version="11.3.0.6" />
     <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0" />
     <PackageReference Include="CalcBindingAva" Version="2.5.3" />
+    <PackageReference Include="Magick.NET.AvaloniaMediaImaging" Version="1.1.7" />
     <PackageReference Include="OpenTK.Graphics" Version="4.1" />
     <PackageReference Include="Avalonia" Version="11.3.8" />
     <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.8" />

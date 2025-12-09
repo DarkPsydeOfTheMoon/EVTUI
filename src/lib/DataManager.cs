@@ -55,7 +55,7 @@ public class DataManager
 
         this.ProjectManager = new ProjectManager(userData);
         this.EventManager   = new EventManager();
-        this.ScriptManager  = new ScriptManager();
+        this.ScriptManager  = new ScriptManager(this);
         this.AudioManager   = new AudioManager();
         this.CpkList        = new List<string>();
     }
