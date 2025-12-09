@@ -25,15 +25,10 @@ public class EventManager
     /////////////////////////////
     // *** PRIVATE MEMBERS *** //
     ///////////////./////////////
+    private DataManager config;
     //private EVT?   SerialEvent               = null;
     private ECS?   SerialEventSounds         = null;
     private string CpkDecryptionFunctionName = null;
-
-    // from DataManager, just copied for convenience
-    // not the most elegant approach, so TODO probably
-    private List<string> CpkList;
-    private string       VanillaDir;
-    private string       ModdedDir;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
@@ -51,16 +46,14 @@ public class EventManager
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public bool Load(List<string> cpkList, string evtid, string vanillaDir, string moddedDir, string cpkDecryptionFunctionName)
+    public EventManager(DataManager config)
     {
-        this.CpkList = cpkList;
-        this.VanillaDir = vanillaDir;
-        this.ModdedDir = moddedDir;
+        this.config = config;
+    }
 
+    public bool Load(CpkEVTContents? cpkEVTContents)
+    {
         this.Clear();
-        this.CpkDecryptionFunctionName = cpkDecryptionFunctionName;
-
-        CpkEVTContents? cpkEVTContents = CPKExtract.ExtractEVTFiles(this.CpkList, evtid, this.VanillaDir, this.ModdedDir, this.CpkDecryptionFunctionName);
         if (cpkEVTContents is null)
             return false;
 
@@ -97,13 +90,13 @@ public class EventManager
             this.AcwbPaths.Add((acbPath, awbPath));
         }
         if (this.SerialEvent.Flags[12])
-            this.BmdPaths = CPKExtract.ExtractMatchingFiles(this.CpkList, this.SerialEvent.EventBmdPath.Replace("\0", ""), this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
+            this.BmdPaths = config.ExtractMatchingFiles(this.SerialEvent.EventBmdPath.Replace("\0", ""));
         else
             // derive this from IDs within EVT instead...?
             this.BmdPaths = cpkEVTContents.Value.bmdPaths;
 
         if (this.SerialEvent.Flags[14])
-            this.BfPaths = CPKExtract.ExtractMatchingFiles(this.CpkList, this.SerialEvent.EventBfPath.Replace("\0", ""), this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
+            this.BfPaths = config.ExtractMatchingFiles(this.SerialEvent.EventBfPath.Replace("\0", ""));
         else
             // derive this from IDs within EVT instead...?
             this.BfPaths = cpkEVTContents.Value.bfPaths;
@@ -115,7 +108,6 @@ public class EventManager
     {
         this.SerialEvent               = null;
         this.SerialEventSounds         = null;
-        this.CpkDecryptionFunctionName = null;
     }
 
     public void SaveEVT() { this.SerialEvent.Write(this.EvtPath); }
@@ -239,7 +231,7 @@ public class EventManager
         if (pattern == "")
             return new List<string>();
         else
-            return CPKExtract.ExtractMatchingFiles(this.CpkList, pattern, this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
+            return config.ExtractMatchingFiles(pattern);
     }
 
     // TODO: needs ResourceType
@@ -279,11 +271,11 @@ public class EventManager
             return new List<string>();
         else
         {
-            List<string> candidates = CPKExtract.ExtractMatchingFiles(this.CpkList, pattern, this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
+            List<string> candidates = config.ExtractMatchingFiles(pattern);
             if (candidates.Count == 0 && (ObjectTypes)obj.Type == ObjectTypes.Character)
             {
                 pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]COMMON_ANIM[\\\\/]{animType}CMN{animId:0000}\\.GAP";
-                candidates = CPKExtract.ExtractMatchingFiles(this.CpkList, pattern, this.ModdedDir, this.VanillaDir, this.CpkDecryptionFunctionName);
+                candidates = config.ExtractMatchingFiles(pattern);
             }
             return candidates;
         }
