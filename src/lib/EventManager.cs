@@ -89,13 +89,13 @@ public class EventManager
             this.AcwbPaths.Add((acbPath, awbPath));
         }
         if (this.SerialEvent.Flags[12])
-            this.BmdPaths = config.ExtractMatchingFiles(this.SerialEvent.EventBmdPath.Replace("\0", ""));
+            this.BmdPaths = config.ExtractMatchingFiles(this.SerialEvent.EventBmdPath.Replace("\0", "").Replace("/", "[\\\\/]"));
         else
             // derive this from IDs within EVT instead...?
             this.BmdPaths = cpkEVTContents.Value.bmdPaths;
 
         if (this.SerialEvent.Flags[14])
-            this.BfPaths = config.ExtractMatchingFiles(this.SerialEvent.EventBfPath.Replace("\0", ""));
+            this.BfPaths = config.ExtractMatchingFiles(this.SerialEvent.EventBfPath.Replace("\0", "").Replace("/", "[\\\\/]"));
         else
             // derive this from IDs within EVT instead...?
             this.BfPaths = cpkEVTContents.Value.bfPaths;
