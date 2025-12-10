@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 using ReactiveUI;
 
-using static EVTUI.ViewModels.FieldUtils;
+using static EVTUI.Utils;
 
 namespace EVTUI.ViewModels;
 
