@@ -7,8 +7,6 @@ using System.Text;
 
 using Serialization;
 
-//using static EVTUI.Utils;
-
 namespace EVTUI;
 
 public class AtlusArchive : ISerializable
@@ -63,7 +61,8 @@ public class AtlusArchive : ISerializable
 
         if (this.IsOldVersion)
         {
-            Console.WriteLine("die, i guess...");
+            // I don't feel like implementing this lol
+            Trace.TraceWarning("Old-style BIN/PAK reading not implemented");
         }
         else
         {
@@ -74,7 +73,8 @@ public class AtlusArchive : ISerializable
                 { ["nameLength"] = this.NamesLength, ["isCutin"] = this.IsCutin });
         }
 
-        rw.AssertEOF();
+        rw.ResetEndianness();
+        //rw.AssertEOF();
     }
 
     public void Write(string filepath) { TraitMethods.Write(this, filepath); }
@@ -88,8 +88,6 @@ public class FileEntry : ISerializable
     public string Name = "";
     public Int32  Ind  = 0;
 
-    public byte[] Header;
-
     public Int32  Size = 0;
     public byte[] Data;
 
@@ -101,14 +99,7 @@ public class FileEntry : ISerializable
             rw.RwString(ref this.Name, (int)args["nameLength"], Encoding.ASCII);
 
         rw.RwInt32(ref this.Size);
-
-        //if (args.ContainsKey("isCutin") && (bool)args["isCutin"])
-        //{
-        //    rw.RwBytestring(ref this.Header, 32);
-        //    rw.RwBytestring(ref this.Data, this.Size-32);
-        //}
-        //else
-            rw.RwBytestring(ref this.Data, this.Size);
+        rw.RwBytestring(ref this.Data, this.Size);
     }
 }
 
@@ -136,8 +127,6 @@ public class GLH : ISerializable
         rw.RwBytestring(ref this.Padding, 12);
 
         rw.RwUInt8s(ref this.Data, this.CompressedSize - (int)rw.RelativeTell());
-        //rw.RwObj();
-        //Console.WriteLine(System.Text.Encoding.Default.GetString(this.Header));
         if (System.Text.Encoding.Default.GetString(new byte[] { this.Data[0], this.Data[1], this.Data[2], this.Data[3] }) == "0ZLG")
             this.DecompressedData.FromBytes(this.Data);
 
@@ -175,9 +164,8 @@ public class GLZ : ISerializable
         rw.RwUInt8(ref this.Marker);
 
         rw.RwBytestring(ref this.Padding, 15);
-        //Console.WriteLine(System.Text.Encoding.Default.GetString(this.Padding));
-        //Console.WriteLine(rw.RelativeTell());
 
+        // if we ever want to be able to repack... but eh
         //if (rw.IsParselike())
         rw.RwUInt8s(ref this.CompressedData, this.CompressedSize - (int)rw.RelativeTell());
         if (rw.IsConstructlike())

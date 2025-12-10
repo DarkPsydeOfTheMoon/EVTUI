@@ -695,7 +695,17 @@ public class ScriptManager
         foreach (FileEntry entry in bin.Entries)
         {
             var settings = new MagickReadSettings() { Format = MagickFormat.Dds };
-            return new MagickImage(new MemoryStream(entry.Data), settings);
+            if (entry.Name.Replace("\0", "").Trim().EndsWith(".dds2"))
+            {
+                AtlusArchive dds2 = new AtlusArchive();
+                dds2.FromBytes(entry.Data);
+                MagickImageCollection images = new MagickImageCollection();
+                foreach (FileEntry dds in dds2.Entries)
+                    images.Add(new MagickImage(new MemoryStream(dds.Data), settings));
+                return (MagickImage)images.Flatten(MagickColors.None);
+            }
+            else
+                return new MagickImage(new MemoryStream(entry.Data), settings);
         }
         return null;
     }

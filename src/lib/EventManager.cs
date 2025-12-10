@@ -28,7 +28,6 @@ public class EventManager
     private DataManager config;
     //private EVT?   SerialEvent               = null;
     private ECS?   SerialEventSounds         = null;
-    private string CpkDecryptionFunctionName = null;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
