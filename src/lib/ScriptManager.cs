@@ -679,9 +679,9 @@ public class ScriptManager
                     bool isOnCall = (node.FunctionArguments[4] != 0);
 
                     if (outfitId == -1)
-                        return $"BUSTUP/B{characterId:000}_{emoteId:000}_[0-9][0-9].BIN";
+                        return $"BUSTUP[\\\\/]B{characterId:000}_{emoteId:000}_[0-9][0-9].BIN";
                     else
-                        return $"BUSTUP/B{characterId:000}_{emoteId:000}_{outfitId:00}.BIN";
+                        return $"BUSTUP[\\\\/]B{characterId:000}_{emoteId:000}_{outfitId:00}.BIN";
                 }
         return null;
     }
@@ -689,22 +689,25 @@ public class ScriptManager
     public MagickImage GetMainBustupImage(string path)
     {
         List<string> paths = config.ExtractMatchingFiles(path);
-        AtlusArchive bin = new AtlusArchive();
-        bin.Read(paths[0]);
-        foreach (FileEntry entry in bin.Entries)
+        if (paths.Count > 0)
         {
-            var settings = new MagickReadSettings() { Format = MagickFormat.Dds };
-            if (entry.Name.Replace("\0", "").Trim().EndsWith(".dds2"))
+            AtlusArchive bin = new AtlusArchive();
+            bin.Read(paths[0]);
+            foreach (FileEntry entry in bin.Entries)
             {
-                AtlusArchive dds2 = new AtlusArchive();
-                dds2.FromBytes(entry.Data);
-                MagickImageCollection images = new MagickImageCollection();
-                foreach (FileEntry dds in dds2.Entries)
-                    images.Add(new MagickImage(new MemoryStream(dds.Data), settings));
-                return (MagickImage)images.Flatten(MagickColors.None);
+                var settings = new MagickReadSettings() { Format = MagickFormat.Dds };
+                if (entry.Name.Replace("\0", "").Trim().EndsWith(".dds2"))
+                {
+                    AtlusArchive dds2 = new AtlusArchive();
+                    dds2.FromBytes(entry.Data);
+                    MagickImageCollection images = new MagickImageCollection();
+                    foreach (FileEntry dds in dds2.Entries)
+                        images.Add(new MagickImage(new MemoryStream(dds.Data), settings));
+                    return (MagickImage)images.Flatten(MagickColors.None);
+                }
+                else
+                    return new MagickImage(new MemoryStream(entry.Data), settings);
             }
-            else
-                return new MagickImage(new MemoryStream(entry.Data), settings);
         }
         return null;
     }
@@ -740,11 +743,11 @@ public class ScriptManager
                         subId = 1;
 
                     if (category == 2)
-                        return $"CUTIN/UTARC/2_SUB_0/CUTINSUB_0_{majorId:00}_{minorId:00}.{subId:000}";
+                        return $"CUTIN[\\\\/]UTARC[\\\\/]2_SUB_0[\\\\/]CUTINSUB_0_{majorId:00}_{minorId:00}.{subId:000}";
                     else if (category == 1)
-                        return $"CUTIN/UTARC/1_COM_0/CUTINCOM_0_{majorId:00}_{minorId:00}.{subId:000}";
+                        return $"CUTIN[\\\\/]UTARC[\\\\/]1_COM_0[\\\\/]CUTINCOM_0_{majorId:00}_{minorId:00}.{subId:000}";
                     else
-                        return $"CUTIN/UTARC/0_MAIN_0/CUTINMAIN_0_{majorId:00}_{minorId:00}.{subId:000}";
+                        return $"CUTIN[\\\\/]UTARC[\\\\/]0_MAIN_0[\\\\/]CUTINMAIN_0_{majorId:00}_{minorId:00}.{subId:000}";
                 }
         return null;
     }
