@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -19,66 +20,123 @@ namespace EVTUI.Views;
 
 public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
 {
-    private ContentControl _editorContainer;
-    private TextEditor _textEditor;
-    private RegistryOptions _registryOptions;
-    private TextMate.Installation _textMateInstallation;
+    private Window topLevel;
+    private static RegistryOptions _registryOptions = new RegistryOptions(ThemeName.Monokai);
 
-    private ComboBox _nameBox;
-    private ComboBox _extBox;
+    private TextEditor            _msgTextEditor;
+    private TextMate.Installation _msgTextMateInstallation;
+    private static string _jsonGrammar = _registryOptions.GetScopeByLanguageId("json");
+
+    private TextEditor            _flowTextEditor;
+    private TextMate.Installation _flowTextMateInstallation;
+    private static string _cppGrammar = _registryOptions.GetScopeByLanguageId("cpp");
+
+    private IDisposable _subscription;
 
     public ScriptPanel()
     {
         InitializeComponent();
         this.WhenActivated(d =>
         {
-            _editorContainer = this.FindControl<ContentControl>("EditorContainer");
-            _registryOptions = new RegistryOptions(ThemeName.Monokai);
-            _nameBox = this.FindControl<ComboBox>("CompiledName");
-            _extBox = this.FindControl<ComboBox>("DecompiledExt");
-            _nameBox.SelectionChanged += NameSelectionChanged;
-            _extBox.SelectionChanged += ExtSelectionChanged;
-            this.UpdateTextEditor();
+            var tl = TopLevel.GetTopLevel(this);
+            if (tl is null) throw new NullReferenceException();
+            this.topLevel = (Window)tl;
+
+            if (_msgTextEditor is null || _flowTextEditor is null)
+            {
+                this.InitializeTextEditor();
+                this.UpdateTextEditor();
+            }
         });
     }
 
-    public void NameSelectionChanged(object source, SelectionChangedEventArgs e)
+    public async void NameSelectionChanged(object source, SelectionChangedEventArgs e)
     {
-        ViewModel!.SelectedCompiledScriptName = (string)(_nameBox.SelectedItem);
-        ViewModel!.UpdateSubfiles();
-        if (!ViewModel!.HasDecompiledFiles)
-            this.UpdateTextEditor();
+        try
+        {
+            if (!(EditorContainer.Content is null))
+            {
+                ViewModel!.SelectedCompiledScriptName = (string)(CompiledName.SelectedItem);
+                ViewModel!.UpdateSubfiles();
+                if (!ViewModel!.HasDecompiledFiles)
+                    this.UpdateTextEditor();
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to load script due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
-    public void ExtSelectionChanged(object source, SelectionChangedEventArgs e)
+    public async void ExtSelectionChanged(object source, SelectionChangedEventArgs e)
     {
-        this.UpdateTextEditor();
+        try
+        {
+            if (!(EditorContainer.Content is null))
+                this.UpdateTextEditor();
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to load file related to script due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
-    public void Compile(object source, RoutedEventArgs e)
+    public async void Compile(object source, RoutedEventArgs e)
     {
-        ViewModel!.Compile();
+        try
+        {
+            ViewModel!.Compile();
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to compile script due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public void InitializeTextEditor()
+    {
+        _msgTextEditor = new TextEditor();
+        // very goofy to have to do this here but I can't figure out the right XAML for it lolz
+        _msgTextEditor.TextArea.TextView.Margin = new Thickness(0, 0, 20, 0);
+        _msgTextEditor.IsReadOnly = !(ViewModel!.Editable);
+        if (!(ViewModel!.Editable))
+            _msgTextEditor.TextArea.Caret.CaretBrush = Brushes.Transparent;
+        _msgTextMateInstallation = _msgTextEditor.InstallTextMate(_registryOptions);
+        _msgTextMateInstallation.SetGrammar(_jsonGrammar);
+        _msgTextEditor.Document = new TextDocument("");
+
+        _flowTextEditor = new TextEditor();
+        // very goofy to have to do this here but I can't figure out the right XAML for it lolz
+        _flowTextEditor.TextArea.TextView.Margin = new Thickness(0, 0, 20, 0);
+        _flowTextEditor.IsReadOnly = !(ViewModel!.Editable);
+        if (!(ViewModel!.Editable))
+            _flowTextEditor.TextArea.Caret.CaretBrush = Brushes.Transparent;
+        _flowTextMateInstallation = _flowTextEditor.InstallTextMate(_registryOptions);
+        _flowTextMateInstallation.SetGrammar(_cppGrammar);
+        _flowTextEditor.Document = new TextDocument("");
     }
 
     public void UpdateTextEditor()
     {
-        _textEditor = new TextEditor();
-        // very goofy to have to do this here but I can't figure out the right XAML for it lolz
-        _textEditor.TextArea.TextView.Margin = new Thickness(0, 0, 20, 0);
-        _textEditor.IsReadOnly = !(ViewModel!.Editable);
-        if (!(ViewModel!.Editable))
-            _textEditor.TextArea.Caret.CaretBrush = Brushes.Transparent;
-        _textEditor.IsEnabled = ViewModel!.HasDecompiledFiles;
-        _textEditor.Document = new TextDocument(ViewModel!.SelectedScriptContent);
-        this.WhenAnyValue(x => x._textEditor.Document.Text).Subscribe(x => ViewModel!.SelectedScriptContent = x );
-        _textMateInstallation = _textEditor.InstallTextMate(_registryOptions);
-        if (ViewModel!.HasDecompiledFiles)
+        if (!(_subscription is null))
+            _subscription.Dispose();
+
+        if (ViewModel!.SelectedDecompiledScriptName.EndsWith(".msg"))
         {
-            if (ViewModel!.SelectedDecompiledScriptName.EndsWith(".msg"))
-                _textMateInstallation.SetGrammar(_registryOptions.GetScopeByLanguageId("json"));
-            else
-                _textMateInstallation.SetGrammar(_registryOptions.GetScopeByLanguageId("cpp"));
+            _msgTextEditor.IsEnabled = ViewModel!.HasDecompiledFiles;
+            _msgTextEditor.Document.Text = ViewModel!.SelectedScriptContent;
+            EditorContainer.Content = _msgTextEditor;
+            _subscription = this.WhenAnyValue(x => x._msgTextEditor.Document.Text).Subscribe(x => ViewModel!.SelectedScriptContent = x );
         }
-        _editorContainer.Content = _textEditor;
+        else
+        {
+            _flowTextEditor.IsEnabled = ViewModel!.HasDecompiledFiles;
+            _flowTextEditor.Document.Text = ViewModel!.SelectedScriptContent;
+            EditorContainer.Content = _flowTextEditor;
+            _subscription = this.WhenAnyValue(x => x._flowTextEditor.Document.Text).Subscribe(x => ViewModel!.SelectedScriptContent = x );
+        }
     }
 }

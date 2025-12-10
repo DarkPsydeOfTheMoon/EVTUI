@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using ImageMagick;
+
 using AtlusScriptLibrary.Common.Text.Encodings;
 
 using AtlusScriptLibrary.Common.Libraries;
@@ -24,6 +26,7 @@ using AtlusScriptLibrary.FlowScriptLanguage.Compiler;
 
 using FormatVersion = AtlusScriptLibrary.MessageScriptLanguage.FormatVersion;
 using FlowFormatVersion = AtlusScriptLibrary.FlowScriptLanguage.FormatVersion;
+using ASTLogEventArgs = AtlusScriptLibrary.Common.Logging.LogEventArgs;
 
 namespace EVTUI;
 
@@ -82,7 +85,7 @@ public class AppLogListener : LogListener
         this.Text = "";
     }
 
-    protected override void OnLogCore( object sender, LogEventArgs e )
+    protected override void OnLogCore( object sender, ASTLogEventArgs e )
     {
         if (this.Text.Length > 0)
             this.Text += "\n";
@@ -93,6 +96,7 @@ public class AppLogListener : LogListener
 
 public class ScriptManager
 {
+    protected DataManager config;
 
     /////////////////////////////
     // *** PRIVATE MEMBERS *** //
@@ -245,8 +249,10 @@ public class ScriptManager
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
-    public ScriptManager()
+    public ScriptManager(DataManager config)
     {
+        this.config = config;
+
         System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
         this.ScriptList   = new Dictionary<string, List<string>>();
@@ -414,13 +420,18 @@ public class ScriptManager
             return;
         foreach (string scriptType in this.ScriptTexts.Keys)
             foreach (string fileBase in this.ScriptTexts[scriptType].Keys)
+            {
+                //Regex patt = new Regex($"{fileBase}$", RegexOptions.IgnoreCase),
                 foreach (string fileExt in this.ScriptTexts[scriptType][fileBase].Keys)
+                    // TODO: this breaks with custom CPK folder names... and also with case-sensitive names... blagh
+                    //foreach (string path in Directory.GetFiles(modDir, "*.*", SearchOption.AllDirectories))
                     // recommended format is dummy file in essentials + top-level femu
                     if (File.Exists(Path.Combine(modDir, fileBase)) && File.Exists(Path.Combine(emuDir, scriptType, Path.GetFileNameWithoutExtension(fileBase))+fileExt))
                         File.Copy(Path.Combine(emuDir, scriptType, Path.GetFileNameWithoutExtension(fileBase))+fileExt, this.BasePath(workingDir, fileBase)+fileExt, true);
                     // ...but full-path femu is also fine
                     else if (File.Exists(this.BasePath(Path.Combine(emuDir, scriptType), fileBase)+fileExt))
                         File.Copy(this.BasePath(Path.Combine(emuDir, scriptType), fileBase)+fileExt, this.BasePath(workingDir, fileBase)+fileExt, true);
+            }
     }
 
     public void RefreshScriptTexts(string targetDir)
@@ -651,6 +662,105 @@ public class ScriptManager
                         default:
                             break;
                     }
+        return null;
+    }
+
+    public string? GetTurnBustupPath(int turnIndex, int elemIndex)
+    {
+        if (!(this.ActiveBMD is null))
+            foreach (Node node in this.Parse(this.BMDFiles[this.ActiveBMD].Turns[turnIndex].Elems[elemIndex], this.ActiveBMD.Contains("BASE.CPK")))
+                if (node.FunctionTableIndex == 4 && node.FunctionIndex == 6)
+                {
+                    int characterId = (int)node.FunctionArguments[1];
+                    int emoteId = (int)node.FunctionArguments[2];
+                    int outfitId = -1;
+                    if (node.FunctionArguments[3] != 0xFFFF)
+                        outfitId = (int)node.FunctionArguments[3];
+                    bool isOnCall = (node.FunctionArguments[4] != 0);
+
+                    if (outfitId == -1)
+                        return $"BUSTUP/B{characterId:000}_{emoteId:000}_[0-9][0-9].BIN";
+                    else
+                        return $"BUSTUP/B{characterId:000}_{emoteId:000}_{outfitId:00}.BIN";
+                }
+        return null;
+    }
+
+    public MagickImage GetMainBustupImage(string path)
+    {
+        List<string> paths = config.ExtractMatchingFiles(path);
+        AtlusArchive bin = new AtlusArchive();
+        bin.Read(paths[0]);
+        foreach (FileEntry entry in bin.Entries)
+        {
+            var settings = new MagickReadSettings() { Format = MagickFormat.Dds };
+            if (entry.Name.Replace("\0", "").Trim().EndsWith(".dds2"))
+            {
+                AtlusArchive dds2 = new AtlusArchive();
+                dds2.FromBytes(entry.Data);
+                MagickImageCollection images = new MagickImageCollection();
+                foreach (FileEntry dds in dds2.Entries)
+                    images.Add(new MagickImage(new MemoryStream(dds.Data), settings));
+                return (MagickImage)images.Flatten(MagickColors.None);
+            }
+            else
+                return new MagickImage(new MemoryStream(entry.Data), settings);
+        }
+        return null;
+    }
+
+    public string? GetTurnCutinPath(int turnIndex, int elemIndex)
+    {
+        if (!(this.ActiveBMD is null))
+            foreach (Node node in this.Parse(this.BMDFiles[this.ActiveBMD].Turns[turnIndex].Elems[elemIndex], this.ActiveBMD.Contains("BASE.CPK")))
+                // it's a cutin command AND it's visible
+                if (node.FunctionTableIndex == 4 && node.FunctionIndex == 17 && node.FunctionArguments[11] == 1)
+                {
+                    int category = 0;
+                    int majorId = 0;
+                    if (node.FunctionArguments[8] >= 200)
+                    {
+                        category = 2;
+                        majorId = (int)node.FunctionArguments[8] - 200;
+                    }
+                    else if (node.FunctionArguments[8] >= 100)
+                    {
+                        category = 1;
+                        majorId = (int)node.FunctionArguments[8] - 100;
+                    }
+                    else
+                        majorId = (int)node.FunctionArguments[8];
+
+                    int minorId = (int)node.FunctionArguments[9];
+
+                    int subId = 0;
+                    if ((node.FunctionArguments[10] & 2) == 1)
+                        subId = 2;
+                    else if ((node.FunctionArguments[10] & 1) == 1)
+                        subId = 1;
+
+                    if (category == 2)
+                        return $"CUTIN/UTARC/2_SUB_0/CUTINSUB_0_{majorId:00}_{minorId:00}.{subId:000}";
+                    else if (category == 1)
+                        return $"CUTIN/UTARC/1_COM_0/CUTINCOM_0_{majorId:00}_{minorId:00}.{subId:000}";
+                    else
+                        return $"CUTIN/UTARC/0_MAIN_0/CUTINMAIN_0_{majorId:00}_{minorId:00}.{subId:000}";
+                }
+        return null;
+    }
+
+    public MagickImage GetMainCutinImage(string path)
+    {
+        List<string> paths = config.ExtractMatchingFiles(path);
+        AtlusArchive bin = new AtlusArchive(isCutin: true);
+        bin.Read(paths[0]);
+        foreach (FileEntry entry in bin.Entries)
+        {
+            GLH thing = new GLH();
+            thing.FromBytes(entry.Data);
+            var settings = new MagickReadSettings() { Format = MagickFormat.Dds };
+            return new MagickImage(new MemoryStream(thing.DecompressedData.Data), settings);
+        }
         return null;
     }
 

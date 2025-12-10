@@ -54,8 +54,8 @@ public class DataManager
         this.OpenStuff = openStuff;
 
         this.ProjectManager = new ProjectManager(userData);
-        this.EventManager   = new EventManager();
-        this.ScriptManager  = new ScriptManager();
+        this.EventManager   = new EventManager(this);
+        this.ScriptManager  = new ScriptManager(this);
         this.AudioManager   = new AudioManager();
         this.CpkList        = new List<string>();
     }
@@ -114,7 +114,7 @@ public class DataManager
         if (!this.ReadOnly && !this.ProjectLoaded)
             return false;
 
-        bool success = this.EventManager.Load(this.CpkList, $"E{majorId:000}_{minorId:000}", this.VanillaExtractionPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.CpkDecryptionFunctionName);
+        bool success = this.EventManager.Load(this.ExtractEVTFiles($"E{majorId:000}_{minorId:000}"));
         if (success)
             await this.ProjectManager.LoadEvent(majorId, minorId);
         this.EventLoaded = success;
@@ -170,6 +170,11 @@ public class DataManager
     public List<string> ExtractMatchingFiles(string pattern)
     {
         return CPKExtract.ExtractMatchingFiles(this.CpkList, pattern, this.ProjectManager.ModdedFileDir, this.VanillaExtractionPath, this.ProjectManager.CpkDecryptionFunctionName);
+    }
+
+    public CpkEVTContents? ExtractEVTFiles(string evtid)
+    {
+        return CPKExtract.ExtractEVTFiles(this.CpkList, evtid, this.VanillaExtractionPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.CpkDecryptionFunctionName);
     }
 
     public async Task SaveBF()

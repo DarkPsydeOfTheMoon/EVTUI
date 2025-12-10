@@ -39,6 +39,7 @@
 
   <UserControl.Resources>
     <Flyout x:Key="CommandFlyout" Opening="PopulateFlyout" Closed="ClearFlyout" Placement="Bottom"/>
+    <views:ToBitmap x:Key="ToBitmap"/>
   </UserControl.Resources>
 
   <UserControl.DataTemplates>
@@ -1519,6 +1520,30 @@
                   <ContentControl Content="{Binding Dialogue}" Margin="0,5,0,5"/>
                   <Button Click="PlayVoiceTrack" ToolTip.Tip="Play/Pause Selected Track" IsVisible="{Binding HasVoiceLine}">
                     <PathIcon Data="{StaticResource video_play_pause_regular}" />
+                  </Button>
+                  <Button ToolTip.Tip="{Binding BustupPath}" IsVisible="{Binding Bustup, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Button.Flyout>
+                      <Flyout>
+                        <StackPanel Classes="form">
+                          <TextBlock Classes="formtitle" Text="Bustup"/>
+                          <Separator Classes="formtitle"/>
+                          <Image Source="{Binding Bustup, Converter={StaticResource ToBitmap}}" MaxWidth="600"/>
+                        </StackPanel>
+                      </Flyout>
+                    </Button.Flyout>
+                    <PathIcon Data="{StaticResource person_voice_regular}" />
+                  </Button>
+                  <Button ToolTip.Tip="{Binding CutinPath}" IsVisible="{Binding Cutin, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Button.Flyout>
+                      <Flyout>
+                        <StackPanel Classes="form">
+                          <TextBlock Classes="formtitle" Text="Cutin"/>
+                          <Separator Classes="formtitle"/>
+                          <Image Source="{Binding Cutin, Converter={StaticResource ToBitmap}}" MaxWidth="600"/>
+                        </StackPanel>
+                      </Flyout>
+                    </Button.Flyout>
+                    <PathIcon Data="{StaticResource cut_regular}" />
                   </Button>
                 </StackPanel>
               </DataTemplate>
