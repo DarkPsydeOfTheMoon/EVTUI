@@ -421,7 +421,6 @@ public class ScriptManager
         foreach (string scriptType in this.ScriptTexts.Keys)
             foreach (string fileBase in this.ScriptTexts[scriptType].Keys)
             {
-                Console.WriteLine(fileBase);
                 //Regex patt = new Regex($"{fileBase}$", RegexOptions.IgnoreCase),
                 foreach (string fileExt in this.ScriptTexts[scriptType][fileBase].Keys)
                     // TODO: this breaks with custom CPK folder names... and also with case-sensitive names... blagh
