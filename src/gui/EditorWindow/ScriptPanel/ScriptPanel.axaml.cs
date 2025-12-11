@@ -124,6 +124,9 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
         if (!(_subscription is null))
             _subscription.Dispose();
 
+        if (String.IsNullOrEmpty(ViewModel!.SelectedDecompiledScriptName))
+            return;
+
         if (ViewModel!.SelectedDecompiledScriptName.EndsWith(".msg"))
         {
             _msgTextEditor.IsEnabled = ViewModel!.HasDecompiledFiles;

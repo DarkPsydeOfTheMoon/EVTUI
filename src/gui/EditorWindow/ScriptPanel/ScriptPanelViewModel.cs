@@ -93,7 +93,7 @@ public class ScriptPanelViewModel : ViewModelBase
         }
     }
 
-    private string _compilationLogs;
+    private string _compilationLogs = "";
     public string CompilationLogs
     {
         get => _compilationLogs;

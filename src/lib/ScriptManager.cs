@@ -147,7 +147,10 @@ public class ScriptManager
                                     speakerName = this.Parse(this.BMDFiles[key].Speakers[turn.SpeakerId], isJP)[0].Text;
                                 if (node.FunctionTableIndex == 3 && node.FunctionIndex == 1 && node.FunctionArguments[3] != 0)
                                 {
-                                    Dictionary<uint, MessageCue> messageCues = null;
+                                    // apparently this is doing something but i don't understand how...
+                                    // this should really all be in the ViewModel and not the Model, anyway
+                                    // TODO
+                                    Dictionary<uint, MessageCue> messageCues = new Dictionary<uint, MessageCue>();
                                     switch (node.FunctionArguments[1])
                                     {
                                         case 0:
@@ -165,7 +168,7 @@ public class ScriptManager
                                         default:
                                             break;
                                     }
-                                    messageCues.Add(node.FunctionArguments[3], new MessageCue(speakerName, turnName, indWithinTurn+1));
+                                    messageCues[node.FunctionArguments[3]] = new MessageCue(speakerName, turnName, indWithinTurn+1);
                                 }
                             } catch (Exception ex) { Trace.TraceError(ex.ToString()); }
                         }
