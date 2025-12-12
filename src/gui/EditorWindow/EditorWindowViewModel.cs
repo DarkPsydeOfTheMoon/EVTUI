@@ -14,8 +14,12 @@ public class CommonViewModels : ReactiveObject
     public CommonViewModels(DataManager dataManager)
     {
         this.Assets = new ObservableCollection<AssetViewModel>();
+        this.AssetsByID = new Dictionary<int, AssetViewModel>();
         foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
-            this.Assets.Add(new AssetViewModel(dataManager, obj));
+        {
+            this.AssetsByID[obj.Id] = new AssetViewModel(dataManager, obj);
+            this.Assets.Add(this.AssetsByID[obj.Id]);
+        }
 
         this.Timeline = new TimelineViewModel(dataManager);
 
@@ -35,9 +39,11 @@ public class CommonViewModels : ReactiveObject
         });
     }
 
-    public ObservableCollection<AssetViewModel> Assets   { get; set; }
-    public TimelineViewModel                    Timeline { get; set; }
-    public GFDRenderingPanelViewModel           Render   { get; set; }
+    public ObservableCollection<AssetViewModel> Assets     { get; set; }
+    public Dictionary<int, AssetViewModel>      AssetsByID { get; set; }
+
+    public TimelineViewModel          Timeline { get; set; }
+    public GFDRenderingPanelViewModel Render   { get; set; }
 }
 
 public class EditorWindowViewModel : ViewModelBase

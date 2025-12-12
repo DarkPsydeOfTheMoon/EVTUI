@@ -14,7 +14,7 @@ public class MAt_ : Generic
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
         //this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
-        this.UpdateHelperNames(commonVMs);
+        this.UpdateHelperNames(commonVMs, this.AssetID.Choice);
 
         //this.HelperID = new NumEntryField("Helper ID", this.Editable, this.CommandData.HelperId, 0, 9999, 1);
         //this.WhenAnyValue(_ => _.HelperID.Value).Subscribe(_ => this.CommandData.HelperId = (uint)this.HelperID.Value);
@@ -28,7 +28,7 @@ public class MAt_ : Generic
         this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ =>
         {
             this.Command.ObjectId = this.AssetID.Choice;
-            this.UpdateHelperNames(commonVMs);
+            this.UpdateHelperNames(commonVMs, this.AssetID.Choice);
             //this.HelperID.Choices = new ObservableCollection<string>(this.HelperNames.Keys);
             string choice = this.HelperID.Choice;
             this.HelperID.Choices.Clear();
@@ -65,25 +65,4 @@ public class MAt_ : Generic
     public RotationWidget Rotation { get; set; }
 
     public BoolChoiceField UnkBool { get; set; }
-
-    private BiDict<string, uint> HelperNames;
-    private void UpdateHelperNames(CommonViewModels commonVMs)
-    {
-        this.HelperNames = new BiDict<string, uint>();
-        foreach (AssetViewModel asset in commonVMs.Assets)
-            if ((int)asset.ObjectID.Value == this.AssetID.Choice)
-            {
-                if (!String.IsNullOrEmpty(asset.ActiveModelPath))
-                {
-                    GFDLibrary.ModelPack model = GFDLibrary.Api.FlatApi.LoadModel(asset.ActiveModelPath);
-                    foreach (GFDLibrary.Models.Node node in model.Model.Nodes)
-                        if (node.Properties.ContainsKey("gfdHelperID"))
-                        {
-                            int id = (int)node.Properties["gfdHelperID"].GetValue();
-                            this.HelperNames.Add($"{node.Name} ({id})", (uint)id);
-                        }
-                }
-                break;
-            }
-    }
 }

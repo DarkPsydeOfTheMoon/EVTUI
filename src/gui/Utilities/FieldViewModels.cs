@@ -377,15 +377,31 @@ public class ModelPreviewWidget : ViewModelBase
     public ModelPreviewWidget(DataManager config, IntSelectionField modelID)
     {
         _modelID = modelID;
-
         this.ModelPreviewVM = new GFDRenderingPanelViewModel(config);
-
         this.WhenAnyValue(x => x.ModelPreviewVM.ReadyToRender).Subscribe(x =>
         {
             if (x)
                 this.ModelPreviewVM.sceneManager.LoadObjects(config, new int[] {_objectID});
             else
                 this.ModelPreviewVM.sceneManager.teardown();
+        });
+    }
+
+    public ModelPreviewWidget(DataManager config, IntSelectionField modelID, StringSelectionField modelPath, string texturePath="", bool isField=false)
+    {
+        _modelID = modelID;
+        this.ModelPreviewVM = new GFDRenderingPanelViewModel(config);
+        this.WhenAnyValue(x => x.ModelPreviewVM.ReadyToRender).Subscribe(x =>
+        {
+            List<string> modelFiles = config.ExtractMatchingFiles($"MODEL/FIELD_TEX/OBJECT/{modelPath.Choice}.GMD");
+            if (modelFiles.Count > 0)
+            {
+                Console.WriteLine(modelFiles[0]);
+                if (x)
+                    this.ModelPreviewVM.sceneManager.LoadObject(_objectID, modelFiles[0], texturePath, isField:isField);
+                else
+                    this.ModelPreviewVM.sceneManager.teardown();
+            }
         });
     }
 
