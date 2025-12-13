@@ -322,14 +322,14 @@ public class SceneManager
     public List<GLShaderProgram> shaders      = [];
 
     GLPerspectiveCamera fallbackCamera = new GLPerspectiveCamera(
-        0.01f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
+        1.0f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
         new BoundingSphere(new Vector3(0, 0, 0), 100), 
         new OpenTK.Mathematics.Vector3(0, -80, -100), 
         new OpenTK.Mathematics.Vector3(0, 0, 0)
     );
 
     GLPerspectiveCamera closeupCamera = new GLPerspectiveCamera(
-        0.01f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
+        1.0f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
         new BoundingSphere(new Vector3(0, 90, 0), -20), 
         new OpenTK.Mathematics.Vector3(0, -80, -100), 
         new OpenTK.Mathematics.Vector3(0, 0, 0)
@@ -518,7 +518,7 @@ public class SceneManager
     public void PlaceCamera(float[] position, float[] rotation, float angleOfView)
     {
         this.activeCamera = new GLPerspectiveCamera(
-            0.01f, 60000.0f, angleOfView, 16.0f/9.0f,
+            1.0f, 60000.0f, angleOfView, 16.0f/9.0f,
             // translation 
             new OpenTK.Mathematics.Vector3(0, 0, 0),
             // offset

@@ -62,6 +62,7 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     {
         GL.ClearColor(this.r, this.g, this.b, this.a);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        GL.Clear(ClearBufferMask.AccumBufferBit);
         GL.Enable(EnableCap.DepthTest);
         GL.Viewport(0, 0, (int)this.width, (int)this.height);
         this.sceneManager.activeCamera.AspectRatio = (float)(this.width/this.height);
