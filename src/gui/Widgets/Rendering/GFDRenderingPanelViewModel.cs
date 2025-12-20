@@ -74,6 +74,9 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         // meaning that we won't need to pass in a global shader here.
         foreach (var scenemodel in this.sceneManager.sceneModels.Values)
             scenemodel.Draw(this.glShaderProgram, this.sceneManager.activeCamera);
+        foreach (int objectID in this.sceneManager.fieldModels.Keys)
+            foreach (int subID in this.sceneManager.fieldModels[objectID].Keys)
+                this.sceneManager.fieldModels[objectID][subID].Draw(this.glShaderProgram, this.sceneManager.activeCamera);
     }
 
     /////////////////////////////
@@ -93,13 +96,20 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     {
         int objectID = (int)asset.ObjectID.Value;
 
-        if (String.IsNullOrEmpty(asset.ActiveModelPath))
+        //this.sceneManager.LoadObject(objectID, asset.ActiveModelPath, asset.ActiveTextureBinPath, (asset.ObjectType.Choice == "Field"));
+        if (asset.ObjectType.Choice == "Field")
+            lock (this.sceneManager.fieldModels) { this.sceneManager.LoadField(objectID, asset.ActiveSubModelPaths, asset.ActiveTextureBinPaths); }
+        else
         {
-            Trace.TraceWarning($"Asset with ID {objectID} could not be loaded. It seems not to have a valid existing path.");
-            return;
+            if (String.IsNullOrEmpty(asset.ActiveModelPath))
+            {
+                Trace.TraceWarning($"Asset with ID {objectID} could not be loaded. It seems not to have a valid existing path.");
+                return;
+            }
+
+            lock (this.sceneManager.sceneModels) { this.sceneManager.LoadObject(objectID, asset.ActiveModelPath, null, false); }
         }
 
-        this.sceneManager.LoadObject(objectID, asset.ActiveModelPath, asset.ActiveTextureBinPath, (asset.ObjectType.Choice == "Field"));
         if (!String.IsNullOrEmpty(asset.ActiveBaseAnimPath))
             this.sceneManager.sceneModels[objectID].BaseAnimationPack = this.sceneManager.sceneModels[objectID].TryLoadAnimationPack(asset.ActiveBaseAnimPath);
         if (!String.IsNullOrEmpty(asset.ActiveExtBaseAnimPath))

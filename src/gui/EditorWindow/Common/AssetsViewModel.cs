@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 
 using ReactiveUI;
 
@@ -300,18 +301,25 @@ public class AssetViewModel : ViewModelBase
     protected static HashSet<string> modelTypes = new HashSet<string>() {"Field", "Enemy", "SymShadow", "Item", "ResourceTableNPC", "Character", "FieldCharacter", "FieldObject", "Persona"};
 
     public ObservableCollection<string> ModelPaths;
-    public ObservableCollection<string> TextureBinPaths;
+    //public ObservableCollection<string> TextureBinPaths;
     public ObservableCollection<string> BaseAnimPaths;
     public ObservableCollection<string> ExtBaseAnimPaths;
     public ObservableCollection<string> AddAnimPaths;
     public ObservableCollection<string> ExtAddAnimPaths;
 
     public string ActiveModelPath       { get => (this.ModelPaths.Count > 0) ? this.ModelPaths[0]: null; }
-    public string ActiveTextureBinPath       { get => (this.TextureBinPaths.Count > 0) ? this.TextureBinPaths[0]: null; }
+    //public string ActiveTextureBinPath  { get => (this.TextureBinPaths.Count > 0) ? this.TextureBinPaths[0]: null; }
     public string ActiveBaseAnimPath    { get => (this.BaseAnimPaths.Count > 0) ? this.BaseAnimPaths[0] : null;}
     public string ActiveExtBaseAnimPath { get => (this.ExtBaseAnimPaths.Count > 0) ? this.ExtBaseAnimPaths[0] : null; }
     public string ActiveAddAnimPath     { get => (this.AddAnimPaths.Count > 0) ? this.AddAnimPaths[0] : null; }
     public string ActiveExtAddAnimPath  { get => (this.ExtAddAnimPaths.Count > 0) ? this.ExtAddAnimPaths[0] : null; }
+
+    // fields only... i cba to make a separate class for them. yet.
+    //public ObservableCollection<string> MapPaths;
+    public Dictionary<int, ObservableCollection<string>> SubModelPaths;
+    public Dictionary<int, ObservableCollection<string>> TextureBinPaths;
+    public Dictionary<int, string> ActiveSubModelPaths { get => (this.SubModelPaths is null) ? null : this.SubModelPaths.ToDictionary(x => x.Key, x => (x.Value.Count > 0) ? x.Value[0] : null); }
+    public Dictionary<int, string> ActiveTextureBinPaths { get => (this.TextureBinPaths is null) ? null : this.TextureBinPaths.ToDictionary(x => x.Key, x => (x.Value.Count > 0) ? x.Value[0] : null); }
 
     //public AnimationWidget BaseAnimPreview { get; set; }
 
@@ -341,17 +349,19 @@ public class AssetViewModel : ViewModelBase
     public void UpdateModelPaths()
     {
         this.ModelPaths = new ObservableCollection<string>();
-        this.TextureBinPaths = new ObservableCollection<string>();
+        this.SubModelPaths = new Dictionary<int, ObservableCollection<string>>();
+        //this.TextureBinPaths = new ObservableCollection<string>();
+        this.TextureBinPaths = new Dictionary<int, ObservableCollection<string>>();
         string model_pattern = "";
         string texture_pattern = "";
         switch (this.ObjectType.Choice)
         {
             case "Character":
                 if (this.MinorID.Value == 0)
-                   model_pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_00._{this.SubID.Value:00}\\.GMD";
+                   model_pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_00[0-9]_{this.SubID.Value:00}\\.GMD";
                 else
                     if (this.SubID.Value == 0)
-                        model_pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_..\\.GMD";
+                        model_pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_[0-9][0-9]\\.GMD";
                     else
                         model_pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_{this.SubID.Value:00}\\.GMD";
                 break;
@@ -359,8 +369,16 @@ public class AssetViewModel : ViewModelBase
                 model_pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GMD";
                 break;
             case "Field":
-                model_pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value}\\.GFS";
-                texture_pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value:00}_00\\.BIN";
+                if (this.SubID.Value == 0)
+                {
+                    model_pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9]\\.GFS";
+                    texture_pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9][0-9]_00\\.BIN";
+                }
+                else
+                {
+                    model_pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value}\\.GFS";
+                    texture_pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value:00}_00\\.BIN";
+                }
                 break;
             default:
                 Trace.TraceWarning($"Unknown asset type: {this.ObjectType.Choice}");
@@ -370,15 +388,32 @@ public class AssetViewModel : ViewModelBase
         if (model_pattern != "")
             foreach (string path in this.Config.ExtractMatchingFiles(model_pattern))
             {
-                Console.WriteLine(path);
-                this.ModelPaths.Add(path);
+                if (this.ObjectType.Choice == "Field")
+                {
+                    int subId = Int32.Parse(path.Substring(path.Length-5, 1));
+                    if (!this.SubModelPaths.ContainsKey(subId))
+                        this.SubModelPaths[subId] = new ObservableCollection<string>();
+                    this.SubModelPaths[subId].Add(path);
+                    Console.WriteLine($"{subId}: {path}, {this.SubModelPaths[subId].Count}");
+                }
+                else
+                {
+                    Console.WriteLine(path);
+                    this.ModelPaths.Add(path);
+                }
             }
 
+        // only if field
         if (texture_pattern != "")
             foreach (string path in this.Config.ExtractMatchingFiles(texture_pattern))
             {
-                Console.WriteLine(path);
-                this.TextureBinPaths.Add(path);
+                //Console.WriteLine(path);
+                //this.TextureBinPaths.Add(path);
+                int subId = Int32.Parse(path.Substring(path.Length-9, 2));
+                if (!this.TextureBinPaths.ContainsKey(subId))
+                    this.TextureBinPaths[subId] = new ObservableCollection<string>();
+                this.TextureBinPaths[subId].Add(path);
+                Console.WriteLine($"{subId}: {path}, {this.TextureBinPaths[subId].Count}");
             }
     }
 

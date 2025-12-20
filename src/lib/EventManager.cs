@@ -240,14 +240,22 @@ public class EventManager
         string animType = (fromBaseAnims) ? "B" : "A";
         int animId = (fromBaseAnims) ? obj.BaseMotionNo : obj.ExtBaseMotionNo;
         string pattern = "";
+        string backoff = "";
         switch ((ObjectTypes)obj.Type)
         {
             case ObjectTypes.Character:
                 if (blendAnims)
-                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EMT{obj.ResourceMajorId:0000}\\.GAP";
+                {
+                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EMT{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GAP";
+                    backoff = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EMT{obj.ResourceMajorId:0000}\\.GAP";
                     //pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EVENT[\\\\/]{animType}E{obj.ResourceMajorId:0000}_{animId:000}A\\.GAP";
+                }
                 else
+                {
+                    //pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]BATTLE[\\\\/]{animType}B{obj.ResourceMajorId:0000}_{obj.ResourceMinorId:000}\\.GAP";
                     pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EVENT[\\\\/]{animType}E{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
+                    backoff = $"MODEL[\\\\/]CHARACTER[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]EVENT[\\\\/]{animType}E{obj.ResourceMajorId:0000}_{(animId+30):000}\\.GAP";
+                }
                 break;
             case ObjectTypes.Enemy:
                 pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]{obj.ResourceMajorId:0000}[\\\\/]{animType}EM{obj.ResourceMajorId:0000}_{animId:000}\\.GAP";
@@ -271,6 +279,8 @@ public class EventManager
         else
         {
             List<string> candidates = config.ExtractMatchingFiles(pattern);
+            if (candidates.Count == 0 && backoff != "")
+                candidates = config.ExtractMatchingFiles(backoff);
             if (candidates.Count == 0 && (ObjectTypes)obj.Type == ObjectTypes.Character)
             {
                 pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]COMMON_ANIM[\\\\/]{animType}CMN{animId:0000}\\.GAP";

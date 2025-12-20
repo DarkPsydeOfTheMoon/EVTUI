@@ -15,11 +15,13 @@ public class CommonViewModels : ReactiveObject
     {
         this.Assets = new ObservableCollection<AssetViewModel>();
         this.AssetsByID = new Dictionary<int, AssetViewModel>();
-        foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
+        //foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
+        Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
         {
-            this.AssetsByID[obj.Id] = new AssetViewModel(dataManager, obj);
-            this.Assets.Add(this.AssetsByID[obj.Id]);
-        }
+            var asset = new AssetViewModel(dataManager, obj);
+            lock (this.AssetsByID) { this.AssetsByID[obj.Id] = asset; }
+            lock (this.Assets) { this.Assets.Add(this.AssetsByID[obj.Id]); }
+        });
 
         this.Timeline = new TimelineViewModel(dataManager);
 
@@ -29,9 +31,12 @@ public class CommonViewModels : ReactiveObject
             if (x)
             {
                 foreach (AssetViewModel asset in this.Assets)
+                //Parallel.ForEach(this.Assets, asset =>
+                //{
                     //if (asset.IsModel)
                     if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item")
                         this.Render.AddModel(asset, this.Timeline);
+                //});
                 this.Render.PlaceCamera(this.Timeline);
             }
             else
