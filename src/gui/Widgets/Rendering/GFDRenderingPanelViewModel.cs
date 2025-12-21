@@ -96,9 +96,30 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     {
         int objectID = (int)asset.ObjectID.Value;
 
-        //this.sceneManager.LoadObject(objectID, asset.ActiveModelPath, asset.ActiveTextureBinPath, (asset.ObjectType.Choice == "Field"));
         if (asset.ObjectType.Choice == "Field")
+        {
             lock (this.sceneManager.fieldModels) { this.sceneManager.LoadField(objectID, asset.ActiveSubModelPaths, asset.ActiveTextureBinPaths); }
+            if (!(asset.ActiveMap is null))
+                for (int subId=0; subId<asset.ActiveMap.Entries.Length; subId++)
+                {
+                    //float[] position = new float[] { (float)(800*(asset.ActiveMap.Entries[subId].X - 60)), (float)(800*(asset.ActiveMap.Entries[subId].Y)), (float)(800*(asset.ActiveMap.Entries[subId].Z - 60)) };
+                    float[] position = new float[] { (float)(400*(asset.ActiveMap.UnkBool2+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.UnkBool2+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.UnkBool2+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
+                    float[] rotation = new float[] { 0f, (float)(asset.ActiveMap.Entries[subId].Direction*90), 0f };
+                    //float[] position = new float[] { 0f, 0f, 0f };
+                    //if (((asset.ActiveMap.Flags >> 9) & 1) == 1)
+                    //if (asset.ActiveMap.Entries[subId].Direction == 1)
+                    /*if (asset.ActiveMap.UnkBool2 == 0)
+                    {
+                        Console.WriteLine("!");
+                        position = new float[] { (float)(400*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.Entries[subId].Z - 60)) };
+                    }*/
+                    //float[] position = new float[] { (float)(800*(asset.ActiveMap.Entries[subId].X - 60)), 0f, (float)(800*(asset.ActiveMap.Entries[subId].Y - 60)) };
+                    //float[] position = new float[] { (float)(800*(asset.ActiveMap.Entries[subId].X - 60)), (float)(800*(asset.ActiveMap.Entries[subId].Direction)), (float)(800*(asset.ActiveMap.Entries[subId].Y - 60)) };
+                    //float[] position = new float[] { 0f, (float)(800*(asset.ActiveMap.Entries[subId].Z)), (float)(800*(asset.ActiveMap.Entries[subId].Y - 60)) };
+                    Console.WriteLine($"{position[0]} {position[1]} {position[2]}; {rotation[0]} {rotation[1]} {rotation[2]}");
+                    this.sceneManager.fieldModels[objectID][subId].SetPosition(position, rotation);
+                }
+        }
         else
         {
             if (String.IsNullOrEmpty(asset.ActiveModelPath))

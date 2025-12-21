@@ -284,6 +284,7 @@ public class SceneModel
             bool appearsInEvening = false;
             bool appearsInSummer = false;
             bool appearsInClear = false;
+            bool appearsInPreseason = true;
             //string helperId = "*";
             if (node.Node.Properties.ContainsKey("fldLayoutOfModel_major"))
                 //majorId = node.Node.Properties["fldLayoutOfModel_major"].ToUserPropertyString();
@@ -302,8 +303,10 @@ public class SceneModel
                 appearsInSummer = ((int)node.Node.Properties["fldLayoutOfModel_if_summer"].GetValue() == 1);
             //if (node.Node.Properties.ContainsKey("fldLayoutOfModel_if_fine"))
             //    appearsInSummer = ((int)node.Node.Properties["fldLayoutOfModel_if_fine"].GetValue() == 1);
+            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_if_preseason"))
+                appearsInPreseason = ((int)node.Node.Properties["fldLayoutOfModel_if_preseason"].GetValue() != 0);
 
-            if (majorId > 0 && minorId > 0 && appearsInEvening && appearsInSummer) // && appearsInClear)
+            if (majorId > 0 && minorId > 0 && appearsInEvening && appearsInSummer) // && appearsInPreseason) // && appearsInClear)
             {
                 string pattern = $"MODEL/FIELD_TEX/OBJECT/M{majorId:000}_{minorId:000}.GMD";
                 //Console.WriteLine($"{node.Node.Name}, {pattern}, {resId}, {helperId}");
