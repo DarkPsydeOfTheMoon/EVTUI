@@ -56,7 +56,7 @@ public static class CPKExtract
         Parallel.ForEach(CpkList, CpkPath =>
         {
             CpkFile[] files;
-            using (var fileStream = new FileStream(CpkPath, FileMode.Open))
+            using (var fileStream = new FileStream(CpkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, decryptionFunction))
                 { files = reader.GetFiles(); }
             using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, decryptionFunction);
@@ -106,7 +106,7 @@ public static class CPKExtract
         Parallel.ForEach(CpkList, CpkPath =>
         {
             CpkFile[] files;
-            using (var fileStream = new FileStream(CpkPath, FileMode.Open))
+            using (var fileStream = new FileStream(CpkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, decryptionFunction))
             {
                 files = reader.GetFiles();
@@ -186,7 +186,7 @@ public static class CPKExtract
         {
             Trace.TraceInformation($"Loading from CPK: {CpkPath}");
             CpkFile[] files;
-            using (var fileStream = new FileStream(CpkPath, FileMode.Open))
+            using (var fileStream = new FileStream(CpkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, decryptionFunction))
             {
                 files = reader.GetFiles();
