@@ -31,9 +31,27 @@ public static class CPKExtract
     {
         DirectoryInfo dirInfo = new DirectoryInfo(dirName);
         foreach (FileInfo file in dirInfo.EnumerateFiles())
-            file.Delete(); 
+        {
+            try
+            {
+                file.Delete();
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning($"Couldn't delete the file {file.ToString()}");
+            }
+        }
         foreach (DirectoryInfo dir in dirInfo.EnumerateDirectories())
-            dir.Delete(true); 
+        {
+            try
+            {
+                dir.Delete(true);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning($"Couldn't delete the directory {dir.ToString()}");
+            }
+        }
     }
 
     public static List<string> ExtractMatchingFiles(List<string> CpkList, string filePatternString, string ExistingFolder, string OutputFolder, string decryptionFunctionName)
@@ -149,33 +167,33 @@ public static class CPKExtract
                 if (CPKExtract.Patterns["EVT:EVT"].IsMatch(candidatePath))
                 {
                     evtFound = true;
-                    retval.evtPath = candidatePath;
+                    lock (retval.evtPath) { retval.evtPath = candidatePath; }
                 }
                 else if (CPKExtract.Patterns["EVT:ECS"].IsMatch(candidatePath))
-                    retval.ecsPath = candidatePath;
+                    lock (retval.ecsPath) { retval.ecsPath = candidatePath; }
                 else if (CPKExtract.Patterns["EVT:ACB"].IsMatch(candidatePath))
-                    retval.acbPaths.Add(candidatePath);
+                    lock (retval.acbPaths) { retval.acbPaths.Add(candidatePath); }
                 else if (CPKExtract.Patterns["EVT:AWB"].IsMatch(candidatePath))
-                    retval.awbPaths.Add(candidatePath);
+                    lock (retval.awbPaths) { retval.awbPaths.Add(candidatePath); }
                 else if (CPKExtract.Patterns["EVT:BMD"].IsMatch(candidatePath) && (!looseFiles || new FileInfo(candidatePath).Length > 0))
-                    retval.bmdPaths.Add(candidatePath);
+                    lock (retval.bmdPaths) { retval.bmdPaths.Add(candidatePath); }
                 else if (CPKExtract.Patterns["EVT:BF"].IsMatch(candidatePath) && (!looseFiles || new FileInfo(candidatePath).Length > 0))
-                    retval.bfPaths.Add(candidatePath);
+                    lock (retval.bfPaths) { retval.bfPaths.Add(candidatePath); }
                 else
                     return false;
             }
             else if (CPKExtract.Patterns["VSW:ACB"].IsMatch(candidatePath))
-                retval.acbPaths.Add(candidatePath);
+                lock (retval.acbPaths) { retval.acbPaths.Add(candidatePath); }
             else if (CPKExtract.Patterns["VSW:AWB"].IsMatch(candidatePath))
-                retval.awbPaths.Add(candidatePath);
+                lock (retval.awbPaths) { retval.awbPaths.Add(candidatePath); }
             else if (CPKExtract.Patterns["SYS:ACB"].IsMatch(candidatePath))
-                retval.acbPaths.Add(candidatePath);
+                lock (retval.acbPaths) { retval.acbPaths.Add(candidatePath); }
             else if (CPKExtract.Patterns["SYS:AWB"].IsMatch(candidatePath))
-                retval.awbPaths.Add(candidatePath);
+                lock (retval.awbPaths) { retval.awbPaths.Add(candidatePath); }
             else if (CPKExtract.Patterns["BGM:ACB"].IsMatch(candidatePath))
-                retval.acbPaths.Add(candidatePath);
+                lock (retval.acbPaths) { retval.acbPaths.Add(candidatePath); }
             else if (CPKExtract.Patterns["BGM:AWB"].IsMatch(candidatePath))
-                retval.awbPaths.Add(candidatePath);
+                lock (retval.awbPaths) { retval.awbPaths.Add(candidatePath); }
             else
                 return false;
             Trace.TraceInformation($"Found file path to load: {candidatePath}");
