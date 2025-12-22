@@ -31,8 +31,7 @@ public class CommonViewModels : ReactiveObject
             if (x)
             {
                 foreach (AssetViewModel asset in this.Assets)
-                    //if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
-                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
+                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
                     {
                         this.Render.AddModel(asset);
                         if (asset.ObjectType.Choice != "Field")

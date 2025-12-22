@@ -1,6 +1,9 @@
 using System;
+using System.Diagnostics;
+
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
 using Avalonia.ReactiveUI;
@@ -8,8 +11,8 @@ using Avalonia.Threading;
 using static Avalonia.OpenGL.GlConsts;
 
 using OpenTK.Graphics.OpenGL;
-using EVTUI.ViewModels;
 
+using EVTUI.ViewModels;
 
 namespace EVTUI.Views
 {
@@ -19,6 +22,7 @@ namespace EVTUI.Views
         /////////////////////////////
         // *** PRIVATE MEMBERS *** //
         /////////////////////////////
+        private Window topLevel;
         private AvaloniaOpenTKWrapper? avaloniaTkContext;
         private readonly DispatcherTimer redrawTimer = new DispatcherTimer();
 
@@ -39,16 +43,40 @@ namespace EVTUI.Views
             redrawTimer.Tick += this.RequestRedrawEventHandler;
 
             // Also redraw if the window resizes.
-            var topLevel = (MainWindow)TopLevel.GetTopLevel(this);
+            this.Loaded += MoreLoaded;
             MainWindow.ClientSizeProperty.Changed.Subscribe(size => RequestNextFrameRendering());
         }
 
         ////////////////////////////
         // *** PRIVATE METHODS *** //
         ////////////////////////////
-        private void RequestRedrawEventHandler(object? sender, EventArgs e)
+        public void MoreLoaded(object? sender, RoutedEventArgs e)
         {
-            RequestNextFrameRendering();
+            try
+            {
+                var tl = TopLevel.GetTopLevel(this);
+                if (tl is null) throw new NullReferenceException();
+                this.topLevel = (Window)tl;
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+            }
+        }
+
+        private async void RequestRedrawEventHandler(object? sender, EventArgs e)
+        {
+            try
+            {
+                RequestNextFrameRendering();
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+                if (!(this.topLevel is null))
+                    await Utils.RaiseModal(this.topLevel, $"Failed to redraw render due to unhandled exception:\n{ex.ToString()}");
+                getVM().ReadyToRender = false;
+            }
         }
 
         private static void CheckError(GlInterface gl)
@@ -60,40 +88,72 @@ namespace EVTUI.Views
             }
         }
 
-        protected override unsafe void OnOpenGlInit(GlInterface gl)
+        //protected override unsafe async void OnOpenGlInit(GlInterface gl)
+        protected override async void OnOpenGlInit(GlInterface gl)
         {
-            // Bind OpenTK to the panel
-            CheckError(gl);
-            this.avaloniaTkContext = new(gl);
-            GL.LoadBindings(avaloniaTkContext);
+            try
+            {
+                // Bind OpenTK to the panel
+                CheckError(gl);
+                this.avaloniaTkContext = new(gl);
+                GL.LoadBindings(avaloniaTkContext);
 
-            // Start the signal to redraw the scene @ 30fps
-            redrawTimer.Start();
+                // Start the signal to redraw the scene @ 30fps
+                redrawTimer.Start();
             
-            // Init test data if it exists and has not already been
-            // initialised (should be removed when real hooks exist).
-            var ctx = getVM();
-            ctx.ReadyToRender = true;
+                // Init test data if it exists and has not already been
+                // initialised (should be removed when real hooks exist).
+                var ctx = getVM();
+                ctx.ReadyToRender = true;
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+                if (!(this.topLevel is null))
+                    await Utils.RaiseModal(this.topLevel, $"Failed to initialize render due to unhandled exception:\n{ex.ToString()}");
+                getVM().ReadyToRender = false;
+            }
         }
 
-        protected override void OnOpenGlDeinit(GlInterface GL)
+        protected override async void OnOpenGlDeinit(GlInterface GL)
         {
-            redrawTimer.Stop();
-            this.avaloniaTkContext = null;
-            var ctx = getVM();
-            ctx.ReadyToRender = false;
+            try
+            {
+                redrawTimer.Stop();
+                this.avaloniaTkContext = null;
+                var ctx = getVM();
+                ctx.ReadyToRender = false;
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+                if (!(this.topLevel is null))
+                    await Utils.RaiseModal(this.topLevel, $"Failed to de-initialize render due to unhandled exception:\n{ex.ToString()}");
+                getVM().ReadyToRender = false;
+            }
         }
 
-        protected override unsafe void OnOpenGlRender(GlInterface gl, int framebuffer)
+        //protected override unsafe async void OnOpenGlRender(GlInterface gl, int framebuffer)
+        protected override async void OnOpenGlRender(GlInterface gl, int framebuffer)
         {
-            var vm = getVM();
-            vm.width  = Bounds.Width;
-            vm.height = Bounds.Height;
+            try
+            {
+                var vm = getVM();
+                vm.width  = Bounds.Width;
+                vm.height = Bounds.Height;
 
-            vm.RefreshSceneState();
-            vm.DrawScene();
+                vm.RefreshSceneState();
+                vm.DrawScene();
 
-            CheckError(gl);
+                CheckError(gl);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError(ex.ToString());
+                if (!(this.topLevel is null))
+                    await Utils.RaiseModal(this.topLevel, $"Failed to draw render due to unhandled exception:\n{ex.ToString()}");
+                getVM().ReadyToRender = false;
+            }
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
