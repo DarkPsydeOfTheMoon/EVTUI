@@ -31,9 +31,27 @@ public static class CPKExtract
     {
         DirectoryInfo dirInfo = new DirectoryInfo(dirName);
         foreach (FileInfo file in dirInfo.EnumerateFiles())
-            file.Delete(); 
+        {
+            try
+            {
+                file.Delete();
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning($"Couldn't delete the file {file.ToString()}");
+            }
+        }
         foreach (DirectoryInfo dir in dirInfo.EnumerateDirectories())
-            dir.Delete(true); 
+        {
+            try
+            {
+                dir.Delete(true);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceWarning($"Couldn't delete the directory {dir.ToString()}");
+            }
+        }
     }
 
     public static List<string> ExtractMatchingFiles(List<string> CpkList, string filePatternString, string ExistingFolder, string OutputFolder, string decryptionFunctionName)

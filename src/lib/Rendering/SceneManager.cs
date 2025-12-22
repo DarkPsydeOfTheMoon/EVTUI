@@ -53,7 +53,12 @@ public class SceneModel
     {
         // can happen if EVT object isn't set up properly
         if (!(this.model is null))
+        {
             this.model.Dispose();
+            foreach (int resId in this.model.AttachedModels.Keys)
+                this.model.AttachedModels[resId].Dispose();
+            this.model.AttachedModels.Clear();
+        }
     }
 
     public void StartAnimTimer() { this.animationStopwatch.Start(); }
@@ -158,7 +163,13 @@ public class SceneModel
                 return new GLTexture(Texture.CreateDefaultTexture(textureName));
             }
 
+            if (!(textureStream is null))
+                textureStream.Dispose();
+
         } );
+
+        if (!(fieldtex is null))
+            fieldtex.Dispose();
 
         this.model = glmodel;
         this.GAP = model.AnimationPack;
