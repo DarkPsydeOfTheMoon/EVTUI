@@ -103,7 +103,7 @@ public class GFDRenderingPanelViewModel : ViewModelBase
             if (!(asset.ActiveMap is null))
                 for (int subId=0; subId<asset.ActiveMap.Entries.Length; subId++)
                 {
-                    float[] position = new float[] { (float)(400*(asset.ActiveMap.UnkBool2+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.UnkBool2+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.UnkBool2+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
+                    float[] position = new float[] { (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
                     float[] rotation = new float[] { 0f, (float)(asset.ActiveMap.Entries[subId].Direction*90), 0f };
                     this.sceneManager.fieldModels[objectID][subId].SetPosition(position, rotation);
                 }

@@ -58,12 +58,9 @@ public class Generic : ReactiveObject
         this.HelperNames = new BiDict<string, uint>();
         if (isField)
             this.ResourceHelperNames = new BiDict<string, int>();
-        //foreach (AssetViewModel asset in commonVMs.Assets)
-        //    if ((int)asset.ObjectID.Value == assetID)
             if (commonVMs.AssetsByID.ContainsKey(assetID))
             {
                 AssetViewModel asset = commonVMs.AssetsByID[assetID];
-                //if (!String.IsNullOrEmpty(asset.ActiveModelPath))
                 if (!String.IsNullOrEmpty(asset.ActiveModelPath))
                 {
                     GFDLibrary.ModelPack model = GFDLibrary.Api.FlatApi.LoadModel(asset.ActiveModelPath);
@@ -83,7 +80,6 @@ public class Generic : ReactiveObject
                         }
                     }
                 }
-                //break;
             }
     }
 }

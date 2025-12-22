@@ -9,12 +9,10 @@ namespace EVTUI;
 
 public class MAP : ISerializable
 {
-    private bool IsLittleEndian = false;
-
     public Int32 EntryCount;
 
-    public byte UnkBool1;
-    public byte UnkBool2;
+    public byte Endianness;
+    public byte Spacing;
     public UInt16 Flags;
 
     public UInt32 Version;
@@ -34,22 +32,19 @@ public class MAP : ISerializable
     {
         if (rw.IsConstructlike())
         {
-            this.IsLittleEndian = true;
-            rw.SetLittleEndian(this.IsLittleEndian);
+            rw.SetLittleEndian(true);
             rw.RwInt32(ref this.EntryCount);
-            // reasonable-enough check to work lol
-            if (this.EntryCount > 999)
-                this.IsLittleEndian = false;
+            rw.RwUInt8(ref this.Endianness);
             rw.ResetEndianness();
             rw.RelativeSeek(0, 0);
         }
 
-        rw.SetLittleEndian(this.IsLittleEndian);
+        rw.SetLittleEndian((this.Endianness == 1));
 
         rw.RwInt32(ref this.EntryCount);
 
-        rw.RwUInt8(ref this.UnkBool1);
-        rw.RwUInt8(ref this.UnkBool2);
+        rw.RwUInt8(ref this.Endianness);
+        rw.RwUInt8(ref this.Spacing);
         rw.RwUInt16(ref this.Flags);
 
         rw.RwUInt32(ref this.Version);
@@ -110,12 +105,8 @@ public class MAPEntry : ISerializable
         rw.RwUInt16(ref this.MinorID);
 
         rw.RwUInt8(ref this.X);
-        //rw.RwUInt8(ref this.Y);
         rw.RwUInt8(ref this.Z);
-        //rw.RwUInt8(ref this.Z);
-        //rw.RwUInt8(ref this.Y);
         rw.RwUInt8(ref this.Direction);
-        //rw.RwUInt8(ref this.Direction);
         rw.RwUInt8(ref this.Y);
 
         rw.RwObj(ref this.UNUSED_UINT8);

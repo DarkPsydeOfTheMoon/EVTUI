@@ -301,7 +301,6 @@ public class AssetViewModel : ViewModelBase
     protected static HashSet<string> modelTypes = new HashSet<string>() {"Field", "Enemy", "SymShadow", "Item", "ResourceTableNPC", "Character", "FieldCharacter", "FieldObject", "Persona"};
 
     public ObservableCollection<string> ModelPaths;
-    //public ObservableCollection<string> TextureBinPaths;
     public ObservableCollection<string> BaseAnimPaths;
     public ObservableCollection<string> ExtBaseAnimPaths;
     public ObservableCollection<string> AddAnimPaths;
