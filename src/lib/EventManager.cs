@@ -9,8 +9,8 @@ namespace EVTUI;
 
 public struct CpkEVTContents
 {
-    public string? evtPath;
-    public string? ecsPath;
+    public string evtPath = "";
+    public string ecsPath = "";
     public List<string> acbPaths = new List<string>();
     public List<string> awbPaths = new List<string>();
     public List<string> bfPaths  = new List<string>();
@@ -62,7 +62,7 @@ public class EventManager
 
         this.EcsPath = cpkEVTContents.Value.ecsPath;
         this.SerialEventSounds = new ECS();
-        if (this.EcsPath is null)
+        if (String.IsNullOrEmpty(this.EcsPath))
             this.EcsPath = this.EvtPath.Substring(0, this.EvtPath.Length-4) + ".ECS";
         else
             this.SerialEventSounds.Read(this.EcsPath);

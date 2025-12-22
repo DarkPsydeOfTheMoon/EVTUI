@@ -109,24 +109,41 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
     // *** PRIVATE METHODS *** //
     /////////////////////////////
 
-    private void CloseAll(object? sender, CancelEventArgs e)
+    private async void CloseAll(object? sender, CancelEventArgs e)
     {
-        foreach (EditorWindow window in this.editorWindows.Keys)
+        try
         {
-            window.Close();
-            ((EditorWindowViewModel)(window.DataContext)).Config.Reset();
+            foreach (EditorWindow window in this.editorWindows.Keys)
+            {
+                window.Close();
+                ((EditorWindowViewModel)(window.DataContext)).Config.Reset();
+            }
+            this.openStuff.Clear();
+            this.editorWindows.Clear();
         }
-        this.openStuff.Clear();
-        this.editorWindows.Clear();
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            if (!(this.topLevel is null))
+                await Utils.RaiseModal(this.topLevel, $"Failed to close all editor windows due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
-    private void EditorClosed(object? sender, CancelEventArgs e)
+    private async void EditorClosed(object? sender, CancelEventArgs e)
     {
-        (string GamePath, string? ModPath, int MajorId, int MinorId) thingToClose = this.editorWindows[(EditorWindow)sender];
-        this.openStuff.Remove(thingToClose);
-        this.editorWindows.Remove((EditorWindow)sender);
-        if (this.editorWindows.Count == 0)
-            ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Config.Reset();
+        try
+        {
+            (string GamePath, string? ModPath, int MajorId, int MinorId) thingToClose = this.editorWindows[(EditorWindow)sender];
+            this.openStuff.Remove(thingToClose);
+            this.editorWindows.Remove((EditorWindow)sender);
+            if (this.editorWindows.Count == 0)
+                ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Config.Reset();
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this.topLevel, $"Failed to close editor window due to unhandled exception:\n{ex.ToString()}");
+        }
     }
 
     private async void NewProjectClicked(object? sender, PointerReleasedEventArgs e)
