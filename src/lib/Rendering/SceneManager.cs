@@ -143,14 +143,15 @@ public class SceneModel
         {
             if ( !(fieldtex is null) && fieldtex.TryOpenFile( textureName, out var textureStream ) )
             {
-                using ( textureStream )
+                using (var memStream = new MemoryStream())
                 {
-                    using (var memStream = new MemoryStream())
+                    using ( textureStream )
                     {
                         textureStream.CopyTo(memStream);
-                        var texture = new Texture(textureName, TextureFormat.DDS, memStream.ToArray());
-                        return new GLTexture( texture );
                     }
+                    textureStream.Dispose();
+                    var texture = new Texture(textureName, TextureFormat.DDS, memStream.ToArray());
+                    return new GLTexture( texture );
                 }
             }
             else if ( model.Textures.TryGetTexture( textureName, out var texture ) )
@@ -162,10 +163,6 @@ public class SceneModel
                 Trace.TraceWarning( $"tTexture '{textureName}' used by material '{material.Name}' is missing" );
                 return new GLTexture(Texture.CreateDefaultTexture(textureName));
             }
-
-            if (!(textureStream is null))
-                textureStream.Dispose();
-
         } );
 
         if (!(fieldtex is null))
