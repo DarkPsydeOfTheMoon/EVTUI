@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 using ReactiveUI;
 
-using static EVTUI.ViewModels.FieldUtils;
+using static EVTUI.Utils;
 
 namespace EVTUI.ViewModels.TimelineCommands;
 
@@ -24,8 +24,8 @@ public class MAtO : Generic
         this.Offset = new Position3D("Offset (From Attachment Point)", this.Editable, this.CommandData.RelativePosition);
         this.Rotation = new RotationWidget(config, this.CommandData.Rotation, null, pitchInd: 0, yawInd: 1);
 
-        this.ParentModelPreviewVM = new ModelPreviewWidget(config, this.AssetID);
-        this.ChildModelPreviewVM = new ModelPreviewWidget(config, this.ChildAssetID);
+        this.ParentModelPreviewVM = new ModelPreviewWidget(config, commonVMs, this.AssetID);
+        this.ChildModelPreviewVM = new ModelPreviewWidget(config, commonVMs, this.ChildAssetID);
     }
 
     public ModelPreviewWidget ParentModelPreviewVM { get; set; }

@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 
 using ReactiveUI;
 
-using static EVTUI.ViewModels.FieldUtils;
+using static EVTUI.Utils;
 
 namespace EVTUI.ViewModels;
 
@@ -300,18 +301,24 @@ public class AssetViewModel : ViewModelBase
     protected static HashSet<string> modelTypes = new HashSet<string>() {"Field", "Enemy", "SymShadow", "Item", "ResourceTableNPC", "Character", "FieldCharacter", "FieldObject", "Persona"};
 
     public ObservableCollection<string> ModelPaths;
-    public ObservableCollection<string> TextureBinPaths;
     public ObservableCollection<string> BaseAnimPaths;
     public ObservableCollection<string> ExtBaseAnimPaths;
     public ObservableCollection<string> AddAnimPaths;
     public ObservableCollection<string> ExtAddAnimPaths;
 
-    public string ActiveModelPath       { get => (this.ModelPaths.Count > 0) ? this.ModelPaths[0]: null; }
-    public string ActiveTextureBinPath       { get => (this.TextureBinPaths.Count > 0) ? this.TextureBinPaths[0]: null; }
-    public string ActiveBaseAnimPath    { get => (this.BaseAnimPaths.Count > 0) ? this.BaseAnimPaths[0] : null;}
-    public string ActiveExtBaseAnimPath { get => (this.ExtBaseAnimPaths.Count > 0) ? this.ExtBaseAnimPaths[0] : null; }
-    public string ActiveAddAnimPath     { get => (this.AddAnimPaths.Count > 0) ? this.AddAnimPaths[0] : null; }
-    public string ActiveExtAddAnimPath  { get => (this.ExtAddAnimPaths.Count > 0) ? this.ExtAddAnimPaths[0] : null; }
+    public string ActiveModelPath;
+    public string ActiveBaseAnimPath;
+    public string ActiveExtBaseAnimPath;
+    public string ActiveAddAnimPath;
+    public string ActiveExtAddAnimPath;
+
+    // fields only... i cba to make a separate class for them. yet.
+    //public ObservableCollection<string> MapPaths;
+    public Dictionary<int, ObservableCollection<string>> SubModelPaths;
+    public Dictionary<int, ObservableCollection<string>> TextureBinPaths;
+    public MAP ActiveMap;
+    public Dictionary<int, string> ActiveSubModelPaths;
+    public Dictionary<int, string> ActiveTextureBinPaths;
 
     //public AnimationWidget BaseAnimPreview { get; set; }
 
@@ -319,12 +326,21 @@ public class AssetViewModel : ViewModelBase
 
     public void UpdatePaths()
     {
-        this.UpdateModelPaths();
-
         this.BaseAnimPaths = new ObservableCollection<string>();
         this.ExtBaseAnimPaths = new ObservableCollection<string>();
         this.AddAnimPaths = new ObservableCollection<string>();
         this.ExtAddAnimPaths = new ObservableCollection<string>();
+
+        this.ActiveModelPath = null;
+        this.ActiveBaseAnimPath = null;
+        this.ActiveExtBaseAnimPath = null;
+        this.ActiveAddAnimPath = null;
+        this.ActiveExtAddAnimPath = null;
+
+        this.UpdateModelPaths();
+        if (this.ObjectType.Choice == "Field")
+            this.UpdateFieldPaths();
+
         if (this.ObjectType.Choice == "Character")
         {
             foreach (string path in this.UpdateAnimPaths(false, false))
@@ -336,50 +352,138 @@ public class AssetViewModel : ViewModelBase
             foreach (string path in this.UpdateAnimPaths(true, true))
                 this.ExtAddAnimPaths.Add(path);
         }
+
+        if (this.ModelPaths.Count > 0)
+            this.ActiveModelPath = this.ModelPaths[0];
+        if (this.BaseAnimPaths.Count > 0)
+            this.ActiveBaseAnimPath = this.BaseAnimPaths[0];
+        if (this.ExtBaseAnimPaths.Count > 0)
+            this.ActiveExtBaseAnimPath = this.ExtBaseAnimPaths[0];
+        if (this.AddAnimPaths.Count > 0)
+            this.ActiveAddAnimPath = this.AddAnimPaths[0];
+        if (this.ExtAddAnimPaths.Count > 0)
+            this.ActiveExtAddAnimPath = this.ExtAddAnimPaths[0];
     }
 
     public void UpdateModelPaths()
     {
         this.ModelPaths = new ObservableCollection<string>();
-        this.TextureBinPaths = new ObservableCollection<string>();
-        string model_pattern = "";
-        string texture_pattern = "";
+        string pattern = "";
         switch (this.ObjectType.Choice)
         {
             case "Character":
                 if (this.MinorID.Value == 0)
-                   model_pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_00._{this.SubID.Value:00}\\.GMD";
+                   pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_00[0-9]_{this.SubID.Value:00}\\.GMD";
                 else
                     if (this.SubID.Value == 0)
-                        model_pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_..\\.GMD";
+                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_[0-9][0-9]\\.GMD";
                     else
-                        model_pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_{this.SubID.Value:00}\\.GMD";
+                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_{this.SubID.Value:00}\\.GMD";
+                break;
+            case "Enemy":
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]{this.MajorID.Value:0000}[\\\\/]EM{this.MajorID.Value:0000}\\.GMD";
+                break;
+            case "Persona":
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]PERSONA[\\\\/]{this.MajorID.Value:0000}[\\\\/]PS{this.MajorID.Value:0000}\\.GMD";
                 break;
             case "Item":
-                model_pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GMD";
+                pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GMD";
                 break;
-            case "Field":
-                model_pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value}\\.GFS";
-                texture_pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value:00}_00\\.BIN";
+            case "FieldObject":
+                pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]OBJECT[\\\\/]M{this.MajorID.Value:000}_{this.MinorID.Value:000}\\.GMD";
+                break;
+            case "SymShadow":
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]SYMBOL[\\\\/]SYM{this.MajorID.Value:000}\\.GMD";
                 break;
             default:
                 Trace.TraceWarning($"Unknown asset type: {this.ObjectType.Choice}");
                 break;
         }
 
-        if (model_pattern != "")
-            foreach (string path in this.Config.ExtractMatchingFiles(model_pattern))
-            {
-                Console.WriteLine(path);
+        if (pattern != "")
+            foreach (string path in this.Config.ExtractMatchingFiles(pattern))
                 this.ModelPaths.Add(path);
+    }
+
+    public void UpdateFieldPaths()
+    {
+        this.SubModelPaths = new Dictionary<int, ObservableCollection<string>>();
+        this.TextureBinPaths = new Dictionary<int, ObservableCollection<string>>();
+        this.ActiveMap = null;
+
+        string mapPattern = $"FIELD/MAP/D{this.MajorID.Value:000}_{this.MinorID.Value:000}\\.MAP";
+        List<string> mapPaths = this.Config.ExtractMatchingFiles(mapPattern);
+        if (mapPaths.Count > 0)
+        {
+            Console.WriteLine(mapPaths[0]);
+            // i guess i should make multiple versions available to select from... TODO
+            this.ActiveMap = new MAP();
+            this.ActiveMap.Read(mapPaths[0]);
+            for (int subId=0; subId<this.ActiveMap.Entries.Length; subId++)
+            {
+                string modelPattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.ActiveMap.Entries[subId].MajorID:000}_{this.ActiveMap.Entries[subId].MinorID:000}_[0-9].GFS";
+                string texturePattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.ActiveMap.Entries[subId].MajorID:000}_{this.ActiveMap.Entries[subId].MinorID:000}_[0-9][0-9]_00\\.BIN";
+
+                foreach (string path in this.Config.ExtractMatchingFiles(modelPattern))
+                {
+                    if (!this.SubModelPaths.ContainsKey(subId))
+                        this.SubModelPaths[subId] = new ObservableCollection<string>();
+                    this.SubModelPaths[subId].Add(path);
+                    Console.WriteLine($"{subId}: {path}, {this.SubModelPaths[subId].Count}");
+                }
+
+                foreach (string path in this.Config.ExtractMatchingFiles(texturePattern))
+                {
+                    if (!this.TextureBinPaths.ContainsKey(subId))
+                        this.TextureBinPaths[subId] = new ObservableCollection<string>();
+                    this.TextureBinPaths[subId].Add(path);
+                    Console.WriteLine($"{subId}: {path}, {this.TextureBinPaths[subId].Count}");
+                }
+            }
+        }
+        else
+        {
+            string modelPattern = "";
+            string texturePattern = "";
+
+            if (this.SubID.Value == 0)
+            {
+                modelPattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9]\\.GFS";
+                texturePattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9][0-9]_00\\.BIN";
+            }
+            else
+            {
+                modelPattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value}\\.GFS";
+                texturePattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value:00}_00\\.BIN";
             }
 
-        if (texture_pattern != "")
-            foreach (string path in this.Config.ExtractMatchingFiles(texture_pattern))
+            foreach (string path in this.Config.ExtractMatchingFiles(modelPattern))
             {
-                Console.WriteLine(path);
-                this.TextureBinPaths.Add(path);
+                int subId = Int32.Parse(path.Substring(path.Length-5, 1));
+                if (!this.SubModelPaths.ContainsKey(subId))
+                    this.SubModelPaths[subId] = new ObservableCollection<string>();
+                this.SubModelPaths[subId].Add(path);
+                Console.WriteLine($"{subId}: {path}, {this.SubModelPaths[subId].Count}");
             }
+
+            foreach (string path in this.Config.ExtractMatchingFiles(texturePattern))
+            {
+                int subId = Int32.Parse(path.Substring(path.Length-9, 2));
+                if (!this.TextureBinPaths.ContainsKey(subId))
+                    this.TextureBinPaths[subId] = new ObservableCollection<string>();
+                this.TextureBinPaths[subId].Add(path);
+                Console.WriteLine($"{subId}: {path}, {this.TextureBinPaths[subId].Count}");
+            }
+        }
+
+        this.ActiveSubModelPaths = new Dictionary<int, string>();
+        this.ActiveTextureBinPaths = new Dictionary<int, string>();
+
+        foreach (int key in this.SubModelPaths.Keys)
+            this.ActiveSubModelPaths[key] = (this.SubModelPaths[key] is null || this.SubModelPaths[key].Count == 0) ? null : this.SubModelPaths[key][0];
+
+        foreach (int key in this.TextureBinPaths.Keys)
+            this.ActiveTextureBinPaths[key] = (this.TextureBinPaths[key] is null || this.TextureBinPaths[key].Count == 0) ? null : this.TextureBinPaths[key][0];
     }
 
     public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims)
@@ -387,59 +491,59 @@ public class AssetViewModel : ViewModelBase
         string animType = (isExtAnims) ? "A" : "B";
         int animId = (isExtAnims) ? (int)this.ExtBaseAnimID.Value : (int)this.BaseAnimID.Value;
         string pattern = "";
-        //string backoff = "";
-        bool backoff = true;
+        string backoff = "";
         List<string> ret = new List<string>();
 
         if (animId == -1)
             return ret;
 
-        while (backoff) // && animId <= 9999)
+        switch (this.ObjectType.Choice)
         {
-            switch (this.ObjectType.Choice)
-            {
-                case "Character":
-                    if (isBlendAnims)
-                    {
-                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EMT{this.MajorID.Value:0000}\\.GAP";
-                        //pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_{animId:000}A\\.GAP";
-                        backoff = false;
-                    }
-                    else
-                    {
-                        if (this.IsCommon.Value)
-                            //MODEL/CHARACTER/COMMON_ANIM/ACMN0001.GAP
-                            pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]COMMON_ANIM[\\\\/]{animType}CMN{animId:0000}\\.GAP";
-                        else
-                        {
-                            pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_{animId:000}\\.GAP";
-                            ///backoff = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_001\\.GAP";
-                        }
-                        backoff = (animId < 9999);
-                    }
-                    break;
-                case "Item":
-                    // yes, it's the GMD itself. for items, that's where animations are also stored
-                    pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GMD";
-                    backoff = false;
-                    break;
-                default:
-                    Trace.TraceWarning($"Unknown asset type: {this.ObjectType.Choice}");
-                    break;
-            }
-
-            if (pattern == "")
+            case "Character":
+                if (this.IsCommon.Value)
+                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]COMMON_ANIM[\\\\/]{animType}CMN{animId:0000}\\.GAP";
+                else if (isBlendAnims)
+                {
+                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EMT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GAP";
+                    backoff = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EMT{this.MajorID.Value:0000}\\.GAP";
+                }
+                else
+                {
+                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_{animId:000}\\.GAP";
+                    backoff = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_{(animId+30):000}\\.GAP";
+                }
                 break;
-            else
-                ret = this.Config.ExtractMatchingFiles(pattern);
-
-            if (ret.Count > 0)
+            case "Enemy":
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]{this.MajorID.Value:0000}[\\\\/]{animType}EM{this.MajorID.Value:0000}_{animId:000}\\.GAP";
                 break;
-            else
-                animId += 30;
+            case "Persona":
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]PERSONA[\\\\/]{this.MajorID.Value:0000}[\\\\/]{animType}PS{this.MajorID.Value:0000}_{animId:000}\\.GAP";
+                break;
+            case "Item":
+                // yes, it's the GMD itself. for items, that's where animations are also stored
+                pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GMD";
+                break;
+            case "FieldObject":
+                pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]OBJECT[\\\\/]M{this.MajorID.Value:000}_{this.MinorID.Value:000}\\.GMD";
+                break;
+            case "SymShadow":
+                // I suspect it's the same for Overworld Shadows, but I cannot confirm yet
+                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]SYMBOL[\\\\/]SYM{this.MajorID.Value:000}\\.GMD";
+                break;
+            default:
+                Trace.TraceWarning($"Unknown asset type: {this.ObjectType.Choice}");
+                break;
         }
 
-        return ret;
+        if (pattern == "")
+            return new List<string>();
+        else
+        {
+            List<string> candidates = this.Config.ExtractMatchingFiles(pattern);
+            if (candidates.Count == 0 && backoff != "")
+                candidates = this.Config.ExtractMatchingFiles(backoff);
+            return candidates;
+        }
     }
 
     public static BiDict<string, int> ObjectTypes = new BiDict<string, int>

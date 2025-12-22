@@ -103,7 +103,6 @@ public static class CPKExtract
         if (Enum.TryParse(decryptionFunctionName, out decryptionFunctionIndex))
             decryptionFunction = CriFsLib.Instance.GetKnownDecryptionFunction(decryptionFunctionIndex);
 
-        object _lock = new();
         Parallel.ForEach(CpkList, CpkPath =>
         {
             CpkFile[] files;
@@ -118,7 +117,7 @@ public static class CPKExtract
                 var inCpkPath = Path.Combine(files[x].Directory ?? "", files[x].FileName);
                 if (pattern.IsMatch(inCpkPath))
                 {
-                    lock (_lock)
+                    lock (events)
                     {
                         events.Add((int.Parse(files[x].FileName.Substring(1, 3)), int.Parse(files[x].FileName.Substring(5, 3))));
                     }

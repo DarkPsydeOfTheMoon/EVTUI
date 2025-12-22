@@ -62,6 +62,7 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     {
         GL.ClearColor(this.r, this.g, this.b, this.a);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        GL.Clear(ClearBufferMask.AccumBufferBit);
         GL.Enable(EnableCap.DepthTest);
         GL.Viewport(0, 0, (int)this.width, (int)this.height);
         this.sceneManager.activeCamera.AspectRatio = (float)(this.width/this.height);
@@ -73,6 +74,9 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         // meaning that we won't need to pass in a global shader here.
         foreach (var scenemodel in this.sceneManager.sceneModels.Values)
             scenemodel.Draw(this.glShaderProgram, this.sceneManager.activeCamera);
+        foreach (int objectID in this.sceneManager.fieldModels.Keys)
+            foreach (int subID in this.sceneManager.fieldModels[objectID].Keys)
+                this.sceneManager.fieldModels[objectID][subID].Draw(this.glShaderProgram, this.sceneManager.activeCamera);
     }
 
     /////////////////////////////
@@ -88,17 +92,33 @@ public class GFDRenderingPanelViewModel : ViewModelBase
             }
     }
 
-    public void AddModel(AssetViewModel asset, TimelineViewModel timeline)
+    //public void AddModel(AssetViewModel asset, TimelineViewModel timeline)
+    public void AddModel(AssetViewModel asset)
     {
         int objectID = (int)asset.ObjectID.Value;
 
-        if (String.IsNullOrEmpty(asset.ActiveModelPath))
+        if (asset.ObjectType.Choice == "Field")
         {
-            Trace.TraceWarning($"Asset with ID {objectID} could not be loaded. It seems not to have a valid existing path.");
-            return;
+            lock (this.sceneManager.fieldModels) { this.sceneManager.LoadField(objectID, asset.ActiveSubModelPaths, asset.ActiveTextureBinPaths); }
+            if (!(asset.ActiveMap is null))
+                for (int subId=0; subId<asset.ActiveMap.Entries.Length; subId++)
+                {
+                    float[] position = new float[] { (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
+                    float[] rotation = new float[] { 0f, (float)(asset.ActiveMap.Entries[subId].Direction*90), 0f };
+                    this.sceneManager.fieldModels[objectID][subId].SetPosition(position, rotation);
+                }
+        }
+        else
+        {
+            if (String.IsNullOrEmpty(asset.ActiveModelPath))
+            {
+                Trace.TraceWarning($"Asset with ID {objectID} could not be loaded. It seems not to have a valid existing path.");
+                return;
+            }
+
+            lock (this.sceneManager.sceneModels) { this.sceneManager.LoadObject(objectID, asset.ActiveModelPath, null, false); }
         }
 
-        this.sceneManager.LoadObject(objectID, asset.ActiveModelPath, asset.ActiveTextureBinPath, (asset.ObjectType.Choice == "Field"));
         if (!String.IsNullOrEmpty(asset.ActiveBaseAnimPath))
             this.sceneManager.sceneModels[objectID].BaseAnimationPack = this.sceneManager.sceneModels[objectID].TryLoadAnimationPack(asset.ActiveBaseAnimPath);
         if (!String.IsNullOrEmpty(asset.ActiveExtBaseAnimPath))
@@ -107,6 +127,17 @@ public class GFDRenderingPanelViewModel : ViewModelBase
             this.sceneManager.sceneModels[objectID].AddAnimationPack = this.sceneManager.sceneModels[objectID].TryLoadAnimationPack(asset.ActiveAddAnimPath);
         if (!String.IsNullOrEmpty(asset.ActiveExtAddAnimPath))
             this.sceneManager.sceneModels[objectID].ExtAddAnimationPack = this.sceneManager.sceneModels[objectID].TryLoadAnimationPack(asset.ActiveExtAddAnimPath);
+    }
+
+    public void PositionModel(AssetViewModel asset, TimelineViewModel timeline)
+    {
+        int objectID = (int)asset.ObjectID.Value;
+
+        if (String.IsNullOrEmpty(asset.ActiveModelPath))
+        {
+            Trace.TraceWarning($"Asset with ID {objectID} could not be loaded. It seems not to have a valid existing path.");
+            return;
+        }
 
         foreach (CommandPointer cmd in timeline.Categories[2].Commands)
             if (cmd.Command.ObjectId == objectID && cmd.Code == "MSD_")

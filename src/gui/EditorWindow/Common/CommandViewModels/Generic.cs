@@ -50,6 +50,38 @@ public class Generic : ReactiveObject
             {"Bottom Right",  5},
         }
     );
+
+    protected BiDict<string, uint> HelperNames;
+    protected BiDict<string, int> ResourceHelperNames;
+    protected void UpdateHelperNames(CommonViewModels commonVMs, int assetID, bool isField = false)
+    {
+        this.HelperNames = new BiDict<string, uint>();
+        if (isField)
+            this.ResourceHelperNames = new BiDict<string, int>();
+            if (commonVMs.AssetsByID.ContainsKey(assetID))
+            {
+                AssetViewModel asset = commonVMs.AssetsByID[assetID];
+                if (!String.IsNullOrEmpty(asset.ActiveModelPath))
+                {
+                    GFDLibrary.ModelPack model = GFDLibrary.Api.FlatApi.LoadModel(asset.ActiveModelPath);
+                    foreach (GFDLibrary.Models.Node node in model.Model.Nodes)
+                    {
+                        if (node.Properties.ContainsKey("gfdHelperID"))
+                        {
+                            int id = (int)node.Properties["gfdHelperID"].GetValue();
+                            this.HelperNames.Add($"{node.Name} ({id})", (uint)id);
+                        }
+                        if (isField && node.Properties.ContainsKey("fldLayoutOfModel_resId") && node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Properties.ContainsKey("fldLayoutOfModel_minor"))
+                        {
+                            int resId = (int)node.Properties["fldLayoutOfModel_resId"].GetValue();
+                            int majorId = (int)node.Properties["fldLayoutOfModel_major"].GetValue();
+                            int minorId = (int)node.Properties["fldLayoutOfModel_minor"].GetValue();
+                            this.ResourceHelperNames.Add($"M{majorId:000}_{minorId:000}", resId);
+                        }
+                    }
+                }
+            }
+    }
 }
 
 public class Basics : ReactiveObject

@@ -41,19 +41,44 @@ index d02daac..728e647 100644
  namespace GFDLibrary.Rendering.OpenGL
  {
 diff --git a/GFDLibrary.Rendering.OpenGL/GLMaterial.cs b/GFDLibrary.Rendering.OpenGL/GLMaterial.cs
-index 232e40e..4d1a882 100644
+index 232e40e..27874f5 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLMaterial.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLMaterial.cs
-@@ -2,7 +2,7 @@
+@@ -1,8 +1,10 @@
+ ﻿using System;
++using System.Collections.Generic;
  using System.Linq;
  using System.Reflection;
++using GFDLibrary.Animations;
  using GFDLibrary.Materials;
 -using OpenTK;
 +using OpenTK.Mathematics;
  using OpenTK.Graphics.OpenGL;
  
  namespace GFDLibrary.Rendering.OpenGL
-@@ -356,4 +356,4 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -17,6 +19,10 @@ namespace GFDLibrary.Rendering.OpenGL
+ 
+     public abstract class GLBaseMaterial : IGLMaterial
+     {
++        public Material Material { get; }
++        public List<AnimationController> Controllers { get; }
++        public List<List<AnimationController>> BlendControllers { get; }
++        public List<int> BlendControllerIndices { get; }
+         public GLTexture DiffuseTexture { get; set; }
+         public GLTexture NormalTexture { get; set; }
+         public GLTexture SpecularTexture { get; set; }
+@@ -53,6 +59,10 @@ namespace GFDLibrary.Rendering.OpenGL
+ 
+         public GLBaseMaterial( Material material, MaterialTextureCreator textureCreator )
+         {
++            Material = material;
++            Controllers = new List<AnimationController>();
++            BlendControllers = new List<List<AnimationController>>();
++            BlendControllerIndices = new List<int>();
+             MatFlags = Convert.ToInt32( material.Flags );
+             DrawMethod = (int)material.DrawMethod;
+             HighlightMapBlendMode = (int)material.HighlightMapBlendMode;
+@@ -356,4 +366,4 @@ namespace GFDLibrary.Rendering.OpenGL
          }
          public override bool IsMaterialTransparent() => ParameterSet.IsMaterialTransparent();
      }
@@ -61,7 +86,7 @@ index 232e40e..4d1a882 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLMesh.cs b/GFDLibrary.Rendering.OpenGL/GLMesh.cs
-index d535d24..6b3072e 100644
+index d535d24..4347d4f 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLMesh.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLMesh.cs
 @@ -3,7 +3,7 @@ using System.Collections.Generic;
@@ -73,6 +98,15 @@ index d535d24..6b3072e 100644
  using OpenTK.Graphics.OpenGL;
  using Vector3 = System.Numerics.Vector3;
  
+@@ -17,7 +17,7 @@ namespace GFDLibrary.Rendering.OpenGL
+ 
+         public GLBaseMaterial Material { get; }
+ 
+-        public bool IsVisible { get; }
++        public bool IsVisible { get; set; }
+ 
+         public GLMesh( GLVertexArray vertexArray, GLBaseMaterial material, bool isVisible )
+         {
 @@ -150,4 +150,4 @@ namespace GFDLibrary.Rendering.OpenGL
          }
          #endregion
@@ -81,7 +115,7 @@ index d535d24..6b3072e 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLModel.cs b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-index daee18f..07dae6e 100644
+index daee18f..00baada 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLModel.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLModel.cs
 @@ -6,7 +6,7 @@ using System.Numerics;
@@ -93,42 +127,28 @@ index daee18f..07dae6e 100644
  using OpenTK.Graphics.OpenGL;
  using Quaternion = System.Numerics.Quaternion;
  using Vector3 = System.Numerics.Vector3;
-@@ -22,6 +22,7 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -22,6 +22,9 @@ namespace GFDLibrary.Rendering.OpenGL
          public Dictionary<string, GLBaseMaterial> Materials { get; }
  
          public Animation Animation { get; private set; }
 +        public Dictionary<int, Animation> BlendAnimations { get; }
++
++        public Dictionary<int, GLModel> AttachedModels { get; }
  
          public GLModel( ModelPack modelPack, MaterialTextureCreator textureCreator )
          {
-@@ -33,6 +34,7 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -33,6 +36,7 @@ namespace GFDLibrary.Rendering.OpenGL
              Materials = modelPack.Materials?.ToDictionary( x => x.Key, y => GLBaseMaterial.CreateGLMaterial( y.Value, textureCreator ) ) ??
                          new Dictionary<string, GLBaseMaterial>();
  
-+            //List<GLNode> newNodes = new List<GLNode>();
++            this.AttachedModels = new Dictionary<int, GLModel>();
              foreach ( var glNode in Nodes )
              {
                  glNode.Parent = Nodes.FirstOrDefault( x => x.Node == glNode.Node.Parent );
-@@ -41,6 +43,14 @@ namespace GFDLibrary.Rendering.OpenGL
- 
-                 foreach ( var attachment in glNode.Node.Attachments )
-                 {
-+                    // TODO: further attempts to get field objects to work
-+                    //if ( attachment.Type == NodeAttachmentType.Model)
-+                    //    foreach (var newNode in ((NodeModelAttachment)attachment).Model.Nodes)
-+                    //        newNodes.Add(new GLNode(newNode));
-+                    //else if ( attachment.Type == NodeAttachmentType.ModelPack )
-+                    //    foreach (var newNode in ((NodeModelPackAttachment)attachment).Model.Nodes)
-+                    //        newNodes.Add(new GLNode(newNode));
-+
-                     if ( attachment.Type != NodeAttachmentType.Mesh )
-                         continue;
- 
-@@ -48,6 +58,80 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -48,6 +52,79 @@ namespace GFDLibrary.Rendering.OpenGL
                      glNode.Meshes.Add( glMesh );
                  }
              }
-+            //Nodes.AddRange(newNodes);
 +
 +            BlendAnimations = new Dictionary<int, Animation>();
 +        }
@@ -205,7 +225,50 @@ index daee18f..07dae6e 100644
          }
  
          public void LoadAnimation( Animation animation )
-@@ -94,6 +178,44 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -60,6 +137,42 @@ namespace GFDLibrary.Rendering.OpenGL
+                 glNode.Controllers.AddRange( animation.Controllers.Where( x => x.TargetKind == TargetKind.Node &&
+                                                                                x.TargetName == glNode.Node.Name ) );
+             }
++
++            foreach (string matName in Materials.Keys)
++            {
++                Materials[matName].Controllers.Clear();
++                Materials[matName].Controllers.AddRange( animation.Controllers.Where( x => x.TargetKind == TargetKind.Material &&
++                                                                                           x.TargetName == Materials[matName].Material.Name ) );
++
++                // for debugging
++                /*if (Materials[matName].Controllers.Count > 0)
++                    Console.WriteLine($"##### {matName}: {Materials[matName].Controllers[0].TargetKind}");
++                foreach (AnimationController controller in Materials[matName].Controllers)
++                    if (controller.TargetKind != TargetKind.Node)
++                    {
++                        Console.WriteLine($"{controller.TargetKind}: {controller.TargetName} ({controller.TargetId})");
++                        if (controller.TargetKind == TargetKind.Material && Materials.ContainsKey(matName))
++                            Console.WriteLine($"### {Materials[matName].MatFlags & (uint)MaterialFlags.Transparency}");
++                        foreach (AnimationLayer layer in controller.Layers)
++                        {
++                            Console.WriteLine($"\t{layer.KeyType}");
++                            foreach (Key key in layer.Keys)
++                            {
++                               Console.WriteLine($"\t\t{key.Time}");
++                               if (layer.KeyType == KeyType.Single5Alt || layer.KeyType == KeyType.Single5)
++                               {
++                                   Single5Key skey = (Single5Key)key;
++                                   Console.WriteLine($"\t\t{skey.Field00}, {skey.Field04}, {skey.Field08}, {skey.Field0C}, {skey.Field10}");
++                               }
++                               else if (layer.KeyType == KeyType.MaterialSingle_4 || layer.KeyType ==  KeyType.MaterialSingle_9)
++                               {
++                                   SingleKey skey = (SingleKey)key;
++                                   Console.WriteLine($"\t\t{skey.Value}");
++                               }
++                            }
++                        }
++                    }*/
++            }
+         }
+ 
+         public void UnloadAnimation()
+@@ -94,6 +207,61 @@ namespace GFDLibrary.Rendering.OpenGL
              }
          }
  
@@ -230,6 +293,23 @@ index daee18f..07dae6e 100644
 +                controller.AddRange( animation.Controllers.Where( x => x.TargetKind == TargetKind.Node &&
 +                                                                  x.TargetName == glNode.Node.Name ) );
 +            }
++
++            foreach (string matName in Materials.Keys)
++            {
++                int matControllerIndex = Materials[matName].BlendControllerIndices.IndexOf( index );
++                List<AnimationController> controller = new List<AnimationController>();
++                if (matControllerIndex == -1)
++                    Materials[matName].BlendControllers.Add( controller );
++                else
++                {
++                    controller = Materials[matName].BlendControllers[matControllerIndex];
++                    controller.Clear();
++                }
++
++                Materials[matName].BlendControllerIndices.Add(index);
++                controller.AddRange( animation.Controllers.Where( x => x.TargetKind == TargetKind.Material &&
++                                                                  x.TargetName == Materials[matName].Material.Name ) );
++            }
 +        }
 +
 +        public void UnloadBlendAnimation( int index )
@@ -250,7 +330,7 @@ index daee18f..07dae6e 100644
          private GLShaderProgram GetTargetShader(ShaderRegistry shaderRegistry, GLMesh glMesh, Matrix4 view, Matrix4 projection, HashSet<ResourceType> shaderPrograms )
          {
              if ( typeof( GLMetaphorMaterial ).IsInstanceOfType( glMesh.Material )
-@@ -117,8 +239,9 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -117,8 +285,9 @@ namespace GFDLibrary.Rendering.OpenGL
  
          public void Draw( DrawContext context )
          {
@@ -261,9 +341,14 @@ index daee18f..07dae6e 100644
              context.ShaderRegistry.mDefaultShader.Use();
              context.ShaderRegistry.mDefaultShader.SetUniform( "uView", context.Camera.View );
              context.ShaderRegistry.mDefaultShader.SetUniform( "uProjection", context.Camera.Projection );
-@@ -138,13 +261,16 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -137,14 +306,23 @@ namespace GFDLibrary.Rendering.OpenGL
+                 for ( var i = 0; i < glNode.Meshes.Count; i++ )
                  {
                      var glMesh = glNode.Meshes[i];
++                    if (NoActiveAnimations())
++                        glMesh.IsVisible = !glMesh.Material.Material.Flags.HasFlag(MaterialFlags.Transparency);
++                    if (!glMesh.IsVisible)
++                        continue;
  
 -                    if ( Animation != null && glMesh.Mesh != null )
 +                    if ( !NoActiveAnimations() && glMesh.Mesh != null )
@@ -273,13 +358,28 @@ index daee18f..07dae6e 100644
                          oldGlMesh.Dispose();
                      }
                      GLShaderProgram targetShader = GetTargetShader( context.ShaderRegistry, glMesh, context.Camera.View, context.Camera.Projection, shaderProgramsInUse );
-+                    // very clumsy way to make material-less/texture-less stuff (e.g., bounding boxes) not show up in the render... surely there's a better way...
++                    // very clumsy way to make material-less/texture-less stuff (e.g., bounding boxes) not show up in the render... surely there's a better way... but the commented-out attempts shrimply do not work
++                    //if (!glMesh.Mesh.Flags.HasFlag( GeometryFlags.HasMaterial))
++                    //if (!glMesh.Mesh.MaterialName == "gfdDefaultMat0")
 +                    if (!glMesh.Material.HasDiffuseTexture && !glMesh.Material.HasNormalTexture && !glMesh.Material.HasSpecularTexture && !glMesh.Material.HasReflectionTexture && !glMesh.Material.HasHighlightTexture && !glMesh.Material.HasGlowTexture && !glMesh.Material.HasNightTexture && !glMesh.Material.HasDetailTexture && !glMesh.Material.HasShadowTexture && !glMesh.Material.HasTexture10)
 +                        continue;
                      if ( !glMesh.Material.IsMaterialTransparent() ) // If opaque
                      {
                          if ( glMesh.Mesh != null )
-@@ -162,7 +288,7 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -156,13 +334,20 @@ namespace GFDLibrary.Rendering.OpenGL
+                         transparentMeshes.Add( Tuple.Create( glMesh, glNode.WorldTransform.ToOpenTK(), targetShader ) );
+                     }
+                 }
++
++                if (glNode.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
++                {
++                    int resId = (int)glNode.Node.Properties["fldLayoutOfModel_resId"].GetValue();
++                    if (this.AttachedModels.ContainsKey(resId))
++                        this.AttachedModels[resId].Draw(context);
++                }
+             }
+ 
+             // Enable blending for transparent objects
              GL.Enable( EnableCap.Blend );
  
              // Sort transparent objects based on their distance from the camera
@@ -288,10 +388,11 @@ index daee18f..07dae6e 100644
  
              // Disable depth mask
              GL.DepthMask( false );
-@@ -197,59 +323,79 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -196,66 +381,136 @@ namespace GFDLibrary.Rendering.OpenGL
+             GL.Disable( EnableCap.Blend );
          }
  
- 
+-
 -        private void AnimateNodes( double animationTime )
 +        private void FetchNodeAnimation( List<AnimationController> controllers, double animationTime, ref Quaternion rotation, ref Vector3 translation, ref Vector3 scale )
          {
@@ -373,6 +474,46 @@ index daee18f..07dae6e 100644
 +            }
 +        }
 +
++        private void FetchMaterialAnimation( List<AnimationController> controllers, double animationTime, ref bool visibility )
++        {
++            foreach ( var controller in controllers )
++            {
++                foreach ( var layer in controller.Layers )
++                {
++                    Key curKey = null;
++                    Key nextKey = null;
++
++                    if ( controller != null )
++                    {
++                        (curKey, nextKey) = GetCurrentAndNextKeys( layer, animationTime );
++                    }
++
++                    if ( controller != null && curKey != null )
++                    {
++                        // TODO: MaterialSingle_9 actually sets the alpha, but idk how to make that work...
++                        if (layer.KeyType == KeyType.MaterialSingle_4) // || layer.KeyType == KeyType.MaterialSingle_9)
++                        {
++                            SingleKey sKey = (SingleKey)curKey;
++                            if (sKey.Value > 0) //== 1)
++                                visibility = true;
++                            else //if (sKey.Value == -1)
++                                visibility = false;
++                        }
++                        /*else if (layer.KeyType == KeyType.Single5 || layer.KeyType == KeyType.Single5Alt)
++                        {
++                            //visibility = false;
++                            Single5Key sKey = (Single5Key)curKey;
++                            // absolutely not how it works but let's approximate for now lol
++                            if (sKey.Field04 == 0)
++                                visibility = false;
++                            else
++                                visibility = true;
++                        }*/
++                    }
++                }
++             }
++        }
++
 +        private void AnimateNodes( double animationTime )
 +        {
 +            foreach ( var glNode in Nodes )
@@ -403,6 +544,23 @@ index daee18f..07dae6e 100644
 +                var transform = Matrix4x4.CreateFromQuaternion( rotation ) * Matrix4x4.CreateScale( scale );
                  transform.Translation   = translation;
                  glNode.CurrentTransform = transform;
+ 
+                 // Calculate world transform
+                 glNode.WorldTransform =
+                     glNode.Parent == null ? glNode.CurrentTransform : glNode.CurrentTransform * glNode.Parent.WorldTransform;
++
++                // Material animations!?
++                for ( var i = 0; i < glNode.Meshes.Count; i++ )
++                {
++                    var glMesh = glNode.Meshes[i];
++                    bool visibility = !glMesh.Material.Material.Flags.HasFlag(MaterialFlags.Transparency);
++                    FetchMaterialAnimation( glMesh.Material.Controllers, animationTime, ref visibility);
++                    foreach ( var blendControllers in glMesh.Material.BlendControllers )
++                        FetchMaterialAnimation( blendControllers, animationTime, ref visibility);
++                    glMesh.IsVisible = visibility;
++                }
+             }
+         }
  
 diff --git a/GFDLibrary.Rendering.OpenGL/GLNode.cs b/GFDLibrary.Rendering.OpenGL/GLNode.cs
 index 6ad8f72..b98f7b3 100644
@@ -476,6 +634,17 @@ index 22cdcb9..f8ca23c 100644
  using OpenTK.Graphics.OpenGL;
  
  namespace GFDLibrary.Rendering.OpenGL
+diff --git a/GFDLibrary/Animations/Animation.cs b/GFDLibrary/Animations/Animation.cs
+index 6d77b67..7856af1 100644
+--- a/GFDLibrary/Animations/Animation.cs
++++ b/GFDLibrary/Animations/Animation.cs
+@@ -313,4 +313,4 @@ namespace GFDLibrary.Animations
+             return obj == null ? value & ~flag : value | flag;
+         }
+     }
+-}
+\ No newline at end of file
++}
 diff --git a/GFDLibrary/Api/FlatApi.cs b/GFDLibrary/Api/FlatApi.cs
 index 511bc54..e87322b 100644
 --- a/GFDLibrary/Api/FlatApi.cs
@@ -506,7 +675,7 @@ index dbcd9b1..ea2d93b 100644
      <Folder Include="Animations\Conversion\" />
    </ItemGroup>
 diff --git a/GFDLibrary/Models/NodeAttachment.cs b/GFDLibrary/Models/NodeAttachment.cs
-index 4cc6b16..b6f15d7 100644
+index 4cc6b16..82fe975 100644
 --- a/GFDLibrary/Models/NodeAttachment.cs
 +++ b/GFDLibrary/Models/NodeAttachment.cs
 @@ -39,6 +39,8 @@ namespace GFDLibrary.Models
@@ -524,15 +693,15 @@ index 4cc6b16..b6f15d7 100644
  
 +    public sealed class NodeModelPackAttachment : NodeAttachment
 +    {
-+        public Model Model { get; set; }
++        public ModelPack ModelPack { get; set; }
 +
 +        public NodeModelPackAttachment() : base( NodeAttachmentType.ModelPack ) { }
 +
-+        public NodeModelPackAttachment( ModelPack modelPack ) : base( NodeAttachmentType.ModelPack ) => Model = modelPack.Model;
++        public NodeModelPackAttachment( ModelPack modelPack ) : base( NodeAttachmentType.ModelPack ) => ModelPack = modelPack;
 +
 +        public override Resource GetValue()
 +        {
-+            return Model;
++            return ModelPack;
 +        }
 +    }
 +

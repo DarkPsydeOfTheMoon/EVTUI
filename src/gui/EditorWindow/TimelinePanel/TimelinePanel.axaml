@@ -941,7 +941,11 @@
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
         <ContentControl Content="{Binding ActionType}"/>
-        <ContentControl Content="{Binding ObjectIndex}"/>
+        <!--ContentControl Content="{Binding ObjectIndex}"/-->
+        <StackPanel Classes="preview">
+          <ContentControl Content="{Binding ObjectIndex}"/>
+          <ContentControl Content="{Binding ModelPreviewVM}"/>
+        </StackPanel>
       </StackPanel>
     </DataTemplate>
 

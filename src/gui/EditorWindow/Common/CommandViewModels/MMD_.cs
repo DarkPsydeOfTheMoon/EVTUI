@@ -5,7 +5,7 @@ using System.Linq;
 
 using ReactiveUI;
 
-using static EVTUI.ViewModels.FieldUtils;
+using static EVTUI.Utils;
 
 namespace EVTUI.ViewModels.TimelineCommands;
 
@@ -43,8 +43,8 @@ public class MMD_ : Generic
         });
 
         // animations
-        this.MovingAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.MovingAnimation, this.CommandData.Flags, $"Moving Animation", enabledInd:0, extInd:2, enabledFlip:true);
-        this.WaitingAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.WaitingAnimation, this.CommandData.Flags, $"Idle Animation", enabledInd:1, extInd:3, enabledFlip:true);
+        this.MovingAnimation = new AnimationWidget(config, commonVMs, this.AssetID, this.CommandData.MovingAnimation, this.CommandData.Flags, $"Moving Animation", enabledInd:0, extInd:2, enabledFlip:true);
+        this.WaitingAnimation = new AnimationWidget(config, commonVMs, this.AssetID, this.CommandData.WaitingAnimation, this.CommandData.Flags, $"Idle Animation", enabledInd:1, extInd:3, enabledFlip:true);
 
         // unknown
         this.Unk = new NumEntryField("Unknown", this.Editable, this.CommandData.UNK, 0, null, 1);

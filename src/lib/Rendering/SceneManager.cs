@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Numerics;
+using System.Threading.Tasks;
 
 using GFDLibrary;
 
 using GFDLibrary.Animations;
 using GFDLibrary.Common;
+using GFDLibrary.Materials;
 using GFDLibrary.Rendering.OpenGL;
 using GFDLibrary.Textures;
 
@@ -47,31 +49,6 @@ public class SceneModel
         this.LoadModel(modelPath, texturePath, isField);
     }
 
-    public SceneModel(DataManager config, SerialObject obj)
-    {
-        List<string> assetPaths = config.EventManager.GetAssetPaths(obj.Id);
-        if (assetPaths.Count > 0)
-        {
-            this.LoadModel(assetPaths[0], null);
-
-            List<string> baseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, false);
-            if (baseAnimPaths.Count > 0)
-                this.BaseAnimationPack = this.TryLoadAnimationPack(baseAnimPaths[0]);
-
-            List<string> extBaseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, false);
-            if (extBaseAnimPaths.Count > 0)
-                this.ExtBaseAnimationPack = this.TryLoadAnimationPack(extBaseAnimPaths[0]);
-
-            List<string> addAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, true);
-            if (addAnimPaths.Count > 0)
-                this.AddAnimationPack = this.TryLoadAnimationPack(addAnimPaths[0]);
-
-            List<string> extAddAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, true);
-            if (extAddAnimPaths.Count > 0)
-                this.ExtAddAnimationPack = this.TryLoadAnimationPack(extAddAnimPaths[0]);
-        }
-    }
-
     public void Dispose()
     {
         // can happen if EVT object isn't set up properly
@@ -80,9 +57,7 @@ public class SceneModel
     }
 
     public void StartAnimTimer() { this.animationStopwatch.Start(); }
-
     public void StopAnimTimer() { this.animationStopwatch.Stop(); }
-
     public void ResetAnimTimer() { this.animationStopwatch.Restart(); }
 
     public void LoadAnimation(Animation animation)
@@ -161,7 +136,7 @@ public class SceneModel
 
         GLModel glmodel = new GLModel(model, ( material, textureName ) =>
         {
-            if ( isField && !(fieldtex is null) && fieldtex.TryOpenFile( textureName, out var textureStream ) )
+            if ( !(fieldtex is null) && fieldtex.TryOpenFile( textureName, out var textureStream ) )
             {
                 using ( textureStream )
                 {
@@ -188,9 +163,8 @@ public class SceneModel
         this.model = glmodel;
         this.GAP = model.AnimationPack;
 
-        // TODO
-        //if (isField)
-        //    this.LoadAttachedModels();
+        if (isField)
+            this.LoadAttachedModels(texturepath);
     }
 
     public void SetPosition(float[] position, float[] rotation)
@@ -270,43 +244,36 @@ public class SceneModel
         }
     }
 
-    public void LoadAttachedModels()
+    public void LoadAttachedModels(string texturepath)
     {
         foreach (GLNode node in this.model.Nodes)
+        //Parallel.ForEach(this.model.Nodes, node =>
         {
             int majorId = 0;
             int minorId = 0;
             int resId = 0;
-            //string helperId = "*";
             if (node.Node.Properties.ContainsKey("fldLayoutOfModel_major"))
-                //majorId = node.Node.Properties["fldLayoutOfModel_major"].ToUserPropertyString();
                 majorId = (int)node.Node.Properties["fldLayoutOfModel_major"].GetValue();
             if (node.Node.Properties.ContainsKey("fldLayoutOfModel_minor"))
-                //minorId = node.Node.Properties["fldLayoutOfModel_minor"].ToUserPropertyString();
                 minorId = (int)node.Node.Properties["fldLayoutOfModel_minor"].GetValue();
             if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
-                //resId = node.Node.Properties["fldLayoutOfModel_resId"].ToUserPropertyString();
                 resId = (int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue();
-            //if (node.Node.Properties.ContainsKey("gfdHelperID"))
-            //    helperId = node.Node.Properties["gfdHelperID"].ToUserPropertyString();
 
             if (majorId > 0 && minorId > 0)
             {
                 string pattern = $"MODEL/FIELD_TEX/OBJECT/M{majorId:000}_{minorId:000}.GMD";
-                //Console.WriteLine($"{node.Node.Name}, {pattern}, {resId}, {helperId}");
                 List<string> matches = this.Config.ExtractMatchingFiles(pattern);
                 if (matches.Count > 0)
                 {
-                    Console.WriteLine(matches[0]);
-                    var resource = Resource.Load(matches[0]);
-                    Console.WriteLine(resource.ResourceType);
-                    // doesn't work because it's ResourceType.ModelPack, not ResourceType.Model...
-                    // I added some rudimentary handling but still nothing shows up (because GLModel only renders mesh attachments, lol, so fair enough)
-                    node.Node.Attachments.Add(NodeAttachment.Create(resource));
+                    var attachedModel = new SceneModel(this.Config, matches[0], texturepath, false);
+                    float[] position = new float[] {node.Node.Translation.X, node.Node.Translation.Y, node.Node.Translation.Z};
+                    Vector3 rotVec = this.model.QuatToEuler(node.Node.Rotation);
+                    float[] rotation = new float[] {0f, MathHelper.RadiansToDegrees(rotVec.Y), 0f};
+                    attachedModel.SetPosition(position, rotation);
+                    lock (this.model.AttachedModels) { this.model.AttachedModels[resId] = attachedModel.model; }
                 }
             }
-        }
-
+        } //);
     }
 
 }
@@ -317,19 +284,20 @@ public class SceneManager
     protected DataManager Config;
 
     public Dictionary<int, SceneModel> sceneModels = new Dictionary<int, SceneModel>();
+    public Dictionary<int, Dictionary<int, SceneModel>> fieldModels = new Dictionary<int, Dictionary<int, SceneModel>>();
     public List<AnimationPack>   externalGAPs = [];
     List<GLPerspectiveCamera>    cameras      = [];
     public List<GLShaderProgram> shaders      = [];
 
     GLPerspectiveCamera fallbackCamera = new GLPerspectiveCamera(
-        0.01f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
+        1.0f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
         new BoundingSphere(new Vector3(0, 0, 0), 100), 
         new OpenTK.Mathematics.Vector3(0, -80, -100), 
         new OpenTK.Mathematics.Vector3(0, 0, 0)
     );
 
     GLPerspectiveCamera closeupCamera = new GLPerspectiveCamera(
-        0.01f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
+        1.0f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
         new BoundingSphere(new Vector3(0, 90, 0), -20), 
         new OpenTK.Mathematics.Vector3(0, -80, -100), 
         new OpenTK.Mathematics.Vector3(0, 0, 0)
@@ -377,6 +345,14 @@ public class SceneManager
             this.sceneModels[objectID].Dispose();
         this.sceneModels.Clear();
 
+        foreach (int objectID in this.fieldModels.Keys)
+        {
+            foreach (int subID in this.fieldModels[objectID].Keys)
+                this.fieldModels[objectID][subID].Dispose();
+            this.fieldModels[objectID].Clear();
+        }
+        this.fieldModels.Clear();
+
         for (int i=this.externalGAPs.Count-1; i>=0; --i)
             this.UnloadGAP(i);
         this.externalGAPs.Clear();
@@ -391,11 +367,6 @@ public class SceneManager
     /////////////////////////////////////
     public void LoadObject(int objectID, string modelPath, string texturePath, bool isField=false)
     {
-        this.sceneModels[objectID] = new SceneModel(this.Config, modelPath, texturePath, isField);
-    }
-
-    public void LoadObjects(DataManager config, int[] objectIDs)
-    {
         ////////////////////////////
         // TODO: Implement external texture loading.
         //       In the function below is a code snippet that should work (it's been nicked from
@@ -403,14 +374,19 @@ public class SceneManager
         //       SceneManager before it can be integrated.
         //       (IMO, we should handle the bins in here and pass them to the model initializers.)
         ////////////////////////////
-        foreach (int objectID in objectIDs)
-            this.sceneModels[objectID] = new SceneModel(config, config.EventManager.ObjectsById[objectID]);
+        this.sceneModels[objectID] = new SceneModel(this.Config, modelPath, texturePath, isField);
+    }
+
+    public void LoadField(int objectID, Dictionary<int, string> modelPaths, Dictionary<int, string> texturePaths)
+    {
+        this.fieldModels[objectID] = new Dictionary<int, SceneModel>();
+        foreach (int subID in modelPaths.Keys)
+            this.fieldModels[objectID][subID] = new SceneModel(this.Config, modelPaths[subID], texturePaths[subID], true);
     }
 
     ///////////////////////////////////
     // *** GAP Memory Management *** //
     ///////////////////////////////////
-    //public void LoadGAP(string filepath)
     public int LoadGAP(string filepath)
     {
         if (!File.Exists(filepath))
@@ -518,7 +494,7 @@ public class SceneManager
     public void PlaceCamera(float[] position, float[] rotation, float angleOfView)
     {
         this.activeCamera = new GLPerspectiveCamera(
-            0.01f, 60000.0f, angleOfView, 16.0f/9.0f,
+            1.0f, 60000.0f, angleOfView, 16.0f/9.0f,
             // translation 
             new OpenTK.Mathematics.Vector3(0, 0, 0),
             // offset

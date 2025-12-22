@@ -14,8 +14,13 @@ public class CommonViewModels : ReactiveObject
     public CommonViewModels(DataManager dataManager)
     {
         this.Assets = new ObservableCollection<AssetViewModel>();
-        foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
-            this.Assets.Add(new AssetViewModel(dataManager, obj));
+        this.AssetsByID = new Dictionary<int, AssetViewModel>();
+        Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
+        {
+            var asset = new AssetViewModel(dataManager, obj);
+            lock (this.AssetsByID) { this.AssetsByID[obj.Id] = asset; }
+            lock (this.Assets) { this.Assets.Add(this.AssetsByID[obj.Id]); }
+        });
 
         this.Timeline = new TimelineViewModel(dataManager);
 
@@ -25,9 +30,12 @@ public class CommonViewModels : ReactiveObject
             if (x)
             {
                 foreach (AssetViewModel asset in this.Assets)
-                    //if (asset.IsModel)
-                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item")
-                        this.Render.AddModel(asset, this.Timeline);
+                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
+                    {
+                        this.Render.AddModel(asset);
+                        if (asset.ObjectType.Choice != "Field")
+                            this.Render.PositionModel(asset, this.Timeline);
+                    }
                 this.Render.PlaceCamera(this.Timeline);
             }
             else
@@ -35,9 +43,11 @@ public class CommonViewModels : ReactiveObject
         });
     }
 
-    public ObservableCollection<AssetViewModel> Assets   { get; set; }
-    public TimelineViewModel                    Timeline { get; set; }
-    public GFDRenderingPanelViewModel           Render   { get; set; }
+    public ObservableCollection<AssetViewModel> Assets     { get; set; }
+    public Dictionary<int, AssetViewModel>      AssetsByID { get; set; }
+
+    public TimelineViewModel          Timeline { get; set; }
+    public GFDRenderingPanelViewModel Render   { get; set; }
 }
 
 public class EditorWindowViewModel : ViewModelBase
