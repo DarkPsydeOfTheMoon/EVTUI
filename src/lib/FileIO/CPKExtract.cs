@@ -36,7 +36,7 @@ public static class CPKExtract
             {
                 file.Delete();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Trace.TraceWarning($"Couldn't delete the file {file.ToString()}");
             }
@@ -47,7 +47,7 @@ public static class CPKExtract
             {
                 dir.Delete(true);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Trace.TraceWarning($"Couldn't delete the directory {dir.ToString()}");
             }
