@@ -261,7 +261,7 @@ public class SceneModel
 
             if (majorId > 0 && minorId > 0)
             {
-                string pattern = $"MODEL/FIELD_TEX/OBJECT/M{majorId:000}_{minorId:000}.GMD";
+                string pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]OBJECT[\\\\/]M{majorId:000}_{minorId:000}.GMD";
                 List<string> matches = this.Config.ExtractMatchingFiles(pattern);
                 if (matches.Count > 0)
                 {

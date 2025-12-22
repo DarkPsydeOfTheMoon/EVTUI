@@ -14,14 +14,13 @@ public class CommonViewModels : ReactiveObject
     public CommonViewModels(DataManager dataManager)
     {
         this.Assets = new ObservableCollection<AssetViewModel>();
-		//Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
         this.AssetsByID = new Dictionary<int, AssetViewModel>();
-        foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
+		Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
         {
             var asset = new AssetViewModel(dataManager, obj);
             lock (this.AssetsByID) { this.AssetsByID[obj.Id] = asset; }
             lock (this.Assets) { this.Assets.Add(this.AssetsByID[obj.Id]); }
-        } //);
+        });
 
         this.Timeline = new TimelineViewModel(dataManager);
 

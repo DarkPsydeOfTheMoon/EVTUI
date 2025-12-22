@@ -411,7 +411,7 @@ public class AssetViewModel : ViewModelBase
         this.TextureBinPaths = new Dictionary<int, ObservableCollection<string>>();
         this.ActiveMap = null;
 
-        string mapPattern = $"FIELD/MAP/D{this.MajorID.Value:000}_{this.MinorID.Value:000}\\.MAP";
+        string mapPattern = $"FIELD[\\\\/]MAP[\\\\/]D{this.MajorID.Value:000}_{this.MinorID.Value:000}\\.MAP";
         List<string> mapPaths = this.Config.ExtractMatchingFiles(mapPattern);
         if (mapPaths.Count > 0)
         {
