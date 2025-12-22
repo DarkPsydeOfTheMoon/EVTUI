@@ -24,8 +24,8 @@ public class MRot : Generic
         this.Rotation = new RotationWidget(config, this.CommandData.Rotation, this.CommandData.Flags, yawInd: 0, pitchInd: 1, yawEnabledInd: 0, pitchEnabledInd: 1, rollEnabledInd: 2);
 
         // animations
-        this.RotatingAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.RotatingAnimation, this.CommandData.Flags, $"Rotating Animation", enabledInd:4, extInd:6);
-        this.WaitingAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.WaitingAnimation, this.CommandData.Flags, $"Idle Animation", enabledInd:5, extInd:7);
+        this.RotatingAnimation = new AnimationWidget(config, commonVMs, this.AssetID, this.CommandData.RotatingAnimation, this.CommandData.Flags, $"Rotating Animation", enabledInd:4, extInd:6);
+        this.WaitingAnimation = new AnimationWidget(config, commonVMs, this.AssetID, this.CommandData.WaitingAnimation, this.CommandData.Flags, $"Idle Animation", enabledInd:5, extInd:7);
 
         // unknown
         this.Unk = new NumEntryField("Unknown Int", this.Editable, this.CommandData.UNK, 0, null, 1);

@@ -15,7 +15,6 @@ public class CommonViewModels : ReactiveObject
     {
         this.Assets = new ObservableCollection<AssetViewModel>();
         this.AssetsByID = new Dictionary<int, AssetViewModel>();
-        //foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
         Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
         {
             var asset = new AssetViewModel(dataManager, obj);
@@ -31,12 +30,12 @@ public class CommonViewModels : ReactiveObject
             if (x)
             {
                 foreach (AssetViewModel asset in this.Assets)
-                //Parallel.ForEach(this.Assets, asset =>
-                //{
-                    //if (asset.IsModel)
-                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item")
-                        this.Render.AddModel(asset, this.Timeline);
-                //});
+                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
+                    {
+                        this.Render.AddModel(asset);
+                        if (asset.ObjectType.Choice != "Field")
+                            this.Render.PositionModel(asset, this.Timeline);
+                    }
                 this.Render.PlaceCamera(this.Timeline);
             }
             else

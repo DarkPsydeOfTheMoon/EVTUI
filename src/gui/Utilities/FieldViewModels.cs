@@ -235,7 +235,7 @@ public class ColorSelectionField : FieldBase
 
 public class AnimationWidget : ViewModelBase
 {
-    public AnimationWidget(DataManager config, IntSelectionField modelID, AnimationStruct animation, BitfieldBase bitfield, string name, int? enabledInd = null, int? extInd = null, int? frameBlendingInd = null, bool enabledFlip = false, bool extFlip = false, bool frameBlendingFlip = false, bool loopFlip = false, int? trackNum = null)
+    public AnimationWidget(DataManager config, CommonViewModels commonVMs, IntSelectionField modelID, AnimationStruct animation, BitfieldBase bitfield, string name, int? enabledInd = null, int? extInd = null, int? frameBlendingInd = null, bool enabledFlip = false, bool extFlip = false, bool frameBlendingFlip = false, bool loopFlip = false, int? trackNum = null)
     {
         _modelID = modelID;
 
@@ -329,7 +329,7 @@ public class AnimationWidget : ViewModelBase
             {
                 if (x)
                 {
-                    this.AnimationPreviewVM.sceneManager.LoadObjects(config, new int[] {_objectID});
+                    this.AnimationPreviewVM.AddModel(commonVMs.AssetsByID[_objectID]);
                     if (trackNum is null)
                         this.AnimationPreviewVM.sceneManager.LoadBaseAnimation(_objectID, this.AnimationFromExt.Value, (int)this.AnimationID.Value);
                     else
@@ -374,34 +374,16 @@ public class AnimationWidget : ViewModelBase
 
 public class ModelPreviewWidget : ViewModelBase
 {
-    public ModelPreviewWidget(DataManager config, IntSelectionField modelID)
+    public ModelPreviewWidget(DataManager config, CommonViewModels commonVMs, IntSelectionField modelID)
     {
         _modelID = modelID;
         this.ModelPreviewVM = new GFDRenderingPanelViewModel(config);
         this.WhenAnyValue(x => x.ModelPreviewVM.ReadyToRender).Subscribe(x =>
         {
             if (x)
-                this.ModelPreviewVM.sceneManager.LoadObjects(config, new int[] {_objectID});
+                this.ModelPreviewVM.AddModel(commonVMs.AssetsByID[_objectID]);
             else
                 this.ModelPreviewVM.sceneManager.teardown();
-        });
-    }
-
-    public ModelPreviewWidget(DataManager config, IntSelectionField modelID, StringSelectionField modelPath, string texturePath="", bool isField=false)
-    {
-        _modelID = modelID;
-        this.ModelPreviewVM = new GFDRenderingPanelViewModel(config);
-        this.WhenAnyValue(x => x.ModelPreviewVM.ReadyToRender).Subscribe(x =>
-        {
-            List<string> modelFiles = config.ExtractMatchingFiles($"MODEL/FIELD_TEX/OBJECT/{modelPath.Choice}.GMD");
-            if (modelFiles.Count > 0)
-            {
-                Console.WriteLine(modelFiles[0]);
-                if (x)
-                    this.ModelPreviewVM.sceneManager.LoadObject(_objectID, modelFiles[0], texturePath, isField:isField);
-                else
-                    this.ModelPreviewVM.sceneManager.teardown();
-            }
         });
     }
 

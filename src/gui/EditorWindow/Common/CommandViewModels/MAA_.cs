@@ -18,7 +18,7 @@ public class MAA_ : Generic
         this.DebugFrameForward = new BoolChoiceField("Frame Forward", this.Editable, this.CommandData.Flags[31]);
         this.WhenAnyValue(_ => _.DebugFrameForward.Value).Subscribe(_ => this.CommandData.Flags[31] = this.DebugFrameForward.Value);
 
-        this.AddAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.AddAnimation, this.CommandData.Flags, $"Animation", extInd:0, trackNum:(int)this.TrackNumber.Value);
+        this.AddAnimation = new AnimationWidget(config, commonVMs, this.AssetID, this.CommandData.AddAnimation, this.CommandData.Flags, $"Animation", extInd:0, trackNum:(int)this.TrackNumber.Value);
     }
 
     public IntSelectionField AssetID           { get; set; }

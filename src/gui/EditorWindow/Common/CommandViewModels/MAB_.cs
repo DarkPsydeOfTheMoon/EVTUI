@@ -17,8 +17,8 @@ public class MAB_ : Generic
         this.WhenAnyValue(_ => _.StartWaitingFrames.Value).Subscribe(_ => this.CommandData.StartWaitingFrames = (uint)this.StartWaitingFrames.Value);
 
         // animations
-        this.FirstAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.FirstAnimation, this.CommandData.Flags, $"First Animation", extInd:4);
-        this.SecondAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.SecondAnimation, this.CommandData.Flags, $"Second Animation", enabledInd:0, extInd:5, frameBlendingInd:1, enabledFlip:true);
+        this.FirstAnimation = new AnimationWidget(config, commonVMs, this.AssetID, this.CommandData.FirstAnimation, this.CommandData.Flags, $"First Animation", extInd:4);
+        this.SecondAnimation = new AnimationWidget(config, commonVMs, this.AssetID, this.CommandData.SecondAnimation, this.CommandData.Flags, $"Second Animation", enabledInd:0, extInd:5, frameBlendingInd:1, enabledFlip:true);
 
         // debug
         this.DebugUnkBool = new BoolChoiceField("Unknown (Debug)", this.Editable, this.CommandData.Flags[30]);

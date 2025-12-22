@@ -18,8 +18,8 @@ public class MAAB : Generic
         this.WhenAnyValue(_ => _.ChildAssetID.Choice).Subscribe(_ => this.CommandData.ChildObjectId = this.ChildAssetID.Choice);
 
         // animations
-        this.FirstAnimation = new AnimationWidget(config, this.ChildAssetID, this.CommandData.FirstAnimation, this.CommandData.Flags, $"First Animation", extInd:4);
-        this.SecondAnimation = new AnimationWidget(config, this.ChildAssetID, this.CommandData.SecondAnimation, this.CommandData.Flags, $"Second Animation", enabledInd:0, extInd:5, frameBlendingInd:1, enabledFlip:true);
+        this.FirstAnimation = new AnimationWidget(config, commonVMs, this.ChildAssetID, this.CommandData.FirstAnimation, this.CommandData.Flags, $"First Animation", extInd:4);
+        this.SecondAnimation = new AnimationWidget(config, commonVMs, this.ChildAssetID, this.CommandData.SecondAnimation, this.CommandData.Flags, $"Second Animation", enabledInd:0, extInd:5, frameBlendingInd:1, enabledFlip:true);
     }
 
     public IntSelectionField AssetID      { get; set; }

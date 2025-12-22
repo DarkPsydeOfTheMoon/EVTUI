@@ -15,6 +15,7 @@ public class FOD_ : Generic
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x00000003));
         this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
+        // TODO... IDK exactly how resIDs work with subfield models yet
         /*this.UpdateHelperNames(commonVMs, this.AssetID.Choice, isField:true);
         //if (commonVMs.AssetsByID.ContainsKey(this.AssetID.Choice))
         //    this.TexturePath = commonVMs.AssetsByID[this.AssetID.Choice].ActiveTextureBinPath;
@@ -27,7 +28,7 @@ public class FOD_ : Generic
         this.ObjectIndex = new NumEntryField("Field Object Index", this.Editable, this.CommandData.ObjectIndex, -1, 65535, 1);
         this.WhenAnyValue(_ => _.ObjectIndex.Value).Subscribe(_ => this.CommandData.ObjectIndex = (int)this.ObjectIndex.Value);
         /*this.ObjectIndex = new StringSelectionField("Field Object Name", this.Editable, (!(this.CommandData.ObjectIndex is null) && this.ResourceHelperNames.Backward.ContainsKey(this.CommandData.ObjectIndex)) ? this.ResourceHelperNames.Backward[this.CommandData.ObjectIndex] : null, this.ResourceHelperNames.Keys);
-        this.ModelPreviewVM = new ModelPreviewWidget(config, this.AssetID, this.ObjectIndex, texturePath:this.TexturePath, isField:true);
+        this.ModelPreviewVM = new ModelPreviewWidget(config, commonVMs, this.AssetID, this.ObjectIndex, texturePath:this.TexturePath, isField:true);
         this.WhenAnyValue(_ => _.ObjectIndex.Choice).Subscribe(_ =>
         {
             if (!(this.ObjectIndex.Choice is null) && this.ResourceHelperNames.Forward.ContainsKey(this.ObjectIndex.Choice))
@@ -51,7 +52,7 @@ public class FOD_ : Generic
         });*/
     }
 
-    private string TexturePath = "";
+    //private string TexturePath = "";
 
     public IntSelectionField AssetID { get; set; }
 

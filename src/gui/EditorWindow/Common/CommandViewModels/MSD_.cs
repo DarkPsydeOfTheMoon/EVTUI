@@ -15,12 +15,12 @@ public class MSD_ : Generic
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
         this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
-        this.ModelPreviewVM = new ModelPreviewWidget(config, this.AssetID);
+        this.ModelPreviewVM = new ModelPreviewWidget(config, commonVMs, this.AssetID);
 
         this.Position = new Position3D("Position", this.Editable, this.CommandData.Position);
         this.Rotation = new RotationWidget(config, this.CommandData.Rotation, this.CommandData.Flags, pitchInd: 0, yawInd: 1, enabledInd: 1, enabledFlip: true);
 
-        this.WaitingAnimation = new AnimationWidget(config, this.AssetID, this.CommandData.WaitingAnimation, this.CommandData.Flags, $"Idle Animation", enabledInd:0, extInd:2, enabledFlip:true);
+        this.WaitingAnimation = new AnimationWidget(config, commonVMs, this.AssetID, this.CommandData.WaitingAnimation, this.CommandData.Flags, $"Idle Animation", enabledInd:0, extInd:2, enabledFlip:true);
     }
 
     public IntSelectionField  AssetID        { get; set; }

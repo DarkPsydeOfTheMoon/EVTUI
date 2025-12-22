@@ -49,31 +49,6 @@ public class SceneModel
         this.LoadModel(modelPath, texturePath, isField);
     }
 
-    public SceneModel(DataManager config, SerialObject obj)
-    {
-        List<string> assetPaths = config.EventManager.GetAssetPaths(obj.Id);
-        if (assetPaths.Count > 0)
-        {
-            this.LoadModel(assetPaths[0], null);
-
-            List<string> baseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, false);
-            if (baseAnimPaths.Count > 0)
-                this.BaseAnimationPack = this.TryLoadAnimationPack(baseAnimPaths[0]);
-
-            List<string> extBaseAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, false);
-            if (extBaseAnimPaths.Count > 0)
-                this.ExtBaseAnimationPack = this.TryLoadAnimationPack(extBaseAnimPaths[0]);
-
-            List<string> addAnimPaths = config.EventManager.GetAnimPaths(obj.Id, true, true);
-            if (addAnimPaths.Count > 0)
-                this.AddAnimationPack = this.TryLoadAnimationPack(addAnimPaths[0]);
-
-            List<string> extAddAnimPaths = config.EventManager.GetAnimPaths(obj.Id, false, true);
-            if (extAddAnimPaths.Count > 0)
-                this.ExtAddAnimationPack = this.TryLoadAnimationPack(extAddAnimPaths[0]);
-        }
-    }
-
     public void Dispose()
     {
         // can happen if EVT object isn't set up properly
@@ -82,9 +57,7 @@ public class SceneModel
     }
 
     public void StartAnimTimer() { this.animationStopwatch.Start(); }
-
     public void StopAnimTimer() { this.animationStopwatch.Stop(); }
-
     public void ResetAnimTimer() { this.animationStopwatch.Restart(); }
 
     public void LoadAnimation(Animation animation)
@@ -163,7 +136,6 @@ public class SceneModel
 
         GLModel glmodel = new GLModel(model, ( material, textureName ) =>
         {
-            //if ( isField && !(fieldtex is null) && fieldtex.TryOpenFile( textureName, out var textureStream ) )
             if ( !(fieldtex is null) && fieldtex.TryOpenFile( textureName, out var textureStream ) )
             {
                 using ( textureStream )
@@ -191,7 +163,6 @@ public class SceneModel
         this.model = glmodel;
         this.GAP = model.AnimationPack;
 
-        // TODO
         if (isField)
             this.LoadAttachedModels(texturepath);
     }
@@ -281,61 +252,28 @@ public class SceneModel
             int majorId = 0;
             int minorId = 0;
             int resId = 0;
-            bool appearsInEvening = false;
-            bool appearsInSummer = false;
-            bool appearsInClear = false;
-            bool appearsInPreseason = true;
-            //string helperId = "*";
             if (node.Node.Properties.ContainsKey("fldLayoutOfModel_major"))
-                //majorId = node.Node.Properties["fldLayoutOfModel_major"].ToUserPropertyString();
                 majorId = (int)node.Node.Properties["fldLayoutOfModel_major"].GetValue();
             if (node.Node.Properties.ContainsKey("fldLayoutOfModel_minor"))
-                //minorId = node.Node.Properties["fldLayoutOfModel_minor"].ToUserPropertyString();
                 minorId = (int)node.Node.Properties["fldLayoutOfModel_minor"].GetValue();
             if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
-                //resId = node.Node.Properties["fldLayoutOfModel_resId"].ToUserPropertyString();
                 resId = (int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue();
-            //if (node.Node.Properties.ContainsKey("gfdHelperID"))
-            //    helperId = node.Node.Properties["gfdHelperID"].ToUserPropertyString();
-            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_if_yoru"))
-                appearsInEvening = ((int)node.Node.Properties["fldLayoutOfModel_if_yoru"].GetValue() == 1);
-            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_if_summer"))
-                appearsInSummer = ((int)node.Node.Properties["fldLayoutOfModel_if_summer"].GetValue() == 1);
-            //if (node.Node.Properties.ContainsKey("fldLayoutOfModel_if_fine"))
-            //    appearsInSummer = ((int)node.Node.Properties["fldLayoutOfModel_if_fine"].GetValue() == 1);
-            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_if_preseason"))
-                appearsInPreseason = ((int)node.Node.Properties["fldLayoutOfModel_if_preseason"].GetValue() != 0);
 
-            if (majorId > 0 && minorId > 0 && appearsInEvening && appearsInSummer) // && appearsInPreseason) // && appearsInClear)
+            if (majorId > 0 && minorId > 0)
             {
                 string pattern = $"MODEL/FIELD_TEX/OBJECT/M{majorId:000}_{minorId:000}.GMD";
-                //Console.WriteLine($"{node.Node.Name}, {pattern}, {resId}, {helperId}");
                 List<string> matches = this.Config.ExtractMatchingFiles(pattern);
                 if (matches.Count > 0)
                 {
-                    //Console.WriteLine(matches[0]);
-                    //var resource = Resource.Load(matches[0]);
-                    //Console.WriteLine(resource.ResourceType);
-                    // doesn't work because it's ResourceType.ModelPack, not ResourceType.Model...
-                    // I added some rudimentary handling but still nothing shows up (because GLModel only renders mesh attachments, lol, so fair enough)
-                    //node.Node.Attachments.Add(NodeAttachment.Create(resource));
-                    //this.sceneModels[objectID] = new SceneModel(this.Config, modelPath, texturePath, isField);
                     var attachedModel = new SceneModel(this.Config, matches[0], texturepath, false);
-                    //attachedModel.model.Nodes[0].WorldTransform = node.WorldTransform;
                     float[] position = new float[] {node.Node.Translation.X, node.Node.Translation.Y, node.Node.Translation.Z};
                     Vector3 rotVec = this.model.QuatToEuler(node.Node.Rotation);
-                    //float[] rotation = new float[] {MathHelper.RadiansToDegrees(rotVec.X), MathHelper.RadiansToDegrees(rotVec.Y), MathHelper.RadiansToDegrees(rotVec.Z)};
                     float[] rotation = new float[] {0f, MathHelper.RadiansToDegrees(rotVec.Y), 0f};
-                    //float[] rotation = new float[] {rotVec.X, rotVec.Y, rotVec.Z};
-                    //float[] rotation = new float[3];
-                    //float[] scale = new float[] {node.Node.Scale.X, node.Node.Scale.Y, node.Node.Scale.Z};
-                    Console.WriteLine($"##### {node.Node.Name}, {resId}, {position[0]} {position[1]} {position[2]}, {rotation[0]} {rotation[1]} {rotation[2]}");
                     attachedModel.SetPosition(position, rotation);
                     lock (this.model.AttachedModels) { this.model.AttachedModels[resId] = attachedModel.model; }
                 }
             }
         } //);
-
     }
 
 }
@@ -429,6 +367,13 @@ public class SceneManager
     /////////////////////////////////////
     public void LoadObject(int objectID, string modelPath, string texturePath, bool isField=false)
     {
+        ////////////////////////////
+        // TODO: Implement external texture loading.
+        //       In the function below is a code snippet that should work (it's been nicked from
+        //       GFD Studio), but the texture-bin management systems need to be worked into the
+        //       SceneManager before it can be integrated.
+        //       (IMO, we should handle the bins in here and pass them to the model initializers.)
+        ////////////////////////////
         this.sceneModels[objectID] = new SceneModel(this.Config, modelPath, texturePath, isField);
     }
 
@@ -439,23 +384,9 @@ public class SceneManager
             this.fieldModels[objectID][subID] = new SceneModel(this.Config, modelPaths[subID], texturePaths[subID], true);
     }
 
-    public void LoadObjects(DataManager config, int[] objectIDs)
-    {
-        ////////////////////////////
-        // TODO: Implement external texture loading.
-        //       In the function below is a code snippet that should work (it's been nicked from
-        //       GFD Studio), but the texture-bin management systems need to be worked into the
-        //       SceneManager before it can be integrated.
-        //       (IMO, we should handle the bins in here and pass them to the model initializers.)
-        ////////////////////////////
-        foreach (int objectID in objectIDs)
-            this.sceneModels[objectID] = new SceneModel(config, config.EventManager.ObjectsById[objectID]);
-    }
-
     ///////////////////////////////////
     // *** GAP Memory Management *** //
     ///////////////////////////////////
-    //public void LoadGAP(string filepath)
     public int LoadGAP(string filepath)
     {
         if (!File.Exists(filepath))

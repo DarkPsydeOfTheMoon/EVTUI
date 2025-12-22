@@ -12,14 +12,10 @@ public class MAt_ : Generic
     {
         this.LongName = "Model: Attachment";
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
-        //this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
         this.UpdateHelperNames(commonVMs, this.AssetID.Choice);
 
-        //this.HelperID = new NumEntryField("Helper ID", this.Editable, this.CommandData.HelperId, 0, 9999, 1);
-        //this.WhenAnyValue(_ => _.HelperID.Value).Subscribe(_ => this.CommandData.HelperId = (uint)this.HelperID.Value);
         this.HelperID = new StringSelectionField("Helper Node", this.Editable, (!(this.CommandData.HelperId is null) && this.HelperNames.Backward.ContainsKey(this.CommandData.HelperId)) ? this.HelperNames.Backward[this.CommandData.HelperId] : null, this.HelperNames.Keys);
-        //this.WhenAnyValue(_ => _.HelperID.Choice).Subscribe(_ => this.CommandData.HelperId = this.HelperNames.Forward[this.HelperID.Choice]);
         this.WhenAnyValue(_ => _.HelperID.Choice).Subscribe(_ =>
         {
             if (!(this.HelperID.Choice is null) && this.HelperNames.Forward.ContainsKey(this.HelperID.Choice))
@@ -29,7 +25,6 @@ public class MAt_ : Generic
         {
             this.Command.ObjectId = this.AssetID.Choice;
             this.UpdateHelperNames(commonVMs, this.AssetID.Choice);
-            //this.HelperID.Choices = new ObservableCollection<string>(this.HelperNames.Keys);
             string choice = this.HelperID.Choice;
             this.HelperID.Choices.Clear();
             foreach (string helperName in this.HelperNames.Keys)
@@ -45,8 +40,8 @@ public class MAt_ : Generic
         this.Offset = new Position3D("Offset (From Attachment Point)", this.Editable, this.CommandData.RelativePosition);
         this.Rotation = new RotationWidget(config, this.CommandData.Rotation, this.CommandData.Flags, pitchInd: 0, yawInd: 1);
 
-        this.ParentModelPreviewVM = new ModelPreviewWidget(config, this.AssetID);
-        this.ChildModelPreviewVM = new ModelPreviewWidget(config, this.ChildAssetID);
+        this.ParentModelPreviewVM = new ModelPreviewWidget(config, commonVMs, this.AssetID);
+        this.ChildModelPreviewVM = new ModelPreviewWidget(config, commonVMs, this.ChildAssetID);
 
         this.UnkBool = new BoolChoiceField("Unknown", this.Editable, this.CommandData.Flags[4]);
         this.WhenAnyValue(_ => _.UnkBool.Value).Subscribe(_ => this.CommandData.Flags[4] = this.UnkBool.Value);
@@ -57,7 +52,6 @@ public class MAt_ : Generic
 
     public IntSelectionField AssetID { get; set; }
 
-    //public NumEntryField     HelperID     { get; set; } // TODO: parse GFD and present as string selection...
     public StringSelectionField HelperID     { get; set; }
     public IntSelectionField    ChildAssetID { get; set; }
 
