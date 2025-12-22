@@ -88,7 +88,6 @@ namespace EVTUI.Views
             }
         }
 
-        //protected override unsafe async void OnOpenGlInit(GlInterface gl)
         protected override async void OnOpenGlInit(GlInterface gl)
         {
             try
@@ -133,7 +132,6 @@ namespace EVTUI.Views
             }
         }
 
-        //protected override unsafe async void OnOpenGlRender(GlInterface gl, int framebuffer)
         protected override async void OnOpenGlRender(GlInterface gl, int framebuffer)
         {
             try
