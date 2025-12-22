@@ -14,13 +14,14 @@ public class CommonViewModels : ReactiveObject
     public CommonViewModels(DataManager dataManager)
     {
         this.Assets = new ObservableCollection<AssetViewModel>();
+		//Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
         this.AssetsByID = new Dictionary<int, AssetViewModel>();
-        Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
+        foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
         {
             var asset = new AssetViewModel(dataManager, obj);
             lock (this.AssetsByID) { this.AssetsByID[obj.Id] = asset; }
             lock (this.Assets) { this.Assets.Add(this.AssetsByID[obj.Id]); }
-        });
+        } //);
 
         this.Timeline = new TimelineViewModel(dataManager);
 
@@ -30,7 +31,8 @@ public class CommonViewModels : ReactiveObject
             if (x)
             {
                 foreach (AssetViewModel asset in this.Assets)
-                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
+                    //if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
+                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
                     {
                         this.Render.AddModel(asset);
                         if (asset.ObjectType.Choice != "Field")
