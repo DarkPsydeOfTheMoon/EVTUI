@@ -43,14 +43,14 @@ namespace EVTUI.Views
             redrawTimer.Tick += this.RequestRedrawEventHandler;
 
             // Also redraw if the window resizes.
-            this.Loaded += MoreLoaded;
+            this.Loaded += GetTopLevel;
             MainWindow.ClientSizeProperty.Changed.Subscribe(size => RequestNextFrameRendering());
         }
 
         ////////////////////////////
         // *** PRIVATE METHODS *** //
         ////////////////////////////
-        public void MoreLoaded(object? sender, RoutedEventArgs e)
+        public void GetTopLevel(object? sender, RoutedEventArgs e)
         {
             try
             {

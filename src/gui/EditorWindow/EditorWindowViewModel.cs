@@ -15,7 +15,7 @@ public class CommonViewModels : ReactiveObject
     {
         this.Assets = new ObservableCollection<AssetViewModel>();
         this.AssetsByID = new Dictionary<int, AssetViewModel>();
-		Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
+        Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
         {
             var asset = new AssetViewModel(dataManager, obj);
             lock (this.AssetsByID) { this.AssetsByID[obj.Id] = asset; }
