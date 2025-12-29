@@ -3,6 +3,7 @@ using CriFsV2Lib.Definitions;
 using CriFsV2Lib.Definitions.Interfaces;
 using CriFsV2Lib.Definitions.Structs;
 using CriFsV2Lib.Definitions.Utilities;
+using CriFsV2Lib.Utilities.Parsing;
 
 using System;
 using System.Collections.Generic;
@@ -54,7 +55,122 @@ public static class CPKExtract
         }
     }
 
-    public static List<string> ExtractMatchingFiles(List<string> CpkList, string filePatternString, string ExistingFolder, string OutputFolder, string decryptionFunctionName)
+    public static CpkFile[] ListAllFiles(string cpkPath, string decryptionFunctionName)
+    {
+        KnownDecryptionFunction decryptionFunctionIndex;
+        InPlaceDecryptionFunction decryptionFunction = null;
+        if (Enum.TryParse(decryptionFunctionName, out decryptionFunctionIndex))
+            decryptionFunction = CriFsLib.Instance.GetKnownDecryptionFunction(decryptionFunctionIndex);
+
+        using (var fileStream = new FileStream(cpkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = CriFsLib.Instance.CreateCpkReader(fileStream, true, decryptionFunction))
+                return reader.GetFiles();
+    }
+
+    public static async IAsyncEnumerable<string> FindModFiles(string[] prefix, string suffix, string ExistingFolder)
+    {
+        string filePatternString = Path.Combine(prefix);
+        if (!(suffix is null))
+            filePatternString = Path.Combine(filePatternString, suffix);
+        Regex filePattern = new Regex(filePatternString, RegexOptions.IgnoreCase);
+        if (!String.IsNullOrEmpty(ExistingFolder))
+            foreach (var ModPath in Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories))
+            {
+                if (filePattern.IsMatch(ModPath) && new FileInfo(ModPath).Length > 0)
+                    yield return await Task.FromResult(ModPath);
+            }
+    }
+
+    public static async IAsyncEnumerable<string> ExtractFiles(List<CpkFile> files, string CpkPath, string OutputFolder, string decryptionFunctionName)
+    {
+        KnownDecryptionFunction decryptionFunctionIndex;
+        InPlaceDecryptionFunction decryptionFunction = null;
+        if (Enum.TryParse(decryptionFunctionName, out decryptionFunctionIndex))
+            decryptionFunction = CriFsLib.Instance.GetKnownDecryptionFunction(decryptionFunctionIndex);
+
+        List<string> matches = new List<string>();
+        using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, decryptionFunction);
+        using (var fileStream = new FileStream(CpkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            foreach (CpkFile file in files)
+            {
+                string dirPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), file.Directory ?? ""));
+                Directory.CreateDirectory(dirPath);
+                string inCpkPath = Path.Combine(file.Directory ?? "", file.FileName);
+                string outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
+                extractor.QueueItem(new ItemModel(outputPath, file));
+                yield return await Task.FromResult(outputPath);
+            }
+        extractor.WaitForCompletion();
+        ArrayRental.Reset();
+    }
+
+    //public static List<string> ExtractMatchingFiles(in Dictionary<string, Trie> CpkTries, string[] prefix, string suffix, string ExistingFolder, string OutputFolder, string decryptionFunctionName)
+    /*public static List<string> ExtractMatchingFiles(Dictionary<string, Trie> CpkTries, string[] prefix, string suffix, string ExistingFolder, string OutputFolder, string decryptionFunctionName)
+    //public static async Task<List<string>> ExtractMatchingFiles(Dictionary<string, Trie> CpkTries, string[] prefix, string suffix, string ExistingFolder, string OutputFolder, string decryptionFunctionName)
+    {
+        List<string> matches = new List<string>();
+
+        string filePatternString = Path.Combine(prefix);
+        if (!(suffix is null))
+            filePatternString = Path.Combine(filePatternString, suffix);
+        Regex filePattern = new Regex(filePatternString, RegexOptions.IgnoreCase);
+        if (!String.IsNullOrEmpty(ExistingFolder))
+            Parallel.ForEach(Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories), ModPath =>
+            //await Parallel.ForEachAsync(Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories), ModPath =>
+            //await Parallel.ForEachAsync(Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories), async (ModPath, ct) =>
+            {
+                if (filePattern.IsMatch(ModPath) && new FileInfo(ModPath).Length > 0)
+                    lock (matches) { matches.Add(ModPath); }
+            });
+
+        KnownDecryptionFunction decryptionFunctionIndex;
+        InPlaceDecryptionFunction decryptionFunction = null;
+        if (Enum.TryParse(decryptionFunctionName, out decryptionFunctionIndex))
+            decryptionFunction = CriFsLib.Instance.GetKnownDecryptionFunction(decryptionFunctionIndex);
+
+        //await Parallel.ForEachAsync(CpkTries.Keys, async (CpkPath, ct) =>
+        //await Parallel.ForEachAsync(CpkTries.Keys, CpkPath =>
+        Parallel.ForEach(CpkTries.Keys, CpkPath =>
+        //foreach (string CpkPath in CpkTries.Keys)
+        {
+            List<CpkFile> files = CpkTries[CpkPath].TryGetFile(prefix, suffix: suffix);
+            if (files.Count > 0)
+            {
+                using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, decryptionFunction);
+                using (var fileStream = new FileStream(CpkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                {
+                    foreach (CpkFile file in files)
+                    {
+                        string dirPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), file.Directory ?? ""));
+                        Directory.CreateDirectory(dirPath);
+                        string inCpkPath = Path.Combine(file.Directory ?? "", file.FileName);
+                        string outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
+                        lock (matches) { matches.Add(outputPath); }
+                        extractor.QueueItem(new ItemModel(outputPath, file));
+                        //using ArrayRental res = CpkHelper.ExtractFile(file, fileStream, decryptionFunction);
+                        //File.WriteAllBytes(outputPath, res.Span.ToArray());
+                        //byte[] buffer = new byte[file.FileSize];
+                        //fileStream.Seek(file.FileOffset, 0);
+                        //fileStream.Read(buffer, 0, file.FileSize);
+                        //File.WriteAllBytes(outputPath, buffer);
+                        //buffer = null;
+                        //ArrayRental.Reset();
+                        //res.Dispose();
+                    }
+                }
+                extractor.WaitForCompletion();
+                ArrayRental.Reset();
+            }
+            files.Clear();
+            //GC.Collect();
+        });
+
+        //ArrayRental.Reset();
+        //GC.Collect();
+        return matches;
+    }*/
+
+    /*public static List<string> ExtractMatchingFiles(List<string> CpkList, string filePatternString, string ExistingFolder, string OutputFolder, string decryptionFunctionName)
     {
         Regex filePattern = new Regex(filePatternString, RegexOptions.IgnoreCase);
         List<string> matches = new List<string>();
@@ -93,9 +209,9 @@ public static class CPKExtract
         });
 
         return matches;
-    }
+    }*/
 
-    private static Dictionary<string, Regex> Patterns = new Dictionary<string, Regex>()
+    /*private static Dictionary<string, Regex> Patterns = new Dictionary<string, Regex>()
     {
         ["EVT:EVT"] = new Regex("\\.EVT$",                 RegexOptions.IgnoreCase),
         ["EVT:ECS"] = new Regex("\\.ECS$",                 RegexOptions.IgnoreCase),
@@ -109,7 +225,7 @@ public static class CPKExtract
         ["SYS:AWB"] = new Regex("SYSTEM\\.AWB$",           RegexOptions.IgnoreCase),
         ["BGM:ACB"] = new Regex("BGM\\.ACB$",              RegexOptions.IgnoreCase),
         ["BGM:AWB"] = new Regex("BGM\\.AWB$",              RegexOptions.IgnoreCase),
-    };
+    };*/
 
     public static List<(int MajorId, int MinorId)> ListAllEvents(List<string> CpkList, string decryptionFunctionName)
     {
@@ -148,7 +264,7 @@ public static class CPKExtract
         return ret;
     }
 
-    public static CpkEVTContents? ExtractEVTFiles(List<string> CpkList, string eventId, string OutputFolder, string existingFolder, string decryptionFunctionName)
+    /*public static CpkEVTContents? ExtractEVTFiles(List<string> CpkList, string eventId, string OutputFolder, string existingFolder, string decryptionFunctionName)
     {
         var retval = new CpkEVTContents();
         Regex eventPattern = new Regex($"[\\\\/]{eventId}([\\\\/\\.]|_SE)", RegexOptions.IgnoreCase);
@@ -238,5 +354,5 @@ public static class CPKExtract
             return null;
 
         return retval;
-    }
+    }*/
 }

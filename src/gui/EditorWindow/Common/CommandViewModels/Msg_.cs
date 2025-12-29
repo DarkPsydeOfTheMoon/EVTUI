@@ -271,12 +271,12 @@ public class PagePreview : ReactiveObject
         }
 
         this.BustupPath = config.ScriptManager.GetTurnBustupPath(turnIndex, pageIndex);
-        if (!String.IsNullOrEmpty(this.BustupPath))
-            this.Bustup = config.ScriptManager.GetMainBustupImage(this.BustupPath);
+        if (!(this.BustupPath.Prefix is null))
+            this.Bustup = config.ScriptManager.GetMainBustupImage(this.BustupPath.Prefix, this.BustupPath.Suffix);
 
         this.CutinPath = config.ScriptManager.GetTurnCutinPath(turnIndex, pageIndex);
-        if (!String.IsNullOrEmpty(this.CutinPath))
-            this.Cutin = config.ScriptManager.GetMainCutinImage(this.CutinPath);
+        if (!(this.CutinPath.Prefix is null))
+            this.Cutin = config.ScriptManager.GetMainCutinImage(this.CutinPath.Prefix, this.CutinPath.Suffix);
     }
 
     public StringEntryField     Dialogue    { get; set; }
@@ -285,11 +285,11 @@ public class PagePreview : ReactiveObject
     public uint?   CueID    { get; set; }
     public bool    Editable { get; }
 
-    public string?     BustupPath { get; set; }
-    public MagickImage Bustup     { get; set; }
+    public (string[] Prefix, string Suffix) BustupPath { get; set; }
+    public MagickImage                      Bustup     { get; set; }
 
-    public string?     CutinPath { get; set; }
-    public MagickImage Cutin     { get; set; }
+    public (string[] Prefix, string Suffix) CutinPath { get; set; }
+    public MagickImage                      Cutin     { get; set; }
 
 	// TODO: make this like... an observable/reactive derived property... idk how that works
     //public bool    HasVoiceLine { get { return (!(this.Source is null) && !(this.CueID is null)); } }

@@ -275,6 +275,14 @@ public class ScriptManager
         }
     }
 
+    public void Dispose()
+    {
+        this.ScriptList.Clear();
+        this.ScriptTexts.Clear();
+        this.ScriptErrors.Clear();
+        this.config = null;
+    }
+
     public string RemovePrefix(string prefix, string s)
     {
         return s.Substring((prefix.Length+1), s.Length-(prefix.Length+1));
@@ -668,7 +676,7 @@ public class ScriptManager
         return null;
     }
 
-    public string? GetTurnBustupPath(int turnIndex, int elemIndex)
+    public (string[] Prefix, string Suffix) GetTurnBustupPath(int turnIndex, int elemIndex)
     {
         if (!(this.ActiveBMD is null))
             foreach (Node node in this.Parse(this.BMDFiles[this.ActiveBMD].Turns[turnIndex].Elems[elemIndex], this.ActiveBMD.Contains("BASE.CPK")))
@@ -682,16 +690,16 @@ public class ScriptManager
                     bool isOnCall = (node.FunctionArguments[4] != 0);
 
                     if (outfitId == -1)
-                        return $"BUSTUP[\\\\/]B{characterId:000}_{emoteId:000}_[0-9][0-9].BIN";
+                        return (new string[] { "bustup" }, $"b{characterId:000}_{emoteId:000}_[0-9][0-9]\\.bin");
                     else
-                        return $"BUSTUP[\\\\/]B{characterId:000}_{emoteId:000}_{outfitId:00}.BIN";
+                        return (new string[] { "bustup", $"b{characterId:000}_{emoteId:000}_{outfitId:00}.bin" }, null);
                 }
-        return null;
+        return (null, null);
     }
 
-    public MagickImage GetMainBustupImage(string path)
+    public MagickImage GetMainBustupImage(string[] prefix, string suffix)
     {
-        List<string> paths = config.ExtractMatchingFiles(path);
+        List<string> paths = config.ExtractExactFiles(prefix, suffix);
         if (paths.Count > 0)
         {
             AtlusArchive bin = new AtlusArchive();
@@ -715,7 +723,7 @@ public class ScriptManager
         return null;
     }
 
-    public string? GetTurnCutinPath(int turnIndex, int elemIndex)
+    public (string[] Prefix, string Suffix) GetTurnCutinPath(int turnIndex, int elemIndex)
     {
         if (!(this.ActiveBMD is null))
             foreach (Node node in this.Parse(this.BMDFiles[this.ActiveBMD].Turns[turnIndex].Elems[elemIndex], this.ActiveBMD.Contains("BASE.CPK")))
@@ -746,26 +754,29 @@ public class ScriptManager
                         subId = 1;
 
                     if (category == 2)
-                        return $"CUTIN[\\\\/]UTARC[\\\\/]2_SUB_0[\\\\/]CUTINSUB_0_{majorId:00}_{minorId:00}.{subId:000}";
+                        return (new string[] { "cutin", "utarc", "2_sub_0", $"cutinsub_0_{majorId:00}_{minorId:00}.{subId:000}" }, null);
                     else if (category == 1)
-                        return $"CUTIN[\\\\/]UTARC[\\\\/]1_COM_0[\\\\/]CUTINCOM_0_{majorId:00}_{minorId:00}.{subId:000}";
+                        return (new string[] { "cutin", "utarc", "1_com_0", $"cutincom_0_{majorId:00}_{minorId:00}.{subId:000}" }, null);
                     else
-                        return $"CUTIN[\\\\/]UTARC[\\\\/]0_MAIN_0[\\\\/]CUTINMAIN_0_{majorId:00}_{minorId:00}.{subId:000}";
+                        return (new string[] { "cutin", "utarc", "0_main_0", $"cutinmain_0_{majorId:00}_{minorId:00}.{subId:000}" }, null);
                 }
-        return null;
+        return (null, null);
     }
 
-    public MagickImage GetMainCutinImage(string path)
+    public MagickImage GetMainCutinImage(string[] prefix, string suffix)
     {
-        List<string> paths = config.ExtractMatchingFiles(path);
-        AtlusArchive bin = new AtlusArchive(isCutin: true);
-        bin.Read(paths[0]);
-        foreach (FileEntry entry in bin.Entries)
+        List<string> paths = config.ExtractExactFiles(prefix, suffix);
+        if (paths.Count > 0)
         {
-            GLH thing = new GLH();
-            thing.FromBytes(entry.Data);
-            var settings = new MagickReadSettings() { Format = MagickFormat.Dds };
-            return new MagickImage(new MemoryStream(thing.DecompressedData.Data), settings);
+            AtlusArchive bin = new AtlusArchive(isCutin: true);
+            bin.Read(paths[0]);
+            foreach (FileEntry entry in bin.Entries)
+            {
+                GLH thing = new GLH();
+                thing.FromBytes(entry.Data);
+                var settings = new MagickReadSettings() { Format = MagickFormat.Dds };
+                return new MagickImage(new MemoryStream(thing.DecompressedData.Data), settings);
+            }
         }
         return null;
     }

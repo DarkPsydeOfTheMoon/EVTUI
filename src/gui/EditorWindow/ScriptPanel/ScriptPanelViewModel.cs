@@ -10,6 +10,7 @@ public class ScriptPanelViewModel : ViewModelBase
     /////////////////////////////
     // *** PRIVATE MEMBERS *** //
     /////////////////////////////
+    private List<IDisposable> subscriptions;
     private Dictionary<string, bool> IsMsg;
 
     ////////////////////////////
@@ -109,6 +110,8 @@ public class ScriptPanelViewModel : ViewModelBase
     ////////////////////////////
     public ScriptPanelViewModel(DataManager Config)
     {
+        this.subscriptions = new List<IDisposable>();
+
         this.Config = Config;
         this.Editable = !this.Config.ReadOnly;
 
@@ -121,12 +124,12 @@ public class ScriptPanelViewModel : ViewModelBase
         this.InitScriptEnabled = new BoolChoiceField("Enable Init Script", this.Editable, evt.Flags[1]);
         this.InitScriptIndex = new NumEntryField("Init Script Index", this.Editable, (int)evt.InitScriptIndex, 0, 255, 1);
 
-        this.WhenAnyValue(x => x.EmbedBMD.Value).Subscribe(x => evt.Flags[12] = this.EmbedBMD.Value);
-        this.WhenAnyValue(x => x.BMDPath.Text).Subscribe(x => evt.EventBmdPath = this.BMDPath.Text);
-        this.WhenAnyValue(x => x.EmbedBF.Value).Subscribe(x => evt.Flags[14] = this.EmbedBF.Value);
-        this.WhenAnyValue(x => x.BFPath.Text).Subscribe(x => evt.EventBfPath = this.BFPath.Text);
-        this.WhenAnyValue(x => x.InitScriptEnabled.Value).Subscribe(x => evt.Flags[1] = this.InitScriptEnabled.Value);
-        this.WhenAnyValue(x => x.InitScriptIndex.Value).Subscribe(x => evt.InitScriptIndex = (byte)x);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.EmbedBMD.Value).Subscribe(x => evt.Flags[12] = this.EmbedBMD.Value));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.BMDPath.Text).Subscribe(x => evt.EventBmdPath = this.BMDPath.Text));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.EmbedBF.Value).Subscribe(x => evt.Flags[14] = this.EmbedBF.Value));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.BFPath.Text).Subscribe(x => evt.EventBfPath = this.BFPath.Text));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.InitScriptEnabled.Value).Subscribe(x => evt.Flags[1] = this.InitScriptEnabled.Value));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.InitScriptIndex.Value).Subscribe(x => evt.InitScriptIndex = (byte)x));
 
         this._scriptNames = new ObservableCollection<string>();
         this._scriptExtNames = new ObservableCollection<string>();
@@ -142,6 +145,18 @@ public class ScriptPanelViewModel : ViewModelBase
             this.SelectedCompiledScriptName = this.ScriptNames[0];
             this.UpdateSubfiles();
         }
+    }
+
+    public void Dispose()
+    {
+        foreach (IDisposable subscription in this.subscriptions)
+            subscription.Dispose();
+        this.subscriptions.Clear();
+
+        this.ScriptNames.Clear();
+        this.ScriptExtNames.Clear();
+        this.IsMsg.Clear();
+        this.Config = null;
     }
 
     public void UpdateSubfiles()

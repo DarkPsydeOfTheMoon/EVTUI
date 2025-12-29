@@ -115,7 +115,7 @@ index d535d24..4347d4f 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLModel.cs b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-index daee18f..00baada 100644
+index daee18f..3f57932 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLModel.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLModel.cs
 @@ -6,7 +6,7 @@ using System.Numerics;
@@ -469,8 +469,8 @@ index daee18f..00baada 100644
 +                        {
 +                            //Debugger.Break();
 +                        }
-                     }
-                 }
++                    }
++                }
 +            }
 +        }
 +
@@ -509,8 +509,8 @@ index daee18f..00baada 100644
 +                            else
 +                                visibility = true;
 +                        }*/
-+                    }
-+                }
+                     }
+                 }
 +             }
 +        }
 +
@@ -562,6 +562,19 @@ index daee18f..00baada 100644
              }
          }
  
+@@ -339,6 +594,12 @@ namespace GFDLibrary.Rendering.OpenGL
+                         foreach ( var geometry in glNode.Meshes )
+                             geometry.Dispose();
+                     }
++
++                    foreach (string matName in Materials.Keys)
++                        Materials[matName].Dispose();
++
++                    foreach (int resId in AttachedModels.Keys)
++                        AttachedModels[resId].Dispose();
+                 }
+ 
+                 mDisposed = true;
 diff --git a/GFDLibrary.Rendering.OpenGL/GLNode.cs b/GFDLibrary.Rendering.OpenGL/GLNode.cs
 index 6ad8f72..b98f7b3 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLNode.cs
@@ -717,6 +730,19 @@ index 4cc6b16..82fe975 100644
 -}
 \ No newline at end of file
 +}
+diff --git a/GFDLibrary/Resource.cs b/GFDLibrary/Resource.cs
+index b51c8a5..91da843 100644
+--- a/GFDLibrary/Resource.cs
++++ b/GFDLibrary/Resource.cs
+@@ -66,7 +66,7 @@ namespace GFDLibrary
+ 
+         private static Resource Load( string path, Type type )
+         {
+-            using ( var stream = File.OpenRead( path ) )
++            using ( var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+             {
+                 // Copy file to memory for faster reading
+                 var memoryStream = new MemoryStream( (int)stream.Length );
 diff --git a/GFDLibrary/ResourceVersion.cs b/GFDLibrary/ResourceVersion.cs
 index 35b0863..802085b 100644
 --- a/GFDLibrary/ResourceVersion.cs

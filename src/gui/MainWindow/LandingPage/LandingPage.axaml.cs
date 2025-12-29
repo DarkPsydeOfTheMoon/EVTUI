@@ -72,6 +72,9 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             // Launch window and get a return code to distinguish how the window
             // was closed.
             int? res = await ((Window)configWindowView).ShowDialog<int?>(this.topLevel);
+            configWindowVM.Dispose();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             if (res is null)
                 return 1;
 
@@ -116,10 +119,13 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             foreach (EditorWindow window in this.editorWindows.Keys)
             {
                 window.Close();
-                ((EditorWindowViewModel)(window.DataContext)).Config.Reset();
+                ((EditorWindowViewModel)(window.DataContext)).Config.ClearCache();
+                ((EditorWindowViewModel)(window.DataContext)).Dispose();
             }
             this.openStuff.Clear();
             this.editorWindows.Clear();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
         catch (Exception ex)
         {
@@ -137,7 +143,10 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             this.openStuff.Remove(thingToClose);
             this.editorWindows.Remove((EditorWindow)sender);
             if (this.editorWindows.Count == 0)
-                ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Config.Reset();
+                ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Config.ClearCache();
+            ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Dispose();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
         catch (Exception ex)
         {

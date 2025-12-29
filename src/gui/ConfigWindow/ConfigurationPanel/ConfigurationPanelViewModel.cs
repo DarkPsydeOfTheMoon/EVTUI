@@ -24,6 +24,11 @@ public class DisplayableProject : ReactiveObject
         Ind      = ind;
     }
 
+    public void Dispose()
+    {
+        this.Config = null;
+    }
+
     private DataManager Config;
 
     private string _name;
@@ -65,6 +70,11 @@ public class DisplayableGame : ReactiveObject
         Ind    = ind;
     }
 
+    public void Dispose()
+    {
+        this.Config = null;
+    }
+
     private DataManager Config;
 
     public string Type  { get; set; }
@@ -102,6 +112,13 @@ public class DisplayableEvent : ReactiveObject
                     _projNotes  = evt.Text;
         _hasProjPin = hasProjPin;
         _hasGamePin = hasGamePin;
+    }
+
+    public void Dispose()
+    {
+        this.Game = null;
+        this.Proj = null;
+        this.Config = null;
     }
 
     private DataManager Config;
@@ -167,7 +184,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public DataManager Config { get; }
+    public DataManager Config { get; private set; }
     public string      ConfigType;
 
     public NewProjectConfig newProjectConfig { get; set; } = new NewProjectConfig();
@@ -281,6 +298,15 @@ public class ConfigurationPanelViewModel : ViewModelBase
         this.WhenAnyValue(x => x.SelectedCollection).Subscribe(x => this.DisplayEvents());
     }
     
+    public void Dispose()
+    {
+        this.ProjectList.Clear();
+        this.GameList.Clear();
+        this.EventList.Clear();
+        this.newProjectConfig = null;
+        this.Config = null;
+    }
+
     public bool TrySetCPKs(string cpkdir)
     {
         List<string> cpks = this.Config.GetCPKsFromPath(cpkdir);
@@ -292,7 +318,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
             this.newProjectConfig.GamePath = cpkdir;
             OnPropertyChanged(nameof(DisplayCPKPath));
         }
-        this.Config.CpkList = cpks;
+        this.Config.InitCPKs(cpks);
         return true;
     }
 

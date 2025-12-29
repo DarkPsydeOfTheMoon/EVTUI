@@ -69,6 +69,24 @@ public class AudioManager
         mediaPlayer   = new MediaPlayer(libVLC);
     }
 
+    public void Dispose()
+    {
+        this.mediaPlayer.Dispose();
+        this.mediaPlayer = null;
+
+        this.libVLC.Dispose();
+        this.libVLC = null;
+
+        if (!(this.Stream is null))
+            this.Stream.Dispose();
+
+        foreach (string key in this.AcbByType.Keys)
+            this.AcbByType[key].Clear();
+        this.AcbByType.Clear();
+        this.AcbList.Clear();
+        this.AudioCueFiles.Clear();
+    }
+
     private static Dictionary<string, Regex> Patterns = new Dictionary<string, Regex>()
     {    
         ["BGM"]    = new Regex("BGM\\.ACB$",                                 RegexOptions.IgnoreCase),
@@ -87,7 +105,7 @@ public class AudioManager
             this.AcbByType[key].Clear();
         if (!(acwbPaths is null))
         {
-            object _lock = new();
+            //object _lock = new();
             Parallel.ForEach(acwbPaths, acwbPath =>
             {
                 // stuff to be passed to the ACB object
@@ -112,19 +130,16 @@ public class AudioManager
                 if (!(soundFile.Cues is null))
                 {
                     string key = acwbPath.ACB.Substring((modPath.Length+1), acwbPath.ACB.Length-(modPath.Length+1));
-                    lock (_lock)
+                    foreach (string typeKey in AudioManager.Patterns.Keys)
                     {
-                        foreach (string typeKey in AudioManager.Patterns.Keys)
+                        if (AudioManager.Patterns[typeKey].IsMatch(key))
                         {
-                            if (AudioManager.Patterns[typeKey].IsMatch(key))
-                            {
-                                this.AcbByType[typeKey].Add(key);
-                                break;
-                            }
+                            lock (this.AcbByType[typeKey]) { this.AcbByType[typeKey].Add(key); }
+                            break;
                         }
-                        this.AudioCueFiles[key] = soundFile;
-                        this.AcbList.Add(key);
                     }
+                    lock (this.AudioCueFiles) { this.AudioCueFiles[key] = soundFile; }
+                    lock (this.AcbList) { this.AcbList.Add(key); }
                 }
             });
         }

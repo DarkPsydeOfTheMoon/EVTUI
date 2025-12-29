@@ -12,16 +12,16 @@ public class TimelinePanelViewModel : ViewModelBase
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public DataManager Config { get; }
-    public Clipboard SharedClipboard { get; }
+    public DataManager Config { get; private set; }
+    public Clipboard SharedClipboard { get; private set; }
 
-    public CommonViewModels Common { get; }
-    public TimelineViewModel TimelineContent { get; set; }
+    public CommonViewModels Common { get; private set; }
+    public TimelineViewModel TimelineContent { get; private set; }
     public TimelineCommands.Generic ActiveCommand { get; set; }
     protected CommandPointer _activeCommandPointer;
     protected Category _activeCategory;
 
-    public ObservableCollection<string> AddableCodes { get; set; } = new ObservableCollection<string>();
+    public ObservableCollection<string> AddableCodes { get; set; } //= new ObservableCollection<string>();
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -32,6 +32,16 @@ public class TimelinePanelViewModel : ViewModelBase
         this.Common          = commonVMs;
         this.TimelineContent = commonVMs.Timeline;
         this.SharedClipboard = clipboard;
+        this.AddableCodes    = new ObservableCollection<string>();
+    }
+
+    public void Dispose()
+    {
+        this.Config = null;
+        this.Common = null;
+        this.TimelineContent = null;
+        this.SharedClipboard = null;
+        this.AddableCodes.Clear();
     }
 
     public void InsertFrames(int afterFrame, int numberFrames)
