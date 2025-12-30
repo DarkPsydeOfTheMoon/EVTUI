@@ -72,7 +72,13 @@ public class EventManager
         if (acbPaths.Count > 0)
         {
             List<string> awbPaths = this.config.ExtractExactFiles(new string[] { "sound", $"{name}.awb" });
-            lock (this.AcwbPaths) { this.AcwbPaths.Add((acbPaths.Last(), (awbPaths.Count > 0) ? awbPaths.Last() : null)); }
+            acbPaths.Sort();
+            awbPaths.Sort();
+            lock (this.AcwbPaths)
+            {
+                for (int i=0; i<acbPaths.Count; i++)
+                    this.AcwbPaths.Add((acbPaths[i], (awbPaths.Count > i) ? awbPaths[i] : (awbPaths.Count > 0) ? awbPaths[0] : null));
+            }
             awbPaths.Clear();
         }
         acbPaths.Clear();
@@ -85,8 +91,10 @@ public class EventManager
         if (voiceAcbPaths.Count > 0)
         {
             List<string> voiceAwbPaths = this.config.ExtractExactFiles(new string[] { "sound", "event", $"e{majorId:000}_{minorId:000}.awb" });
-            for (int i=voiceAcbPaths.Count-1; i>=0; i--)
-                this.AcwbPaths.Add((voiceAcbPaths[i], (voiceAwbPaths.Count > i) ? voiceAwbPaths[i] : null));
+            voiceAcbPaths.Sort();
+            voiceAwbPaths.Sort();
+            for (int i=0; i<voiceAcbPaths.Count; i++)
+                this.AcwbPaths.Add((voiceAcbPaths[i], (voiceAwbPaths.Count > i) ? voiceAwbPaths[i] : (voiceAwbPaths.Count > 0) ? voiceAwbPaths[0] : null));
             voiceAwbPaths.Clear();
         }
         voiceAcbPaths.Clear();
@@ -99,8 +107,10 @@ public class EventManager
         if (sfxAcbPaths.Count > 0)
         {
             List<string> sfxAwbPaths = this.config.ExtractExactFiles(new string[] { "sound", "event", $"e{majorId:000}_{minorId:000}_se.awb" });
-            for (int i=sfxAcbPaths.Count-1; i>=0; i--)
-                this.AcwbPaths.Add((sfxAcbPaths[i], (sfxAwbPaths.Count > i) ? sfxAwbPaths[i] : null));
+            sfxAcbPaths.Sort();
+            sfxAwbPaths.Sort();
+            for (int i=0; i<sfxAcbPaths.Count; i++)
+                this.AcwbPaths.Add((sfxAcbPaths[i], (sfxAwbPaths.Count > i) ? sfxAwbPaths[i] : (sfxAwbPaths.Count > 0) ? sfxAwbPaths[0] : null));
             sfxAwbPaths.Clear();
         }
         sfxAcbPaths.Clear();
