@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EVTUI;
@@ -69,9 +70,14 @@ public static class CPKExtract
 
     public static async IAsyncEnumerable<string> FindModFiles(string[] prefix, string suffix, string ExistingFolder)
     {
-        string filePatternString = Path.Combine(prefix);
+        string delim = "/";
+        if (Path.DirectorySeparatorChar == '\\')
+            delim = "\\\\";
+        //string filePatternString = Path.Combine(prefix);
+        string filePatternString = String.Join(delim, prefix);
         if (!(suffix is null))
-            filePatternString = Path.Combine(filePatternString, suffix);
+            //filePatternString = Path.Combine(filePatternString, suffix);
+            filePatternString += delim + suffix;
         Regex filePattern = new Regex(filePatternString, RegexOptions.IgnoreCase);
         if (!String.IsNullOrEmpty(ExistingFolder))
             foreach (var ModPath in Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories))
@@ -81,14 +87,20 @@ public static class CPKExtract
             }
     }
 
+    private static ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
     public static async IAsyncEnumerable<string> ExtractFiles(List<CpkFile> files, string CpkPath, string OutputFolder, string decryptionFunctionName)
+    //public static async Task<List<string>> ExtractFiles(List<CpkFile> files, string CpkPath, string OutputFolder, string decryptionFunctionName)
     {
         KnownDecryptionFunction decryptionFunctionIndex;
         InPlaceDecryptionFunction decryptionFunction = null;
         if (Enum.TryParse(decryptionFunctionName, out decryptionFunctionIndex))
             decryptionFunction = CriFsLib.Instance.GetKnownDecryptionFunction(decryptionFunctionIndex);
 
-        List<string> matches = new List<string>();
+        //if (rwLock.TryEnterWriteLock(2000))
+        //{
+        //    try
+        //    {
+        //List<string> matches = new List<string>();
         using var extractor = CriFsLib.Instance.CreateBatchExtractor<ItemModel>(CpkPath, decryptionFunction);
         using (var fileStream = new FileStream(CpkPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             foreach (CpkFile file in files)
@@ -97,11 +109,38 @@ public static class CPKExtract
                 Directory.CreateDirectory(dirPath);
                 string inCpkPath = Path.Combine(file.Directory ?? "", file.FileName);
                 string outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
-                extractor.QueueItem(new ItemModel(outputPath, file));
+                //matches.Add(outputPath);
+                if (rwLock.TryEnterWriteLock(2000))
+                {
+                    try
+                    {
+                        if (!File.Exists(outputPath))
+                        {
+                            using (File.Create(outputPath)) {}
+                            extractor.QueueItem(new ItemModel(outputPath, file));
+                        }
+                    }
+                    finally
+                    {
+                        rwLock.ExitWriteLock();
+                    }
+                }
+                else
+                {
+                    Trace.TraceError("Failed to acquire extraction write lock after 2s.");
+                    throw new IOException("Failed to acquire ectraction write lock after 2s.");
+                }
+                //using ArrayRental res = CpkHelper.ExtractFile(file, fileStream, decryptionFunction);
+                //if (!File.Exists(outputPath))
+                //    File.WriteAllBytes(outputPath, res.Span.ToArray());
+                //res.Dispose();
                 yield return await Task.FromResult(outputPath);
+                //yield return outputPath;
             }
         extractor.WaitForCompletion();
+        //await extractor.WaitForCompletionAsync();
         ArrayRental.Reset();
+        //return matches;
     }
 
     //public static List<string> ExtractMatchingFiles(in Dictionary<string, Trie> CpkTries, string[] prefix, string suffix, string ExistingFolder, string OutputFolder, string decryptionFunctionName)

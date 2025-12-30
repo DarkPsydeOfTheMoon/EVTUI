@@ -257,7 +257,7 @@ public class SceneManager
 
     public Dictionary<int, SceneModel> sceneModels;
     public Dictionary<int, Dictionary<int, SceneModel>> fieldModels;
-    public List<AnimationPack> externalGAPs;
+    //public List<AnimationPack> externalGAPs;
     public List<GLPerspectiveCamera> cameras;
     public List<GLShaderProgram> shaders;
     public Dictionary<string, Texture> FieldTex;
@@ -285,7 +285,7 @@ public class SceneManager
 
         this.sceneModels = new Dictionary<int, SceneModel>();
         this.fieldModels = new Dictionary<int, Dictionary<int, SceneModel>>();
-        this.externalGAPs = new List<AnimationPack>();
+        //this.externalGAPs = new List<AnimationPack>();
         this.cameras = new List<GLPerspectiveCamera>();
         this.shaders = new List<GLShaderProgram>();
         this.FieldTex = new Dictionary<string, Texture>();
@@ -339,9 +339,9 @@ public class SceneManager
         }
         this.fieldModels.Clear();
 
-        for (int i=this.externalGAPs.Count-1; i>=0; --i)
-            this.UnloadGAP(i);
-        this.externalGAPs.Clear();
+        //for (int i=this.externalGAPs.Count-1; i>=0; --i)
+        //    this.UnloadGAP(i);
+        //this.externalGAPs.Clear();
 
         for (int i=this.shaders.Count-1; i>=0; --i)
             this.UnloadShader(i);
@@ -384,7 +384,7 @@ public class SceneManager
     ///////////////////////////////////
     // *** GAP Memory Management *** //
     ///////////////////////////////////
-    public int LoadGAP(string filepath)
+    /*public int LoadGAP(string filepath)
     {
         if (!File.Exists(filepath))
             throw new FileNotFoundException($"GAP file '{filepath}' does not exist.");
@@ -401,7 +401,7 @@ public class SceneManager
             return;
         }
         this.externalGAPs.RemoveAt(index);
-    }
+    }*/
 
     //////////////////////////////////////
     // *** Shader Memory Management *** //
@@ -434,7 +434,7 @@ public class SceneManager
     /////////////////////////////////////
     // *** Model State Management *** //
     ////////////////////////////////////
-    public void ActivateAnimationOnModel(int model_index, int gap_index, int animation_index)
+    /*public void ActivateAnimationOnModel(int model_index, int gap_index, int animation_index)
     {
         var animation = this.externalGAPs[gap_index].Animations[animation_index];
         if (this.sceneModels.ContainsKey(model_index))
@@ -458,7 +458,7 @@ public class SceneManager
             this.sceneModels[model_index].UnloadAnimation();
         else
             Trace.TraceWarning($"Tried to unload animations for asset #{model_index}, which hasn't been loaded.");
-    }
+    }*/
 
     public void LoadBaseAnimation(int model_index, bool isExt, int idx)
     {

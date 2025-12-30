@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 
 using ReactiveUI;
 
+using GFDLibrary;
+
 using EVTUI;
 
 namespace EVTUI.ViewModels;
@@ -19,17 +21,56 @@ public class CommonViewModels : ReactiveObject
 
         this.Render = new GFDRenderingPanelViewModel(dataManager);
 
+        Dictionary<string, ModelPack> cachedModels = new Dictionary<string, ModelPack>();
         this.Assets = new ObservableCollection<AssetViewModel>();
         this.AssetsByID = new Dictionary<int, AssetViewModel>();
         //foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
         Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
         {
-            var asset = new AssetViewModel(dataManager, obj);
+            AssetViewModel asset = new AssetViewModel(dataManager, obj);
+            lock (cachedModels)
+            {
+                foreach (string path in asset.ActiveModels.Keys)
+                    if (!(cachedModels.ContainsKey(path)) || cachedModels[path] is null)
+                        cachedModels[path] = asset.ActiveModels[path];
+            }
+            /*//lock (cachedModels)
+            //{
+                Parallel.ForEach(asset.ActiveModels.Keys, path =>
+                {
+                    if (!(cachedModels.ContainsKey(path)))
+                    {
+                        if (asset.ActiveModels[path] is null)
+                        {
+                            lock (cachedModels) { cachedModels[path] = null; }
+                            ModelPack model = GFDLibrary.Api.FlatApi.LoadModel(path);
+                            lock (cachedModels) { cachedModels[path] = model; }
+                            lock (asset.ActiveModels) { asset.ActiveModels[path] = model; }
+                        }
+                        else
+                            lock (cachedModels) { cachedModels[path] = asset.ActiveModels[path]; }
+                    }
+                    if (asset.ActiveModels[path] is null)
+                        Console.WriteLine($"####### {path}");
+                });
+            //}*/
             lock (this.AssetsByID) { this.AssetsByID[obj.Id] = asset; }
             lock (this.Assets) { this.Assets.Add(this.AssetsByID[obj.Id]); }
             if (asset.ObjectType.Choice == "Field")
                 this.Render.AddTextures(asset.ActiveTextureBinPaths);
         });
+        Parallel.ForEach(cachedModels.Keys, path =>
+        {
+            if (cachedModels[path] is null)
+                cachedModels[path] = GFDLibrary.Api.FlatApi.LoadModel(path);
+        });
+        Parallel.ForEach(this.Assets, asset =>
+        {
+            foreach (string path in asset.ActiveModels.Keys)
+                asset.ActiveModels[path] = cachedModels[path];
+        });
+        cachedModels.Clear();
+        cachedModels = null;
 
         this.Timeline = new TimelineViewModel(dataManager);
 

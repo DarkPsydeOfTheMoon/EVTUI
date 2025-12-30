@@ -113,6 +113,8 @@ public class EventManager
             this.BmdPaths = this.config.ExtractExactFiles(this.SerialEvent.EventBmdPath.Replace("\0", ""));
         else
             this.BmdPaths = this.config.ExtractExactFiles(new string[] { "event_data", "message", $"e{majorHundred:000}", $"e{majorId:000}_{minorId:000}.bmd" });
+        this.BmdPaths.Sort();
+        this.BmdPaths.Reverse();
         await Task.Yield();
     }
 
@@ -122,6 +124,8 @@ public class EventManager
             this.BfPaths = this.config.ExtractExactFiles(this.SerialEvent.EventBfPath.Replace("\0", ""));
         else
             this.BfPaths = this.config.ExtractExactFiles(new string[] { "event_data", "script", $"e{majorHundred:000}", $"e{majorId:000}_{minorId:000}.bf" });
+        this.BfPaths.Sort();
+        this.BfPaths.Reverse();
         await Task.Yield();
     }
 
