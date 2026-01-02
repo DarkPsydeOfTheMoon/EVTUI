@@ -83,4 +83,10 @@ public class BiDict<TKey, TValue>
     public List<TKey> Keys { get => this.Forward.Keys.ToList(); }
 
     public List<TValue> Values { get => this.Backward.Keys.ToList(); }
+
+    public void Clear()
+    {
+        this.Forward.Clear();
+        this.Backward.Clear();
+    }
 }

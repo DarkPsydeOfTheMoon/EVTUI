@@ -13,8 +13,8 @@ public class EnCc : Generic
     {
         this.LongName = "Environment: Color Correction";
 
-        this.ActionType = new StringSelectionField("Mode", this.Editable, this.ActionTypes.Backward[this.CommandData.Enable], this.ActionTypes.Keys);
-        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Enable = this.ActionTypes.Forward[this.ActionType.Choice]);
+        this.ActionType = new StringSelectionField("Mode", this.Editable, EnCc.ActionTypes.Backward[this.CommandData.Enable], EnCc.ActionTypes.Keys);
+        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Enable = EnCc.ActionTypes.Forward[this.ActionType.Choice]);
 
         // corrections
         this.Cyan = new NumRangeField("Cyan", this.Editable, this.CommandData.Cyan, -1, 1, 0.01);
@@ -38,7 +38,7 @@ public class EnCc : Generic
     public NumRangeField Dodge   { get; set; }
     public NumRangeField Burn    { get; set; }
 
-    public BiDict<string, uint> ActionTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> ActionTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

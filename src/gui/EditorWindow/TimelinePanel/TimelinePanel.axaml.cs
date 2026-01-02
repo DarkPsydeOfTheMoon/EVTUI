@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 
+using ReactiveUI;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
@@ -13,8 +15,6 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
 using Avalonia.VisualTree;
-
-using ReactiveUI;
 
 using EVTUI.ViewModels;
 using EVTUI.ViewModels.TimelineCommands;
@@ -84,6 +84,9 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
     public TimelinePanel()
     {
         InitializeComponent();
+        // goofy but it does seem to help a bit with memory pressure...
+        this.Loaded += hello;
+        this.Unloaded += goodbye;
         this.WhenActivated(d =>
         {
             var tl = TopLevel.GetTopLevel(this);
@@ -95,7 +98,21 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
             this.FramePositions = new List<double>();
             foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
                 this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
+
         });
+    }
+
+    public void hello(object sender, RoutedEventArgs e)
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+    }
+
+    public void goodbye(object sender, RoutedEventArgs e)
+    {
+        this.topLevel = null;
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
     }
 
     public async void ToggleMarker(object sender, PointerReleasedEventArgs e)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 
 using ReactiveUI;
 
@@ -9,6 +10,8 @@ namespace EVTUI.ViewModels;
 
 public class TimelineViewModel : ReactiveObject
 {
+
+    private List<IDisposable> subscriptions;
 
     // from header
     // labels
@@ -43,6 +46,7 @@ public class TimelineViewModel : ReactiveObject
 
     public TimelineViewModel(DataManager dataManager)
     {
+        this.subscriptions = new List<IDisposable>();
         EVT evt = (EVT)dataManager.EventManager.SerialEvent;
 
         // from header
@@ -53,41 +57,41 @@ public class TimelineViewModel : ReactiveObject
         this.Rank = new StringSelectionField("Rank", !dataManager.ReadOnly, Enum.GetName(typeof(Ranks), evt.Rank), new List<string>(Enum.GetNames(typeof(Ranks))));
         this.Level = new NumEntryField("Level", !dataManager.ReadOnly, evt.Level, 0, 3, 1);
 
-        this.WhenAnyValue(x => x.MajorID.Value).Subscribe(x => evt.MajorId = (short)x);
-        this.WhenAnyValue(x => x.MinorID.Value).Subscribe(x => evt.MinorId = (short)x);
-        this.WhenAnyValue(x => x.Rank.Choice).Subscribe(x => evt.Rank = (byte)Enum.Parse(typeof(Ranks), x));
-        this.WhenAnyValue(x => x.Level.Value).Subscribe(x => evt.Level = (byte)x);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.MajorID.Value).Subscribe(x => evt.MajorId = (short)x));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.MinorID.Value).Subscribe(x => evt.MinorId = (short)x));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.Rank.Choice).Subscribe(x => evt.Rank = (byte)Enum.Parse(typeof(Ranks), x)));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.Level.Value).Subscribe(x => evt.Level = (byte)x));
 
         // cinemascope
         this.CinemascopeEnabled = new BoolChoiceField("Enable Cinemascope", !dataManager.ReadOnly, evt.Flags[8]);
         this.CinemascopeAnimationEnabled = new BoolChoiceField("Enable Cinemascope Animation", !dataManager.ReadOnly, evt.Flags[9]);
-        this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", !dataManager.ReadOnly, (int)evt.CinemascopeStartingFrame, 0, 9999, 1);
+        this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", !dataManager.ReadOnly, evt.CinemascopeStartingFrame, 0, 9999, 1);
 
-        this.WhenAnyValue(x => x.CinemascopeEnabled.Value).Subscribe(x => evt.Flags[8] = this.CinemascopeEnabled.Value);
-        this.WhenAnyValue(x => x.CinemascopeAnimationEnabled.Value).Subscribe(x => evt.Flags[9] = this.CinemascopeAnimationEnabled.Value);
-        this.WhenAnyValue(x => x.CinemascopeStartingFrame.Value).Subscribe(x => evt.CinemascopeStartingFrame = (short)x);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.CinemascopeEnabled.Value).Subscribe(x => evt.Flags[8] = this.CinemascopeEnabled.Value));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.CinemascopeAnimationEnabled.Value).Subscribe(x => evt.Flags[9] = this.CinemascopeAnimationEnabled.Value));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.CinemascopeStartingFrame.Value).Subscribe(x => evt.CinemascopeStartingFrame = (short)x));
 
         // env
-        this.InitEnvAssetID = new NumEntryField("Init ENV ID", !dataManager.ReadOnly, (int)evt.InitEnvAssetID, 0, 9999, 1);
-        this.DebugEnvAssetID = new NumEntryField("Debug ENV ID", !dataManager.ReadOnly, (int)evt.InitDebugEnvAssetID, 0, 9999, 1);
+        this.InitEnvAssetID = new NumEntryField("Init ENV ID", !dataManager.ReadOnly, evt.InitEnvAssetID, 0, 9999, 1);
+        this.DebugEnvAssetID = new NumEntryField("Debug ENV ID", !dataManager.ReadOnly, evt.InitDebugEnvAssetID, 0, 9999, 1);
 
-        this.WhenAnyValue(x => x.InitEnvAssetID.Value).Subscribe(x => evt.InitEnvAssetID = (int)x);
-        this.WhenAnyValue(x => x.DebugEnvAssetID.Value).Subscribe(x => evt.InitDebugEnvAssetID = (int)x);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.InitEnvAssetID.Value).Subscribe(x => evt.InitEnvAssetID = (int)x));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.DebugEnvAssetID.Value).Subscribe(x => evt.InitDebugEnvAssetID = (int)x));
 
         // other flags
         this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", !dataManager.ReadOnly, evt.Flags[6]);
         this.UnkFlag2 = new BoolChoiceField("Unknown Flag #2", !dataManager.ReadOnly, evt.Flags[16]);
 
-        this.WhenAnyValue(x => x.UnkFlag1.Value).Subscribe(x => evt.Flags[6] = this.UnkFlag1.Value);
-        this.WhenAnyValue(x => x.UnkFlag2.Value).Subscribe(x => evt.Flags[16] = this.UnkFlag2.Value);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.UnkFlag1.Value).Subscribe(x => evt.Flags[6] = this.UnkFlag1.Value));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.UnkFlag2.Value).Subscribe(x => evt.Flags[16] = this.UnkFlag2.Value));
 
         // frames
         this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, evt.FrameRate, 1, 255, 1);
         this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, evt.FrameCount, 1, 99999, 1);
         this.StartingFrameEnabled = new BoolChoiceField("Set Delayed Starting Frame?", !dataManager.ReadOnly, evt.Flags[0]);
-        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, evt.StartingFrame, 0, 99999, 1);
+        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, evt.StartingFrame, 0, 9999, 1);
 
-        this.WhenAnyValue(x => x.FrameRate.Value).Subscribe(x => evt.FrameRate = (byte)this.FrameRate.Value);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.FrameRate.Value).Subscribe(x => evt.FrameRate = (byte)this.FrameRate.Value));
         // (the rest of the WhenAnyValues are below)
 
         _frameCount = (int)this.FrameDuration.Value;
@@ -135,7 +139,7 @@ public class TimelineViewModel : ReactiveObject
         this.Categories.Add(new Category("Hardware", 14, this.FrameCount));
         this.Categories.Add(new Category("Other",    15, this.FrameCount));
 
-        this.WhenAnyValue(x => x.FrameDuration.Value).Subscribe(x => 
+        this.subscriptions.Add(this.WhenAnyValue(x => x.FrameDuration.Value).Subscribe(x => 
         {
             evt.FrameCount = (int)this.FrameDuration.Value;
             this.FrameCount = (int)this.FrameDuration.Value;
@@ -150,9 +154,9 @@ public class TimelineViewModel : ReactiveObject
                 foreach (CommandPointer _cmd in _cat.Commands)
                     _cmd.IsInPlayRange = (_cmd.Frame >= _startingFrame && _cmd.Frame < _frameCount);
             }
-        });
+        }));
 
-        this.WhenAnyValue(x => x.StartingFrameEnabled.Value, x => x.StartingFrameEntry.Value).Subscribe(x => 
+        this.subscriptions.Add(this.WhenAnyValue(x => x.StartingFrameEnabled.Value, x => x.StartingFrameEntry.Value).Subscribe(x => 
         {
             evt.Flags[0] = this.StartingFrameEnabled.Value;
             evt.StartingFrame = (short)this.StartingFrameEntry.Value;
@@ -162,24 +166,24 @@ public class TimelineViewModel : ReactiveObject
             foreach (Category _cat in this.Categories)
                 foreach (CommandPointer _cmd in _cat.Commands)
                     _cmd.IsInPlayRange = (_cmd.Frame >= _startingFrame && _cmd.Frame < _frameCount);
-        });
+        }));
 
-        for (int j=0; j<dataManager.EventManager.EventSoundCommands.Length; j++)
+        Parallel.For(0, dataManager.EventManager.EventSoundCommands.Length, j =>
         {
             string code = dataManager.EventManager.EventSoundCommands[j].CommandCode;
             int i = dataManager.EventManager.EventSoundCommands[j].FrameStart;
             int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
             CommandPointer newCmd = new CommandPointer(dataManager, code, true, j, i, len, (i >= _startingFrame && i < _frameCount));
             this.AddCommand(newCmd, sort: false);
-        }
-        for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
+        });
+        Parallel.For(0, dataManager.EventManager.EventCommands.Length, j =>
         {
             string code = dataManager.EventManager.EventCommands[j].CommandCode;
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
             int len = dataManager.EventManager.EventCommands[j].FrameDuration;
             CommandPointer newCmd = new CommandPointer(dataManager, code, false, j, i, len, (i >= _startingFrame && i < _frameCount));
             this.AddCommand(newCmd, sort: false);
-        }
+        });
         foreach (Category _cat in this.Categories)
             _cat.SortCommands();
     }
@@ -334,10 +338,13 @@ public class TimelineViewModel : ReactiveObject
     public void AddCommand(CommandPointer newCmd, bool sort = true)
     {
         int catInd = TimelineViewModel.CodeToCategory(newCmd.Code, newCmd.IsAudioCmd);
-        this.Categories[catInd].AddCommand(newCmd);
-        if (sort)
-            this.Categories[catInd].SortCommands();
-        this.Categories[catInd].IsOpen = true;
+        lock (this.Categories[catInd])
+        {
+            this.Categories[catInd].AddCommand(newCmd);
+            if (sort)
+                this.Categories[catInd].SortCommands();
+            this.Categories[catInd].IsOpen = true;
+        }
     }
 
     public void DeleteCommand(CommandPointer cmd)
@@ -375,6 +382,16 @@ public class TimelineViewModel : ReactiveObject
     {
         get => _activeFrame;
         set => this.RaiseAndSetIfChanged(ref _activeFrame, value);
+    }
+
+    public void Dispose()
+    {
+        foreach (IDisposable subscription in this.subscriptions)
+            subscription.Dispose();
+        this.subscriptions.Clear();
+        foreach (Category _cat in this.Categories)
+            _cat.Dispose();
+        this.Categories.Clear();
     }
 }
 
@@ -423,6 +440,11 @@ public class Category : ViewModelBase
         this.MaxInOneFrame = 0;
         this.CommandsPerFrame = new Dictionary<int, int>();
         this.IsOpen = false;
+    }
+
+    public void Dispose()
+    {
+        this.Commands.Clear();
     }
 
     private Dictionary<int, int> CommandsPerFrame;
@@ -504,7 +526,7 @@ public class Category : ViewModelBase
     // make sure they get drawn in the right order, basically...
     public void SortCommands()
     {
-        ObservableCollection<CommandPointer> temp = new ObservableCollection<CommandPointer>(this.Commands.OrderBy(cmd => cmd.Frame));
+        ObservableCollection<CommandPointer> temp = new ObservableCollection<CommandPointer>(this.Commands.OrderBy(cmd => cmd.Frame).ThenBy(cmd => cmd.CmdIndex));
         this.Commands.Clear();
         foreach (CommandPointer cmd in temp)
             this.Commands.Add(cmd);
@@ -551,7 +573,7 @@ public class Category : ViewModelBase
 
 public class CommandPointer : ViewModelBase
 {
-    public CommandPointer(DataManager config, string code, bool isAudioCmd, int cmdIndex, int frame, int duration, bool isInPlayRange)
+    public CommandPointer(in DataManager config, string code, bool isAudioCmd, int cmdIndex, int frame, int duration, bool isInPlayRange)
     {
         this.Code       = code;
         this.IsAudioCmd = isAudioCmd;

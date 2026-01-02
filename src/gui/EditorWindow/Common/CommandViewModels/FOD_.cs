@@ -22,8 +22,8 @@ public class FOD_ : Generic
         //else
             this.TexturePath = "";*/
 
-        this.ActionType = new StringSelectionField("Mode", this.Editable, this.ActionTypes.Backward[this.CommandData.EnableFieldObject], this.ActionTypes.Keys);
-        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.EnableFieldObject = this.ActionTypes.Forward[this.ActionType.Choice]);
+        this.ActionType = new StringSelectionField("Mode", this.Editable, FOD_.ActionTypes.Backward[this.CommandData.EnableFieldObject], FOD_.ActionTypes.Keys);
+        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.EnableFieldObject = FOD_.ActionTypes.Forward[this.ActionType.Choice]);
 
         this.ObjectIndex = new NumEntryField("Field Object Index", this.Editable, this.CommandData.ObjectIndex, -1, 65535, 1);
         this.WhenAnyValue(_ => _.ObjectIndex.Value).Subscribe(_ => this.CommandData.ObjectIndex = (int)this.ObjectIndex.Value);
@@ -62,7 +62,7 @@ public class FOD_ : Generic
 
     public ModelPreviewWidget ModelPreviewVM { get; set; }
 
-    public BiDict<string, uint> ActionTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> ActionTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

@@ -14,8 +14,8 @@ public class Snd_ : Generic
     {
         this.LongName = "Sounds: Play Cue";
 
-        this.ActionType = new StringSelectionField("Action", this.Editable, this.ActionTypes.Backward[this.CommandData.Action], this.ActionTypes.Keys);
-        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Action = this.ActionTypes.Forward[this.ActionType.Choice]);
+        this.ActionType = new StringSelectionField("Action", this.Editable, Generic.AudioActionTypes.Backward[this.CommandData.Action], Generic.AudioActionTypes.Keys);
+        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Action = Generic.AudioActionTypes.Forward[this.ActionType.Choice]);
 
         // TODO: temporarily (?) making this numeric entry until audio frameworks (i.e., ryo) are supported
         //this.CueID = new IntSelectionField("Cue ID", this.Editable, this.CommandData.CueId, config.AudioManager.CueIds.ConvertAll(x => (int)x));
@@ -23,11 +23,11 @@ public class Snd_ : Generic
         this.CueID = new NumEntryField("CueID", this.Editable, this.CommandData.CueId, 0, 99999, 1);
         this.WhenAnyValue(_ => _.CueID.Value).Subscribe(_ => this.CommandData.CueId = (int)this.CueID.Value);
 
-        this.SourceType = new StringSelectionField("Source", this.Editable,  this.SourceTypes.Backward[this.CommandData.Source], this.SourceTypes.Keys);
+        this.SourceType = new StringSelectionField("Source", this.Editable,  Snd_.SourceTypes.Backward[this.CommandData.Source], Snd_.SourceTypes.Keys);
         config.AudioManager.SetActiveACBType(this.SourceType.Choice);
         this.WhenAnyValue(x => x.SourceType.Choice).Subscribe(x =>
         {
-            this.CommandData.Source = this.SourceTypes.Forward[this.SourceType.Choice];
+            this.CommandData.Source = Snd_.SourceTypes.Forward[this.SourceType.Choice];
             config.AudioManager.SetActiveACBType(x);
             // shenanigans to avoid not-an-object issues when old cueId is not in new set
             //if (!config.AudioManager.CueIds.Contains((uint)this.CueID.Choice))
@@ -51,17 +51,7 @@ public class Snd_ : Generic
     public NumEntryField FadeDuration { get; set; }
     public NumEntryField Unk          { get; set; }
 
-    public BiDict<string, int> ActionTypes = new BiDict<string, int>
-    (
-        new Dictionary<string, int>
-        {
-            {"None", 0},
-            {"Play", 1},
-            {"Stop", 2},
-        }
-    );
-
-    public BiDict<string, int> SourceTypes = new BiDict<string, int>
+    public static BiDict<string, int> SourceTypes = new BiDict<string, int>
     (
         new Dictionary<string, int>
         {

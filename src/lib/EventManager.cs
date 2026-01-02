@@ -3,21 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace EVTUI;
-
-public struct CpkEVTContents
-{
-    public string evtPath = "";
-    public string ecsPath = "";
-    public List<string> acbPaths = new List<string>();
-    public List<string> awbPaths = new List<string>();
-    public List<string> bfPaths  = new List<string>();
-    public List<string> bmdPaths = new List<string>();
-
-    public CpkEVTContents() {}
-}
 
 public class EventManager
 {
@@ -26,8 +16,8 @@ public class EventManager
     // *** PRIVATE MEMBERS *** //
     ///////////////./////////////
     private DataManager config;
-    //private EVT?   SerialEvent               = null;
-    private ECS?   SerialEventSounds         = null;
+    //private EVT? SerialEvent = null;
+    private ECS? SerialEventSounds = null;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
@@ -40,7 +30,7 @@ public class EventManager
 
     // TODO: re-privatize this...? the Basics and Assets tabs use it...
     // is there a nicer way than having it just be public?
-    public EVT?   SerialEvent               = null;
+    public EVT? SerialEvent = null;
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
@@ -50,63 +40,150 @@ public class EventManager
         this.config = config;
     }
 
-    public bool Load(CpkEVTContents? cpkEVTContents)
+    public void Dispose()
     {
-        this.Clear();
-        if (cpkEVTContents is null)
-            return false;
-
-        this.EvtPath = cpkEVTContents.Value.evtPath;
-        this.SerialEvent = new EVT();
-        this.SerialEvent.Read(this.EvtPath);
-
-        this.EcsPath = cpkEVTContents.Value.ecsPath;
-        this.SerialEventSounds = new ECS();
-        if (String.IsNullOrEmpty(this.EcsPath))
-            this.EcsPath = this.EvtPath.Substring(0, this.EvtPath.Length-4) + ".ECS";
-        else
-            this.SerialEventSounds.Read(this.EcsPath);
-
-        // cheap way of putting en.cpk before base.cpk and modded files before vanilla files, lolllll
-        // i'll do it properly eventually, maybe
-        cpkEVTContents.Value.acbPaths.Reverse();
-        cpkEVTContents.Value.bfPaths.Reverse();
-        cpkEVTContents.Value.bmdPaths.Reverse();
-
-        // the DataManager will pass these to the AudioManager
-        this.AcwbPaths = new List<(string ACB, string? AWB)>();
-        foreach (string acbPath in cpkEVTContents.Value.acbPaths)
-        {
-            string basePath = acbPath.Substring(0, acbPath.Length-4);
-            Regex awbPattern = new Regex(Regex.Escape(basePath)+"\\.AWB$", RegexOptions.IgnoreCase);
-            string awbPath = null;
-            foreach (string candidateAwbPath in cpkEVTContents.Value.awbPaths)
-                if (awbPattern.IsMatch(candidateAwbPath))
-                {
-                    awbPath = candidateAwbPath;
-                    break;
-                }
-            this.AcwbPaths.Add((acbPath, awbPath));
-        }
-        if (this.SerialEvent.Flags[12])
-            this.BmdPaths = config.ExtractMatchingFiles(this.SerialEvent.EventBmdPath.Replace("\0", "").Replace("/", "[\\\\/]"));
-        else
-            // derive this from IDs within EVT instead...?
-            this.BmdPaths = cpkEVTContents.Value.bmdPaths;
-
-        if (this.SerialEvent.Flags[14])
-            this.BfPaths = config.ExtractMatchingFiles(this.SerialEvent.EventBfPath.Replace("\0", "").Replace("/", "[\\\\/]"));
-        else
-            // derive this from IDs within EVT instead...?
-            this.BfPaths = cpkEVTContents.Value.bfPaths;
-
-        return true;
+        this.SerialEvent = null;
+        this.SerialEventSounds = null;
+        if (!(AcwbPaths is null))
+            this.AcwbPaths.Clear();
+        if (!(BfPaths is null))
+            this.BfPaths.Clear();
+        if (!(BmdPaths is null))
+            this.BmdPaths.Clear();
+        this.config = null;
     }
 
-    public void Clear()
+    private async Task AddEcs(int majorHundred, int majorTen, int majorId, int minorId)
     {
-        this.SerialEvent               = null;
-        this.SerialEventSounds         = null;
+        string[] ecsPrefix = new string[] { "event", $"e{majorHundred:000}", $"e{majorTen:000}", $"e{majorId:000}_{minorId:000}.ecs" };
+        List<string> ecsPaths = this.config.ExtractExactFiles(ecsPrefix);
+        this.SerialEventSounds = new ECS();
+        if (ecsPaths.Count == 0)
+            this.EcsPath = this.EvtPath.Substring(0, this.EvtPath.Length-4) + ".ECS";
+        else
+        {
+            this.EcsPath = ecsPaths[0];
+            this.SerialEventSounds.Read(this.EcsPath);
+        }
+        ecsPaths.Clear();
+        await Task.Yield();
+    }
+
+    private async Task AddCommonAcwb(string name)
+    {
+        List<string> acbPaths = this.config.ExtractExactFiles(new string[] { "sound", $"{name}.acb" });
+        if (acbPaths.Count > 0)
+        {
+            List<string> awbPaths = this.config.ExtractExactFiles(new string[] { "sound", $"{name}.awb" });
+            acbPaths.Sort();
+            awbPaths.Sort();
+            lock (this.AcwbPaths)
+            {
+                for (int i=0; i<acbPaths.Count; i++)
+                    this.AcwbPaths.Add((acbPaths[i], (awbPaths.Count > i) ? awbPaths[i] : (awbPaths.Count > 0) ? awbPaths[0] : null));
+            }
+            awbPaths.Clear();
+        }
+        acbPaths.Clear();
+        await Task.Yield();
+    }
+
+    private async Task AddVoiceAcwb(int majorId, int minorId)
+    {
+        List<string> voiceAcbPaths = this.config.ExtractExactFiles(new string[] { "sound", "event", $"e{majorId:000}_{minorId:000}.acb" });
+        if (voiceAcbPaths.Count > 0)
+        {
+            List<string> voiceAwbPaths = this.config.ExtractExactFiles(new string[] { "sound", "event", $"e{majorId:000}_{minorId:000}.awb" });
+            voiceAcbPaths.Sort();
+            voiceAwbPaths.Sort();
+            for (int i=0; i<voiceAcbPaths.Count; i++)
+                this.AcwbPaths.Add((voiceAcbPaths[i], (voiceAwbPaths.Count > i) ? voiceAwbPaths[i] : (voiceAwbPaths.Count > 0) ? voiceAwbPaths[0] : null));
+            voiceAwbPaths.Clear();
+        }
+        voiceAcbPaths.Clear();
+        await Task.Yield();
+    }
+
+    private async Task AddSfxAcwb(int majorId, int minorId)
+    {
+        List<string> sfxAcbPaths = this.config.ExtractExactFiles(new string[] { "sound", "event", $"e{majorId:000}_{minorId:000}_se.acb" });
+        if (sfxAcbPaths.Count > 0)
+        {
+            List<string> sfxAwbPaths = this.config.ExtractExactFiles(new string[] { "sound", "event", $"e{majorId:000}_{minorId:000}_se.awb" });
+            sfxAcbPaths.Sort();
+            sfxAwbPaths.Sort();
+            for (int i=0; i<sfxAcbPaths.Count; i++)
+                this.AcwbPaths.Add((sfxAcbPaths[i], (sfxAwbPaths.Count > i) ? sfxAwbPaths[i] : (sfxAwbPaths.Count > 0) ? sfxAwbPaths[0] : null));
+            sfxAwbPaths.Clear();
+        }
+        sfxAcbPaths.Clear();
+        await Task.Yield();
+    }
+
+    public async Task AddBmd(int majorHundred, int majorId, int minorId)
+    {
+        if (this.SerialEvent.Flags[12])
+            this.BmdPaths = this.config.ExtractExactFiles(this.SerialEvent.EventBmdPath.Replace("\0", ""));
+        else
+            this.BmdPaths = this.config.ExtractExactFiles(new string[] { "event_data", "message", $"e{majorHundred:000}", $"e{majorId:000}_{minorId:000}.bmd" });
+        this.BmdPaths.Sort();
+        this.BmdPaths.Reverse();
+        await Task.Yield();
+    }
+
+    public async Task AddBf(int majorHundred, int majorId, int minorId)
+    {
+        if (this.SerialEvent.Flags[14])
+            this.BfPaths = this.config.ExtractExactFiles(this.SerialEvent.EventBfPath.Replace("\0", ""));
+        else
+            this.BfPaths = this.config.ExtractExactFiles(new string[] { "event_data", "script", $"e{majorHundred:000}", $"e{majorId:000}_{minorId:000}.bf" });
+        this.BfPaths.Sort();
+        this.BfPaths.Reverse();
+        await Task.Yield();
+    }
+
+    public async Task<bool> Load(int majorId, int minorId)
+    {
+        int majorHundred = (majorId / 100) * 100;
+        int majorTen = (majorId / 10) * 10;
+
+        // EVT
+        string[] evtPrefix = new string[] { "event", $"e{majorHundred:000}", $"e{majorTen:000}", $"e{majorId:000}_{minorId:000}.evt" };
+        List<string> evtPaths = this.config.ExtractExactFiles(evtPrefix);
+        if (evtPaths.Count == 0)
+            return false;
+        this.EvtPath = evtPaths[0];
+        this.SerialEvent = new EVT();
+        this.SerialEvent.Read(this.EvtPath);
+        evtPaths.Clear();
+
+        this.AcwbPaths = new List<(string ACB, string? AWB)>();
+        List<Task> tasks = new List<Task>();
+
+        // ECS
+        tasks.Add(this.AddEcs(majorHundred, majorTen, majorId, minorId));
+
+        // ACB/AWB
+        // SYSTEM, BGM, COMMON
+        //foreach (string name in new string[] { "system", "bgm", "voice_singleword" })
+        foreach (string name in new string[] { "bgm", "voice_singleword" })
+            tasks.Add(this.AddCommonAcwb(name));
+        // EVENT (voice)
+        tasks.Add(this.AddVoiceAcwb(majorId, minorId));
+        // EVENT (sfx)
+        tasks.Add(this.AddSfxAcwb(majorId, minorId));
+
+        // BMD
+        tasks.Add(this.AddBmd(majorHundred, majorId, minorId));
+
+        // BF
+        tasks.Add(this.AddBf(majorHundred, majorId, minorId));
+
+        await Task.WhenAll(tasks);
+        foreach (Task task in tasks)
+            task.Dispose();
+        tasks.Clear();
+        return true;
     }
 
     public void SaveEVT() { this.SerialEvent.Write(this.EvtPath); }

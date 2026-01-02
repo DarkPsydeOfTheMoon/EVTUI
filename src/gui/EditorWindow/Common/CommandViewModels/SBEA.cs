@@ -12,19 +12,9 @@ public class SBEA : Generic
     public SBEA(DataManager config, CommonViewModels commonVMs, CommandPointer cmd) : base(config, commonVMs, cmd)
     {
         this.LongName = "Sounds: Field Noise (All)";
-        this.ActionType = new StringSelectionField("Action", this.Editable, this.ActionTypes.Backward[this.CommandData.Action], this.ActionTypes.Keys);
-        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Action = this.ActionTypes.Forward[this.ActionType.Choice]);
+        this.ActionType = new StringSelectionField("Action", this.Editable, Generic.AudioActionTypes.Backward[this.CommandData.Action], Generic.AudioActionTypes.Keys);
+        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Action = Generic.AudioActionTypes.Forward[this.ActionType.Choice]);
     }
 
     public StringSelectionField ActionType { get; set; }
-
-    public BiDict<string, int> ActionTypes = new BiDict<string, int>
-    (
-        new Dictionary<string, int>
-        {
-            {"None", 0},
-            {"Play", 1},
-            {"Stop", 2},
-        }
-    );
 }

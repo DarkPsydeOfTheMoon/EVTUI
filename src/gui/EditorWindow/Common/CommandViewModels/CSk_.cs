@@ -13,13 +13,13 @@ public class CSk_ : Generic
     {
         this.LongName = "Camera: Shaking Effect (Old)";
 
-        this.VibrationType = new StringSelectionField("Vibration Mode", this.Editable, this.VibrationTypes.Backward[this.CommandData.VibrationMode], this.VibrationTypes.Keys);
-        this.WhenAnyValue(_ => _.VibrationType.Choice).Subscribe(_ => this.CommandData.VibrationMode = this.VibrationTypes.Forward[this.VibrationType.Choice]);
+        this.VibrationType = new StringSelectionField("Vibration Mode", this.Editable, CSk_.VibrationTypes.Backward[this.CommandData.VibrationMode], CSk_.VibrationTypes.Keys);
+        this.WhenAnyValue(_ => _.VibrationType.Choice).Subscribe(_ => this.CommandData.VibrationMode = CSk_.VibrationTypes.Forward[this.VibrationType.Choice]);
     }
 
     public StringSelectionField VibrationType { get; set; }
 
-    public BiDict<string, uint> VibrationTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> VibrationTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

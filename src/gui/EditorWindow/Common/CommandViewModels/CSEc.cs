@@ -21,8 +21,8 @@ public class CSEc : Generic
         this.WhenAnyValue(_ => _.EnableMessageTypes.Value).Subscribe(_ => this.CommandData.Flags[3] = this.EnableMessageTypes.Value);
         this.EnableMessageCoordinates = new BoolChoiceField("Directly Specify Message Coordinates?", this.Editable, this.CommandData.Flags[4]);
         this.WhenAnyValue(_ => _.EnableMessageCoordinates.Value).Subscribe(_ => this.CommandData.Flags[4] = this.EnableMessageCoordinates.Value);
-        this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, this.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], this.MessageCoordinateTypes.Keys);
-        this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = this.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]);
+        this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, Generic.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], Generic.MessageCoordinateTypes.Keys);
+        this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = Generic.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]);
         this.MessageX = new NumRangeField("X Coordinate", this.Editable, this.CommandData.MessageCoordinates[0], -9999, 9999, 1);
         this.WhenAnyValue(_ => _.MessageX.Value).Subscribe(_ => this.CommandData.MessageCoordinates[0] = (float)this.MessageX.Value);
         this.MessageY = new NumRangeField("Y Coordinate", this.Editable, this.CommandData.MessageCoordinates[1], -9999, 9999, 1);

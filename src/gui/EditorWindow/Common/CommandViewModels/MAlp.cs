@@ -17,8 +17,8 @@ public class MAlp : Generic
 
         this.AlphaLevel = new NumEntryField("Alpha Level", this.Editable, this.CommandData.RGBA[3], 0, 255, 1);
         this.WhenAnyValue(_ => _.AlphaLevel.Value).Subscribe(_ => this.CommandData.RGBA[3] = (byte)this.AlphaLevel.Value);
-        this.TranslucentMode = new StringSelectionField("Translucent Mode", this.Editable, this.TranslucentModes.Backward[this.CommandData.TranslucentMode], this.TranslucentModes.Keys);
-        this.WhenAnyValue(_ => _.TranslucentMode.Choice).Subscribe(_ => this.CommandData.TranslucentMode = this.TranslucentModes.Forward[this.TranslucentMode.Choice]);
+        this.TranslucentMode = new StringSelectionField("Translucent Mode", this.Editable, MAlp.TranslucentModes.Backward[this.CommandData.TranslucentMode], MAlp.TranslucentModes.Keys);
+        this.WhenAnyValue(_ => _.TranslucentMode.Choice).Subscribe(_ => this.CommandData.TranslucentMode = MAlp.TranslucentModes.Forward[this.TranslucentMode.Choice]);
         this.InterpolationSettings = new InterpolationParameters(this.CommandData.InterpolationParameters, this.Editable);
         this.WhenAnyValue(_ => _.InterpolationSettings.InterpolationType.Choice, _ => _.InterpolationSettings.SlopeInType.Choice, _ => _.InterpolationSettings.SlopeOutType.Choice).Subscribe(_ => this.CommandData.InterpolationParameters = this.InterpolationSettings.Compose());
     }
@@ -29,7 +29,7 @@ public class MAlp : Generic
     public StringSelectionField    TranslucentMode       { get; set; }
     public InterpolationParameters InterpolationSettings { get; set; }
 
-    public BiDict<string, byte> TranslucentModes = new BiDict<string, byte>
+    public static BiDict<string, byte> TranslucentModes = new BiDict<string, byte>
     (
         new Dictionary<string, byte>
         {

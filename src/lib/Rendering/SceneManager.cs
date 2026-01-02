@@ -9,6 +9,7 @@ using GFDLibrary;
 
 using GFDLibrary.Animations;
 using GFDLibrary.Common;
+using GFDLibrary.IO.Common;
 using GFDLibrary.Materials;
 using GFDLibrary.Rendering.OpenGL;
 using GFDLibrary.Textures;
@@ -24,7 +25,6 @@ public class SceneModel
 {
     protected DataManager Config;
     protected GLModel model;
-    protected AnimationPack GAP;
     protected Stopwatch animationStopwatch = new Stopwatch();  // I think we need one per currently-playing animation...
 
     public AnimationPack BaseAnimationPack;
@@ -35,18 +35,12 @@ public class SceneModel
     protected (bool IsExt, int Idx)? BaseAnimInfo;
     protected (bool IsExt, int Idx)?[] AddAnimInfo = new (bool IsExt, int Idx)?[8];
 
-    public SceneModel(GLModel model, AnimationPack GAP)
-    {
-        this.model = model;
-        this.GAP = GAP;
-        // If we need to loads GAPS on a per-model basis, we can put
-        // the external GAPs here instead of having a global list.
-    }
+    protected Dictionary<int, GLNode> NodesByResId;
 
-    public SceneModel(DataManager config, string modelPath, string texturePath, bool isField=false)
+    public SceneModel(DataManager config, ModelPack model, Dictionary<string, Texture> fieldtex, bool isField=false)
     {
         this.Config = config;
-        this.LoadModel(modelPath, texturePath, isField);
+        this.LoadModel(model, fieldtex, isField);
     }
 
     public void Dispose()
@@ -58,7 +52,15 @@ public class SceneModel
             foreach (int resId in this.model.AttachedModels.Keys)
                 this.model.AttachedModels[resId].Dispose();
             this.model.AttachedModels.Clear();
+            this.NodesByResId.Clear();
         }
+        this.animationStopwatch.Stop();
+        this.animationStopwatch = null;
+        this.BaseAnimationPack = null;
+        this.ExtBaseAnimationPack = null;
+        this.AddAnimationPack = null;
+        this.ExtAddAnimationPack = null;
+        this.Config = null;
     }
 
     public void StartAnimTimer() { this.animationStopwatch.Start(); }
@@ -93,7 +95,7 @@ public class SceneModel
             this.model.UnloadBlendAnimation(index);
     }
 
-    public void Draw(GLShaderProgram shaderProgram, GLCamera camera, double animationTime)
+    public void Draw(ShaderRegistry mShaderRegistry, GLCamera camera, double animationTime)
     {
         // can happen if EVT object isn't set up properly
         if (this.model is null)
@@ -114,8 +116,6 @@ public class SceneModel
         }
 
         double useAnimationTime = isAnimActive ? (animationTime % duration) : 0;
-        ShaderRegistry mShaderRegistry = new ShaderRegistry();
-        mShaderRegistry.mDefaultShader = shaderProgram;
         this.model.Draw( new DrawContext()
         {
             ShaderRegistry = mShaderRegistry,
@@ -124,36 +124,17 @@ public class SceneModel
         } );
     }
 
-    public void Draw(GLShaderProgram shaderProgram, GLCamera camera)
+    public void Draw(ShaderRegistry mShaderRegistry, GLCamera camera)
     {
-        this.Draw(shaderProgram, camera, (float)(this.animationStopwatch.ElapsedMilliseconds)/1000.0f);
+        this.Draw(mShaderRegistry, camera, (float)(this.animationStopwatch.ElapsedMilliseconds)/1000.0f);
     }
 
-    private void LoadModel(string modelpath, string texturepath, bool isField=false)
+    private void LoadModel(ModelPack model, Dictionary<string, Texture> fieldtex, bool isField=false)
     {
-        if (!File.Exists(modelpath))
-            throw new FileNotFoundException($"Model file '{modelpath}' does not exist.");
-
-        var model = GFDLibrary.Api.FlatApi.LoadModel(modelpath);
-        Archive fieldtex = null;
-        if (!String.IsNullOrEmpty(texturepath))
-            fieldtex = new Archive(texturepath);
-
-        GLModel glmodel = new GLModel(model, ( material, textureName ) =>
+        this.model = new GLModel(model, ( material, textureName ) =>
         {
-            if ( !(fieldtex is null) && fieldtex.TryOpenFile( textureName, out var textureStream ) )
-            {
-                using (var memStream = new MemoryStream())
-                {
-                    using ( textureStream )
-                    {
-                        textureStream.CopyTo(memStream);
-                    }
-                    textureStream.Dispose();
-                    var texture = new Texture(textureName, TextureFormat.DDS, memStream.ToArray());
-                    return new GLTexture( texture );
-                }
-            }
+            if (fieldtex.ContainsKey(textureName.ToLower()))
+                return new GLTexture(fieldtex[textureName.ToLower()]);
             else if ( model.Textures.TryGetTexture( textureName, out var texture ) )
             {
                 return new GLTexture( texture );
@@ -165,14 +146,10 @@ public class SceneModel
             }
         } );
 
-        if (!(fieldtex is null))
-            fieldtex.Dispose();
-
-        this.model = glmodel;
-        this.GAP = model.AnimationPack;
-
-        if (isField)
-            this.LoadAttachedModels(texturepath);
+        this.NodesByResId = new Dictionary<int, GLNode>();
+        foreach (GLNode node in this.model.Nodes)
+            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
+                this.NodesByResId[(int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue()] = node;
     }
 
     public void SetPosition(float[] position, float[] rotation)
@@ -192,14 +169,8 @@ public class SceneModel
             key.Rotation = this.model.EulerToQuat(new Vector3(MathHelper.DegreesToRadians(rotation[0]), MathHelper.DegreesToRadians(rotation[1]), MathHelper.DegreesToRadians(rotation[2])));
         pos.Controllers[0].Layers[0].Keys.Add(key);
 
+        this.UnloadBlendAnimation(0);
         this.LoadBlendAnimation(pos, 0);
-    }
-
-    public AnimationPack TryLoadAnimationPack(string filepath)
-    {
-        if (!File.Exists(filepath))
-            throw new FileNotFoundException($"GAP file '{filepath}' does not exist.");
-        return GFDLibrary.Api.FlatApi.LoadModel(filepath).AnimationPack;
     }
 
     public void LoadBaseAnimation(bool isExt, int idx)
@@ -252,36 +223,17 @@ public class SceneModel
         }
     }
 
-    public void LoadAttachedModels(string texturepath)
+    public void AddAttachment(int resId, ModelPack attachedModel, Dictionary<string, Texture> fieldtex)
     {
-        foreach (GLNode node in this.model.Nodes)
-        //Parallel.ForEach(this.model.Nodes, node =>
-        {
-            int majorId = 0;
-            int minorId = 0;
-            int resId = 0;
-            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_major"))
-                majorId = (int)node.Node.Properties["fldLayoutOfModel_major"].GetValue();
-            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_minor"))
-                minorId = (int)node.Node.Properties["fldLayoutOfModel_minor"].GetValue();
-            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
-                resId = (int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue();
+        if (!(this.NodesByResId.ContainsKey(resId)))
+            return;
 
-            if (majorId > 0 && minorId > 0)
-            {
-                string pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]OBJECT[\\\\/]M{majorId:000}_{minorId:000}.GMD";
-                List<string> matches = this.Config.ExtractMatchingFiles(pattern);
-                if (matches.Count > 0)
-                {
-                    var attachedModel = new SceneModel(this.Config, matches[0], texturepath, false);
-                    float[] position = new float[] {node.Node.Translation.X, node.Node.Translation.Y, node.Node.Translation.Z};
-                    Vector3 rotVec = this.model.QuatToEuler(node.Node.Rotation);
-                    float[] rotation = new float[] {0f, MathHelper.RadiansToDegrees(rotVec.Y), 0f};
-                    attachedModel.SetPosition(position, rotation);
-                    lock (this.model.AttachedModels) { this.model.AttachedModels[resId] = attachedModel.model; }
-                }
-            }
-        } //);
+        var _attachedModel = new SceneModel(this.Config, attachedModel, fieldtex, false);
+        float[] position = new float[] {this.NodesByResId[resId].Node.Translation.X, this.NodesByResId[resId].Node.Translation.Y, this.NodesByResId[resId].Node.Translation.Z};
+        Vector3 rotVec = this.model.QuatToEuler(this.NodesByResId[resId].Node.Rotation);
+        float[] rotation = new float[] {0f, MathHelper.RadiansToDegrees(rotVec.Y), 0f};
+        _attachedModel.SetPosition(position, rotation);
+        lock (this.model.AttachedModels) { this.model.AttachedModels[resId] = _attachedModel.model; }
     }
 
 }
@@ -291,11 +243,11 @@ public class SceneManager
 {
     protected DataManager Config;
 
-    public Dictionary<int, SceneModel> sceneModels = new Dictionary<int, SceneModel>();
-    public Dictionary<int, Dictionary<int, SceneModel>> fieldModels = new Dictionary<int, Dictionary<int, SceneModel>>();
-    public List<AnimationPack>   externalGAPs = [];
-    List<GLPerspectiveCamera>    cameras      = [];
-    public List<GLShaderProgram> shaders      = [];
+    public Dictionary<int, SceneModel> sceneModels;
+    public Dictionary<int, Dictionary<int, SceneModel>> fieldModels;
+    public List<GLPerspectiveCamera> cameras;
+    public List<GLShaderProgram> shaders;
+    public Dictionary<string, Texture> FieldTex;
 
     GLPerspectiveCamera fallbackCamera = new GLPerspectiveCamera(
         1.0f, 1000.0f, (float)45.0f, 4.0f/3.0f, 
@@ -317,6 +269,12 @@ public class SceneManager
     {
         this.Config = config;
         this.activeCamera = fallbackCamera;
+
+        this.sceneModels = new Dictionary<int, SceneModel>();
+        this.fieldModels = new Dictionary<int, Dictionary<int, SceneModel>>();
+        this.cameras = new List<GLPerspectiveCamera>();
+        this.shaders = new List<GLShaderProgram>();
+        this.FieldTex = new Dictionary<string, Texture>();
     }
 
     ////////////////////////////////
@@ -347,6 +305,12 @@ public class SceneManager
     ///////////////////////////////
     // *** Cleanup Functions *** //
     ///////////////////////////////
+    public void Dispose()
+    {
+        this.teardown();
+        this.Config = null;
+    }
+
     public void teardown()
     {
         foreach (int objectID in this.sceneModels.Keys)
@@ -361,10 +325,6 @@ public class SceneManager
         }
         this.fieldModels.Clear();
 
-        for (int i=this.externalGAPs.Count-1; i>=0; --i)
-            this.UnloadGAP(i);
-        this.externalGAPs.Clear();
-
         for (int i=this.shaders.Count-1; i>=0; --i)
             this.UnloadShader(i);
         this.shaders.Clear();
@@ -373,45 +333,34 @@ public class SceneManager
     /////////////////////////////////////
     // *** Model Memory Management *** //
     /////////////////////////////////////
-    public void LoadObject(int objectID, string modelPath, string texturePath, bool isField=false)
+    public void LoadTextures(string texturePath)
     {
-        ////////////////////////////
-        // TODO: Implement external texture loading.
-        //       In the function below is a code snippet that should work (it's been nicked from
-        //       GFD Studio), but the texture-bin management systems need to be worked into the
-        //       SceneManager before it can be integrated.
-        //       (IMO, we should handle the bins in here and pass them to the model initializers.)
-        ////////////////////////////
-        this.sceneModels[objectID] = new SceneModel(this.Config, modelPath, texturePath, isField);
+        if (!String.IsNullOrEmpty(texturePath))
+        {
+            AtlusArchive bin = new AtlusArchive();
+            bin.Read(texturePath);
+            foreach (FileEntry entry in bin.Entries)
+            {
+                string textureName = entry.Name.Replace("\0", "").ToLower();
+                lock (this.FieldTex) { this.FieldTex[textureName] = new Texture(textureName, TextureFormat.DDS, entry.Data); }
+            }
+        }
     }
 
-    public void LoadField(int objectID, Dictionary<int, string> modelPaths, Dictionary<int, string> texturePaths)
+    public void LoadObject(int objectID, ModelPack model, bool isField=false)
+    {
+        this.sceneModels[objectID] = new SceneModel(this.Config, model, this.FieldTex, isField);
+    }
+
+    public void LoadField(int objectID, Dictionary<int, string> modelPaths, Dictionary<int, Dictionary<int, string>> attachmentPaths, Dictionary<string, ModelPack> models)
     {
         this.fieldModels[objectID] = new Dictionary<int, SceneModel>();
         foreach (int subID in modelPaths.Keys)
-            this.fieldModels[objectID][subID] = new SceneModel(this.Config, modelPaths[subID], texturePaths[subID], true);
-    }
-
-    ///////////////////////////////////
-    // *** GAP Memory Management *** //
-    ///////////////////////////////////
-    public int LoadGAP(string filepath)
-    {
-        if (!File.Exists(filepath))
-            throw new FileNotFoundException($"GAP file '{filepath}' does not exist.");
-        var anims = GFDLibrary.Api.FlatApi.LoadModel(filepath);
-        this.externalGAPs.Add(anims.AnimationPack);
-        return this.externalGAPs.Count-1;
-    }
-
-    public void UnloadGAP(int index)
-    {
-        if (index >= this.externalGAPs.Count)
         {
-            Trace.TraceWarning($"Cannot unload GAP at index {index} because there are only {this.externalGAPs.Count} GAPs loaded");
-            return;
+            this.fieldModels[objectID][subID] = new SceneModel(this.Config, models[modelPaths[subID]], this.FieldTex, true);
+            foreach (int resId in attachmentPaths[subID].Keys)
+                this.fieldModels[objectID][subID].AddAttachment(resId, models[attachmentPaths[subID][resId]], this.FieldTex);
         }
-        this.externalGAPs.RemoveAt(index);
     }
 
     //////////////////////////////////////
@@ -445,32 +394,6 @@ public class SceneManager
     /////////////////////////////////////
     // *** Model State Management *** //
     ////////////////////////////////////
-    public void ActivateAnimationOnModel(int model_index, int gap_index, int animation_index)
-    {
-        var animation = this.externalGAPs[gap_index].Animations[animation_index];
-        if (this.sceneModels.ContainsKey(model_index))
-            this.sceneModels[model_index].LoadAnimation(animation);
-        else
-            Trace.TraceWarning($"Tried to load animation for asset #{model_index}, which hasn't been loaded.");
-    }
-
-    public void ActivateBlendAnimationOnModel(int model_index, int gap_index, int animation_index)
-    {
-        var animation = this.externalGAPs[gap_index].BlendAnimations[animation_index];
-        if (this.sceneModels.ContainsKey(model_index))
-            this.sceneModels[model_index].LoadAnimation(animation);
-        else
-            Trace.TraceWarning($"Tried to load animation for asset #{model_index}, which hasn't been loaded.");
-    }
-
-    public void DeactivateModelAnimations(int model_index)
-    {
-        if (this.sceneModels.ContainsKey(model_index))
-            this.sceneModels[model_index].UnloadAnimation();
-        else
-            Trace.TraceWarning($"Tried to unload animations for asset #{model_index}, which hasn't been loaded.");
-    }
-
     public void LoadBaseAnimation(int model_index, bool isExt, int idx)
     {
         if (this.sceneModels.ContainsKey(model_index))
@@ -499,10 +422,10 @@ public class SceneManager
             this.activeCamera = this.cameras[camera_index];
     }
 
-    public void PlaceCamera(float[] position, float[] rotation, float angleOfView)
+    public void PlaceCamera(float[] position, float[] rotation, float angleOfView, float nearClip, float farClip)
     {
         this.activeCamera = new GLPerspectiveCamera(
-            1.0f, 60000.0f, angleOfView, 16.0f/9.0f,
+            nearClip, farClip, angleOfView, 16.0f/9.0f,
             // translation 
             new OpenTK.Mathematics.Vector3(0, 0, 0),
             // offset

@@ -7,13 +7,13 @@ using System.Reactive;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
+using ReactiveUI;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.ReactiveUI;
-
-using ReactiveUI;
 
 using EVTUI.ViewModels;
 
@@ -64,6 +64,9 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             User userData = ((LandingPageViewModel)DataContext).UserData;
             DataManager config = new DataManager(userData, this.openStuff);
 
+            if (this.openStuff.Count == 0)
+                config.ClearCache();
+
             ConfigWindowViewModel configWindowVM   = new ConfigWindowViewModel(
                 config, configtype);
             ConfigWindow          configWindowView = new ConfigWindow
@@ -72,8 +75,17 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             // Launch window and get a return code to distinguish how the window
             // was closed.
             int? res = await ((Window)configWindowView).ShowDialog<int?>(this.topLevel);
+            configWindowVM.Dispose();
             if (res is null)
+            {
+                config.Reset();
+                config = null;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
                 return 1;
+            }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
 
             (string GamePath, string? ModPath, int MajorId, int MinorId) newOpenThing = (config.ProjectManager.ActiveGame.Path, config.ModPath, config.ProjectManager.ActiveEvent.MajorId, config.ProjectManager.ActiveEvent.MinorId);
             if (this.openStuff.Contains(newOpenThing))
@@ -116,10 +128,13 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             foreach (EditorWindow window in this.editorWindows.Keys)
             {
                 window.Close();
-                ((EditorWindowViewModel)(window.DataContext)).Config.Reset();
+                ((EditorWindowViewModel)(window.DataContext)).Config.ClearCache();
+                ((EditorWindowViewModel)(window.DataContext)).Dispose();
             }
             this.openStuff.Clear();
             this.editorWindows.Clear();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
         catch (Exception ex)
         {
@@ -137,7 +152,10 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             this.openStuff.Remove(thingToClose);
             this.editorWindows.Remove((EditorWindow)sender);
             if (this.editorWindows.Count == 0)
-                ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Config.Reset();
+                ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Config.ClearCache();
+            ((EditorWindowViewModel)(((EditorWindow)sender).DataContext)).Dispose();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
         catch (Exception ex)
         {

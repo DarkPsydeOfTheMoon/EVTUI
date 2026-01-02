@@ -17,10 +17,10 @@ public class CMC_ : Generic
         // this is technically 0-999, and also model assets only, so... TODO either way
         this.AssetID = new IntSelectionField("Model Asset ID", this.Editable, this.CommandData.AssetId, config.EventManager.AssetIDs);
         this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.CommandData.AssetId = this.AssetID.Choice);
-        this.ShotType = new StringSelectionField("Shot Type", this.Editable, this.ShotTypes.Backward[this.CommandData.ShotType], this.ShotTypes.Keys);
-        this.WhenAnyValue(_ => _.ShotType.Choice).Subscribe(_ => this.CommandData.ShotType = this.ShotTypes.Forward[this.ShotType.Choice]);
-        this.AngleType = new StringSelectionField("Angle Type", this.Editable, this.AngleTypes.Backward[this.CommandData.AngleType], this.AngleTypes.Keys);
-        this.WhenAnyValue(_ => _.AngleType.Choice).Subscribe(_ => this.CommandData.AngleType = this.AngleTypes.Forward[this.AngleType.Choice]);
+        this.ShotType = new StringSelectionField("Shot Type", this.Editable, CMC_.ShotTypes.Backward[this.CommandData.ShotType], CMC_.ShotTypes.Keys);
+        this.WhenAnyValue(_ => _.ShotType.Choice).Subscribe(_ => this.CommandData.ShotType = CMC_.ShotTypes.Forward[this.ShotType.Choice]);
+        this.AngleType = new StringSelectionField("Angle Type", this.Editable, CMC_.AngleTypes.Backward[this.CommandData.AngleType], CMC_.AngleTypes.Keys);
+        this.WhenAnyValue(_ => _.AngleType.Choice).Subscribe(_ => this.CommandData.AngleType = CMC_.AngleTypes.Forward[this.AngleType.Choice]);
         this.StartCorrectionFrame = new NumRangeField("Start Correction At Frame", this.Editable, this.CommandData.StartCorrectionFrameNumber, 0, 60, 1);
         this.WhenAnyValue(_ => _.StartCorrectionFrame.Value).Subscribe(_ => this.CommandData.StartCorrectionFrameNumber = (ushort)this.StartCorrectionFrame.Value);
 
@@ -41,14 +41,14 @@ public class CMC_ : Generic
         this.WhenAnyValue(_ => _.FarBlurDistance.Value).Subscribe(_ => this.CommandData.FarBlurSurface = (float)this.FarBlurDistance.Value);
         this.BlurStrength = new NumRangeField("Blur Strength", this.Editable, this.CommandData.BlurStrength, 0.5, 1, 0.01);
         this.WhenAnyValue(_ => _.BlurStrength.Value).Subscribe(_ => this.CommandData.BlurStrength = (float)this.BlurStrength.Value);
-        this.BlurType = new StringSelectionField("Blur Type", this.Editable, this.BlurTypes.Backward[this.CommandData.BlurType], this.BlurTypes.Keys);
-        this.WhenAnyValue(_ => _.BlurType).Subscribe(_ => this.CommandData.BlurType = this.BlurTypes.Forward[this.BlurType.Choice]);
+        this.BlurType = new StringSelectionField("Blur Type", this.Editable, Generic.BlurTypes.Backward[this.CommandData.BlurType], Generic.BlurTypes.Keys);
+        this.WhenAnyValue(_ => _.BlurType).Subscribe(_ => this.CommandData.BlurType = Generic.BlurTypes.Forward[this.BlurType.Choice]);
 
         // message
         this.EnableMessageCoordinates = new BoolChoiceField("Directly Specify Message Coordinates?", this.Editable, this.CommandData.Flags[5]);
         this.WhenAnyValue(_ => _.EnableMessageCoordinates.Value).Subscribe(_ => this.CommandData.Flags[5] = this.EnableMessageCoordinates.Value);
-        this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, this.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], this.MessageCoordinateTypes.Keys);
-        this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = this.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]);
+        this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, Generic.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], Generic.MessageCoordinateTypes.Keys);
+        this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = Generic.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]);
         this.MessageX = new NumRangeField("X Coordinate", this.Editable, this.CommandData.MessageCoordinates[0], -9999, 9999, 1);
         this.WhenAnyValue(_ => _.MessageX.Value).Subscribe(_ => this.CommandData.MessageCoordinates[0] = (float)this.MessageX.Value);
         this.MessageY = new NumRangeField("Y Coordinate", this.Editable, this.CommandData.MessageCoordinates[1], -9999, 9999, 1);
@@ -79,7 +79,7 @@ public class CMC_ : Generic
     public NumRangeField        MessageX                 { get; set; }
     public NumRangeField        MessageY                 { get; set; }
 
-    public BiDict<string, uint> ShotTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> ShotTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {
@@ -90,7 +90,7 @@ public class CMC_ : Generic
         }
     );
 
-    public BiDict<string, uint> AngleTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> AngleTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

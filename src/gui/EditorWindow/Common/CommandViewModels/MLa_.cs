@@ -18,10 +18,10 @@ public class MLa_ : Generic
         // head movement basics
         this.ResetEyes = new BoolChoiceField("Reset Eyes When Moving?", this.Editable, this.CommandData.ResetEyeWhenMoving != 0);
         this.WhenAnyValue(_ => _.ResetEyes.Value).Subscribe(_ => this.CommandData.ResetEyeWhenMoving = Convert.ToUInt16(this.ResetEyes.Value));
-        this.MotionType = new StringSelectionField("Motion Type", this.Editable, this.MotionTypes.Backward[this.CommandData.MotionType], this.MotionTypes.Keys);
-        this.WhenAnyValue(_ => _.MotionType.Choice).Subscribe(_ => this.CommandData.MotionType = this.MotionTypes.Forward[this.MotionType.Choice]);
-        this.SpeedType = new StringSelectionField("Speed Type", this.Editable, this.SpeedTypes.Backward[this.CommandData.SpeedType], this.SpeedTypes.Keys);
-        this.WhenAnyValue(_ => _.SpeedType.Choice).Subscribe(_ => this.CommandData.SpeedType = this.SpeedTypes.Forward[this.SpeedType.Choice]);
+        this.MotionType = new StringSelectionField("Motion Type", this.Editable, MLa_.MotionTypes.Backward[this.CommandData.MotionType], MLa_.MotionTypes.Keys);
+        this.WhenAnyValue(_ => _.MotionType.Choice).Subscribe(_ => this.CommandData.MotionType = MLa_.MotionTypes.Forward[this.MotionType.Choice]);
+        this.SpeedType = new StringSelectionField("Speed Type", this.Editable, MLa_.SpeedTypes.Backward[this.CommandData.SpeedType], MLa_.SpeedTypes.Keys);
+        this.WhenAnyValue(_ => _.SpeedType.Choice).Subscribe(_ => this.CommandData.SpeedType = MLa_.SpeedTypes.Forward[this.SpeedType.Choice]);
 
         // lookat basics
         this.EyeMovementEnabled = new BoolChoiceField("Enable Eye Movement?", this.Editable, this.CommandData.Flags[0]);
@@ -32,8 +32,8 @@ public class MLa_ : Generic
         this.WhenAnyValue(_ => _.TorsoMovementEnabled.Value).Subscribe(_ => this.CommandData.Flags[2] = this.TorsoMovementEnabled.Value);
         this.SlowTorsoMovement = new BoolChoiceField("Slow Torso Movement?", this.Editable, this.CommandData.Flags[5]);
         this.WhenAnyValue(_ => _.SlowTorsoMovement.Value).Subscribe(_ => this.CommandData.Flags[5] = this.SlowTorsoMovement.Value);
-        this.TargetType = new StringSelectionField("Target Type", this.Editable, this.TargetTypes.Backward[this.CommandData.TargetType], this.TargetTypes.Keys);
-        this.WhenAnyValue(_ => _.TargetType.Choice).Subscribe(_ => this.CommandData.TargetType = this.TargetTypes.Forward[this.TargetType.Choice]);
+        this.TargetType = new StringSelectionField("Target Type", this.Editable, MLa_.TargetTypes.Backward[this.CommandData.TargetType], MLa_.TargetTypes.Keys);
+        this.WhenAnyValue(_ => _.TargetType.Choice).Subscribe(_ => this.CommandData.TargetType = MLa_.TargetTypes.Forward[this.TargetType.Choice]);
 
         // coordinate lookat
         this.TargetPosition = new Position3D("Target Coordinates", this.Editable, this.CommandData.Target);
@@ -73,7 +73,7 @@ public class MLa_ : Generic
     // unknown
     public BoolChoiceField UnkBool { get; set; }
 
-    public BiDict<string, ushort> MotionTypes = new BiDict<string, ushort>
+    public static BiDict<string, ushort> MotionTypes = new BiDict<string, ushort>
     (
         new Dictionary<string, ushort>
         {
@@ -85,7 +85,7 @@ public class MLa_ : Generic
         }
     );
 
-    public BiDict<string, ushort> SpeedTypes = new BiDict<string, ushort>
+    public static BiDict<string, ushort> SpeedTypes = new BiDict<string, ushort>
     (
         new Dictionary<string, ushort>
         {
@@ -96,7 +96,7 @@ public class MLa_ : Generic
         }
     );
 
-    public BiDict<string, ushort> TargetTypes = new BiDict<string, ushort>
+    public static BiDict<string, ushort> TargetTypes = new BiDict<string, ushort>
     (
         new Dictionary<string, ushort>
         {

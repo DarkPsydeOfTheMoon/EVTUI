@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
+using CriFsV2Lib.Definitions.Structs;
 
 using static EVTUI.Utils;
 
@@ -28,7 +31,8 @@ public class DataManager
     public bool ProjectLoaded;
     public bool EventLoaded;
 
-    public List<string> CpkList { get; set; }
+    private List<string> CpkList { get; set; }
+    private Dictionary<string, Trie> CpkTries { get; set; }
 
     public string? CpkPath;
     public string? ModPath;
@@ -60,6 +64,14 @@ public class DataManager
         this.CpkList        = new List<string>();
     }
 
+    public void InitCPKs(List<string> cpkPaths)
+    {
+        this.CpkList = cpkPaths;
+        this.CpkTries = new Dictionary<string, Trie>();
+        foreach (string cpkPath in cpkPaths)
+            this.CpkTries[cpkPath] = new Trie(cpkPath, this.ProjectManager.CpkDecryptionFunctionName);
+    }
+
     public bool CheckIfProjOpen(string modPath)
     {
         foreach (var openThing in this.OpenStuff)
@@ -75,9 +87,21 @@ public class DataManager
         this.ReadOnly      = false;
         this.ProjectLoaded = false;
         this.EventLoaded   = false;
-        this.EventManager.Clear();
+        this.AudioManager.Dispose();
+        this.ScriptManager.Dispose();
+        this.EventManager.Dispose();
+        this.AudioManager = null;
+        this.ScriptManager = null;
+        this.EventManager = null;
+        this.ScriptManager = null;
         this.CpkList.Clear();
-        this.ClearCache();
+        if (!(this.CpkTries is null))
+        {
+            foreach (string key in this.CpkTries.Keys)
+                this.CpkTries[key].Dispose();
+            this.CpkTries.Clear();
+        }
+        //this.ClearCache();
     }
 
     public async Task LoadProject(int ind)
@@ -114,7 +138,7 @@ public class DataManager
         if (!this.ReadOnly && !this.ProjectLoaded)
             return false;
 
-        bool success = this.EventManager.Load(this.ExtractEVTFiles($"E{majorId:000}_{minorId:000}"));
+        bool success = await this.EventManager.Load(majorId, minorId);
         if (success)
             await this.ProjectManager.LoadEvent(majorId, minorId);
         this.EventLoaded = success;
@@ -167,14 +191,41 @@ public class DataManager
         CPKExtract.ClearDirectory(this.WorkingPathBase);
     }
 
-    public List<string> ExtractMatchingFiles(string pattern)
+    private async Task<List<string>> GetModFiles(string[] prefix, string suffix = null)
     {
-        return CPKExtract.ExtractMatchingFiles(this.CpkList, pattern, this.ProjectManager.ModdedFileDir, this.VanillaExtractionPath, this.ProjectManager.CpkDecryptionFunctionName);
+        return await CPKExtract.FindModFiles(prefix, suffix, this.ProjectManager.ModdedFileDir).ToListAsync();
     }
 
-    public CpkEVTContents? ExtractEVTFiles(string evtid)
+    private async Task<List<string>> GetGameFiles(string CpkPath, string[] prefix, string suffix = null)
     {
-        return CPKExtract.ExtractEVTFiles(this.CpkList, evtid, this.VanillaExtractionPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.CpkDecryptionFunctionName);
+        List<CpkFile> matchingFiles = this.CpkTries[CpkPath].TryGetFile(prefix, suffix: suffix);
+        if (matchingFiles.Count > 0)
+            return await CPKExtract.ExtractFiles(matchingFiles, CpkPath, this.VanillaExtractionPath, this.ProjectManager.CpkDecryptionFunctionName).ToListAsync();
+        else
+            return new List<string>();
+    }
+
+    public List<string> ExtractExactFiles(string[] prefix, string suffix = null)
+    {
+        List<Task<List<string>>> tasks = new List<Task<List<string>>>();
+        tasks.Add(this.GetModFiles(prefix, suffix));
+        foreach (string CpkPath in this.CpkTries.Keys)
+            tasks.Add(this.GetGameFiles(CpkPath, prefix, suffix));
+        Task.WhenAll(tasks).Wait();
+        List<string> ret = new List<string>();
+        foreach (var task in tasks)
+        {
+            ret.AddRange(task.Result);
+            task.Dispose();
+        }
+        tasks.Clear();
+        return ret;
+    }
+
+    public List<string> ExtractExactFiles(string path)
+    {
+        string[] prefix = path.ToLower().Split(Trie.separators, StringSplitOptions.RemoveEmptyEntries);
+        return this.ExtractExactFiles(prefix);
     }
 
     public async Task SaveBF()
@@ -221,4 +272,101 @@ public class DataManager
             await this.SaveBF();
     }
 
+}
+
+public class Trie
+{
+    public Dictionary<string, Trie> Children;
+    public CpkFile? Value;
+
+    public static char[] separators = new char[] { '/', '\\' };
+
+    public Trie(string cpkPath, string decryptionFunctionName)
+    {
+        this.Children = new Dictionary<string, Trie>();
+        foreach (CpkFile file in CPKExtract.ListAllFiles(cpkPath, decryptionFunctionName))
+            this.AddFile(file);
+    }
+
+    public Trie(CpkFile file, Queue<string> filePath)
+    {
+        this.Children = new Dictionary<string, Trie>();
+        this.AddFile(file, filePath);
+    }
+
+    public void Dispose()
+    {
+        foreach (string key in this.Children.Keys)
+            this.Children[key].Dispose();
+        this.Children.Clear();
+        this.Value = null;
+    }
+
+    public void AddFile(CpkFile file)
+    {
+        string normedDir = file.Directory.ToLower();
+        string normedFile = file.FileName.ToLower();
+
+        List<string> fullPath = new List<string>();
+        fullPath.AddRange(normedDir.Split(separators, StringSplitOptions.RemoveEmptyEntries));
+        fullPath.AddRange(normedFile.Split(separators, StringSplitOptions.RemoveEmptyEntries));
+
+        this.AddFile(file, new Queue<string>(fullPath));
+    }
+
+    public void AddFile(CpkFile file, Queue<string> filePath)
+    {
+        if (filePath.Count == 0)
+            this.Value = file;
+        else
+        {
+            string prefix = filePath.Dequeue();
+            if (this.Children.ContainsKey(prefix))
+                this.Children[prefix].AddFile(file, filePath);
+            else
+                this.Children[prefix] = new Trie(file, filePath);
+        }
+    }
+
+    public List<CpkFile> TryGetFile(string prefix, string suffix = null)
+    {
+        return this.TryGetFile(prefix.Split(separators, StringSplitOptions.RemoveEmptyEntries), suffix: suffix);
+    }
+
+    public List<CpkFile> TryGetFile(string[] prefix, string suffix = null)
+    {
+        Queue<string> fullPath = new Queue<string>(prefix);
+        return this.TryGetFile(fullPath, suffix: suffix);
+    }
+
+    public List<CpkFile> TryGetFile(Queue<string> filePath, string suffix = null)
+    {
+        if (filePath.Count == 0)
+        {
+            if (suffix is null)
+            {
+                if (this.Value is null)
+                    return new List<CpkFile>();
+                else
+                    return new List<CpkFile> { (CpkFile)this.Value };
+            }
+            else
+            {
+                List<CpkFile> ret = new List<CpkFile>();
+                Regex suffixPattern = new Regex(suffix.ToLower());
+                foreach (string key in this.Children.Keys)
+                    if (suffixPattern.IsMatch(key))
+                        ret.AddRange(this.Children[key].TryGetFile(filePath));
+                return ret;
+            }
+        }
+        else
+        {
+            string prefix = filePath.Dequeue().ToLower();
+            if (this.Children.ContainsKey(prefix))
+                return this.Children[prefix].TryGetFile(filePath, suffix: suffix);
+            else
+                return new List<CpkFile>();
+        }
+    }
 }

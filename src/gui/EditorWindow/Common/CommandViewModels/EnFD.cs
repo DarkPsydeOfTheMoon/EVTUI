@@ -13,8 +13,8 @@ public class EnFD : Generic
     {
         this.LongName = "Environment: Fog Distance";
 
-        this.ScaleType = new StringSelectionField("Mode", this.Editable, this.ScaleTypes.Backward[this.CommandData.Mode], this.ScaleTypes.Keys);
-        this.WhenAnyValue(_ => _.ScaleType.Choice).Subscribe(_ => this.CommandData.Mode = this.ScaleTypes.Forward[this.ScaleType.Choice]);
+        this.ScaleType = new StringSelectionField("Mode", this.Editable, EnFD.ScaleTypes.Backward[this.CommandData.Mode], EnFD.ScaleTypes.Keys);
+        this.WhenAnyValue(_ => _.ScaleType.Choice).Subscribe(_ => this.CommandData.Mode = EnFD.ScaleTypes.Forward[this.ScaleType.Choice]);
         this.FogColor = new ColorSelectionField("Fog Color", this.Editable, this.CommandData.RGBA);
         this.WhenAnyValue(_ => _.FogColor.SelectedColor).Subscribe(_ => this.CommandData.RGBA = this.FogColor.ToUInt32());
 
@@ -35,7 +35,7 @@ public class EnFD : Generic
     public NumRangeField   StartDistance       { get; set; }
     public NumRangeField   EndDistance         { get; set; }
 
-    public BiDict<string, uint> ScaleTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> ScaleTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

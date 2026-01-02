@@ -13,10 +13,10 @@ public class CShk : Generic
     {
         this.LongName = "Camera: Shaking Effect";
 
-        this.ActionType = new StringSelectionField("Mode", this.Editable, this.ActionTypes.Backward[this.CommandData.Action], this.ActionTypes.Keys);
-        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Action = this.ActionTypes.Forward[this.ActionType.Choice]);
-        this.ShakingType = new StringSelectionField("Effect Type", this.Editable, this.ShakingTypes.Backward[this.CommandData.ShakingType], this.ShakingTypes.Keys);
-        this.WhenAnyValue(_ => _.ShakingType.Choice).Subscribe(_ => this.CommandData.ShakingType = this.ShakingTypes.Forward[this.ShakingType.Choice]);
+        this.ActionType = new StringSelectionField("Mode", this.Editable, CShk.ActionTypes.Backward[this.CommandData.Action], CShk.ActionTypes.Keys);
+        this.WhenAnyValue(_ => _.ActionType.Choice).Subscribe(_ => this.CommandData.Action = CShk.ActionTypes.Forward[this.ActionType.Choice]);
+        this.ShakingType = new StringSelectionField("Effect Type", this.Editable, CShk.ShakingTypes.Backward[this.CommandData.ShakingType], CShk.ShakingTypes.Keys);
+        this.WhenAnyValue(_ => _.ShakingType.Choice).Subscribe(_ => this.CommandData.ShakingType = CShk.ShakingTypes.Forward[this.ShakingType.Choice]);
         this.Magnitude = new NumRangeField("Magnitude", this.Editable, this.CommandData.Magnitude, 0, 100, 1);
         this.WhenAnyValue(_ => _.Magnitude.Value).Subscribe(_ => this.CommandData.Magnitude = (float)this.Magnitude.Value);
         this.Speed = new NumRangeField("Speed", this.Editable, this.CommandData.Speed, 0, 100, 1);
@@ -28,7 +28,7 @@ public class CShk : Generic
     public NumRangeField        Magnitude   { get; set; }
     public NumRangeField        Speed       { get; set; }
 
-    public BiDict<string, uint> ActionTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> ActionTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {
@@ -37,7 +37,7 @@ public class CShk : Generic
         }
     );
 
-    public BiDict<string, uint> ShakingTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> ShakingTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

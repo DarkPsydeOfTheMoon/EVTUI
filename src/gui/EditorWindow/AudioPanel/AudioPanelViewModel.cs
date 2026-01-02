@@ -54,6 +54,11 @@ public class AudioPanelViewModel : ViewModelBase
         this.Config = Config;
     }
 
+    public void Dispose()
+    {
+        this.Config = null;
+    }
+
     public void PlaySelectedTrack()
     {
         if (this.TrackSelection != null)

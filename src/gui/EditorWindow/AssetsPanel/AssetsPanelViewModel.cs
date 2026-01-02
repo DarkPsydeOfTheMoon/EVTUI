@@ -27,7 +27,7 @@ public class AssetsPanelViewModel : ViewModelBase
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
     ////////////////////////////
-    public DataManager Config { get; }
+    public DataManager Config { get; private set; }
 
     public ObservableCollection<AssetViewModel> Assets { get; set; }
 
@@ -41,6 +41,12 @@ public class AssetsPanelViewModel : ViewModelBase
         this.Config = dataManager;
         this.Assets = commonVMs.Assets;
         this.SortAssets();
+    }
+
+    public void Dispose()
+    {
+        this.Assets.Clear();
+        this.Config = null;
     }
 
     public void SortAssets()

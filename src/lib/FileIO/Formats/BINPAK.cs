@@ -61,8 +61,26 @@ public class AtlusArchive : ISerializable
 
         if (this.IsOldVersion)
         {
-            // I don't feel like implementing this lol
-            Trace.TraceWarning("Old-style BIN/PAK reading not implemented");
+            if (rw.IsConstructlike())
+            {
+                this.EntryCount = 0;
+                List<FileEntry> entries = new List<FileEntry>();
+                while (!rw.IsEOF())
+                {
+                    FileEntry entry = new FileEntry();
+                    rw.RwObj(ref entry, new Dictionary<string, object>()
+                        { ["nameLength"] = this.NamesLength, ["isCutin"] = this.IsCutin });
+                    entries.Add(entry);
+                    int paddingSize = (rw.RelativeTell() % 64 == 0) ? 0 : (64 - ((int)rw.RelativeTell() % 64));
+                    byte[] padding = null;
+                    rw.RwBytestring(ref padding, paddingSize);
+                    this.EntryCount += 1;
+                }
+                this.Entries = entries.ToArray();
+            }
+            else
+                rw.RwObjs(ref this.Entries, this.EntryCount, new Dictionary<string, object>()
+                    { ["nameLength"] = this.NamesLength, ["isCutin"] = this.IsCutin });
         }
         else
         {
@@ -85,6 +103,9 @@ public class AtlusArchive : ISerializable
 
 public class FileEntry : ISerializable
 {
+    private bool isCutin = false;
+    private int nameLength = 32;
+
     public string Name = "";
     public Int32  Ind  = 0;
 
@@ -93,10 +114,17 @@ public class FileEntry : ISerializable
 
     public void ExbipHook<T>(T rw, Dictionary<string, object> args) where T : struct, IBaseBinaryTarget
     {
-        if (args.ContainsKey("isCutin") && (bool)args["isCutin"])
+        if (!(args is null))
+        {
+            isCutin = (args.ContainsKey("isCutin") && (bool)args["isCutin"]);
+            if (args.ContainsKey("nameLength"))
+                nameLength = (int)args["nameLength"];
+        }
+
+        if (isCutin)
             rw.RwInt32(ref this.Ind);
         else
-            rw.RwString(ref this.Name, (int)args["nameLength"], Encoding.ASCII);
+            rw.RwString(ref this.Name, nameLength, Encoding.ASCII);
 
         rw.RwInt32(ref this.Size);
         rw.RwBytestring(ref this.Data, this.Size);

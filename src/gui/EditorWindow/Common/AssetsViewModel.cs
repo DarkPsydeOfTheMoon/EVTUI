@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
+
+using GFDLibrary;
+using GFDLibrary.Models;
 
 using ReactiveUI;
 
@@ -12,24 +16,27 @@ namespace EVTUI.ViewModels;
 
 public class AssetViewModel : ViewModelBase
 {
+    private List<IDisposable> subscriptions;
 
     public AssetViewModel(DataManager config, SerialObject obj)
     {
+        this.subscriptions = new List<IDisposable>();
+
         this.Config = config;
         this.Obj = obj;
         this.Editable = !this.Config.ReadOnly;
 
         this.ObjectID = new NumEntryField("Asset ID", false, obj.Id, 0, 9999, 1);
-        this.WhenAnyValue(x => x.ObjectID.Value).Subscribe(x => this.Obj.Id = (int)this.ObjectID.Value);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.ObjectID.Value).Subscribe(x => this.Obj.Id = (int)this.ObjectID.Value));
         this.ObjectType = new StringSelectionField("Type", false, AssetViewModel.ObjectTypes.Backward[obj.Type], AssetViewModel.ObjectTypes.Keys);
-        this.WhenAnyValue(x => x.ObjectType.Choice).Subscribe(x => this.Obj.Type = AssetViewModel.ObjectTypes.Forward[this.ObjectType.Choice]);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.ObjectType.Choice).Subscribe(x => this.Obj.Type = AssetViewModel.ObjectTypes.Forward[this.ObjectType.Choice]));
 
         this.UniqueID = new NumEntryField("Unique ID", this.Editable, obj.ResourceUniqueId, 0, 9999, 1);
-        this.WhenAnyValue(x => x.UniqueID.Value).Subscribe(x => this.Obj.ResourceUniqueId = (int)this.UniqueID.Value);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.UniqueID.Value).Subscribe(x => this.Obj.ResourceUniqueId = (int)this.UniqueID.Value));
         this.UnkFlag1 = new BoolChoiceField("Unknown Flag #1", this.Editable, obj.Flags[31]);
-        this.WhenAnyValue(x => x.UnkFlag1.Value).Subscribe(x => this.Obj.Flags[31] = this.UnkFlag1.Value);
+        this.subscriptions.Add(this.WhenAnyValue(x => x.UnkFlag1.Value).Subscribe(x => this.Obj.Flags[31] = this.UnkFlag1.Value));
         this.UnkFlag2 = new BoolChoiceField("Unknown Flag #2", this.Editable, (obj.UnkBool != 0));
-        this.WhenAnyValue(x => x.UnkFlag2).Subscribe(x => this.Obj.UnkBool = Convert.ToInt32(this.UnkFlag2.Value));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.UnkFlag2).Subscribe(x => this.Obj.UnkBool = Convert.ToInt32(this.UnkFlag2.Value)));
 
         string categoryTitle = null;
         string majorIdTitle = null;
@@ -222,50 +229,50 @@ public class AssetViewModel : ViewModelBase
 
         if (!(categoryTitle is null))
         {
-            this.Category = new StringSelectionField(categoryTitle, this.Editable, this.ObjectCategories.Backward[obj.ResourceCategory], this.ObjectCategories.Keys);
-            this.WhenAnyValue(x => x.Category.Choice).Subscribe(x => this.Obj.ResourceCategory = this.ObjectCategories.Forward[this.Category.Choice]);
+            this.Category = new StringSelectionField(categoryTitle, this.Editable, AssetViewModel.ObjectCategories.Backward[obj.ResourceCategory], AssetViewModel.ObjectCategories.Keys);
+            this.subscriptions.Add(this.WhenAnyValue(x => x.Category.Choice).Subscribe(x => this.Obj.ResourceCategory = AssetViewModel.ObjectCategories.Forward[this.Category.Choice]));
         }
 
         if (!(majorIdTitle is null))
         {
             this.MajorID = new NumEntryField(majorIdTitle, this.Editable, obj.ResourceMajorId, 0, 9999, 1);
-            this.WhenAnyValue(x => x.MajorID.Value).Subscribe(x => this.Obj.ResourceMajorId = (int)this.MajorID.Value);
+            this.subscriptions.Add(this.WhenAnyValue(x => x.MajorID.Value).Subscribe(x => this.Obj.ResourceMajorId = (int)this.MajorID.Value));
         }
 
         if (!(minorIdTitle is null))
         {
             this.MinorID = new NumEntryField(minorIdTitle, this.Editable, obj.ResourceMinorId, 0, 255, 1);
-            this.WhenAnyValue(x => x.MinorID.Value).Subscribe(x => this.Obj.ResourceMinorId = (short)this.MinorID.Value);
+            this.subscriptions.Add(this.WhenAnyValue(x => x.MinorID.Value).Subscribe(x => this.Obj.ResourceMinorId = (short)this.MinorID.Value));
         }
 
         if (!(subIdTitle is null))
         {
             this.SubID = new NumEntryField(subIdTitle, this.Editable, obj.ResourceSubId, 0, 255, 1);
-            this.WhenAnyValue(x => x.SubID.Value).Subscribe(x => this.Obj.ResourceSubId = (short)this.SubID.Value);
+            this.subscriptions.Add(this.WhenAnyValue(x => x.SubID.Value).Subscribe(x => this.Obj.ResourceSubId = (short)this.SubID.Value));
         }
 
         if (!(isCommonTitle is null))
         {
             this.IsCommon = new BoolChoiceField(isCommonTitle, this.Editable, obj.Flags[0]);
-            this.WhenAnyValue(x => x.IsCommon.Value).Subscribe(x => this.Obj.Flags[0] = this.IsCommon.Value);
+            this.subscriptions.Add(this.WhenAnyValue(x => x.IsCommon.Value).Subscribe(x => this.Obj.Flags[0] = this.IsCommon.Value));
         }
 
         if (!(extId1Title is null))
         {
             this.BaseAnimID = new NumEntryField(extId1Title, this.Editable, obj.BaseMotionNo, -1, 9999, 1);
-            this.WhenAnyValue(x => x.BaseAnimID.Value).Subscribe(x => this.Obj.BaseMotionNo = (int)this.BaseAnimID.Value);
+            this.subscriptions.Add(this.WhenAnyValue(x => x.BaseAnimID.Value).Subscribe(x => this.Obj.BaseMotionNo = (int)this.BaseAnimID.Value));
         }
 
         if (!(extId2Title is null))
         {
             this.ExtBaseAnimID = new NumEntryField(extId2Title, this.Editable, obj.ExtBaseMotionNo, -1, 9999, 1);
-            this.WhenAnyValue(x => x.ExtBaseAnimID.Value).Subscribe(x => this.Obj.ExtBaseMotionNo = (int)this.ExtBaseAnimID.Value);
+            this.subscriptions.Add(this.WhenAnyValue(x => x.ExtBaseAnimID.Value).Subscribe(x => this.Obj.ExtBaseMotionNo = (int)this.ExtBaseAnimID.Value));
         }
 
         if (!(extId3Title is null))
         {
             this.ExtAddAnimID = new NumEntryField(extId3Title, this.Editable, obj.ExtAddMotionNo, -1, 9999, 1);
-            this.WhenAnyValue(x => x.ExtAddAnimID.Value).Subscribe(x => this.Obj.ExtAddMotionNo = (int)this.ExtAddAnimID.Value);
+            this.subscriptions.Add(this.WhenAnyValue(x => x.ExtAddAnimID.Value).Subscribe(x => this.Obj.ExtAddMotionNo = (int)this.ExtAddAnimID.Value));
         }
 
         this.UpdatePaths();
@@ -319,10 +326,22 @@ public class AssetViewModel : ViewModelBase
     public MAP ActiveMap;
     public Dictionary<int, string> ActiveSubModelPaths;
     public Dictionary<int, string> ActiveTextureBinPaths;
+    public Dictionary<int, Dictionary<int, string>> ActiveAttachmentPaths;
 
+    public Dictionary<string, ModelPack> ActiveModels;
     //public AnimationWidget BaseAnimPreview { get; set; }
 
     public SerialObject Obj { get; set; }
+
+    public void Dispose()
+    {
+        foreach (IDisposable subscription in this.subscriptions)
+            subscription.Dispose();
+        this.subscriptions.Clear();
+        this.ActiveModels.Clear();
+        this.Config = null;
+        this.Obj = null;
+    }
 
     public void UpdatePaths()
     {
@@ -330,6 +349,8 @@ public class AssetViewModel : ViewModelBase
         this.ExtBaseAnimPaths = new ObservableCollection<string>();
         this.AddAnimPaths = new ObservableCollection<string>();
         this.ExtAddAnimPaths = new ObservableCollection<string>();
+
+        this.ActiveModels = new Dictionary<string, ModelPack>();
 
         this.ActiveModelPath = null;
         this.ActiveBaseAnimPath = null;
@@ -340,8 +361,7 @@ public class AssetViewModel : ViewModelBase
         this.UpdateModelPaths();
         if (this.ObjectType.Choice == "Field")
             this.UpdateFieldPaths();
-
-        if (this.ObjectType.Choice == "Character")
+        else if (this.IsModel)
         {
             foreach (string path in this.UpdateAnimPaths(false, false))
                 this.BaseAnimPaths.Add(path);
@@ -354,65 +374,94 @@ public class AssetViewModel : ViewModelBase
         }
 
         if (this.ModelPaths.Count > 0)
+        {
             this.ActiveModelPath = this.ModelPaths[0];
+            if (!this.ActiveModels.ContainsKey(this.ActiveModelPath))
+                this.ActiveModels[this.ActiveModelPath] = null;
+        }
         if (this.BaseAnimPaths.Count > 0)
+        {
             this.ActiveBaseAnimPath = this.BaseAnimPaths[0];
+            if (!this.ActiveModels.ContainsKey(this.ActiveBaseAnimPath))
+                this.ActiveModels[this.ActiveBaseAnimPath] = null;
+        }
         if (this.ExtBaseAnimPaths.Count > 0)
+        {
             this.ActiveExtBaseAnimPath = this.ExtBaseAnimPaths[0];
+            if (!this.ActiveModels.ContainsKey(this.ActiveExtBaseAnimPath))
+                this.ActiveModels[this.ActiveExtBaseAnimPath] = null;
+        }
         if (this.AddAnimPaths.Count > 0)
+        {
             this.ActiveAddAnimPath = this.AddAnimPaths[0];
+            if (!this.ActiveModels.ContainsKey(this.ActiveAddAnimPath))
+                this.ActiveModels[this.ActiveAddAnimPath] = null;
+        }
         if (this.ExtAddAnimPaths.Count > 0)
+        {
             this.ActiveExtAddAnimPath = this.ExtAddAnimPaths[0];
+            if (!this.ActiveModels.ContainsKey(this.ActiveExtAddAnimPath))
+                this.ActiveModels[this.ActiveExtAddAnimPath] = null;
+        }
     }
 
     public void UpdateModelPaths()
     {
         this.ModelPaths = new ObservableCollection<string>();
-        string pattern = "";
+        string[] prefix = null;
+        string suffix = null;
         switch (this.ObjectType.Choice)
         {
             case "Character":
+            case "FieldCharacter":
                 if (this.MinorID.Value == 0)
-                   pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_00[0-9]_{this.SubID.Value:00}\\.GMD";
+                {
+                   prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}" };
+                   suffix = $"c{this.MajorID.Value:0000}_00[0-9]_{this.SubID.Value:00}\\.gmd";
+                }
                 else
                     if (this.SubID.Value == 0)
-                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_[0-9][0-9]\\.GMD";
+                    {
+                        prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}" };
+                        suffix = $"c{this.MajorID.Value:0000}_{this.MinorID.Value:000}_[0-9][0-9]\\.gmd";
+                    }
                     else
-                        pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]C{this.MajorID.Value:0000}_{this.MinorID.Value:000}_{this.SubID.Value:00}\\.GMD";
+                        prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", $"c{this.MajorID.Value:0000}_{this.MinorID.Value:000}_{this.SubID.Value:00}.gmd" };
                 break;
             case "Enemy":
-                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]{this.MajorID.Value:0000}[\\\\/]EM{this.MajorID.Value:0000}\\.GMD";
+                prefix = new string[] { "model", "character", "enemy", $"{this.MajorID.Value:0000}", $"em{this.MajorID.Value:0000}.gmd" };
                 break;
             case "Persona":
-                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]PERSONA[\\\\/]{this.MajorID.Value:0000}[\\\\/]PS{this.MajorID.Value:0000}\\.GMD";
+                prefix = new string[] { "model", "character", "persona", $"{this.MajorID.Value:0000}", $"ps{this.MajorID.Value:0000}.gmd" };
                 break;
             case "Item":
-                pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GMD";
+                prefix = new string[] { "model", "item", $"it{this.MajorID.Value:0000}_{this.MinorID.Value:000}.gmd" };
                 break;
             case "FieldObject":
-                pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]OBJECT[\\\\/]M{this.MajorID.Value:000}_{this.MinorID.Value:000}\\.GMD";
+                prefix = new string[] { "model", "field_tex", "object", $"m{this.MajorID.Value:000}_{this.MinorID.Value:000}.gmd" };
                 break;
             case "SymShadow":
-                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]SYMBOL[\\\\/]SYM{this.MajorID.Value:000}\\.GMD";
+                prefix = new string[] { "model", "character", "enemy", "symbol", $"sym{this.MajorID.Value:000}.gmd" };
                 break;
             default:
                 Trace.TraceWarning($"Unknown asset type: {this.ObjectType.Choice}");
                 break;
         }
 
-        if (pattern != "")
-            foreach (string path in this.Config.ExtractMatchingFiles(pattern))
+        if (!(prefix is null))
+            foreach (string path in this.Config.ExtractExactFiles(prefix, suffix))
                 this.ModelPaths.Add(path);
     }
 
+    // TODO: fetch prefixes by game
     public void UpdateFieldPaths()
     {
         this.SubModelPaths = new Dictionary<int, ObservableCollection<string>>();
         this.TextureBinPaths = new Dictionary<int, ObservableCollection<string>>();
         this.ActiveMap = null;
 
-        string mapPattern = $"FIELD[\\\\/]MAP[\\\\/]D{this.MajorID.Value:000}_{this.MinorID.Value:000}\\.MAP";
-        List<string> mapPaths = this.Config.ExtractMatchingFiles(mapPattern);
+        string[] mapPrefix = new string[] { "field", "map", $"d{this.MajorID.Value:000}_{this.MinorID.Value:000}.map" };
+        List<string> mapPaths = this.Config.ExtractExactFiles(mapPrefix);
         if (mapPaths.Count > 0)
         {
             Console.WriteLine(mapPaths[0]);
@@ -421,10 +470,12 @@ public class AssetViewModel : ViewModelBase
             this.ActiveMap.Read(mapPaths[0]);
             for (int subId=0; subId<this.ActiveMap.Entries.Length; subId++)
             {
-                string modelPattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.ActiveMap.Entries[subId].MajorID:000}_{this.ActiveMap.Entries[subId].MinorID:000}_[0-9].GFS";
-                string texturePattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.ActiveMap.Entries[subId].MajorID:000}_{this.ActiveMap.Entries[subId].MinorID:000}_[0-9][0-9]_00\\.BIN";
+                string[] modelPrefix = new string[] { "model", "field_tex" };
+                string modelSuffix = $"f{this.ActiveMap.Entries[subId].MajorID:000}_{this.ActiveMap.Entries[subId].MinorID:000}_[0-9]\\.gfs";
+                string[] texturePrefix = new string[] { "model", "field_tex", "textures" };
+                string textureSuffix = $"tex{this.ActiveMap.Entries[subId].MajorID:000}_{this.ActiveMap.Entries[subId].MinorID:000}_[0-9][0-9]_00\\.bin";
 
-                foreach (string path in this.Config.ExtractMatchingFiles(modelPattern))
+                foreach (string path in this.Config.ExtractExactFiles(modelPrefix, modelSuffix))
                 {
                     if (!this.SubModelPaths.ContainsKey(subId))
                         this.SubModelPaths[subId] = new ObservableCollection<string>();
@@ -432,7 +483,7 @@ public class AssetViewModel : ViewModelBase
                     Console.WriteLine($"{subId}: {path}, {this.SubModelPaths[subId].Count}");
                 }
 
-                foreach (string path in this.Config.ExtractMatchingFiles(texturePattern))
+                foreach (string path in this.Config.ExtractExactFiles(texturePrefix, textureSuffix))
                 {
                     if (!this.TextureBinPaths.ContainsKey(subId))
                         this.TextureBinPaths[subId] = new ObservableCollection<string>();
@@ -443,21 +494,25 @@ public class AssetViewModel : ViewModelBase
         }
         else
         {
-            string modelPattern = "";
-            string texturePattern = "";
+            string[] modelPrefix = null;
+            string modelSuffix = null;
+            string[] texturePrefix = null;
+            string textureSuffix = null;
 
             if (this.SubID.Value == 0)
             {
-                modelPattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9]\\.GFS";
-                texturePattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9][0-9]_00\\.BIN";
+                modelPrefix = new string[] { "model", "field_tex" };
+                modelSuffix = $"f{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9]\\.gfs";
+                texturePrefix = new string[] { "model", "field_tex", "textures" };
+                textureSuffix = $"tex{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9][0-9]_00\\.bin";
             }
             else
             {
-                modelPattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]F{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value}\\.GFS";
-                texturePattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]TEXTURES[\\\\/]TEX{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value:00}_00\\.BIN";
+                modelPrefix = new string[] { "model", "field_tex", $"f{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value}.gfs" };
+                texturePrefix = new string[] { "model", "field_tex", "textures", $"tex{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value:00}_00.bin" };
             }
 
-            foreach (string path in this.Config.ExtractMatchingFiles(modelPattern))
+            foreach (string path in this.Config.ExtractExactFiles(modelPrefix, modelSuffix))
             {
                 int subId = Int32.Parse(path.Substring(path.Length-5, 1));
                 if (!this.SubModelPaths.ContainsKey(subId))
@@ -466,7 +521,7 @@ public class AssetViewModel : ViewModelBase
                 Console.WriteLine($"{subId}: {path}, {this.SubModelPaths[subId].Count}");
             }
 
-            foreach (string path in this.Config.ExtractMatchingFiles(texturePattern))
+            foreach (string path in this.Config.ExtractExactFiles(texturePrefix, textureSuffix))
             {
                 int subId = Int32.Parse(path.Substring(path.Length-9, 2));
                 if (!this.TextureBinPaths.ContainsKey(subId))
@@ -478,20 +533,45 @@ public class AssetViewModel : ViewModelBase
 
         this.ActiveSubModelPaths = new Dictionary<int, string>();
         this.ActiveTextureBinPaths = new Dictionary<int, string>();
+        this.ActiveAttachmentPaths = new Dictionary<int, Dictionary<int, string>>();
 
-        foreach (int key in this.SubModelPaths.Keys)
-            this.ActiveSubModelPaths[key] = (this.SubModelPaths[key] is null || this.SubModelPaths[key].Count == 0) ? null : this.SubModelPaths[key][0];
+        foreach (int subId in this.SubModelPaths.Keys)
+        {
+            this.ActiveSubModelPaths[subId] = (this.SubModelPaths[subId] is null || this.SubModelPaths[subId].Count == 0) ? null : this.SubModelPaths[subId][0];
+            if (!this.ActiveModels.ContainsKey(this.ActiveSubModelPaths[subId]))
+                this.ActiveModels[this.ActiveSubModelPaths[subId]] = GFDLibrary.Api.FlatApi.LoadModel(this.ActiveSubModelPaths[subId]);
+            this.ActiveAttachmentPaths[subId] = new Dictionary<int, string>();
+            Parallel.ForEach(this.ActiveModels[this.ActiveSubModelPaths[subId]].Model.Nodes, node =>
+            {
+                if (node.Properties.ContainsKey("fldLayoutOfModel_resId") && node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Properties.ContainsKey("fldLayoutOfModel_minor"))
+                {
+                    int majorId = (int)node.Properties["fldLayoutOfModel_major"].GetValue();
+                    int minorId = (int)node.Properties["fldLayoutOfModel_minor"].GetValue();
+                    int resId = (int)node.Properties["fldLayoutOfModel_resId"].GetValue();
+                    string[] pattern = new string[] { "model", "field_tex", "object", $"m{majorId:000}_{minorId:000}.gmd" };
+                    List<string> matches = this.Config.ExtractExactFiles(pattern);
+                    if (matches.Count > 0)
+                    {
+                        lock (this.ActiveAttachmentPaths[subId]) { this.ActiveAttachmentPaths[subId][resId] = matches[0]; }
+                        if (!this.ActiveModels.ContainsKey(this.ActiveAttachmentPaths[subId][resId]))
+                            lock (this.ActiveModels) { this.ActiveModels[this.ActiveAttachmentPaths[subId][resId]] = null; }
+                    }
+                }
+            });
+        }
 
-        foreach (int key in this.TextureBinPaths.Keys)
-            this.ActiveTextureBinPaths[key] = (this.TextureBinPaths[key] is null || this.TextureBinPaths[key].Count == 0) ? null : this.TextureBinPaths[key][0];
+        foreach (int subId in this.TextureBinPaths.Keys)
+            this.ActiveTextureBinPaths[subId] = (this.TextureBinPaths[subId] is null || this.TextureBinPaths[subId].Count == 0) ? null : this.TextureBinPaths[subId][0];
     }
 
     public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims)
     {
         string animType = (isExtAnims) ? "A" : "B";
         int animId = (isExtAnims) ? (int)this.ExtBaseAnimID.Value : (int)this.BaseAnimID.Value;
-        string pattern = "";
-        string backoff = "";
+        string[] prefix = null;
+        string suffix = null;
+        string[] backoffPrefix = null;
+        string backoffSuffix = null;
         List<string> ret = new List<string>();
 
         if (animId == -1)
@@ -500,48 +580,49 @@ public class AssetViewModel : ViewModelBase
         switch (this.ObjectType.Choice)
         {
             case "Character":
+            case "FieldCharacter":
+                string subtype = (this.ObjectType.Choice == "FieldCharacter") ? "field" : "event";
                 if (this.IsCommon.Value)
-                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]COMMON_ANIM[\\\\/]{animType}CMN{animId:0000}\\.GAP";
+                    prefix = new string[] { "model", "character", "common_anim", $"{animType}CMN{animId:0000}.gap" };
                 else if (isBlendAnims)
                 {
-                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EMT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GAP";
-                    backoff = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EMT{this.MajorID.Value:0000}\\.GAP";
+                    prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", $"emt{this.MajorID.Value:0000}_{this.MinorID.Value:000}.gap" };
+                    backoffPrefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", $"emt{this.MajorID.Value:0000}.gap" };
                 }
                 else
                 {
-                    pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_{animId:000}\\.GAP";
-                    backoff = $"MODEL[\\\\/]CHARACTER[\\\\/]{this.MajorID.Value:0000}[\\\\/]EVENT[\\\\/]{animType}E{this.MajorID.Value:0000}_{(animId+30):000}\\.GAP";
+                    prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", subtype, $"{animType}{subtype.Substring(0, 1)}{this.MajorID.Value:0000}_{animId:000}.gap" };
+                    backoffPrefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", subtype, $"{animType}{subtype.Substring(0, 1)}{this.MajorID.Value:0000}_{(animId+30):000}.gap" };
                 }
                 break;
             case "Enemy":
-                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]{this.MajorID.Value:0000}[\\\\/]{animType}EM{this.MajorID.Value:0000}_{animId:000}\\.GAP";
+                prefix = new string[] { "model", "character", "enemy", $"{this.MajorID.Value:0000}", $"{animType}em{this.MajorID.Value:0000}_{animId:000}.gap" };
                 break;
             case "Persona":
-                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]PERSONA[\\\\/]{this.MajorID.Value:0000}[\\\\/]{animType}PS{this.MajorID.Value:0000}_{animId:000}\\.GAP";
+                prefix = new string[] { "model", "character", "persona", $"{this.MajorID.Value:0000}", $"{animType}ps{this.MajorID.Value:0000}_{animId:000}.gap" };
                 break;
             case "Item":
                 // yes, it's the GMD itself. for items, that's where animations are also stored
-                pattern = $"MODEL[\\\\/]ITEM[\\\\/]IT{this.MajorID.Value:0000}_{this.MinorID.Value:000}\\.GMD";
+                prefix = new string[] { "model", "item", $"it{this.MajorID.Value:0000}_{this.MinorID.Value:000}.gmd" };
                 break;
             case "FieldObject":
-                pattern = $"MODEL[\\\\/]FIELD_TEX[\\\\/]OBJECT[\\\\/]M{this.MajorID.Value:000}_{this.MinorID.Value:000}\\.GMD";
+                prefix = new string[] { "model", "field_tex", "object", $"m{this.MajorID.Value:000}_{this.MinorID.Value:000}.gmd" };
                 break;
             case "SymShadow":
-                // I suspect it's the same for Overworld Shadows, but I cannot confirm yet
-                pattern = $"MODEL[\\\\/]CHARACTER[\\\\/]ENEMY[\\\\/]SYMBOL[\\\\/]SYM{this.MajorID.Value:000}\\.GMD";
+                prefix = new string[] { "model", "character", "enemy", "symbol", $"sym{this.MajorID.Value:000}.gmd" };
                 break;
             default:
                 Trace.TraceWarning($"Unknown asset type: {this.ObjectType.Choice}");
                 break;
         }
 
-        if (pattern == "")
+        if (prefix == null)
             return new List<string>();
         else
         {
-            List<string> candidates = this.Config.ExtractMatchingFiles(pattern);
-            if (candidates.Count == 0 && backoff != "")
-                candidates = this.Config.ExtractMatchingFiles(backoff);
+            List<string> candidates = this.Config.ExtractExactFiles(prefix, suffix);
+            if (candidates.Count == 0 && backoffPrefix != null)
+                candidates = this.Config.ExtractExactFiles(backoffPrefix, backoffSuffix);
             return candidates;
         }
     }
@@ -570,7 +651,7 @@ public class AssetViewModel : ViewModelBase
         }
     );
 
-    public BiDict<string, int> ObjectCategories = new BiDict<string, int>
+    public static BiDict<string, int> ObjectCategories = new BiDict<string, int>
     (
         new Dictionary<string, int>
         {
