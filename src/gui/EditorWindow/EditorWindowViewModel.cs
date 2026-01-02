@@ -38,6 +38,9 @@ public class CommonViewModels : ReactiveObject
             if (asset.ObjectType.Choice == "Field")
                 this.Render.AddTextures(asset.ActiveTextureBinPaths);
         });
+        // kind of weird to do this here but anything else gets wack with concurrency
+        // ...because of common models across assets and such. maybe worth moving the
+        // loading logic into AssetViewModel somehow? but eh...
         Parallel.ForEach(cachedModels.Keys, path =>
         {
             if (cachedModels[path] is null)
@@ -57,15 +60,15 @@ public class CommonViewModels : ReactiveObject
         {
             if (x)
             {
-                foreach (AssetViewModel asset in this.Assets)
+                // TODO: figure why making this parallel fucks up textures
+                // (i think it's something with the delegate texture creator)
                 //Parallel.ForEach(this.Assets, asset =>
+                foreach (AssetViewModel asset in this.Assets)
                 {
-                    //if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
                     if (asset.IsModel)
                     {
                         this.Render.AddModel(asset);
-                        if (asset.ObjectType.Choice != "Field")
-                            this.Render.PositionModel(asset, this.Timeline);
+                        this.Render.PositionModel(asset, this.Timeline);
                     }
                 } //);
                 this.Render.PlaceCamera(this.Timeline);

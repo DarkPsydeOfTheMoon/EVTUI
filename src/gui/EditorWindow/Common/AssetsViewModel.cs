@@ -377,35 +377,30 @@ public class AssetViewModel : ViewModelBase
         {
             this.ActiveModelPath = this.ModelPaths[0];
             if (!this.ActiveModels.ContainsKey(this.ActiveModelPath))
-                //this.ActiveModels[this.ActiveModelPath] = GFDLibrary.Api.FlatApi.LoadModel(this.ActiveModelPath);
                 this.ActiveModels[this.ActiveModelPath] = null;
         }
         if (this.BaseAnimPaths.Count > 0)
         {
             this.ActiveBaseAnimPath = this.BaseAnimPaths[0];
             if (!this.ActiveModels.ContainsKey(this.ActiveBaseAnimPath))
-                //this.ActiveModels[this.ActiveBaseAnimPath] = GFDLibrary.Api.FlatApi.LoadModel(this.ActiveBaseAnimPath);
                 this.ActiveModels[this.ActiveBaseAnimPath] = null;
         }
         if (this.ExtBaseAnimPaths.Count > 0)
         {
             this.ActiveExtBaseAnimPath = this.ExtBaseAnimPaths[0];
             if (!this.ActiveModels.ContainsKey(this.ActiveExtBaseAnimPath))
-                //this.ActiveModels[this.ActiveExtBaseAnimPath] = GFDLibrary.Api.FlatApi.LoadModel(this.ActiveExtBaseAnimPath);
                 this.ActiveModels[this.ActiveExtBaseAnimPath] = null;
         }
         if (this.AddAnimPaths.Count > 0)
         {
             this.ActiveAddAnimPath = this.AddAnimPaths[0];
             if (!this.ActiveModels.ContainsKey(this.ActiveAddAnimPath))
-                //this.ActiveModels[this.ActiveAddAnimPath] = GFDLibrary.Api.FlatApi.LoadModel(this.ActiveAddAnimPath);
                 this.ActiveModels[this.ActiveAddAnimPath] = null;
         }
         if (this.ExtAddAnimPaths.Count > 0)
         {
             this.ActiveExtAddAnimPath = this.ExtAddAnimPaths[0];
             if (!this.ActiveModels.ContainsKey(this.ActiveExtAddAnimPath))
-                //this.ActiveModels[this.ActiveExtAddAnimPath] = GFDLibrary.Api.FlatApi.LoadModel(this.ActiveExtAddAnimPath);
                 this.ActiveModels[this.ActiveExtAddAnimPath] = null;
         }
     }
@@ -546,7 +541,6 @@ public class AssetViewModel : ViewModelBase
             if (!this.ActiveModels.ContainsKey(this.ActiveSubModelPaths[subId]))
                 this.ActiveModels[this.ActiveSubModelPaths[subId]] = GFDLibrary.Api.FlatApi.LoadModel(this.ActiveSubModelPaths[subId]);
             this.ActiveAttachmentPaths[subId] = new Dictionary<int, string>();
-            //foreach (Node node in this.ActiveModels[this.ActiveSubModelPaths[subId]].Model.Nodes)
             Parallel.ForEach(this.ActiveModels[this.ActiveSubModelPaths[subId]].Model.Nodes, node =>
             {
                 if (node.Properties.ContainsKey("fldLayoutOfModel_resId") && node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Properties.ContainsKey("fldLayoutOfModel_minor"))
@@ -560,22 +554,10 @@ public class AssetViewModel : ViewModelBase
                     {
                         lock (this.ActiveAttachmentPaths[subId]) { this.ActiveAttachmentPaths[subId][resId] = matches[0]; }
                         if (!this.ActiveModels.ContainsKey(this.ActiveAttachmentPaths[subId][resId]))
-                        //    lock (this.ActiveModels) { this.ActiveModels[this.ActiveAttachmentPaths[subId][resId]] = GFDLibrary.Api.FlatApi.LoadModel(this.ActiveAttachmentPaths[subId][resId]); }
                             lock (this.ActiveModels) { this.ActiveModels[this.ActiveAttachmentPaths[subId][resId]] = null; }
                     }
                 }
             });
-            /*Parallel.ForEach(this.ActiveAttachmentPaths[subId].Keys, resId =>
-            //foreach (int resId in this.ActiveAttachmentPaths[subId].Keys)
-            {
-                if (!this.ActiveModels.ContainsKey(this.ActiveAttachmentPaths[subId][resId]))
-                {
-                    ModelPack model = GFDLibrary.Api.FlatApi.LoadModel(this.ActiveAttachmentPaths[subId][resId]);
-                    lock (this.ActiveModels) { this.ActiveModels[this.ActiveAttachmentPaths[subId][resId]] = model; }
-                }
-            });
-            GC.Collect();
-            GC.WaitForPendingFinalizers();*/
         }
 
         foreach (int subId in this.TextureBinPaths.Keys)

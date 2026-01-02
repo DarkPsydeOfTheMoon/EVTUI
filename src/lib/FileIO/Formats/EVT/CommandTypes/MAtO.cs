@@ -17,7 +17,7 @@ public partial class CommandTypes
         public float[] RelativePosition = new float[3];
         public float[] Rotation = new float[3];
 
-        public UInt32 InterpolationType;
+        public UInt32 InterpolationParameters;
 
         public ConstUInt32[] UNUSED_UINT32 = Enumerable.Range(0, 4).Select(i => new ConstUInt32()).ToArray();
 
@@ -30,7 +30,7 @@ public partial class CommandTypes
             rw.RwFloat32s(ref this.RelativePosition, 3);
             rw.RwFloat32s(ref this.Rotation, 3);
 
-            rw.RwUInt32(ref this.InterpolationType);
+            rw.RwUInt32(ref this.InterpolationParameters);
 
             rw.RwObj(ref this.UNUSED_UINT32[1], args);
             rw.RwObj(ref this.UNUSED_UINT32[2], args);

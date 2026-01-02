@@ -15,7 +15,7 @@ public class FS__ : Generic
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDsOfType(0x00000003));
         this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
-        this.Position = new Position3D("Offset", this.Editable, this.CommandData.Coordinates);
+        this.Position = new Position3D("Offset", this.Editable, this.CommandData.Position);
         // i may have yaw and pitch switched around here, dunno
         this.Rotation = new RotationWidget(config, this.CommandData.Rotation, null, yawInd: 0, pitchInd: 1);
 

@@ -1114,9 +1114,9 @@
           <ContentControl Content="{Binding ChildAssetID}"/>
           <ContentControl Content="{Binding ChildModelPreviewVM}"/>
         </StackPanel>
-        <ContentControl Content="{Binding InterpolationType}"/>
         <ContentControl Content="{Binding Offset}"/>
         <ContentControl Content="{Binding Rotation}"/>
+        <ContentControl Content="{Binding InterpolationSettings}"/>
       </StackPanel>
     </DataTemplate>
 

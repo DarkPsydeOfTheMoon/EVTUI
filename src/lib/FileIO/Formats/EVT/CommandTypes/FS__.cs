@@ -14,7 +14,7 @@ public partial class CommandTypes
 
         public UInt32 UnkBool;
 
-        public float[] Coordinates = new float[3];
+        public float[] Position = new float[3];
         public float[] Rotation = new float[3];
 
         public float UnkFloat;
@@ -30,7 +30,7 @@ public partial class CommandTypes
             rw.RwObj(ref this.UNUSED_UINT32[1], args);
             rw.RwObj(ref this.UNUSED_UINT32[2], args);
 
-            rw.RwFloat32s(ref this.Coordinates, 3);
+            rw.RwFloat32s(ref this.Position, 3);
             rw.RwFloat32s(ref this.Rotation, 3);
 
             rw.RwFloat32(ref this.UnkFloat);

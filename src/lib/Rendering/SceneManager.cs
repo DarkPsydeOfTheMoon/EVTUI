@@ -25,7 +25,6 @@ public class SceneModel
 {
     protected DataManager Config;
     protected GLModel model;
-    protected AnimationPack GAP;
     protected Stopwatch animationStopwatch = new Stopwatch();  // I think we need one per currently-playing animation...
 
     public AnimationPack BaseAnimationPack;
@@ -37,14 +36,6 @@ public class SceneModel
     protected (bool IsExt, int Idx)?[] AddAnimInfo = new (bool IsExt, int Idx)?[8];
 
     protected Dictionary<int, GLNode> NodesByResId;
-
-    public SceneModel(GLModel model, AnimationPack GAP)
-    {
-        this.model = model;
-        this.GAP = GAP;
-        // If we need to loads GAPS on a per-model basis, we can put
-        // the external GAPs here instead of having a global list.
-    }
 
     public SceneModel(DataManager config, ModelPack model, Dictionary<string, Texture> fieldtex, bool isField=false)
     {
@@ -65,7 +56,6 @@ public class SceneModel
         }
         this.animationStopwatch.Stop();
         this.animationStopwatch = null;
-        this.GAP = null;
         this.BaseAnimationPack = null;
         this.ExtBaseAnimationPack = null;
         this.AddAnimationPack = null;
@@ -141,7 +131,7 @@ public class SceneModel
 
     private void LoadModel(ModelPack model, Dictionary<string, Texture> fieldtex, bool isField=false)
     {
-        GLModel glmodel = new GLModel(model, ( material, textureName ) =>
+        this.model = new GLModel(model, ( material, textureName ) =>
         {
             if (fieldtex.ContainsKey(textureName.ToLower()))
                 return new GLTexture(fieldtex[textureName.ToLower()]);
@@ -155,9 +145,6 @@ public class SceneModel
                 return new GLTexture(Texture.CreateDefaultTexture(textureName));
             }
         } );
-
-        this.model = glmodel;
-        this.GAP = model.AnimationPack;
 
         this.NodesByResId = new Dictionary<int, GLNode>();
         foreach (GLNode node in this.model.Nodes)
@@ -182,6 +169,7 @@ public class SceneModel
             key.Rotation = this.model.EulerToQuat(new Vector3(MathHelper.DegreesToRadians(rotation[0]), MathHelper.DegreesToRadians(rotation[1]), MathHelper.DegreesToRadians(rotation[2])));
         pos.Controllers[0].Layers[0].Keys.Add(key);
 
+        this.UnloadBlendAnimation(0);
         this.LoadBlendAnimation(pos, 0);
     }
 
@@ -257,7 +245,6 @@ public class SceneManager
 
     public Dictionary<int, SceneModel> sceneModels;
     public Dictionary<int, Dictionary<int, SceneModel>> fieldModels;
-    //public List<AnimationPack> externalGAPs;
     public List<GLPerspectiveCamera> cameras;
     public List<GLShaderProgram> shaders;
     public Dictionary<string, Texture> FieldTex;
@@ -285,7 +272,6 @@ public class SceneManager
 
         this.sceneModels = new Dictionary<int, SceneModel>();
         this.fieldModels = new Dictionary<int, Dictionary<int, SceneModel>>();
-        //this.externalGAPs = new List<AnimationPack>();
         this.cameras = new List<GLPerspectiveCamera>();
         this.shaders = new List<GLShaderProgram>();
         this.FieldTex = new Dictionary<string, Texture>();
@@ -339,10 +325,6 @@ public class SceneManager
         }
         this.fieldModels.Clear();
 
-        //for (int i=this.externalGAPs.Count-1; i>=0; --i)
-        //    this.UnloadGAP(i);
-        //this.externalGAPs.Clear();
-
         for (int i=this.shaders.Count-1; i>=0; --i)
             this.UnloadShader(i);
         this.shaders.Clear();
@@ -381,28 +363,6 @@ public class SceneManager
         }
     }
 
-    ///////////////////////////////////
-    // *** GAP Memory Management *** //
-    ///////////////////////////////////
-    /*public int LoadGAP(string filepath)
-    {
-        if (!File.Exists(filepath))
-            throw new FileNotFoundException($"GAP file '{filepath}' does not exist.");
-        var anims = GFDLibrary.Api.FlatApi.LoadModel(filepath);
-        this.externalGAPs.Add(anims.AnimationPack);
-        return this.externalGAPs.Count-1;
-    }
-
-    public void UnloadGAP(int index)
-    {
-        if (index >= this.externalGAPs.Count)
-        {
-            Trace.TraceWarning($"Cannot unload GAP at index {index} because there are only {this.externalGAPs.Count} GAPs loaded");
-            return;
-        }
-        this.externalGAPs.RemoveAt(index);
-    }*/
-
     //////////////////////////////////////
     // *** Shader Memory Management *** //
     //////////////////////////////////////
@@ -434,32 +394,6 @@ public class SceneManager
     /////////////////////////////////////
     // *** Model State Management *** //
     ////////////////////////////////////
-    /*public void ActivateAnimationOnModel(int model_index, int gap_index, int animation_index)
-    {
-        var animation = this.externalGAPs[gap_index].Animations[animation_index];
-        if (this.sceneModels.ContainsKey(model_index))
-            this.sceneModels[model_index].LoadAnimation(animation);
-        else
-            Trace.TraceWarning($"Tried to load animation for asset #{model_index}, which hasn't been loaded.");
-    }
-
-    public void ActivateBlendAnimationOnModel(int model_index, int gap_index, int animation_index)
-    {
-        var animation = this.externalGAPs[gap_index].BlendAnimations[animation_index];
-        if (this.sceneModels.ContainsKey(model_index))
-            this.sceneModels[model_index].LoadAnimation(animation);
-        else
-            Trace.TraceWarning($"Tried to load animation for asset #{model_index}, which hasn't been loaded.");
-    }
-
-    public void DeactivateModelAnimations(int model_index)
-    {
-        if (this.sceneModels.ContainsKey(model_index))
-            this.sceneModels[model_index].UnloadAnimation();
-        else
-            Trace.TraceWarning($"Tried to unload animations for asset #{model_index}, which hasn't been loaded.");
-    }*/
-
     public void LoadBaseAnimation(int model_index, bool isExt, int idx)
     {
         if (this.sceneModels.ContainsKey(model_index))

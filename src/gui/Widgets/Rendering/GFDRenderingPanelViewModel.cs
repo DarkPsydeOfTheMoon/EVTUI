@@ -152,7 +152,6 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         {
             lock (this.sceneManager.fieldModels) { this.sceneManager.LoadField(objectID, asset.ActiveSubModelPaths, asset.ActiveAttachmentPaths, asset.ActiveModels); }
             if (!(asset.ActiveMap is null))
-                //for (int subId=0; subId<asset.ActiveMap.Entries.Length; subId++)
                 Parallel.For(0, asset.ActiveMap.Entries.Length, subId =>
                 {
                     float[] position = new float[] { (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
@@ -185,29 +184,65 @@ public class GFDRenderingPanelViewModel : ViewModelBase
     {
         int objectID = (int)asset.ObjectID.Value;
 
-        if (String.IsNullOrEmpty(asset.ActiveModelPath))
+        if (asset.ObjectType.Choice == "Field")
         {
-            Trace.TraceWarning($"Asset with ID {objectID} could not be loaded. It seems not to have a valid existing path.");
-            return;
-        }
+            float[] positionBase = new float[] { 0f, 0f, 0f };
+            float[] rotationBase = new float[] { 0f, 0f, 0f };
+            foreach (CommandPointer cmd in timeline.Categories[1].Commands)
+                if (cmd.Command.ObjectId == objectID && cmd.Code == "FS__")
+                {
+                    for (int i=0; i<3; i++)
+                        positionBase[i] += cmd.CommandData.Position[i];
+                    rotationBase[0] += cmd.CommandData.Rotation[1];
+                    rotationBase[1] += cmd.CommandData.Rotation[0];
+                    rotationBase[2] += cmd.CommandData.Rotation[2];
+                    break;
+                }
 
-        foreach (CommandPointer cmd in timeline.Categories[2].Commands)
-            if (cmd.Command.ObjectId == objectID && cmd.Code == "MSD_")
+            if (!(asset.ActiveMap is null))
+                Parallel.For(0, asset.ActiveMap.Entries.Length, subId =>
+                {
+                    float[] position = new float[] { (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
+                    float[] rotation = new float[] { 0f, (float)(asset.ActiveMap.Entries[subId].Direction*90), 0f };
+                    for (int i=0; i<3; i++)
+                    {
+                        position[i] += positionBase[i];
+                        rotation[i] += rotationBase[i];
+                    }
+                    this.sceneManager.fieldModels[objectID][subId].SetPosition(position, rotation);
+                });
+            else
+                Parallel.ForEach(this.sceneManager.fieldModels[objectID].Keys, subId =>
+                {
+                    this.sceneManager.fieldModels[objectID][subId].SetPosition(positionBase, rotationBase);
+                });
+        }
+        else
+        {
+            if (String.IsNullOrEmpty(asset.ActiveModelPath))
             {
-                this.sceneManager.sceneModels[objectID].SetPosition(cmd.CommandData.Position, cmd.CommandData.Rotation);
-                if (!cmd.CommandData.Flags[0])
-                    this.sceneManager.sceneModels[objectID].LoadBaseAnimation(cmd.CommandData.Flags[2], (int)cmd.CommandData.WaitingAnimation.Index);
-                break;
+                Trace.TraceWarning($"Asset with ID {objectID} could not be loaded. It seems not to have a valid existing path.");
+                return;
             }
-            /*else if (cmd.Command.ObjectId == objectID && cmd.Code == "MMD_")
-            {
-                //this.sceneManager.sceneModels[objectID].SetPosition(cmd.CommandData.Targets[(int)cmd.CommandData.NumControlGroups - 1], null);
-                this.sceneManager.sceneModels[objectID].SetPosition(new float[] { cmd.CommandData.Targets[(int)cmd.CommandData.NumControlGroups - 1, 0], cmd.CommandData.Targets[(int)cmd.CommandData.NumControlGroups - 1, 1], cmd.CommandData.Targets[(int)cmd.CommandData.NumControlGroups - 1, 2] }, null);
-            }
-            else if (cmd.Command.ObjectId == objectID && cmd.Code == "MRot")
-            {
-                this.sceneManager.sceneModels[objectID].SetPosition(null, cmd.CommandData.Rotation);
-            }*/
+
+            foreach (CommandPointer cmd in timeline.Categories[2].Commands)
+                if (cmd.Command.ObjectId == objectID && cmd.Code == "MSD_")
+                {
+                    this.sceneManager.sceneModels[objectID].SetPosition(cmd.CommandData.Position, cmd.CommandData.Rotation);
+                    if (!cmd.CommandData.Flags[0])
+                        this.sceneManager.sceneModels[objectID].LoadBaseAnimation(cmd.CommandData.Flags[2], (int)cmd.CommandData.WaitingAnimation.Index);
+                    break;
+                }
+                /*else if (cmd.Command.ObjectId == objectID && cmd.Code == "MMD_")
+                {
+                    //this.sceneManager.sceneModels[objectID].SetPosition(cmd.CommandData.Targets[(int)cmd.CommandData.NumControlGroups - 1], null);
+                    this.sceneManager.sceneModels[objectID].SetPosition(new float[] { cmd.CommandData.Targets[(int)cmd.CommandData.NumControlGroups - 1, 0], cmd.CommandData.Targets[(int)cmd.CommandData.NumControlGroups - 1, 1], cmd.CommandData.Targets[(int)cmd.CommandData.NumControlGroups - 1, 2] }, null);
+                }
+                else if (cmd.Command.ObjectId == objectID && cmd.Code == "MRot")
+                {
+                    this.sceneManager.sceneModels[objectID].SetPosition(null, cmd.CommandData.Rotation);
+                }*/
+        }
     }
 
 }

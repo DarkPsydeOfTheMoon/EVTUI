@@ -105,7 +105,6 @@ public class AudioManager
             this.AcbByType[key].Clear();
         if (!(acwbPaths is null))
         {
-            //object _lock = new();
             Parallel.ForEach(acwbPaths, acwbPath =>
             {
                 // stuff to be passed to the ACB object

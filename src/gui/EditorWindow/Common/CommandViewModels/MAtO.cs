@@ -18,11 +18,12 @@ public class MAtO : Generic
         this.ChildAssetID = new IntSelectionField("Attached Asset ID", this.Editable, this.CommandData.ChildObjectId, config.EventManager.AssetIDs);
         this.WhenAnyValue(_ => _.ChildAssetID.Choice).Subscribe(_ => this.CommandData.ChildObjectId = this.ChildAssetID.Choice);
 
-        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, MAtO.InterpolationTypes.Backward[this.CommandData.InterpolationType], MAtO.InterpolationTypes.Keys);
-        this.WhenAnyValue(_ => _.InterpolationType.Choice).Subscribe(_ => this.CommandData.InterpolationType = MAtO.InterpolationTypes.Forward[this.InterpolationType.Choice]);
-
         this.Offset = new Position3D("Offset (From Attachment Point)", this.Editable, this.CommandData.RelativePosition);
         this.Rotation = new RotationWidget(config, this.CommandData.Rotation, null, pitchInd: 0, yawInd: 1);
+
+        // interpolation
+        this.InterpolationSettings = new InterpolationParameters(this.CommandData.InterpolationParameters, this.Editable);
+        this.WhenAnyValue(_ => _.InterpolationSettings.InterpolationType.Choice, _ => _.InterpolationSettings.SlopeInType.Choice, _ => _.InterpolationSettings.SlopeOutType.Choice).Subscribe(_ => this.CommandData.InterpolationParameters = this.InterpolationSettings.Compose());
 
         this.ParentModelPreviewVM = new ModelPreviewWidget(config, commonVMs, this.AssetID);
         this.ChildModelPreviewVM = new ModelPreviewWidget(config, commonVMs, this.ChildAssetID);
@@ -31,22 +32,12 @@ public class MAtO : Generic
     public ModelPreviewWidget ParentModelPreviewVM { get; set; }
     public ModelPreviewWidget ChildModelPreviewVM  { get; set; }
 
-    public IntSelectionField AssetID      { get; set; }
+    public IntSelectionField AssetID { get; set; }
 
-    public IntSelectionField ChildAssetID         { get; set; }
-    public StringSelectionField InterpolationType { get; set; }
+    public IntSelectionField ChildAssetID { get; set; }
 
     public Position3D     Offset   { get; set; }
     public RotationWidget Rotation { get; set; }
 
-    public static BiDict<string, uint> InterpolationTypes = new BiDict<string, uint>
-    (
-        new Dictionary<string, uint>
-        {
-            {"Linear",  0},
-            {"Step",    1},
-            {"Hermite", 2},
-        }
-    );
-
+    public InterpolationParameters InterpolationSettings { get; set; }
 }

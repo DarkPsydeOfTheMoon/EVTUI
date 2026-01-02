@@ -168,7 +168,6 @@ public class TimelineViewModel : ReactiveObject
                     _cmd.IsInPlayRange = (_cmd.Frame >= _startingFrame && _cmd.Frame < _frameCount);
         }));
 
-        //for (int j=0; j<dataManager.EventManager.EventSoundCommands.Length; j++)
         Parallel.For(0, dataManager.EventManager.EventSoundCommands.Length, j =>
         {
             string code = dataManager.EventManager.EventSoundCommands[j].CommandCode;
@@ -177,7 +176,6 @@ public class TimelineViewModel : ReactiveObject
             CommandPointer newCmd = new CommandPointer(dataManager, code, true, j, i, len, (i >= _startingFrame && i < _frameCount));
             this.AddCommand(newCmd, sort: false);
         });
-        //for (int j=0; j<dataManager.EventManager.EventCommands.Length; j++)
         Parallel.For(0, dataManager.EventManager.EventCommands.Length, j =>
         {
             string code = dataManager.EventManager.EventCommands[j].CommandCode;

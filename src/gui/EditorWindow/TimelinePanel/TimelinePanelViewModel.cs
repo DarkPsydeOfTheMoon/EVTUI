@@ -21,7 +21,7 @@ public class TimelinePanelViewModel : ViewModelBase
     protected CommandPointer _activeCommandPointer;
     protected Category _activeCategory;
 
-    public ObservableCollection<string> AddableCodes { get; set; } //= new ObservableCollection<string>();
+    public ObservableCollection<string> AddableCodes { get; set; }
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
