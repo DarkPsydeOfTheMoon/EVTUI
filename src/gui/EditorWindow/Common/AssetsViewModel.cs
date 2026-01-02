@@ -229,8 +229,8 @@ public class AssetViewModel : ViewModelBase
 
         if (!(categoryTitle is null))
         {
-            this.Category = new StringSelectionField(categoryTitle, this.Editable, this.ObjectCategories.Backward[obj.ResourceCategory], this.ObjectCategories.Keys);
-            this.subscriptions.Add(this.WhenAnyValue(x => x.Category.Choice).Subscribe(x => this.Obj.ResourceCategory = this.ObjectCategories.Forward[this.Category.Choice]));
+            this.Category = new StringSelectionField(categoryTitle, this.Editable, AssetViewModel.ObjectCategories.Backward[obj.ResourceCategory], AssetViewModel.ObjectCategories.Keys);
+            this.subscriptions.Add(this.WhenAnyValue(x => x.Category.Choice).Subscribe(x => this.Obj.ResourceCategory = AssetViewModel.ObjectCategories.Forward[this.Category.Choice]));
         }
 
         if (!(majorIdTitle is null))
@@ -361,8 +361,7 @@ public class AssetViewModel : ViewModelBase
         this.UpdateModelPaths();
         if (this.ObjectType.Choice == "Field")
             this.UpdateFieldPaths();
-
-        if (this.ObjectType.Choice == "Character")
+        else if (this.IsModel)
         {
             foreach (string path in this.UpdateAnimPaths(false, false))
                 this.BaseAnimPaths.Add(path);
@@ -419,6 +418,7 @@ public class AssetViewModel : ViewModelBase
         switch (this.ObjectType.Choice)
         {
             case "Character":
+            case "FieldCharacter":
                 if (this.MinorID.Value == 0)
                 {
                    prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}" };
@@ -598,6 +598,8 @@ public class AssetViewModel : ViewModelBase
         switch (this.ObjectType.Choice)
         {
             case "Character":
+            case "FieldCharacter":
+                string subtype = (this.ObjectType.Choice == "FieldCharacter") ? "field" : "event";
                 if (this.IsCommon.Value)
                     prefix = new string[] { "model", "character", "common_anim", $"{animType}CMN{animId:0000}.gap" };
                 else if (isBlendAnims)
@@ -607,8 +609,8 @@ public class AssetViewModel : ViewModelBase
                 }
                 else
                 {
-                    prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", "event", $"{animType}e{this.MajorID.Value:0000}_{animId:000}.gap" };
-                    backoffPrefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", "event", $"{animType}e{this.MajorID.Value:0000}_{(animId+30):000}.gap" };
+                    prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", subtype, $"{animType}{subtype.Substring(0, 1)}{this.MajorID.Value:0000}_{animId:000}.gap" };
+                    backoffPrefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", subtype, $"{animType}{subtype.Substring(0, 1)}{this.MajorID.Value:0000}_{(animId+30):000}.gap" };
                 }
                 break;
             case "Enemy":
@@ -667,7 +669,7 @@ public class AssetViewModel : ViewModelBase
         }
     );
 
-    public BiDict<string, int> ObjectCategories = new BiDict<string, int>
+    public static BiDict<string, int> ObjectCategories = new BiDict<string, int>
     (
         new Dictionary<string, int>
         {

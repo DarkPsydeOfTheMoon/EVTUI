@@ -34,14 +34,4 @@ public class FS__ : Generic
     // unknown
     public BoolChoiceField UnkBool  { get; set; }
     public NumEntryField   UnkFloat { get; set; }
-
-    public BiDict<string, uint> ActionTypes = new BiDict<string, uint>
-    (
-        new Dictionary<string, uint>
-        {
-            {"Hide", 0},
-            {"Show", 1},
-        }
-    );
-
 }

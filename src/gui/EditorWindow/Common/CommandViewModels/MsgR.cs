@@ -18,8 +18,8 @@ public class MsgR : Generic
         this.WhenAnyValue(_ => _.MessageEnabled.Value).Subscribe(_ => this.CommandData.Flags[0] = this.MessageEnabled.Value);
         this.EnableMessageCoordinates = new BoolChoiceField("Directly Specify Message Coordinates?", this.Editable, this.CommandData.Flags[5]);
         this.WhenAnyValue(_ => _.EnableMessageCoordinates.Value).Subscribe(_ => this.CommandData.Flags[5] = this.EnableMessageCoordinates.Value);
-        this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, this.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], this.MessageCoordinateTypes.Keys);
-        this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = this.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]);
+        this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, Generic.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], Generic.MessageCoordinateTypes.Keys);
+        this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = Generic.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]);
         this.MessageX = new NumRangeField("X Coordinate", this.Editable, this.CommandData.MessageCoordinates[0], -9999, 9999, 1);
         this.WhenAnyValue(_ => _.MessageX.Value).Subscribe(_ => this.CommandData.MessageCoordinates[0] = (float)this.MessageX.Value);
         this.MessageY = new NumRangeField("Y Coordinate", this.Editable, this.CommandData.MessageCoordinates[1], -9999, 9999, 1);
@@ -63,6 +63,17 @@ public class MsgR : Generic
                 this.SelectionBlock = new SelectionPreview(config, newSelectIndex);
             this.CommandData.SelectIndex = (uint)config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
         });
+    }
+
+    public new void Dispose()
+    {
+        if (!(this.MessageBlock is null))
+            this.MessageBlock.Dispose();
+        if (!(this.SelectionBlock is null))
+            this.SelectionBlock.Dispose();
+        this.MessageBlock = null;
+        this.SelectionBlock = null;
+        base.Dispose();
     }
 
     public BoolChoiceField DisplayAsSubtitle { get; set; }

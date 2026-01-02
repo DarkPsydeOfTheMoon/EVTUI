@@ -13,13 +13,13 @@ public class Cht_ : Generic
     {
         this.LongName = "Message: Chat Mode";
 
-        this.ChatMode = new StringSelectionField("Chat Mode", this.Editable, this.ChatModes.Backward[this.CommandData.ChatMode], this.ChatModes.Keys);
-        this.WhenAnyValue(_ => _.ChatMode.Choice).Subscribe(_ => this.CommandData.ChatMode = this.ChatModes.Forward[this.ChatMode.Choice]);
+        this.ChatMode = new StringSelectionField("Chat Mode", this.Editable, Cht_.ChatModes.Backward[this.CommandData.ChatMode], Cht_.ChatModes.Keys);
+        this.WhenAnyValue(_ => _.ChatMode.Choice).Subscribe(_ => this.CommandData.ChatMode = Cht_.ChatModes.Forward[this.ChatMode.Choice]);
     }
 
     public StringSelectionField ChatMode { get; set; }
 
-    public BiDict<string, uint> ChatModes = new BiDict<string, uint>
+    public static BiDict<string, uint> ChatModes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

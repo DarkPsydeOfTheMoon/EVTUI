@@ -180,6 +180,10 @@ public class DisplayableEvent : ReactiveObject
 
 public class ConfigurationPanelViewModel : ViewModelBase
 {
+    /////////////////////////////
+    // *** PRIVATE MEMBERS *** //
+    /////////////////////////////
+    private List<IDisposable> subscriptions;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
@@ -238,6 +242,8 @@ public class ConfigurationPanelViewModel : ViewModelBase
     ////////////////////////////
     public ConfigurationPanelViewModel(DataManager dataManager, string configtype)
     {
+        this.subscriptions = new List<IDisposable>();
+
         this.Config = dataManager;
         this.ConfigType = configtype;
 
@@ -262,7 +268,7 @@ public class ConfigurationPanelViewModel : ViewModelBase
                 this.GameList.Add(new DisplayableGame(this.Config, i));
         }
 
-        this.WhenAnyValue(x => x.ProjectList).Subscribe(x =>
+        this.subscriptions.Add(this.WhenAnyValue(x => x.ProjectList).Subscribe(x =>
         {
             OnPropertyChanged(nameof(ProjectList));
             this.ProjectSelection = null;
@@ -271,9 +277,9 @@ public class ConfigurationPanelViewModel : ViewModelBase
             OnPropertyChanged(nameof(ProjectSelection));
             OnPropertyChanged(nameof(AnyRecentProjects));
             OnPropertyChanged(nameof(NoRecentProjects));
-        });
+        }));
 
-        this.WhenAnyValue(x => x.GameList).Subscribe(x =>
+        this.subscriptions.Add(this.WhenAnyValue(x => x.GameList).Subscribe(x =>
         {
             OnPropertyChanged(nameof(GameList));
             this.GameSelection = null;
@@ -282,9 +288,9 @@ public class ConfigurationPanelViewModel : ViewModelBase
             OnPropertyChanged(nameof(GameSelection));
             OnPropertyChanged(nameof(AnyRecentGames));
             OnPropertyChanged(nameof(NoRecentGames));
-        });
+        }));
 
-        this.WhenAnyValue(x => x.EventList).Subscribe(x =>
+        this.subscriptions.Add(this.WhenAnyValue(x => x.EventList).Subscribe(x =>
         {
             OnPropertyChanged(nameof(EventList));
             this.EventSelection = null;
@@ -293,13 +299,16 @@ public class ConfigurationPanelViewModel : ViewModelBase
             OnPropertyChanged(nameof(EventSelection));
             OnPropertyChanged(nameof(AnyRecentEvents));
             OnPropertyChanged(nameof(NoRecentEvents));
-        });
+        }));
 
-        this.WhenAnyValue(x => x.SelectedCollection).Subscribe(x => this.DisplayEvents());
+        this.subscriptions.Add(this.WhenAnyValue(x => x.SelectedCollection).Subscribe(x => this.DisplayEvents()));
     }
     
     public void Dispose()
     {
+        foreach (IDisposable subscription in this.subscriptions)
+            subscription.Dispose();
+        this.subscriptions.Clear();
         this.ProjectList.Clear();
         this.GameList.Clear();
         this.EventList.Clear();

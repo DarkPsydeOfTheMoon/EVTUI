@@ -95,9 +95,12 @@ public class DataManager
         this.EventManager = null;
         this.ScriptManager = null;
         this.CpkList.Clear();
-        foreach (string key in this.CpkTries.Keys)
-            this.CpkTries[key].Dispose();
-        this.CpkTries.Clear();
+        if (!(this.CpkTries is null))
+        {
+            foreach (string key in this.CpkTries.Keys)
+                this.CpkTries[key].Dispose();
+            this.CpkTries.Clear();
+        }
         //this.ClearCache();
     }
 

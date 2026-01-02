@@ -16,7 +16,7 @@ public class ToBitmap : IValueConverter
     {
         try
         {
-            MagickImage img = (MagickImage)value;
+            using MagickImage img = (MagickImage)value;
             WriteableBitmap bmp = img.ToWriteableBitmap();
             return bmp;
         }

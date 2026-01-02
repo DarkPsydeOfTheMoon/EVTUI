@@ -44,9 +44,12 @@ public class EventManager
     {
         this.SerialEvent = null;
         this.SerialEventSounds = null;
-        this.AcwbPaths.Clear();
-        this.BfPaths.Clear();
-        this.BmdPaths.Clear();
+        if (!(AcwbPaths is null))
+            this.AcwbPaths.Clear();
+        if (!(BfPaths is null))
+            this.BfPaths.Clear();
+        if (!(BmdPaths is null))
+            this.BmdPaths.Clear();
         this.config = null;
     }
 

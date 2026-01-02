@@ -1,4 +1,5 @@
 using Avalonia.ReactiveUI;
+
 using EVTUI.ViewModels;
 
 namespace EVTUI.Views;

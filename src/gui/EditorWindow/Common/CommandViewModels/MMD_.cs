@@ -18,18 +18,18 @@ public class MMD_ : Generic
         this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
         // movement
-        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, this.InterpolationTypes.Backward[this.CommandData.InterpolationType], this.InterpolationTypes.Keys);
-        this.WhenAnyValue(_ => _.InterpolationType.Choice).Subscribe(_ => this.CommandData.InterpolationType = this.InterpolationTypes.Forward[this.InterpolationType.Choice]);
+        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, Generic.MovementInterpolationTypes.Backward[this.CommandData.InterpolationType], Generic.MovementInterpolationTypes.Keys);
+        this.WhenAnyValue(_ => _.InterpolationType.Choice).Subscribe(_ => this.CommandData.InterpolationType = Generic.MovementInterpolationTypes.Forward[this.InterpolationType.Choice]);
         this.MovementSpeed = new NumEntryField("Movement Speed", this.Editable, this.CommandData.MovementSpeed, 1, 50, 0.1);
         this.WhenAnyValue(_ => _.MovementSpeed.Value).Subscribe(_ => this.CommandData.MovementSpeed = (float)this.MovementSpeed.Value);
         this.MovementLoopBool = new BoolChoiceField("Loop Movement?", this.Editable, this.CommandData.Flags[5]);
         this.WhenAnyValue(_ => _.MovementLoopBool.Value).Subscribe(_ => this.CommandData.Flags[5] = this.MovementLoopBool.Value);
         this.DisableOrientationChange = new BoolChoiceField("Disable Orientation Change?", this.Editable, this.CommandData.Flags[4]);
         this.WhenAnyValue(_ => _.DisableOrientationChange.Value).Subscribe(_ => this.CommandData.Flags[4] = this.DisableOrientationChange.Value);
-        this.StartSpeedType = new StringSelectionField("Start Speed Type", this.Editable, this.SpeedTypes.Backward[this.CommandData.StartSpeedType], this.SpeedTypes.Keys);
-        this.WhenAnyValue(_ => _.StartSpeedType.Choice).Subscribe(_ => this.CommandData.StartSpeedType = this.SpeedTypes.Forward[this.StartSpeedType.Choice]);
-        this.FinalSpeedType = new StringSelectionField("Final Speed Type", this.Editable, this.SpeedTypes.Backward[this.CommandData.FinalSpeedType], this.SpeedTypes.Keys);
-        this.WhenAnyValue(_ => _.FinalSpeedType.Choice).Subscribe(_ => this.CommandData.FinalSpeedType = this.SpeedTypes.Forward[this.FinalSpeedType.Choice]);
+        this.StartSpeedType = new StringSelectionField("Start Speed Type", this.Editable, MMD_.SpeedTypes.Backward[this.CommandData.StartSpeedType], MMD_.SpeedTypes.Keys);
+        this.WhenAnyValue(_ => _.StartSpeedType.Choice).Subscribe(_ => this.CommandData.StartSpeedType = MMD_.SpeedTypes.Forward[this.StartSpeedType.Choice]);
+        this.FinalSpeedType = new StringSelectionField("Final Speed Type", this.Editable, MMD_.SpeedTypes.Backward[this.CommandData.FinalSpeedType], MMD_.SpeedTypes.Keys);
+        this.WhenAnyValue(_ => _.FinalSpeedType.Choice).Subscribe(_ => this.CommandData.FinalSpeedType = MMD_.SpeedTypes.Forward[this.FinalSpeedType.Choice]);
 
         this.NumControlGroups = new NumEntryField("Control Groups", this.Editable, this.CommandData.NumControlGroups, 1, 8, 1);
         this.Positions = new ObservableCollection<Position3D>();
@@ -71,16 +71,7 @@ public class MMD_ : Generic
     // unknown
     public NumEntryField Unk { get; set; }
 
-    public BiDict<string, uint> InterpolationTypes = new BiDict<string, uint>
-    (
-        new Dictionary<string, uint>
-        {
-            {"Linear",       0},
-            {"Bezier Curve", 1},
-        }
-    );
-
-    public BiDict<string, byte> SpeedTypes = new BiDict<string, byte>
+    public static BiDict<string, byte> SpeedTypes = new BiDict<string, byte>
     (
         new Dictionary<string, byte>
         {

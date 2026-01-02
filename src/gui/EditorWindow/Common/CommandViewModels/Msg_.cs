@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -17,27 +18,27 @@ public class Msg_ : Generic
         this.LongName = "Message (by IDs)";
 
         this.DisplayAsSubtitle = new BoolChoiceField("Display As Subtitle?", this.Editable, this.CommandData.Flags[2]);
-        this.WhenAnyValue(_ => _.DisplayAsSubtitle.Value).Subscribe(_ => this.CommandData.Flags[2] = this.DisplayAsSubtitle.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.DisplayAsSubtitle.Value).Subscribe(_ => this.CommandData.Flags[2] = this.DisplayAsSubtitle.Value));
         //this.ReferenceByIndex = new BoolChoiceField("Reference By Index?", this.Editable, this.CommandData.Flags[31]);
-        //this.WhenAnyValue(_ => _.ReferenceByIndex.Value).Subscribe(_ => this.CommandData.Flags[31] = this.ReferenceByIndex.Value);
+        //this.subscriptions.Add(this.WhenAnyValue(_ => _.ReferenceByIndex.Value).Subscribe(_ => this.CommandData.Flags[31] = this.ReferenceByIndex.Value));
 
         // message
         this.MessageEnabled = new BoolChoiceField("Enable Message?", this.Editable, this.CommandData.Flags[0]);
-        this.WhenAnyValue(_ => _.MessageEnabled.Value).Subscribe(_ => this.CommandData.Flags[0] = this.MessageEnabled.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.MessageEnabled.Value).Subscribe(_ => this.CommandData.Flags[0] = this.MessageEnabled.Value));
         this.EnableMessageCoordinates = new BoolChoiceField("Directly Specify Message Coordinates?", this.Editable, this.CommandData.Flags[5]);
-        this.WhenAnyValue(_ => _.EnableMessageCoordinates.Value).Subscribe(_ => this.CommandData.Flags[5] = this.EnableMessageCoordinates.Value);
-        this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, this.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], this.MessageCoordinateTypes.Keys);
-        this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = this.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.EnableMessageCoordinates.Value).Subscribe(_ => this.CommandData.Flags[5] = this.EnableMessageCoordinates.Value));
+        this.MessageCoordinateType = new StringSelectionField("Coordinate Type", this.Editable, Generic.MessageCoordinateTypes.Backward[this.CommandData.MessageCoordinateType], Generic.MessageCoordinateTypes.Keys);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.MessageCoordinateType.Choice).Subscribe(_ => this.CommandData.MessageCoordinateType = Generic.MessageCoordinateTypes.Forward[this.MessageCoordinateType.Choice]));
         this.MessageX = new NumRangeField("X Coordinate", this.Editable, this.CommandData.MessageCoordinates[0], -9999, 9999, 1);
-        this.WhenAnyValue(_ => _.MessageX.Value).Subscribe(_ => this.CommandData.MessageCoordinates[0] = (float)this.MessageX.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.MessageX.Value).Subscribe(_ => this.CommandData.MessageCoordinates[0] = (float)this.MessageX.Value));
         this.MessageY = new NumRangeField("Y Coordinate", this.Editable, this.CommandData.MessageCoordinates[1], -9999, 9999, 1);
-        this.WhenAnyValue(_ => _.MessageY.Value).Subscribe(_ => this.CommandData.MessageCoordinates[1] = (float)this.MessageY.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.MessageY.Value).Subscribe(_ => this.CommandData.MessageCoordinates[1] = (float)this.MessageY.Value));
 
         // selection
         this.SelectionEnabled = new BoolChoiceField("Enable Selection?", this.Editable, this.CommandData.Flags[1]);
-        this.WhenAnyValue(_ => _.SelectionEnabled.Value).Subscribe(_ => this.CommandData.Flags[1] = this.SelectionEnabled.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.SelectionEnabled.Value).Subscribe(_ => this.CommandData.Flags[1] = this.SelectionEnabled.Value));
         this.SelectionStorage = new NumEntryField("Local Data Storage ID", this.Editable, this.CommandData.EvtLocalDataIdSelStorage, 0, 99, 1);
-        this.WhenAnyValue(_ => _.SelectionStorage.Value).Subscribe(_ => this.CommandData.EvtLocalDataIdSelStorage = (uint)this.SelectionStorage.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.SelectionStorage.Value).Subscribe(_ => this.CommandData.EvtLocalDataIdSelStorage = (uint)this.SelectionStorage.Value));
 
         // entries
         this.Entries = new ObservableCollection<MsgEntry>();
@@ -46,31 +47,31 @@ public class Msg_ : Generic
 
         // unknown
         this.UnkBool1 = new BoolChoiceField("Unknown #1", this.Editable, this.CommandData.Flags[4]);
-        this.WhenAnyValue(_ => _.UnkBool1.Value).Subscribe(_ => this.CommandData.Flags[4] = this.UnkBool1.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.UnkBool1.Value).Subscribe(_ => this.CommandData.Flags[4] = this.UnkBool1.Value));
         this.UnkBool2 = new BoolChoiceField("Unknown #2", this.Editable, this.CommandData.Flags[8]);
-        this.WhenAnyValue(_ => _.UnkBool2.Value).Subscribe(_ => this.CommandData.Flags[8] = this.UnkBool2.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.UnkBool2.Value).Subscribe(_ => this.CommandData.Flags[8] = this.UnkBool2.Value));
 
         this.UnkBool3 = new BoolChoiceField("Unknown #3", this.Editable, this.CommandData.EntryFlags[20]);
-        this.WhenAnyValue(_ => _.UnkBool3.Value).Subscribe(_ => this.CommandData.Flags[20] = this.UnkBool3.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.UnkBool3.Value).Subscribe(_ => this.CommandData.Flags[20] = this.UnkBool3.Value));
         this.UnkBool4 = new BoolChoiceField("Unknown #4", this.Editable, this.CommandData.EntryFlags[21]);
-        this.WhenAnyValue(_ => _.UnkBool4.Value).Subscribe(_ => this.CommandData.Flags[21] = this.UnkBool4.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.UnkBool4.Value).Subscribe(_ => this.CommandData.Flags[21] = this.UnkBool4.Value));
         this.UnkBool5 = new BoolChoiceField("Unknown #5", this.Editable, this.CommandData.EntryFlags[22]);
-        this.WhenAnyValue(_ => _.UnkBool5.Value).Subscribe(_ => this.CommandData.Flags[22] = this.UnkBool5.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.UnkBool5.Value).Subscribe(_ => this.CommandData.Flags[22] = this.UnkBool5.Value));
         this.UnkBool6 = new BoolChoiceField("Unknown #6", this.Editable, this.CommandData.EntryFlags[23]);
-        this.WhenAnyValue(_ => _.UnkBool6.Value).Subscribe(_ => this.CommandData.Flags[23] = this.UnkBool6.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.UnkBool6.Value).Subscribe(_ => this.CommandData.Flags[23] = this.UnkBool6.Value));
         this.UnkBool7 = new BoolChoiceField("Unknown #7", this.Editable, this.CommandData.EntryFlags[24]);
-        this.WhenAnyValue(_ => _.UnkBool7.Value).Subscribe(_ => this.CommandData.Flags[24] = this.UnkBool7.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.UnkBool7.Value).Subscribe(_ => this.CommandData.Flags[24] = this.UnkBool7.Value));
 
         this.UnkEnum = new NumEntryField("Unknown #8", this.Editable, this.CommandData.UnkEnum, 0, 7, 1);
-        this.WhenAnyValue(_ => _.UnkEnum.Value).Subscribe(_ => this.CommandData.UnkEnum = (uint)this.UnkEnum.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.UnkEnum.Value).Subscribe(_ => this.CommandData.UnkEnum = (uint)this.UnkEnum.Value));
 
         this.UnkFloat = new NumRangeField("Unknown #9", this.Editable, this.CommandData.UnkFloat, -99999, 99999, 1);
-        this.WhenAnyValue(_ => _.UnkFloat.Value).Subscribe(_ => this.CommandData.UnkFloat = (float)this.UnkFloat.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.UnkFloat.Value).Subscribe(_ => this.CommandData.UnkFloat = (float)this.UnkFloat.Value));
 
         this.RoyalUnkFloat1 = new NumRangeField("Unknown #10 (Royal-only)", this.Editable, this.CommandData.RoyalUnkFloats[0], 0, 500, 1);
-        this.WhenAnyValue(_ => _.RoyalUnkFloat1.Value).Subscribe(_ => this.CommandData.RoyalUnkFloats[0] = (float)this.RoyalUnkFloat1.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.RoyalUnkFloat1.Value).Subscribe(_ => this.CommandData.RoyalUnkFloats[0] = (float)this.RoyalUnkFloat1.Value));
         this.RoyalUnkFloat2 = new NumRangeField("Unknown #11 (Royal-only)", this.Editable, this.CommandData.RoyalUnkFloats[1], 0, 500, 1);
-        this.WhenAnyValue(_ => _.RoyalUnkFloat2.Value).Subscribe(_ => this.CommandData.RoyalUnkFloats[1] = (float)this.RoyalUnkFloat2.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.RoyalUnkFloat2.Value).Subscribe(_ => this.CommandData.RoyalUnkFloats[1] = (float)this.RoyalUnkFloat2.Value));
 
         // shenanigans lol
         int msgIndex = config.ScriptManager.GetTurnIndex((short)this.CommandData.MessageMajorId, this.CommandData.MessageMinorId, this.CommandData.MessageSubId);
@@ -80,7 +81,7 @@ public class Msg_ : Generic
         {
             if (config.ScriptManager.MsgNames.Contains(this.MessageID.Choice))
                 this.MessageBlock = new MessagePreview(config, msgIndex);
-            this.WhenAnyValue(x => x.MessageID.Choice).Subscribe(x =>
+            this.subscriptions.Add(this.WhenAnyValue(x => x.MessageID.Choice).Subscribe(x =>
             {
                 int newMsgIndex = config.ScriptManager.GetTurnIndex(this.MessageID.Choice);
                 if (config.ScriptManager.MsgNames.Contains(config.ScriptManager.GetTurnName(newMsgIndex)))
@@ -92,14 +93,14 @@ public class Msg_ : Generic
                     this.CommandData.MessageMinorId = byte.Parse(msgPieces[2]);
                     this.CommandData.MessageSubId = byte.Parse(msgPieces[3]);
                 }
-            });
+            }));
 
             int selIndex = config.ScriptManager.GetTurnIndex((short)this.CommandData.SelectMajorId, this.CommandData.SelectMinorId, this.CommandData.SelectSubId);
             string selId = config.ScriptManager.GetTurnName(selIndex);
             this.SelectionID = new StringSelectionField("Selection ID", this.Editable, selId, config.ScriptManager.SelNames.Where(x => selPatt.IsMatch(x)).ToList(), info: "Selections must match the pattern SEL_NNN_N_N, where N are numbers");
             if (config.ScriptManager.SelNames.Contains(this.SelectionID.Choice))
                 _selectionBlock = new SelectionPreview(config, selIndex);
-            this.WhenAnyValue(x => x.SelectionID.Choice).Subscribe(x =>
+            this.subscriptions.Add(this.WhenAnyValue(x => x.SelectionID.Choice).Subscribe(x =>
             {
                 int newSelIndex = config.ScriptManager.GetTurnIndex(this.SelectionID.Choice);
                 if (config.ScriptManager.SelNames.Contains(config.ScriptManager.GetTurnName(newSelIndex)))
@@ -111,8 +112,22 @@ public class Msg_ : Generic
                     this.CommandData.SelectMinorId = byte.Parse(selPieces[2]);
                     this.CommandData.SelectSubId = byte.Parse(selPieces[3]);
                 }
-            });
+            }));
         }
+    }
+
+    public new void Dispose()
+    {
+        if (!(this.Entries is null))
+            this.Entries.Clear();
+        this.Entries = null;
+        if (!(this.MessageBlock is null))
+            this.MessageBlock.Dispose();
+        this.MessageBlock = null;
+        if (!(this.SelectionBlock is null))
+            this.SelectionBlock.Dispose();
+        this.SelectionBlock = null;
+        base.Dispose();
     }
 
     private static Regex msgPatt = new Regex("^[A-Z]+_[0-9][0-9][0-9]_[0-9]_[0-9]$");
@@ -232,6 +247,13 @@ public class MessagePreview : ReactiveObject
             this.Pages.Add(new PagePreview(config, index, i));
     }
 
+    public void Dispose()
+    {
+        foreach (PagePreview page in this.Pages)
+            page.Dispose();
+        this.Pages.Clear();
+    }
+
     public static List<string> MessagePrefixes = new List<string>{"UNK",     "DVL",   "MSG", "MND",     "PFM",            "SEL",    "SYS",    "TRV"   };
     public static List<string> MessageTypes    = new List<string>{"Unknown", "Enemy", "NPC", "Thought", "Persona Update", "Select", "System", "Trivia"};
 
@@ -270,26 +292,48 @@ public class PagePreview : ReactiveObject
             this.HasVoiceLine = true;
         }
 
-        this.BustupPath = config.ScriptManager.GetTurnBustupPath(turnIndex, pageIndex);
-        if (!(this.BustupPath.Prefix is null))
-            this.Bustup = config.ScriptManager.GetMainBustupImage(this.BustupPath.Prefix, this.BustupPath.Suffix);
+        this.BustupPath = null;
+        (string[] Prefix, string Suffix) bustupPattern = config.ScriptManager.GetTurnBustupPath(turnIndex, pageIndex);
+        if (!(bustupPattern.Prefix is null))
+        {
+            this.BustupPath = Path.Combine(bustupPattern.Prefix);
+            if (!(bustupPattern.Suffix is null))
+                this.BustupPath = Path.Combine(this.BustupPath, bustupPattern.Suffix);
+            this.Bustup = config.ScriptManager.GetMainBustupImage(bustupPattern.Prefix, bustupPattern.Suffix);
+        }
 
-        this.CutinPath = config.ScriptManager.GetTurnCutinPath(turnIndex, pageIndex);
-        if (!(this.CutinPath.Prefix is null))
-            this.Cutin = config.ScriptManager.GetMainCutinImage(this.CutinPath.Prefix, this.CutinPath.Suffix);
+        this.CutinPath = null;
+        (string[] Prefix, string Suffix) cutinPattern = config.ScriptManager.GetTurnCutinPath(turnIndex, pageIndex);
+        if (!(cutinPattern.Prefix is null))
+        {
+            this.CutinPath = Path.Combine(cutinPattern.Prefix);
+            if (!(cutinPattern.Suffix is null))
+                this.CutinPath = Path.Combine(this.CutinPath, cutinPattern.Suffix);
+            this.Cutin = config.ScriptManager.GetMainCutinImage(cutinPattern.Prefix, cutinPattern.Suffix);
+        }
     }
 
-    public StringEntryField     Dialogue    { get; set; }
+    public void Dispose()
+    {
+        if (!(this.Bustup is null))
+            this.Bustup.Dispose();
+        if (!(this.Cutin is null))
+            this.Cutin.Dispose();
+        this.Bustup = null;
+        this.Cutin = null;
+    }
+
+    public StringEntryField Dialogue { get; set; }
 
     public string? Source   { get; set; }
     public uint?   CueID    { get; set; }
     public bool    Editable { get; }
 
-    public (string[] Prefix, string Suffix) BustupPath { get; set; }
-    public MagickImage                      Bustup     { get; set; }
+    public string      BustupPath { get; set; }
+    public MagickImage Bustup     { get; set; }
 
-    public (string[] Prefix, string Suffix) CutinPath { get; set; }
-    public MagickImage                      Cutin     { get; set; }
+    public string      CutinPath { get; set; }
+    public MagickImage Cutin     { get; set; }
 
 	// TODO: make this like... an observable/reactive derived property... idk how that works
     //public bool    HasVoiceLine { get { return (!(this.Source is null) && !(this.CueID is null)); } }
@@ -308,6 +352,11 @@ public class SelectionPreview : ReactiveObject
         this.Options = new ObservableCollection<OptionPreview>();
         for (int i=0; i<config.ScriptManager.GetTurnElemCount(index); i++)
             this.Options.Add(new OptionPreview(config, index, i));
+    }
+
+    public void Dispose()
+    {
+        this.Options.Clear();
     }
 
     public void Update(DataManager config, int index)

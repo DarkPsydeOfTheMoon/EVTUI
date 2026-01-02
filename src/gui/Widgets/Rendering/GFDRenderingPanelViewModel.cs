@@ -57,8 +57,11 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         {
             if (x)
             {
+                // TODO: get the shaders from dniwe working!
                 string vsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio", "app_data", "shaders", "default.glsl.vs");
+                //string vsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TOON.VS.18.glsl.vs");
                 string fsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "GFDStudio", "app_data", "shaders", "default.glsl.fs");
+                //string fsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "TOON.PS.6.glsl.fs");
                 this.glShaderProgram = this.sceneManager.LoadShader(vsPath, fsPath);
                 mShaderRegistry.mDefaultShader = this.glShaderProgram;
                 //mShaderRegistry.mDefaultShader.Use();

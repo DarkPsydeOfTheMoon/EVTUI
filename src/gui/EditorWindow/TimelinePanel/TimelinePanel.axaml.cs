@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 
+using ReactiveUI;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
@@ -13,8 +15,6 @@ using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
 using Avalonia.ReactiveUI;
 using Avalonia.VisualTree;
-
-using ReactiveUI;
 
 using EVTUI.ViewModels;
 using EVTUI.ViewModels.TimelineCommands;

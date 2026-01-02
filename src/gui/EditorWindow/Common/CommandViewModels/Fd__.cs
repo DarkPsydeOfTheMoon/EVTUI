@@ -13,10 +13,10 @@ public class Fd__ : Generic
     {
         this.LongName = "Fade";
 
-        this.FadeMode = new StringSelectionField("Fade Mode", this.Editable, this.FadeModes.Backward[this.CommandData.FadeMode], this.FadeModes.Keys);
-        this.WhenAnyValue(_ => _.FadeMode.Choice).Subscribe(_ => this.CommandData.FadeMode = this.FadeModes.Forward[this.FadeMode.Choice]);
-        this.FadeType = new StringSelectionField("Fade Type", this.Editable, this.FadeTypes.Backward[this.CommandData.FadeType], this.FadeTypes.Keys);
-        this.WhenAnyValue(_ => _.FadeType.Choice).Subscribe(_ => this.CommandData.FadeType = this.FadeTypes.Forward[this.FadeType.Choice]);
+        this.FadeMode = new StringSelectionField("Fade Mode", this.Editable, Fd__.FadeModes.Backward[this.CommandData.FadeMode], Fd__.FadeModes.Keys);
+        this.WhenAnyValue(_ => _.FadeMode.Choice).Subscribe(_ => this.CommandData.FadeMode = Fd__.FadeModes.Forward[this.FadeMode.Choice]);
+        this.FadeType = new StringSelectionField("Fade Type", this.Editable, Fd__.FadeTypes.Backward[this.CommandData.FadeType], Fd__.FadeTypes.Keys);
+        this.WhenAnyValue(_ => _.FadeType.Choice).Subscribe(_ => this.CommandData.FadeType = Fd__.FadeTypes.Forward[this.FadeType.Choice]);
         this.UnkBool = new BoolChoiceField("Unknown", this.Editable, this.CommandData.UnkBool != 0);
         this.WhenAnyValue(_ => _.UnkBool.Value).Subscribe(_ => this.CommandData.UnkBool = Convert.ToByte(this.UnkBool.Value));
     }
@@ -25,7 +25,7 @@ public class Fd__ : Generic
     public StringSelectionField FadeType { get; set; }
     public BoolChoiceField      UnkBool  { get; set; }
 
-    public BiDict<string, byte> FadeModes = new BiDict<string, byte>
+    public static BiDict<string, byte> FadeModes = new BiDict<string, byte>
     (
         new Dictionary<string, byte>
         {
@@ -37,7 +37,7 @@ public class Fd__ : Generic
 
     // some strings fully copied from DC's EVTFADEOUTTABLE merging readme
     // ...until i realized the enums don't match lmfao. but i'm leaving them in for now
-    public BiDict<string, byte> FadeTypes = new BiDict<string, byte>
+    public static BiDict<string, byte> FadeTypes = new BiDict<string, byte>
     (
         new Dictionary<string, byte>
         {

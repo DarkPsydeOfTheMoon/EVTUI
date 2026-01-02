@@ -407,21 +407,21 @@ public class InterpolationParameters : ViewModelBase
         this.Field = field;
         this.Editable = editable;
 
-        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, this.InterpolationTypes.Backward[(this.Field & 0xFF)], this.InterpolationTypes.Keys);
-        this.SlopeInType = new StringSelectionField("Slope-In Type", this.Editable, this.SlopeTypes.Backward[((this.Field >> 8) & 0xF)], this.SlopeTypes.Keys);
-        this.SlopeOutType = new StringSelectionField("Slope-Out Type", this.Editable, this.SlopeTypes.Backward[((this.Field >> 12) & 0xF)], this.SlopeTypes.Keys);
+        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, InterpolationParameters.InterpolationTypes.Backward[(this.Field & 0xFF)], InterpolationParameters.InterpolationTypes.Keys);
+        this.SlopeInType = new StringSelectionField("Slope-In Type", this.Editable, InterpolationParameters.SlopeTypes.Backward[((this.Field >> 8) & 0xF)], InterpolationParameters.SlopeTypes.Keys);
+        this.SlopeOutType = new StringSelectionField("Slope-Out Type", this.Editable, InterpolationParameters.SlopeTypes.Backward[((this.Field >> 12) & 0xF)], InterpolationParameters.SlopeTypes.Keys);
     }
 
     public uint Compose()
     {
         this.Field = 0;
-        this.Field |= this.InterpolationTypes.Forward[this.InterpolationType.Choice];
-        this.Field |= (this.SlopeTypes.Forward[this.SlopeInType.Choice] << 8);
-        this.Field |= (this.SlopeTypes.Forward[this.SlopeOutType.Choice] << 12);
+        this.Field |= InterpolationParameters.InterpolationTypes.Forward[this.InterpolationType.Choice];
+        this.Field |= (InterpolationParameters.SlopeTypes.Forward[this.SlopeInType.Choice] << 8);
+        this.Field |= (InterpolationParameters.SlopeTypes.Forward[this.SlopeOutType.Choice] << 12);
         return this.Field;
     }
 
-    public BiDict<string, uint> InterpolationTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> InterpolationTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {
@@ -431,7 +431,7 @@ public class InterpolationParameters : ViewModelBase
         }
     );
 
-    public BiDict<string, uint> SlopeTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> SlopeTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

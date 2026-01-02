@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 
 using ReactiveUI;
+
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -16,7 +17,6 @@ namespace EVTUI.Views;
 
 public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanelViewModel>
 {
-
     private Window topLevel;
 
     public ConfigurationPanel()

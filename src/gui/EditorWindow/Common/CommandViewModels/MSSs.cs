@@ -15,14 +15,14 @@ public class MSSs : Generic
         this.AssetID = new IntSelectionField("Asset ID", this.Editable, this.Command.ObjectId, config.EventManager.AssetIDs);
         this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
-        this.ShoeLayer = new StringSelectionField("Active \"Shoe\" Node Name Prefix", this.Editable, this.ShoeLayers.Backward[this.CommandData.ShoeLayerIndex], this.ShoeLayers.Keys);
-        this.WhenAnyValue(_ => _.ShoeLayer.Choice).Subscribe(_ => this.CommandData.ShoeLayerIndex = this.ShoeLayers.Forward[this.ShoeLayer.Choice]);
+        this.ShoeLayer = new StringSelectionField("Active \"Shoe\" Node Name Prefix", this.Editable, MSSs.ShoeLayers.Backward[this.CommandData.ShoeLayerIndex], MSSs.ShoeLayers.Keys);
+        this.WhenAnyValue(_ => _.ShoeLayer.Choice).Subscribe(_ => this.CommandData.ShoeLayerIndex = MSSs.ShoeLayers.Forward[this.ShoeLayer.Choice]);
     }
 
     public IntSelectionField AssetID { get; set; }
     public StringSelectionField ShoeLayer { get; set; }
 
-    public BiDict<string, uint> ShoeLayers = new BiDict<string, uint>
+    public static BiDict<string, uint> ShoeLayers = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

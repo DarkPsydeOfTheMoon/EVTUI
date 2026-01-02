@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 
+using ReactiveUI;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -11,8 +13,6 @@ using AvaloniaEdit;
 using AvaloniaEdit.Document;
 using AvaloniaEdit.TextMate;
 using TextMateSharp.Grammars;
-
-using ReactiveUI;
 
 using EVTUI.ViewModels;
 

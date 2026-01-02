@@ -98,8 +98,10 @@ public class TimelinePanelViewModel : ViewModelBase
 
     public void UnsetActiveCommand()
     {
+        if (!(this.ActiveCommand is null))
+            ((dynamic)Convert.ChangeType(this.ActiveCommand, this._activeCommandPointer.CommandType)).Dispose();
         this._activeCommandPointer = null;
-        this._activeCategory = null;;
+        this._activeCategory = null;
         this.ActiveCommand = null;
     }
 

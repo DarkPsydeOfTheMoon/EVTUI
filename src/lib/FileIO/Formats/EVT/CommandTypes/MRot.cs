@@ -14,7 +14,7 @@ public partial class CommandTypes
 
         public Bitfield32 Flags = new Bitfield32(1);
         public float[] Rotation = new float[3];
-        public UInt32  InterpolationType;
+        public UInt32  InterpolationParameters;
         public UInt32  UNK;
 
         public AnimationStruct RotatingAnimation = new AnimationStruct(loopBool:0);
@@ -26,7 +26,7 @@ public partial class CommandTypes
         {
             rw.RwObj(ref this.Flags);
             rw.RwFloat32s(ref this.Rotation, 3);
-            rw.RwUInt32(ref this.InterpolationType);
+            rw.RwUInt32(ref this.InterpolationParameters);
             rw.RwUInt32(ref this.UNK);
 
             rw.RwObj(ref this.UNUSED_UINT32[0], args);

@@ -18,8 +18,8 @@ public class EMD_ : Generic
         this.WhenAnyValue(_ => _.AssetID.Choice).Subscribe(_ => this.Command.ObjectId = this.AssetID.Choice);
 
         // movement
-        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, this.InterpolationTypes.Backward[this.CommandData.InterpolationType], this.InterpolationTypes.Keys);
-        this.WhenAnyValue(_ => _.InterpolationType.Choice).Subscribe(_ => this.CommandData.InterpolationType = this.InterpolationTypes.Forward[this.InterpolationType.Choice]);
+        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, Generic.MovementInterpolationTypes.Backward[this.CommandData.InterpolationType], Generic.MovementInterpolationTypes.Keys);
+        this.WhenAnyValue(_ => _.InterpolationType.Choice).Subscribe(_ => this.CommandData.InterpolationType = Generic.MovementInterpolationTypes.Forward[this.InterpolationType.Choice]);
         this.MovementSpeed = new NumEntryField("Movement Speed", this.Editable, this.CommandData.MovementSpeed, 1, 50, 0.1);
         this.WhenAnyValue(_ => _.MovementSpeed.Value).Subscribe(_ => this.CommandData.MovementSpeed  = (float)this.MovementSpeed.Value);
 
@@ -50,13 +50,4 @@ public class EMD_ : Generic
 
     // unknown
     public NumEntryField Unk { get; set; }
-
-    public BiDict<string, uint> InterpolationTypes = new BiDict<string, uint>
-    (
-        new Dictionary<string, uint>
-        {
-            {"Linear",       0},
-            {"Bezier Curve", 1},
-        }
-    );
 }

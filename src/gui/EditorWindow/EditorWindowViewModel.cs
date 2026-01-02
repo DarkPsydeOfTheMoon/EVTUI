@@ -24,7 +24,6 @@ public class CommonViewModels : ReactiveObject
         Dictionary<string, ModelPack> cachedModels = new Dictionary<string, ModelPack>();
         this.Assets = new ObservableCollection<AssetViewModel>();
         this.AssetsByID = new Dictionary<int, AssetViewModel>();
-        //foreach (SerialObject obj in dataManager.EventManager.SerialEvent.Objects)
         Parallel.ForEach(dataManager.EventManager.SerialEvent.Objects, obj =>
         {
             AssetViewModel asset = new AssetViewModel(dataManager, obj);
@@ -34,26 +33,6 @@ public class CommonViewModels : ReactiveObject
                     if (!(cachedModels.ContainsKey(path)) || cachedModels[path] is null)
                         cachedModels[path] = asset.ActiveModels[path];
             }
-            /*//lock (cachedModels)
-            //{
-                Parallel.ForEach(asset.ActiveModels.Keys, path =>
-                {
-                    if (!(cachedModels.ContainsKey(path)))
-                    {
-                        if (asset.ActiveModels[path] is null)
-                        {
-                            lock (cachedModels) { cachedModels[path] = null; }
-                            ModelPack model = GFDLibrary.Api.FlatApi.LoadModel(path);
-                            lock (cachedModels) { cachedModels[path] = model; }
-                            lock (asset.ActiveModels) { asset.ActiveModels[path] = model; }
-                        }
-                        else
-                            lock (cachedModels) { cachedModels[path] = asset.ActiveModels[path]; }
-                    }
-                    if (asset.ActiveModels[path] is null)
-                        Console.WriteLine($"####### {path}");
-                });
-            //}*/
             lock (this.AssetsByID) { this.AssetsByID[obj.Id] = asset; }
             lock (this.Assets) { this.Assets.Add(this.AssetsByID[obj.Id]); }
             if (asset.ObjectType.Choice == "Field")
@@ -81,7 +60,8 @@ public class CommonViewModels : ReactiveObject
                 foreach (AssetViewModel asset in this.Assets)
                 //Parallel.ForEach(this.Assets, asset =>
                 {
-                    if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
+                    //if (asset.ObjectType.Choice == "Character" || asset.ObjectType.Choice == "Field" || asset.ObjectType.Choice == "Item" || asset.ObjectType.Choice == "Persona" || asset.ObjectType.Choice == "Enemy" || asset.ObjectType.Choice == "SymShadow" || asset.ObjectType.Choice == "FieldObject")
+                    if (asset.IsModel)
                     {
                         this.Render.AddModel(asset);
                         if (asset.ObjectType.Choice != "Field")

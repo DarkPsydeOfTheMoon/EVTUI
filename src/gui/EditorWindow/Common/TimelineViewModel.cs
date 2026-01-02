@@ -65,15 +65,15 @@ public class TimelineViewModel : ReactiveObject
         // cinemascope
         this.CinemascopeEnabled = new BoolChoiceField("Enable Cinemascope", !dataManager.ReadOnly, evt.Flags[8]);
         this.CinemascopeAnimationEnabled = new BoolChoiceField("Enable Cinemascope Animation", !dataManager.ReadOnly, evt.Flags[9]);
-        this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", !dataManager.ReadOnly, (int)evt.CinemascopeStartingFrame, 0, 9999, 1);
+        this.CinemascopeStartingFrame = new NumEntryField("Cinemascope Starting Frame", !dataManager.ReadOnly, evt.CinemascopeStartingFrame, 0, 9999, 1);
 
         this.subscriptions.Add(this.WhenAnyValue(x => x.CinemascopeEnabled.Value).Subscribe(x => evt.Flags[8] = this.CinemascopeEnabled.Value));
         this.subscriptions.Add(this.WhenAnyValue(x => x.CinemascopeAnimationEnabled.Value).Subscribe(x => evt.Flags[9] = this.CinemascopeAnimationEnabled.Value));
         this.subscriptions.Add(this.WhenAnyValue(x => x.CinemascopeStartingFrame.Value).Subscribe(x => evt.CinemascopeStartingFrame = (short)x));
 
         // env
-        this.InitEnvAssetID = new NumEntryField("Init ENV ID", !dataManager.ReadOnly, (int)evt.InitEnvAssetID, 0, 9999, 1);
-        this.DebugEnvAssetID = new NumEntryField("Debug ENV ID", !dataManager.ReadOnly, (int)evt.InitDebugEnvAssetID, 0, 9999, 1);
+        this.InitEnvAssetID = new NumEntryField("Init ENV ID", !dataManager.ReadOnly, evt.InitEnvAssetID, 0, 9999, 1);
+        this.DebugEnvAssetID = new NumEntryField("Debug ENV ID", !dataManager.ReadOnly, evt.InitDebugEnvAssetID, 0, 9999, 1);
 
         this.subscriptions.Add(this.WhenAnyValue(x => x.InitEnvAssetID.Value).Subscribe(x => evt.InitEnvAssetID = (int)x));
         this.subscriptions.Add(this.WhenAnyValue(x => x.DebugEnvAssetID.Value).Subscribe(x => evt.InitDebugEnvAssetID = (int)x));
@@ -89,7 +89,7 @@ public class TimelineViewModel : ReactiveObject
         this.FrameRate = new NumEntryField("Frame Rate", !dataManager.ReadOnly, evt.FrameRate, 1, 255, 1);
         this.FrameDuration = new NumEntryField("Frame Count", !dataManager.ReadOnly, evt.FrameCount, 1, 99999, 1);
         this.StartingFrameEnabled = new BoolChoiceField("Set Delayed Starting Frame?", !dataManager.ReadOnly, evt.Flags[0]);
-        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, evt.StartingFrame, 0, 99999, 1);
+        this.StartingFrameEntry = new NumEntryField("Starting Frame", !dataManager.ReadOnly, evt.StartingFrame, 0, 9999, 1);
 
         this.subscriptions.Add(this.WhenAnyValue(x => x.FrameRate.Value).Subscribe(x => evt.FrameRate = (byte)this.FrameRate.Value));
         // (the rest of the WhenAnyValues are below)
@@ -528,7 +528,7 @@ public class Category : ViewModelBase
     // make sure they get drawn in the right order, basically...
     public void SortCommands()
     {
-        ObservableCollection<CommandPointer> temp = new ObservableCollection<CommandPointer>(this.Commands.OrderBy(cmd => cmd.Frame));
+        ObservableCollection<CommandPointer> temp = new ObservableCollection<CommandPointer>(this.Commands.OrderBy(cmd => cmd.Frame).ThenBy(cmd => cmd.CmdIndex));
         this.Commands.Clear();
         foreach (CommandPointer cmd in temp)
             this.Commands.Add(cmd);

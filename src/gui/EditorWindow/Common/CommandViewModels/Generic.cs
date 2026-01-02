@@ -9,6 +9,7 @@ public class Generic : ReactiveObject
 {
     public Generic(DataManager config, CommonViewModels commonVMs, CommandPointer cmd)
     {
+        this.subscriptions = new List<IDisposable>();
         this.Command     = cmd.Command;
         this.CommandData = cmd.CommandData;
         
@@ -18,6 +19,7 @@ public class Generic : ReactiveObject
         this.Editable    = !config.ReadOnly;
     }
 
+    protected List<IDisposable> subscriptions;
     protected SerialCommand Command;
     protected dynamic       CommandData;
 
@@ -26,7 +28,7 @@ public class Generic : ReactiveObject
     public Basics Basics   { get; set; }
     public bool   Editable { get; }
 
-    public BiDict<string, uint> BlurTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> BlurTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {
@@ -38,7 +40,7 @@ public class Generic : ReactiveObject
         }
     );
 
-    public BiDict<string, uint> MessageCoordinateTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> MessageCoordinateTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {
@@ -51,6 +53,44 @@ public class Generic : ReactiveObject
         }
     );
 
+    public static BiDict<string, uint> MovementInterpolationTypes = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"Linear",       0},
+            {"Bezier Curve", 1},
+        }
+    );
+
+    public static BiDict<string, uint> RegistryDisplayTypes = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"None", 0},
+            {"On",   1},
+            {"Off",  2},
+        }
+    );
+
+    public static BiDict<string, uint> RegistrySceneTypes = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"Scene 0", 0},
+            {"Scene 1", 1},
+        }
+    );
+
+    public static BiDict<string, int> AudioActionTypes = new BiDict<string, int>
+    (
+        new Dictionary<string, int>
+        {
+            {"None", 0},
+            {"Play", 1},
+            {"Stop", 2},
+        }
+    );
+
     protected BiDict<string, uint> HelperNames;
     protected BiDict<string, int> ResourceHelperNames;
     protected void UpdateHelperNames(CommonViewModels commonVMs, int assetID, bool isField = false)
@@ -58,29 +98,47 @@ public class Generic : ReactiveObject
         this.HelperNames = new BiDict<string, uint>();
         if (isField)
             this.ResourceHelperNames = new BiDict<string, int>();
-            if (commonVMs.AssetsByID.ContainsKey(assetID))
-            {
-                AssetViewModel asset = commonVMs.AssetsByID[assetID];
-                if (!String.IsNullOrEmpty(asset.ActiveModelPath))
+        if (commonVMs.AssetsByID.ContainsKey(assetID))
+        {
+            AssetViewModel asset = commonVMs.AssetsByID[assetID];
+            //if (!String.IsNullOrEmpty(asset.ActiveModelPath))
+            //{
+            //    GFDLibrary.ModelPack model = GFDLibrary.Api.FlatApi.LoadModel(asset.ActiveModelPath);
+            //    foreach (GFDLibrary.Models.Node node in model.Model.Nodes)
+                foreach (GFDLibrary.Models.Node node in asset.ActiveModels[asset.ActiveModelPath].Model.Nodes)
                 {
-                    GFDLibrary.ModelPack model = GFDLibrary.Api.FlatApi.LoadModel(asset.ActiveModelPath);
-                    foreach (GFDLibrary.Models.Node node in model.Model.Nodes)
+                    if (node.Properties.ContainsKey("gfdHelperID"))
                     {
-                        if (node.Properties.ContainsKey("gfdHelperID"))
-                        {
-                            int id = (int)node.Properties["gfdHelperID"].GetValue();
-                            this.HelperNames.Add($"{node.Name} ({id})", (uint)id);
-                        }
-                        if (isField && node.Properties.ContainsKey("fldLayoutOfModel_resId") && node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Properties.ContainsKey("fldLayoutOfModel_minor"))
-                        {
-                            int resId = (int)node.Properties["fldLayoutOfModel_resId"].GetValue();
-                            int majorId = (int)node.Properties["fldLayoutOfModel_major"].GetValue();
-                            int minorId = (int)node.Properties["fldLayoutOfModel_minor"].GetValue();
-                            this.ResourceHelperNames.Add($"M{majorId:000}_{minorId:000}", resId);
-                        }
+                        int id = (int)node.Properties["gfdHelperID"].GetValue();
+                        this.HelperNames.Add($"{node.Name} ({id})", (uint)id);
+                    }
+                    if (isField && node.Properties.ContainsKey("fldLayoutOfModel_resId") && node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Properties.ContainsKey("fldLayoutOfModel_minor"))
+                    {
+                        int resId = (int)node.Properties["fldLayoutOfModel_resId"].GetValue();
+                        int majorId = (int)node.Properties["fldLayoutOfModel_major"].GetValue();
+                        int minorId = (int)node.Properties["fldLayoutOfModel_minor"].GetValue();
+                        this.ResourceHelperNames.Add($"M{majorId:000}_{minorId:000}", resId);
                     }
                 }
-            }
+            //}
+        }
+    }
+
+    public void Dispose()
+    {
+        foreach (IDisposable subscription in this.subscriptions)
+            subscription.Dispose();
+        this.subscriptions.Clear();
+        if (!(this.HelperNames is null))
+            this.HelperNames.Clear();
+        if (!(this.ResourceHelperNames is null))
+            this.ResourceHelperNames.Clear();
+        this.Command = null;
+        this.CommandData = null;
+        this.Basics.Dispose();
+        this.Basics = null;
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
     }
 }
 
@@ -88,29 +146,30 @@ public class Basics : ReactiveObject
 {
     public Basics(DataManager config, CommandPointer cmd)
     {
+        this.subscriptions = new List<IDisposable>();
         this.Command = cmd.Command;
         this.Editable = !config.ReadOnly;
 
         this.WaitOnCommand = new BoolChoiceField("Wait while frame is stopped?", this.Editable, this.Command.Flags[1]);
-        this.WhenAnyValue(_ => _.WaitOnCommand.Value).Subscribe(_ => this.Command.Flags[1] = this.WaitOnCommand.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.WaitOnCommand.Value).Subscribe(_ => this.Command.Flags[1] = this.WaitOnCommand.Value));
         // feels like these two should only be allowed to go to 99999, but in the beta editor they can go up to 999999...
         this.StartingFrame = new NumEntryField("Starting Frame", this.Editable, this.Command.FrameStart, 0, 99999, 1);
-        this.WhenAnyValue(_ => _.StartingFrame.Value).Subscribe(_ => this.Command.FrameStart = (int)this.StartingFrame.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.StartingFrame.Value).Subscribe(_ => this.Command.FrameStart = (int)this.StartingFrame.Value));
         this.FrameCount = new NumEntryField("Frame Duration", this.Editable, this.Command.FrameDuration, 1, 99999, 1);
-        this.WhenAnyValue(_ => _.FrameCount.Value).Subscribe(_ => this.Command.FrameDuration = (int)this.FrameCount.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.FrameCount.Value).Subscribe(_ => this.Command.FrameDuration = (int)this.FrameCount.Value));
 
         this.ForceSkipCommand = new BoolChoiceField("Force-skip command?", this.Editable, this.Command.Flags[0]);
-        this.WhenAnyValue(_ => _.ForceSkipCommand.Value).Subscribe(_ => this.Command.Flags[0] = this.ForceSkipCommand.Value);
-        this.ConditionalType = new StringSelectionField("Conditional Type", this.Editable, this.ConditionalTypes.Backward[this.Command.ConditionalType], this.ConditionalTypes.Keys);
-        this.WhenAnyValue(_ => _.ConditionalType.Choice).Subscribe(_ => this.Command.ConditionalType = this.ConditionalTypes.Forward[this.ConditionalType.Choice]);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.ForceSkipCommand.Value).Subscribe(_ => this.Command.Flags[0] = this.ForceSkipCommand.Value));
+        this.ConditionalType = new StringSelectionField("Conditional Type", this.Editable, Basics.ConditionalTypes.Backward[this.Command.ConditionalType], Basics.ConditionalTypes.Keys);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.ConditionalType.Choice).Subscribe(_ => this.Command.ConditionalType = Basics.ConditionalTypes.Forward[this.ConditionalType.Choice]));
         this.ConditionalIndex = new NumEntryField("Conditional Index", this.Editable, this.Command.ConditionalIndex, 0, null, 1);
-        this.WhenAnyValue(_ => _.ConditionalIndex.Value).Subscribe(_ => this.Command.ConditionalIndex = (uint)this.ConditionalIndex.Value);
-        this.ComparisonType = new StringSelectionField("Comparison Type", this.Editable, this.ComparisonTypes.Backward[this.Command.ConditionalComparisonType], this.ComparisonTypes.Keys);
-        this.WhenAnyValue(_ => _.ComparisonType.Choice).Subscribe(_ => this.Command.ConditionalComparisonType = this.ComparisonTypes.Forward[this.ComparisonType.Choice]);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.ConditionalIndex.Value).Subscribe(_ => this.Command.ConditionalIndex = (uint)this.ConditionalIndex.Value));
+        this.ComparisonType = new StringSelectionField("Comparison Type", this.Editable, Basics.ComparisonTypes.Backward[this.Command.ConditionalComparisonType], Basics.ComparisonTypes.Keys);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.ComparisonType.Choice).Subscribe(_ => this.Command.ConditionalComparisonType = Basics.ComparisonTypes.Forward[this.ComparisonType.Choice]));
         this.ConditionalValue = new NumEntryField("Conditional Value", this.Editable, this.Command.ConditionalValue, null, null, 1);
-        this.WhenAnyValue(_ => _.ConditionalValue.Value).Subscribe(_ => this.Command.ConditionalValue = (int)this.ConditionalValue.Value);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.ConditionalValue.Value).Subscribe(_ => this.Command.ConditionalValue = (int)this.ConditionalValue.Value));
 
-        this.WhenAnyValue(x => x.ConditionalType.Choice).Subscribe(x =>
+        this.subscriptions.Add(this.WhenAnyValue(x => x.ConditionalType.Choice).Subscribe(x =>
         {
             this.ConditionalIndex.UpperLimit = null;
             if (x == "Reference Global Count")
@@ -124,8 +183,18 @@ public class Basics : ReactiveObject
                 this.ConditionalValue.LowerLimit = 0;
                 this.ConditionalValue.UpperLimit = 1;
             }
-        });
+        }));
     }
+
+    public void Dispose()
+    {
+        foreach (IDisposable subscription in this.subscriptions)
+            subscription.Dispose();
+        this.subscriptions.Clear();
+        this.Command = null;
+    }
+
+    private List<IDisposable> subscriptions;
 
     public BoolChoiceField      WaitOnCommand { get; set; }
     public NumEntryField        StartingFrame { get; set; }
@@ -140,7 +209,7 @@ public class Basics : ReactiveObject
     protected SerialCommand Command;
     public    bool          Editable { get; set; }
 
-    public BiDict<string, uint> ConditionalTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> ConditionalTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {
@@ -153,7 +222,7 @@ public class Basics : ReactiveObject
         }
     );
 
-    public BiDict<string, uint> ComparisonTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> ComparisonTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

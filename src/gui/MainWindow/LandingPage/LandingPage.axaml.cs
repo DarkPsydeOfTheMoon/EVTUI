@@ -7,13 +7,13 @@ using System.Reactive;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
+using ReactiveUI;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.ReactiveUI;
-
-using ReactiveUI;
 
 using EVTUI.ViewModels;
 
@@ -76,10 +76,16 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
             // was closed.
             int? res = await ((Window)configWindowView).ShowDialog<int?>(this.topLevel);
             configWindowVM.Dispose();
+            if (res is null)
+            {
+                config.Reset();
+                config = null;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                return 1;
+            }
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            if (res is null)
-                return 1;
 
             (string GamePath, string? ModPath, int MajorId, int MinorId) newOpenThing = (config.ProjectManager.ActiveGame.Path, config.ModPath, config.ProjectManager.ActiveEvent.MajorId, config.ProjectManager.ActiveEvent.MinorId);
             if (this.openStuff.Contains(newOpenThing))

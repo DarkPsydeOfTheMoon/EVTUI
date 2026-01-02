@@ -18,8 +18,8 @@ public class MAtO : Generic
         this.ChildAssetID = new IntSelectionField("Attached Asset ID", this.Editable, this.CommandData.ChildObjectId, config.EventManager.AssetIDs);
         this.WhenAnyValue(_ => _.ChildAssetID.Choice).Subscribe(_ => this.CommandData.ChildObjectId = this.ChildAssetID.Choice);
 
-        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, this.InterpolationTypes.Backward[this.CommandData.InterpolationType], this.InterpolationTypes.Keys);
-        this.WhenAnyValue(_ => _.InterpolationType.Choice).Subscribe(_ => this.CommandData.InterpolationType = this.InterpolationTypes.Forward[this.InterpolationType.Choice]);
+        this.InterpolationType = new StringSelectionField("Interpolation Type", this.Editable, MAtO.InterpolationTypes.Backward[this.CommandData.InterpolationType], MAtO.InterpolationTypes.Keys);
+        this.WhenAnyValue(_ => _.InterpolationType.Choice).Subscribe(_ => this.CommandData.InterpolationType = MAtO.InterpolationTypes.Forward[this.InterpolationType.Choice]);
 
         this.Offset = new Position3D("Offset (From Attachment Point)", this.Editable, this.CommandData.RelativePosition);
         this.Rotation = new RotationWidget(config, this.CommandData.Rotation, null, pitchInd: 0, yawInd: 1);
@@ -39,7 +39,7 @@ public class MAtO : Generic
     public Position3D     Offset   { get; set; }
     public RotationWidget Rotation { get; set; }
 
-    public BiDict<string, uint> InterpolationTypes = new BiDict<string, uint>
+    public static BiDict<string, uint> InterpolationTypes = new BiDict<string, uint>
     (
         new Dictionary<string, uint>
         {

@@ -1343,23 +1343,11 @@
         <Separator Classes="formtitle"/>
         <ContentControl Content="{Binding Basics}"/>
         <ContentControl Content="{Binding AssetID}"/>
-        <ContentControl Content="{Binding InterpolationType}"/>
         <ContentControl Content="{Binding CustomRotationAnimationsEnabled}"/>
         <ContentControl Content="{Binding Rotation}"/>
-        <!--Expander Header="Rotation (Degrees)">
-          <StackPanel Classes="form">
-            <ContentControl Content="{Binding InterpolationType}"/>
-            <ContentControl Content="{Binding YawEnabled}"/>
-            <ContentControl Content="{Binding YawDegrees}" IsVisible="{Binding YawEnabled.Value}"/>
-            <ContentControl Content="{Binding PitchEnabled}"/>
-            <ContentControl Content="{Binding PitchDegrees}" IsVisible="{Binding PitchEnabled.Value}"/>
-            <ContentControl Content="{Binding RollEnabled}"/>
-            <ContentControl Content="{Binding RollDegrees}" IsVisible="{Binding RollEnabled.Value}"/>
-            <ContentControl Content="{Binding CustomRotationAnimationsEnabled}"/>
-          </StackPanel>
-        </Expander-->
         <ContentControl Content="{Binding RotatingAnimation}" IsVisible="{Binding CustomRotationAnimationsEnabled.Value}"/>
         <ContentControl Content="{Binding WaitingAnimation}" IsVisible="{Binding CustomRotationAnimationsEnabled.Value}"/>
+        <ContentControl Content="{Binding InterpolationSettings}"/>
         <Expander Header="Unknown">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding Unk}"/>
