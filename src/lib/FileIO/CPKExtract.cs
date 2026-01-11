@@ -31,6 +31,9 @@ public static class CPKExtract
 
     public static void ClearDirectory(string dirName)
     {
+        if (!Directory.Exists(dirName))
+            return;
+
         DirectoryInfo dirInfo = new DirectoryInfo(dirName);
         foreach (FileInfo file in dirInfo.EnumerateFiles())
         {
