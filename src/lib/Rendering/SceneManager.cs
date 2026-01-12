@@ -261,19 +261,29 @@ public class SceneModel
     {
         lock (this.model.AttachedModels)
         {
-            if (onOrOff)
-                this.model.AttachedModels[resId] = this.AttachedModels[resId].model;
+            if (this.model.AttachedModels.ContainsKey(resId))
+            {
+                if (onOrOff)
+                    this.model.AttachedModels[resId] = this.AttachedModels[resId].model;
+                else
+                    this.model.AttachedModels.Remove(resId);
+            }
             else
-                this.model.AttachedModels.Remove(resId);
+                Trace.TraceWarning($"No attachment with res ID {resId} exists for this model");
         }
     }
 
     public void AnimateAttachment(int resId, int animId, bool isAddAnim)
     {
-        if (isAddAnim)
-            this.AttachedModels[resId].LoadAddAnimationTrack(false, animId, 0);
+        if (this.model.AttachedModels.ContainsKey(resId))
+        {
+            if (isAddAnim)
+                this.AttachedModels[resId].LoadAddAnimationTrack(false, animId, 0);
+            else
+                this.AttachedModels[resId].LoadBaseAnimation(false, animId);
+        }
         else
-            this.AttachedModels[resId].LoadBaseAnimation(false, animId);
+            Trace.TraceWarning($"No attachment with res ID {resId} exists for this model");
     }
 }
 
