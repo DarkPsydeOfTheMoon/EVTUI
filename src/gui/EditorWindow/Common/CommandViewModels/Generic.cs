@@ -157,26 +157,50 @@ public class Basics : ReactiveObject
         this.subscriptions.Add(this.WhenAnyValue(_ => _.ForceSkipCommand.Value).Subscribe(_ => this.Command.Flags[0] = this.ForceSkipCommand.Value));
         this.ConditionalType = new StringSelectionField("Conditional Type", this.Editable, Basics.ConditionalTypes.Backward[this.Command.ConditionalType], Basics.ConditionalTypes.Keys);
         this.subscriptions.Add(this.WhenAnyValue(_ => _.ConditionalType.Choice).Subscribe(_ => this.Command.ConditionalType = Basics.ConditionalTypes.Forward[this.ConditionalType.Choice]));
-        this.ConditionalIndex = new NumEntryField("Conditional Index", this.Editable, this.Command.ConditionalIndex, 0, null, 1);
-        this.subscriptions.Add(this.WhenAnyValue(_ => _.ConditionalIndex.Value).Subscribe(_ => this.Command.ConditionalIndex = (uint)this.ConditionalIndex.Value));
+
+        this.ConditionalIndex = new NumEntryField("Conditional Index", this.Editable, this.Command.ConditionalIndex, 0, 999, 1);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.ConditionalIndex.Value).Subscribe(_ => 
+        {
+            if (this.ConditionalType.Choice != "Reference Global Bitflag")
+                this.Command.ConditionalIndex = (uint)this.ConditionalIndex.Value;
+        }));
+
+        this.ConditionalBitflag = new BitflagEntryField("Conditional Index", this.Editable, this.Command.ConditionalIndex);
+        this.subscriptions.Add(this.WhenAnyValue(_ => _.ConditionalBitflag.Section, _ => _.ConditionalBitflag.Index).Subscribe(_ => 
+        {
+            if (this.ConditionalType.Choice == "Reference Global Bitflag")
+                this.Command.ConditionalIndex = this.ConditionalBitflag.Compose();
+        }));
+
         this.ComparisonType = new StringSelectionField("Comparison Type", this.Editable, Basics.ComparisonTypes.Backward[this.Command.ConditionalComparisonType], Basics.ComparisonTypes.Keys);
         this.subscriptions.Add(this.WhenAnyValue(_ => _.ComparisonType.Choice).Subscribe(_ => this.Command.ConditionalComparisonType = Basics.ComparisonTypes.Forward[this.ComparisonType.Choice]));
-        this.ConditionalValue = new NumEntryField("Conditional Value", this.Editable, this.Command.ConditionalValue, null, null, 1);
+        this.ConditionalValue = new NumEntryField("Conditional Value", this.Editable, this.Command.ConditionalValue, 0, 999, 1);
         this.subscriptions.Add(this.WhenAnyValue(_ => _.ConditionalValue.Value).Subscribe(_ => this.Command.ConditionalValue = (int)this.ConditionalValue.Value));
 
         this.subscriptions.Add(this.WhenAnyValue(x => x.ConditionalType.Choice).Subscribe(x =>
         {
-            this.ConditionalIndex.UpperLimit = null;
-            if (x == "Reference Global Count")
-                this.ConditionalIndex.UpperLimit = 382;
-            if (x == "Reference Local Data")
-                this.ConditionalIndex.UpperLimit = 99;
-            this.ConditionalValue.LowerLimit = null;
-            this.ConditionalValue.UpperLimit = null;
-            if (x == "Reference Global Bitflag")
+            if (this.ConditionalType.Choice == "Reference Global Bitflag")
             {
                 this.ConditionalValue.LowerLimit = 0;
                 this.ConditionalValue.UpperLimit = 1;
+            }
+            else
+            {    
+                switch (this.ConditionalType.Choice)
+                {
+                    case "Reference Local Data":
+                        this.ConditionalIndex.UpperLimit = 47;
+                        break;
+                    case "Reference Global Count":
+                        this.ConditionalIndex.UpperLimit = 382;
+                        break;
+                    default:
+                        this.ConditionalIndex.UpperLimit = 999;
+                        break;
+                }
+
+                this.ConditionalValue.LowerLimit = 0;
+                this.ConditionalValue.UpperLimit = 999;
             }
         }));
     }
@@ -198,6 +222,7 @@ public class Basics : ReactiveObject
     public BoolChoiceField      ForceSkipCommand { get; set; }
     public StringSelectionField ConditionalType  { get; set; }
     public NumEntryField        ConditionalIndex { get; set; }
+    public BitflagEntryField    ConditionalBitflag { get; set; }
     public StringSelectionField ComparisonType   { get; set; }
     public NumEntryField        ConditionalValue { get; set; }
 

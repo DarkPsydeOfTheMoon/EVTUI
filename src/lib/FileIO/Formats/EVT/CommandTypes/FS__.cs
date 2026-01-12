@@ -17,7 +17,10 @@ public partial class CommandTypes
         public float[] Position = new float[3];
         public float[] Rotation = new float[3];
 
-        public float UnkFloat;
+        //public float UnkFloat;
+        public float UnkFloat1;
+        public float UnkFloat2;
+        public float UnkFloat3;
 
         public ConstUInt32[] UNUSED_UINT32 = Enumerable.Range(0, 4).Select(i => new ConstUInt32()).ToArray();
 
@@ -31,9 +34,13 @@ public partial class CommandTypes
             rw.RwObj(ref this.UNUSED_UINT32[2], args);
 
             rw.RwFloat32s(ref this.Position, 3);
-            rw.RwFloat32s(ref this.Rotation, 3);
+            //rw.RwFloat32s(ref this.Rotation, 3);
+            rw.RwFloat32(ref this.Rotation[0]);
 
-            rw.RwFloat32(ref this.UnkFloat);
+            //rw.RwFloat32(ref this.UnkFloat);
+            rw.RwFloat32(ref this.UnkFloat1);
+            rw.RwFloat32(ref this.UnkFloat2);
+            rw.RwFloat32(ref this.UnkFloat3);
 
             rw.RwObj(ref this.UNUSED_UINT32[3], args);
         }

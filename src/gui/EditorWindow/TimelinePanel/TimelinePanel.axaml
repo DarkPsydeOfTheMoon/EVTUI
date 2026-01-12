@@ -218,7 +218,8 @@
             <StackPanel Classes="form" IsVisible="{Binding !ForceSkipCommand.Value}">
               <ContentControl Content="{Binding ConditionalType}"/>
               <StackPanel Classes="form" IsVisible="{c:Binding '(ConditionalType.Choice != \'Always Run\') and (ConditionalType.Choice != \'Never Run\')', Mode=OneWay}">
-                <ContentControl Content="{Binding ConditionalIndex}"/>
+                <ContentControl Content="{Binding ConditionalIndex}" IsVisible="{c:Binding '(ConditionalType.Choice != \'Reference Global Bitflag\')', Mode=OneWay}"/>
+                <ContentControl Content="{Binding ConditionalBitflag}" IsVisible="{c:Binding '(ConditionalType.Choice == \'Reference Global Bitflag\')', Mode=OneWay}"/>
                 <ContentControl Content="{Binding ComparisonType}"/>
                 <ContentControl Content="{Binding ConditionalValue}"/>
               </StackPanel>
@@ -960,7 +961,10 @@
         <Expander Header="Unknown">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding UnkBool}"/>
-            <ContentControl Content="{Binding UnkFloat}"/>
+            <!--ContentControl Content="{Binding UnkFloat}"/-->
+            <ContentControl Content="{Binding UnkFloat1}"/>
+            <ContentControl Content="{Binding UnkFloat2}"/>
+            <ContentControl Content="{Binding UnkFloat3}"/>
           </StackPanel>
         </Expander>
       </StackPanel>
@@ -1234,7 +1238,7 @@
             <ContentControl Content="{Binding TorsoMovementEnabled}"/>
             <ContentControl Content="{Binding SlowTorsoMovement}" IsVisible="{Binding TorsoMovementEnabled.Value}"/>
             <ContentControl Content="{Binding TargetType}"/>
-            <ContentControl Content="{Binding TargetPosition}" IsVisible="{c:Binding 'TargetType.Choice == \'Coordinates\''}"/>
+            <!--ContentControl Content="{Binding TargetPosition}" IsVisible="{c:Binding 'TargetType.Choice == \'Coordinates\''}"/-->
             <Expander Header="Target Model" IsVisible="{c:Binding 'TargetType.Choice == \'Model\''}">
               <StackPanel Classes="form">
                 <ContentControl Content="{Binding TargetModelID}"/>
@@ -1243,6 +1247,7 @@
             </Expander>
           </StackPanel>
         </Expander>
+        <ContentControl Content="{Binding TargetPosition}"/>
         <Expander Header="Unknown">
           <StackPanel Classes="form">
             <ContentControl Content="{Binding UnkBool}"/>

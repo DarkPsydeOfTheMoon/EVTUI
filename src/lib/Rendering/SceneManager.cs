@@ -36,23 +36,39 @@ public class SceneModel
     protected (bool IsExt, int Idx)?[] AddAnimInfo = new (bool IsExt, int Idx)?[8];
 
     protected Dictionary<int, GLNode> NodesByResId;
+    protected Dictionary<int, SceneModel> AttachedModels;
 
-    public SceneModel(DataManager config, ModelPack model, Dictionary<string, Texture> fieldtex, bool isField=false)
+    public float[] BasePosition = new float[3];
+    public float[] BaseRotation = new float[3];
+
+    public SceneModel(DataManager config, ModelPack model, Dictionary<string, Texture> fieldtex, bool isField=false, GLNode parent=null)
     {
+        if (isField)
+        {
+            this.NodesByResId = new Dictionary<int, GLNode>();
+            this.AttachedModels = new Dictionary<int, SceneModel>();
+        }
+
         this.Config = config;
         this.LoadModel(model, fieldtex, isField);
+
+        if (!(parent is null))
+            this.model.Nodes[0].Parent = parent;
     }
 
     public void Dispose()
     {
-        // can happen if EVT object isn't set up properly
         if (!(this.model is null))
         {
             this.model.Dispose();
-            foreach (int resId in this.model.AttachedModels.Keys)
-                this.model.AttachedModels[resId].Dispose();
-            this.model.AttachedModels.Clear();
-            this.NodesByResId.Clear();
+            if (!(this.AttachedModels is null))
+            {
+                foreach (int resId in this.AttachedModels.Keys)
+                    this.AttachedModels[resId].Dispose();
+                this.AttachedModels.Clear();
+                this.model.AttachedModels.Clear();
+                this.NodesByResId.Clear();
+            }
         }
         this.animationStopwatch.Stop();
         this.animationStopwatch = null;
@@ -69,35 +85,30 @@ public class SceneModel
 
     public void LoadAnimation(Animation animation)
     {
-        // can maybe get rid of this check once asset management is more robust
         if (!(this.model is null))
             this.model.LoadAnimation(animation);
     }
 
     public void UnloadAnimation()
     {
-        // can maybe get rid of this check once asset management is more robust
         if (!(this.model is null))
             this.model.UnloadAnimation();
     }
 
     private void LoadBlendAnimation(Animation animation, int index=-1)
     {
-        // can maybe get rid of this check once asset management is more robust
         if (!(this.model is null))
             this.model.LoadBlendAnimation(animation, index);
     }
 
     private void UnloadBlendAnimation(int index)
     {
-        // can maybe get rid of this check once asset management is more robust
         if (!(this.model is null))
             this.model.UnloadBlendAnimation(index);
     }
 
     public void Draw(ShaderRegistry mShaderRegistry, GLCamera camera, double animationTime)
     {
-        // can happen if EVT object isn't set up properly
         if (this.model is null)
             return;
 
@@ -146,10 +157,13 @@ public class SceneModel
             }
         } );
 
-        this.NodesByResId = new Dictionary<int, GLNode>();
-        foreach (GLNode node in this.model.Nodes)
-            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
-                this.NodesByResId[(int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue()] = node;
+        if (isField)
+        {
+            this.NodesByResId = new Dictionary<int, GLNode>();
+            foreach (GLNode node in this.model.Nodes)
+                if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
+                    this.NodesByResId[(int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue()] = node;
+        }
     }
 
     public void SetPosition(float[] position, float[] rotation)
@@ -163,10 +177,11 @@ public class SceneModel
         pos.Controllers[0].Layers[0].KeyType = KeyType.NodePRS;
 
         PRSKey key = new PRSKey(KeyType.NodePRS);
+        // TODO: this should probably be more properly split out if we only want to set position or only want to set rotation
         if (!(position is null))
-            key.Position = new Vector3(position[0], position[1], position[2]);
+            key.Position = new Vector3(this.BasePosition[0] + position[0], this.BasePosition[1] + position[1], this.BasePosition[2] + position[2]);
         if (!(rotation is null))
-            key.Rotation = this.model.EulerToQuat(new Vector3(MathHelper.DegreesToRadians(rotation[0]), MathHelper.DegreesToRadians(rotation[1]), MathHelper.DegreesToRadians(rotation[2])));
+            key.Rotation = GLModel.EulerToQuat(new Vector3(MathHelper.DegreesToRadians(this.BaseRotation[0] + rotation[0]), MathHelper.DegreesToRadians(this.BaseRotation[1] + rotation[1]), MathHelper.DegreesToRadians(this.BaseRotation[2] + rotation[2])));
         pos.Controllers[0].Layers[0].Keys.Add(key);
 
         this.UnloadBlendAnimation(0);
@@ -228,14 +243,38 @@ public class SceneModel
         if (!(this.NodesByResId.ContainsKey(resId)))
             return;
 
-        var _attachedModel = new SceneModel(this.Config, attachedModel, fieldtex, false);
+        this.AttachedModels[resId] = new SceneModel(this.Config, attachedModel, fieldtex, false);
         float[] position = new float[] {this.NodesByResId[resId].Node.Translation.X, this.NodesByResId[resId].Node.Translation.Y, this.NodesByResId[resId].Node.Translation.Z};
-        Vector3 rotVec = this.model.QuatToEuler(this.NodesByResId[resId].Node.Rotation);
+        Vector3 rotVec = GLModel.QuatToEuler(this.NodesByResId[resId].Node.Rotation);
         float[] rotation = new float[] {0f, MathHelper.RadiansToDegrees(rotVec.Y), 0f};
-        _attachedModel.SetPosition(position, rotation);
-        lock (this.model.AttachedModels) { this.model.AttachedModels[resId] = _attachedModel.model; }
+        if (!(this.model.Nodes[0].Parent is null))
+            this.AttachedModels[resId].model.Nodes[0].Parent = this.model.Nodes[0].Parent;
+        this.AttachedModels[resId].SetPosition(position, rotation);
+        this.AttachedModels[resId].BaseAnimationPack = attachedModel.AnimationPack;
+        this.AttachedModels[resId].AddAnimationPack = attachedModel.AnimationPack;
+        if (this.NodesByResId[resId].Node.Properties.ContainsKey("fldLayoutOfModel_animNo"))
+            this.AttachedModels[resId].LoadBaseAnimation(false, (int)this.NodesByResId[resId].Node.Properties["fldLayoutOfModel_animNo"].GetValue());
+        lock (this.model.AttachedModels) { this.model.AttachedModels[resId] = this.AttachedModels[resId].model; }
     }
 
+    public void ToggleAttachment(int resId, bool onOrOff)
+    {
+        lock (this.model.AttachedModels)
+        {
+            if (onOrOff)
+                this.model.AttachedModels[resId] = this.AttachedModels[resId].model;
+            else
+                this.model.AttachedModels.Remove(resId);
+        }
+    }
+
+    public void AnimateAttachment(int resId, int animId, bool isAddAnim)
+    {
+        if (isAddAnim)
+            this.AttachedModels[resId].LoadAddAnimationTrack(false, animId, 0);
+        else
+            this.AttachedModels[resId].LoadBaseAnimation(false, animId);
+    }
 }
 
 
@@ -245,6 +284,7 @@ public class SceneManager
 
     public Dictionary<int, SceneModel> sceneModels;
     public Dictionary<int, Dictionary<int, SceneModel>> fieldModels;
+    public Dictionary<int, GLNode> fieldRootNodes;
     public List<GLPerspectiveCamera> cameras;
     public List<GLShaderProgram> shaders;
     public Dictionary<string, Texture> FieldTex;
@@ -272,6 +312,7 @@ public class SceneManager
 
         this.sceneModels = new Dictionary<int, SceneModel>();
         this.fieldModels = new Dictionary<int, Dictionary<int, SceneModel>>();
+        this.fieldRootNodes = new Dictionary<int, GLNode>();
         this.cameras = new List<GLPerspectiveCamera>();
         this.shaders = new List<GLShaderProgram>();
         this.FieldTex = new Dictionary<string, Texture>();
@@ -322,8 +363,10 @@ public class SceneManager
             foreach (int subID in this.fieldModels[objectID].Keys)
                 this.fieldModels[objectID][subID].Dispose();
             this.fieldModels[objectID].Clear();
+            this.fieldRootNodes[objectID].Dispose();
         }
         this.fieldModels.Clear();
+        this.fieldRootNodes.Clear();
 
         for (int i=this.shaders.Count-1; i>=0; --i)
             this.UnloadShader(i);
@@ -355,9 +398,10 @@ public class SceneManager
     public void LoadField(int objectID, Dictionary<int, string> modelPaths, Dictionary<int, Dictionary<int, string>> attachmentPaths, Dictionary<string, ModelPack> models)
     {
         this.fieldModels[objectID] = new Dictionary<int, SceneModel>();
+        this.fieldRootNodes[objectID] = new GLNode(new Node("FieldRoot"));
         foreach (int subID in modelPaths.Keys)
         {
-            this.fieldModels[objectID][subID] = new SceneModel(this.Config, models[modelPaths[subID]], this.FieldTex, true);
+            this.fieldModels[objectID][subID] = new SceneModel(this.Config, models[modelPaths[subID]], this.FieldTex, true, parent: this.fieldRootNodes[objectID]);
             foreach (int resId in attachmentPaths[subID].Keys)
                 this.fieldModels[objectID][subID].AddAttachment(resId, models[attachmentPaths[subID][resId]], this.FieldTex);
         }
@@ -409,6 +453,13 @@ public class SceneManager
             this.sceneModels[model_index].LoadAddAnimationTrack(isExt, idx, track);
         else
             Trace.TraceWarning($"Tried to load animation for asset #{model_index}, which hasn't been loaded.");
+    }
+
+    public void SetFieldPosition(int objectID, float[] position, float[] rotation)
+    {
+        this.fieldRootNodes[objectID].Node.Translation = new Vector3(position[0], position[1], position[2]);
+        this.fieldRootNodes[objectID].Node.Rotation = GLModel.EulerToQuat(new Vector3(MathHelper.DegreesToRadians(rotation[0]), MathHelper.DegreesToRadians(rotation[1]), MathHelper.DegreesToRadians(rotation[2])));
+        this.fieldRootNodes[objectID].WorldTransform = this.fieldRootNodes[objectID].Node.WorldTransform;
     }
 
     /////////////////////////////////////

@@ -86,6 +86,9 @@
 
     <DataTemplate DataType="{x:Type vm:BoolChoiceField}">
       <StackPanel Classes="field">
+        <TextBlock ToolTip.Tip="{Binding Info}" IsVisible="{Binding Info, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource info_regular}" Foreground="{DynamicResource SystemAccentColor}" Margin="0"/>
+        </TextBlock>
         <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
         <CheckBox
           IsChecked="{Binding Value}"
@@ -109,6 +112,9 @@
 
     <DataTemplate DataType="{x:Type vm:IntSelectionField}">
       <StackPanel Classes="field">
+        <TextBlock ToolTip.Tip="{Binding Info}" IsVisible="{Binding Info, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource info_regular}" Foreground="{DynamicResource SystemAccentColor}" Margin="0"/>
+        </TextBlock>
         <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
         <ComboBox
           ItemsSource="{Binding Choices}"
@@ -120,6 +126,9 @@
 
     <DataTemplate DataType="{x:Type vm:NumEntryField}">
       <StackPanel Classes="field">
+        <TextBlock ToolTip.Tip="{Binding Info}" IsVisible="{Binding Info, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource info_regular}" Foreground="{DynamicResource SystemAccentColor}" Margin="0"/>
+        </TextBlock>
         <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
         <NumericUpDown
           Minimum="{Binding LowerLimit}"
@@ -132,6 +141,9 @@
 
     <DataTemplate DataType="{x:Type vm:StringEntryField}">
       <StackPanel Classes="field">
+        <TextBlock ToolTip.Tip="{Binding Info}" IsVisible="{Binding Info, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource info_regular}" Foreground="{DynamicResource SystemAccentColor}" Margin="0"/>
+        </TextBlock>
         <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
         <TextBox
           AcceptsReturn="true"
@@ -143,6 +155,9 @@
 
     <DataTemplate DataType="{x:Type vm:DegreeField}">
       <StackPanel Classes="field">
+        <TextBlock ToolTip.Tip="{Binding Info}" IsVisible="{Binding Info, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource info_regular}" Foreground="{DynamicResource SystemAccentColor}" Margin="0"/>
+        </TextBlock>
         <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
         <NumericUpDown
           Increment="{Binding Increment}"
@@ -163,6 +178,9 @@
 
     <DataTemplate DataType="{x:Type vm:NumRangeField}">
       <StackPanel Classes="field">
+        <TextBlock ToolTip.Tip="{Binding Info}" IsVisible="{Binding Info, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource info_regular}" Foreground="{DynamicResource SystemAccentColor}" Margin="0"/>
+        </TextBlock>
         <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
         <NumericUpDown
           Minimum="{Binding LowerLimit}"
@@ -184,8 +202,31 @@
 
     <DataTemplate DataType="{x:Type vm:ColorSelectionField}">
       <StackPanel Classes="field">
+        <TextBlock ToolTip.Tip="{Binding Info}" IsVisible="{Binding Info, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource info_regular}" Foreground="{DynamicResource SystemAccentColor}" Margin="0"/>
+        </TextBlock>
         <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
-        <ColorPicker Color="{Binding SelectedColor}"/>
+        <ColorPicker Color="{Binding SelectedColor}" IsEnabled="{Binding Editable}"/>
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type vm:BitflagEntryField}">
+      <StackPanel Classes="field">
+        <TextBlock ToolTip.Tip="{Binding Info}" IsVisible="{Binding Info, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" VerticalAlignment="Center">
+          <PathIcon Data="{StaticResource info_regular}" Foreground="{DynamicResource SystemAccentColor}" Margin="0"/>
+        </TextBlock>
+        <TextBlock Classes="fieldtitle" Text="{Binding Name}"/>
+        <ComboBox
+          ItemsSource="{x:Static vm:BitflagEntryField.SectionChoices}"
+          SelectedItem="{Binding Section}"
+          IsEnabled="{Binding Editable}"
+          MaxDropDownHeight="300"/>
+        <NumericUpDown
+          Minimum="0"
+          Maximum="{Binding UpperLimit}"
+          Increment="1"
+          Value="{Binding Index}"
+          IsEnabled="{Binding Editable}" AllowSpin="true"/>
       </StackPanel>
     </DataTemplate>
 

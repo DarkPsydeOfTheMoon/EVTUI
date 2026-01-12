@@ -115,7 +115,7 @@ index d535d24..4347d4f 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLModel.cs b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-index daee18f..3f57932 100644
+index daee18f..e2a1d9e 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLModel.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLModel.cs
 @@ -6,7 +6,7 @@ using System.Numerics;
@@ -153,7 +153,7 @@ index daee18f..3f57932 100644
 +            BlendAnimations = new Dictionary<int, Animation>();
 +        }
 +
-+        public Vector3 QuatToEuler( Quaternion q )
++        public static Vector3 QuatToEuler( Quaternion q )
 +        {
 +            Vector3 res = new Vector3(0, 0, 0);
 +
@@ -198,7 +198,7 @@ index daee18f..3f57932 100644
 +            return res;
 +        }
 +
-+        public Quaternion EulerToQuat( Vector3 e )
++        public static Quaternion EulerToQuat( Vector3 e )
 +        {
 +            var x = e.X / 2;
 +            var y = e.Y / 2;
@@ -522,7 +522,7 @@ index daee18f..3f57932 100644
 +                var translation = glNode.Node.Translation;
 +                var scale = glNode.Node.Scale;
 +                FetchNodeAnimation( glNode.Controllers, animationTime, ref rotation, ref translation, ref scale );
-+                var rotationEuler = QuatToEuler( rotation );
++                var rotationEuler = GLModel.QuatToEuler( rotation );
 +                var bkp_rotation = rotation;
 +
 +                foreach ( var blendControllers in glNode.BlendControllers )
@@ -531,13 +531,13 @@ index daee18f..3f57932 100644
 +                    Vector3 blendTranslation = new Vector3(0, 0, 0);
 +                    Vector3 blendScale = new Vector3(0, 0, 0);
 +                    FetchNodeAnimation( blendControllers, animationTime, ref blendRotation, ref blendTranslation, ref blendScale );
-+                    var blendRotationEuler = QuatToEuler( blendRotation );
++                    var blendRotationEuler = GLModel.QuatToEuler( blendRotation );
 +
 +                    rotationEuler += blendRotationEuler;
 +                    translation   += blendTranslation;
 +                    scale         += blendScale;
 +                }
-+                rotation = EulerToQuat( rotationEuler );
++                rotation = GLModel.EulerToQuat( rotationEuler );
  
                  // Calculate current transform
 -                var transform = Matrix4x4.CreateFromQuaternion( rotation ) * Matrix4x4.CreateScale( glNode.Node.Scale );
@@ -647,6 +647,26 @@ index 22cdcb9..f8ca23c 100644
  using OpenTK.Graphics.OpenGL;
  
  namespace GFDLibrary.Rendering.OpenGL
+diff --git a/GFDLibrary.Rendering.OpenGL/GLVertexArray.cs b/GFDLibrary.Rendering.OpenGL/GLVertexArray.cs
+index 49345f0..0a279af 100644
+--- a/GFDLibrary.Rendering.OpenGL/GLVertexArray.cs
++++ b/GFDLibrary.Rendering.OpenGL/GLVertexArray.cs
+@@ -43,7 +43,7 @@ namespace GFDLibrary.Rendering.OpenGL
+                 for ( int channelIndex = 0; channelIndex < 3; ++channelIndex)
+                 {
+                     if ( texCoordChannels.Length > channelIndex && texCoordChannels[channelIndex] != null )
+-                        TextureCoordinateChannelBuffers[channelIndex] = new GLVertexAttributeBuffer<Vector2>( texCoordChannels[channelIndex], channelIndex == 0 ? 2 : 5 + channelIndex, 2, VertexAttribPointerType.Float );
++                        TextureCoordinateChannelBuffers[channelIndex] = new GLVertexAttributeBuffer<Vector2>( texCoordChannels[channelIndex], channelIndex == 0 ? 2 : 4 + channelIndex, 2, VertexAttribPointerType.Float );
+                 }
+             }
+ 
+@@ -113,4 +113,4 @@ namespace GFDLibrary.Rendering.OpenGL
+         }
+         #endregion
+     }
+-}
+\ No newline at end of file
++}
 diff --git a/GFDLibrary/Animations/Animation.cs b/GFDLibrary/Animations/Animation.cs
 index 6d77b67..7856af1 100644
 --- a/GFDLibrary/Animations/Animation.cs

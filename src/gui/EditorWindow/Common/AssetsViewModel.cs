@@ -236,44 +236,113 @@ public class AssetViewModel : ViewModelBase
         if (!(majorIdTitle is null))
         {
             this.MajorID = new NumEntryField(majorIdTitle, this.Editable, obj.ResourceMajorId, 0, 9999, 1);
-            this.subscriptions.Add(this.WhenAnyValue(x => x.MajorID.Value).Subscribe(x => this.Obj.ResourceMajorId = (int)this.MajorID.Value));
+            this.subscriptions.Add(this.WhenAnyValue(x => x.MajorID.Value).Subscribe(x => 
+            {
+                // i don't understand why this is necessary but it is! whatever!!!
+                if (this.Obj.ResourceMajorId != this.MajorID.Value)
+                {
+                    this.Obj.ResourceMajorId = (int)this.MajorID.Value;
+                    this.UpdatePaths();
+                    this.UpdateActiveModelCache();
+                }
+            }));
         }
 
         if (!(minorIdTitle is null))
         {
             this.MinorID = new NumEntryField(minorIdTitle, this.Editable, obj.ResourceMinorId, 0, 255, 1);
-            this.subscriptions.Add(this.WhenAnyValue(x => x.MinorID.Value).Subscribe(x => this.Obj.ResourceMinorId = (short)this.MinorID.Value));
+            this.subscriptions.Add(this.WhenAnyValue(x => x.MinorID.Value).Subscribe(x => 
+            {
+                if (this.Obj.ResourceMinorId != this.MinorID.Value)
+                {
+                    this.Obj.ResourceMinorId = (short)this.MinorID.Value;
+                    this.UpdatePaths();
+                    this.UpdateActiveModelCache();
+                }
+            }));
         }
 
         if (!(subIdTitle is null))
         {
             this.SubID = new NumEntryField(subIdTitle, this.Editable, obj.ResourceSubId, 0, 255, 1);
-            this.subscriptions.Add(this.WhenAnyValue(x => x.SubID.Value).Subscribe(x => this.Obj.ResourceSubId = (short)this.SubID.Value));
+            this.subscriptions.Add(this.WhenAnyValue(x => x.SubID.Value).Subscribe(x => 
+            {
+                if (this.Obj.ResourceSubId != this.SubID.Value)
+                {
+                    this.Obj.ResourceSubId = (short)this.SubID.Value;
+                    this.UpdatePaths();
+                    this.UpdateActiveModelCache();
+                }
+            }));
         }
 
         if (!(isCommonTitle is null))
         {
             this.IsCommon = new BoolChoiceField(isCommonTitle, this.Editable, obj.Flags[0]);
-            this.subscriptions.Add(this.WhenAnyValue(x => x.IsCommon.Value).Subscribe(x => this.Obj.Flags[0] = this.IsCommon.Value));
+            this.subscriptions.Add(this.WhenAnyValue(x => x.IsCommon.Value).Subscribe(x => 
+            {
+                if (this.Obj.Flags[0] != this.IsCommon.Value)
+                {
+                    this.Obj.Flags[0] = this.IsCommon.Value;
+                    this.UpdateAllAnimPaths();
+                    this.UpdateActiveModelCache();
+                }
+            }));
         }
 
         if (!(extId1Title is null))
         {
             this.BaseAnimID = new NumEntryField(extId1Title, this.Editable, obj.BaseMotionNo, -1, 9999, 1);
-            this.subscriptions.Add(this.WhenAnyValue(x => x.BaseAnimID.Value).Subscribe(x => this.Obj.BaseMotionNo = (int)this.BaseAnimID.Value));
+            this.subscriptions.Add(this.WhenAnyValue(x => x.BaseAnimID.Value).Subscribe(x => 
+            {
+                if (this.Obj.BaseMotionNo != this.BaseAnimID.Value)
+                {
+                    this.Obj.BaseMotionNo = (int)this.BaseAnimID.Value;
+                    this.UpdateAllAnimPaths();
+                    this.UpdateActiveModelCache();
+                }
+            }));
         }
 
         if (!(extId2Title is null))
         {
             this.ExtBaseAnimID = new NumEntryField(extId2Title, this.Editable, obj.ExtBaseMotionNo, -1, 9999, 1);
-            this.subscriptions.Add(this.WhenAnyValue(x => x.ExtBaseAnimID.Value).Subscribe(x => this.Obj.ExtBaseMotionNo = (int)this.ExtBaseAnimID.Value));
+            this.subscriptions.Add(this.WhenAnyValue(x => x.ExtBaseAnimID.Value).Subscribe(x => 
+            {
+                if (this.Obj.ExtBaseMotionNo != this.ExtBaseAnimID.Value)
+                {
+                    this.Obj.ExtBaseMotionNo = (int)this.ExtBaseAnimID.Value;
+                    this.UpdateAllAnimPaths();
+                    this.UpdateActiveModelCache();
+                }
+            }));
         }
 
         if (!(extId3Title is null))
         {
             this.ExtAddAnimID = new NumEntryField(extId3Title, this.Editable, obj.ExtAddMotionNo, -1, 9999, 1);
-            this.subscriptions.Add(this.WhenAnyValue(x => x.ExtAddAnimID.Value).Subscribe(x => this.Obj.ExtAddMotionNo = (int)this.ExtAddAnimID.Value));
+            this.subscriptions.Add(this.WhenAnyValue(x => x.ExtAddAnimID.Value).Subscribe(x => 
+            {
+                if (this.Obj.ExtAddMotionNo != this.ExtAddAnimID.Value)
+                {
+                    this.Obj.ExtAddMotionNo = (int)this.ExtAddAnimID.Value;
+                    this.UpdateAllAnimPaths();
+                    this.UpdateActiveModelCache();
+                }
+            }));
         }
+
+        this.ActiveModels = new Dictionary<string, ModelPack>();
+        this.BaseAnimPaths = new ObservableCollection<string>();
+        this.ExtBaseAnimPaths = new ObservableCollection<string>();
+        this.AddAnimPaths = new ObservableCollection<string>();
+        this.ExtAddAnimPaths = new ObservableCollection<string>();
+
+        this.SubModelPaths = new Dictionary<int, ObservableCollection<string>>();
+        this.TextureBinPaths = new Dictionary<int, ObservableCollection<string>>();
+        this.ActiveSubModelPaths = new Dictionary<int, string>();
+        this.ActiveTextureBinPaths = new Dictionary<int, string>();
+        this.ActiveAttachmentPaths = new Dictionary<int, Dictionary<int, string>>();
 
         this.UpdatePaths();
 
@@ -345,64 +414,24 @@ public class AssetViewModel : ViewModelBase
 
     public void UpdatePaths()
     {
-        this.BaseAnimPaths = new ObservableCollection<string>();
-        this.ExtBaseAnimPaths = new ObservableCollection<string>();
-        this.AddAnimPaths = new ObservableCollection<string>();
-        this.ExtAddAnimPaths = new ObservableCollection<string>();
-
-        this.ActiveModels = new Dictionary<string, ModelPack>();
-
-        this.ActiveModelPath = null;
-        this.ActiveBaseAnimPath = null;
-        this.ActiveExtBaseAnimPath = null;
-        this.ActiveAddAnimPath = null;
-        this.ActiveExtAddAnimPath = null;
-
+        //this.ActiveModels.Clear();
         this.UpdateModelPaths();
-        if (this.ObjectType.Choice == "Field")
-            this.UpdateFieldPaths();
-        else if (this.IsModel)
-        {
-            foreach (string path in this.UpdateAnimPaths(false, false))
-                this.BaseAnimPaths.Add(path);
-            foreach (string path in this.UpdateAnimPaths(false, true))
-                this.ExtBaseAnimPaths.Add(path);
-            foreach (string path in this.UpdateAnimPaths(true, false))
-                this.AddAnimPaths.Add(path);
-            foreach (string path in this.UpdateAnimPaths(true, true))
-                this.ExtAddAnimPaths.Add(path);
-        }
-
         if (this.ModelPaths.Count > 0)
         {
-            this.ActiveModelPath = this.ModelPaths[0];
-            if (!this.ActiveModels.ContainsKey(this.ActiveModelPath))
-                this.ActiveModels[this.ActiveModelPath] = null;
+            if (this.ActiveModelPath != this.ModelPaths[0])
+            {
+                this.ActiveModelPath = this.ModelPaths[0];
+                if (!this.ActiveModels.ContainsKey(this.ActiveModelPath))
+                    this.ActiveModels[this.ActiveModelPath] = null;
+            }
         }
-        if (this.BaseAnimPaths.Count > 0)
-        {
-            this.ActiveBaseAnimPath = this.BaseAnimPaths[0];
-            if (!this.ActiveModels.ContainsKey(this.ActiveBaseAnimPath))
-                this.ActiveModels[this.ActiveBaseAnimPath] = null;
-        }
-        if (this.ExtBaseAnimPaths.Count > 0)
-        {
-            this.ActiveExtBaseAnimPath = this.ExtBaseAnimPaths[0];
-            if (!this.ActiveModels.ContainsKey(this.ActiveExtBaseAnimPath))
-                this.ActiveModels[this.ActiveExtBaseAnimPath] = null;
-        }
-        if (this.AddAnimPaths.Count > 0)
-        {
-            this.ActiveAddAnimPath = this.AddAnimPaths[0];
-            if (!this.ActiveModels.ContainsKey(this.ActiveAddAnimPath))
-                this.ActiveModels[this.ActiveAddAnimPath] = null;
-        }
-        if (this.ExtAddAnimPaths.Count > 0)
-        {
-            this.ActiveExtAddAnimPath = this.ExtAddAnimPaths[0];
-            if (!this.ActiveModels.ContainsKey(this.ActiveExtAddAnimPath))
-                this.ActiveModels[this.ActiveExtAddAnimPath] = null;
-        }
+        else
+            this.ActiveModelPath = null;
+
+        this.UpdateAllAnimPaths();
+
+        if (this.ObjectType.Choice == "Field")
+            this.UpdateFieldPaths();
     }
 
     public void UpdateModelPaths()
@@ -456,8 +485,8 @@ public class AssetViewModel : ViewModelBase
     // TODO: fetch prefixes by game
     public void UpdateFieldPaths()
     {
-        this.SubModelPaths = new Dictionary<int, ObservableCollection<string>>();
-        this.TextureBinPaths = new Dictionary<int, ObservableCollection<string>>();
+        this.SubModelPaths.Clear();
+        this.TextureBinPaths.Clear();
         this.ActiveMap = null;
 
         string[] mapPrefix = new string[] { "field", "map", $"d{this.MajorID.Value:000}_{this.MinorID.Value:000}.map" };
@@ -494,23 +523,12 @@ public class AssetViewModel : ViewModelBase
         }
         else
         {
-            string[] modelPrefix = null;
-            string modelSuffix = null;
-            string[] texturePrefix = null;
-            string textureSuffix = null;
-
-            if (this.SubID.Value == 0)
-            {
-                modelPrefix = new string[] { "model", "field_tex" };
-                modelSuffix = $"f{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9]\\.gfs";
-                texturePrefix = new string[] { "model", "field_tex", "textures" };
-                textureSuffix = $"tex{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9][0-9]_00\\.bin";
-            }
-            else
-            {
-                modelPrefix = new string[] { "model", "field_tex", $"f{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value}.gfs" };
-                texturePrefix = new string[] { "model", "field_tex", "textures", $"tex{this.MajorID.Value:000}_{this.MinorID.Value:000}_{this.SubID.Value:00}_00.bin" };
-            }
+            // actually doesn't seem like sub ID is used in field loading...
+            // possibly used for fld "div" / room ID checks, though
+            string[] modelPrefix = new string[] { "model", "field_tex" };
+            string modelSuffix = $"f{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9]\\.gfs";
+            string[] texturePrefix = new string[] { "model", "field_tex", "textures" };
+            string textureSuffix = $"tex{this.MajorID.Value:000}_{this.MinorID.Value:000}_[0-9][0-9]_00\\.bin";
 
             foreach (string path in this.Config.ExtractExactFiles(modelPrefix, modelSuffix))
             {
@@ -531,9 +549,9 @@ public class AssetViewModel : ViewModelBase
             }
         }
 
-        this.ActiveSubModelPaths = new Dictionary<int, string>();
-        this.ActiveTextureBinPaths = new Dictionary<int, string>();
-        this.ActiveAttachmentPaths = new Dictionary<int, Dictionary<int, string>>();
+        this.ActiveSubModelPaths.Clear();
+        this.ActiveTextureBinPaths.Clear();
+        this.ActiveAttachmentPaths.Clear();
 
         foreach (int subId in this.SubModelPaths.Keys)
         {
@@ -564,18 +582,17 @@ public class AssetViewModel : ViewModelBase
             this.ActiveTextureBinPaths[subId] = (this.TextureBinPaths[subId] is null || this.TextureBinPaths[subId].Count == 0) ? null : this.TextureBinPaths[subId][0];
     }
 
-    public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims)
+    //public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims)
+    public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims, int forceAnimId=-1)
     {
         string animType = (isExtAnims) ? "A" : "B";
-        int animId = (isExtAnims) ? (int)this.ExtBaseAnimID.Value : (int)this.BaseAnimID.Value;
+        //int animId = (isExtAnims) ? (int)this.ExtBaseAnimID.Value : (int)this.BaseAnimID.Value;
+        int animId = (forceAnimId > -1) ? forceAnimId : (isExtAnims) ? (int)this.ExtBaseAnimID.Value : (int)this.BaseAnimID.Value;
         string[] prefix = null;
         string suffix = null;
         string[] backoffPrefix = null;
         string backoffSuffix = null;
         List<string> ret = new List<string>();
-
-        if (animId == -1)
-            return ret;
 
         switch (this.ObjectType.Choice)
         {
@@ -583,7 +600,11 @@ public class AssetViewModel : ViewModelBase
             case "FieldCharacter":
                 string subtype = (this.ObjectType.Choice == "FieldCharacter") ? "field" : "event";
                 if (this.IsCommon.Value)
+                {
+                    if (animId == -1)
+                        return ret;
                     prefix = new string[] { "model", "character", "common_anim", $"{animType}CMN{animId:0000}.gap" };
+                }
                 else if (isBlendAnims)
                 {
                     prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", $"emt{this.MajorID.Value:0000}_{this.MinorID.Value:000}.gap" };
@@ -591,14 +612,21 @@ public class AssetViewModel : ViewModelBase
                 }
                 else
                 {
+                    if (animId == -1)
+                        return ret;
                     prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", subtype, $"{animType}{subtype.Substring(0, 1)}{this.MajorID.Value:0000}_{animId:000}.gap" };
-                    backoffPrefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", subtype, $"{animType}{subtype.Substring(0, 1)}{this.MajorID.Value:0000}_{(animId+30):000}.gap" };
+                    if (forceAnimId == -1)
+                        backoffPrefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", subtype, $"{animType}{subtype.Substring(0, 1)}{this.MajorID.Value:0000}_{(animId+30):000}.gap" };
                 }
                 break;
             case "Enemy":
+                if (animId == -1)
+                    return ret;
                 prefix = new string[] { "model", "character", "enemy", $"{this.MajorID.Value:0000}", $"{animType}em{this.MajorID.Value:0000}_{animId:000}.gap" };
                 break;
             case "Persona":
+                if (animId == -1)
+                    return ret;
                 prefix = new string[] { "model", "character", "persona", $"{this.MajorID.Value:0000}", $"{animType}ps{this.MajorID.Value:0000}_{animId:000}.gap" };
                 break;
             case "Item":
@@ -623,8 +651,95 @@ public class AssetViewModel : ViewModelBase
             List<string> candidates = this.Config.ExtractExactFiles(prefix, suffix);
             if (candidates.Count == 0 && backoffPrefix != null)
                 candidates = this.Config.ExtractExactFiles(backoffPrefix, backoffSuffix);
+            if (candidates.Count == 0)
+            {
+                if (forceAnimId == -1 && animId > 0)
+                    candidates = this.UpdateAnimPaths(isBlendAnims, isExtAnims, forceAnimId:animId-1);
+                else if (forceAnimId > 0)
+                    candidates = this.UpdateAnimPaths(isBlendAnims, isExtAnims, forceAnimId:forceAnimId-1);
+            }
             return candidates;
         }
+    }
+
+    private void UpdateAllAnimPaths()
+    {
+        if (this.IsModel)
+        {
+            this.BaseAnimPaths.Clear();
+            this.ExtBaseAnimPaths.Clear();
+            this.AddAnimPaths.Clear();
+            this.ExtAddAnimPaths.Clear();
+
+            this.ActiveAddAnimPath = null;
+            this.ActiveExtAddAnimPath = null;
+
+            foreach (string path in this.UpdateAnimPaths(false, false))
+                this.BaseAnimPaths.Add(path);
+            foreach (string path in this.UpdateAnimPaths(false, true))
+                this.ExtBaseAnimPaths.Add(path);
+            foreach (string path in this.UpdateAnimPaths(true, false))
+                this.AddAnimPaths.Add(path);
+            foreach (string path in this.UpdateAnimPaths(true, true))
+                this.ExtAddAnimPaths.Add(path);
+
+            if (this.BaseAnimPaths.Count > 0)
+            {
+                if (this.ActiveBaseAnimPath != this.BaseAnimPaths[0])
+                {
+                    this.ActiveBaseAnimPath = this.BaseAnimPaths[0];
+                    if (!this.ActiveModels.ContainsKey(this.ActiveBaseAnimPath))
+                        this.ActiveModels[this.ActiveBaseAnimPath] = null;
+                }
+            }
+            else
+                this.ActiveBaseAnimPath = null;
+
+            if (this.ExtBaseAnimPaths.Count > 0)
+            {
+                if (this.ActiveExtBaseAnimPath != this.ExtBaseAnimPaths[0])
+                {
+                    this.ActiveExtBaseAnimPath = this.ExtBaseAnimPaths[0];
+                    if (!this.ActiveModels.ContainsKey(this.ActiveExtBaseAnimPath))
+                        this.ActiveModels[this.ActiveExtBaseAnimPath] = null;
+                }
+            }
+            else
+                this.ActiveExtBaseAnimPath = null;
+
+            if (this.AddAnimPaths.Count > 0)
+            {
+                if (this.ActiveAddAnimPath != this.AddAnimPaths[0])
+                {
+                    this.ActiveAddAnimPath = this.AddAnimPaths[0];
+                    if (!this.ActiveModels.ContainsKey(this.ActiveAddAnimPath))
+                        this.ActiveModels[this.ActiveAddAnimPath] = null;
+                }
+            }
+            else
+                this.ActiveAddAnimPath = null;
+
+            if (this.ExtAddAnimPaths.Count > 0)
+            {
+                if (this.ActiveExtAddAnimPath != this.ExtAddAnimPaths[0])
+                {
+                    this.ActiveExtAddAnimPath = this.ExtAddAnimPaths[0];
+                    if (!this.ActiveModels.ContainsKey(this.ActiveExtAddAnimPath))
+                        this.ActiveModels[this.ActiveExtAddAnimPath] = null;
+                }
+            }
+            else
+                this.ActiveExtAddAnimPath = null;
+        }
+    }
+
+    private void UpdateActiveModelCache()
+    {
+        Parallel.ForEach(this.ActiveModels.Keys, path =>
+        {
+            if (this.ActiveModels[path] is null)
+                this.ActiveModels[path] = GFDLibrary.Api.FlatApi.LoadModel(path);
+        });
     }
 
     public static BiDict<string, int> ObjectTypes = new BiDict<string, int>
