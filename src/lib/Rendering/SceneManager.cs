@@ -245,25 +245,15 @@ public class SceneModel
 
         this.AttachedModels[resId] = new SceneModel(this.Config, attachedModel, fieldtex, false);
         float[] position = new float[] {this.NodesByResId[resId].Node.Translation.X, this.NodesByResId[resId].Node.Translation.Y, this.NodesByResId[resId].Node.Translation.Z};
-        //float[] position = new float[] {this.BasePosition[0] + this.NodesByResId[resId].Node.Translation.X, this.BasePosition[1] + this.NodesByResId[resId].Node.Translation.Y, this.BasePosition[2] + this.NodesByResId[resId].Node.Translation.Z};
         Vector3 rotVec = GLModel.QuatToEuler(this.NodesByResId[resId].Node.Rotation);
         float[] rotation = new float[] {0f, MathHelper.RadiansToDegrees(rotVec.Y), 0f};
-        //float[] rotation = new float[] {MathHelper.RadiansToDegrees(rotVec.X), MathHelper.RadiansToDegrees(rotVec.Y), MathHelper.RadiansToDegrees(rotVec.Z)};
-        //float[] rotation = new float[] {this.BaseRotation[0], MathHelper.RadiansToDegrees(this.BaseRotation[1] + rotVec.Y), this.BaseRotation[2]};
-        //this.AttachedModels[resId].BasePosition = this.BasePosition;
-        //this.AttachedModels[resId].BaseRotation = this.BaseRotation;
-        //this.AttachedModels[resId].model.Nodes[0].Parent = this.NodesByResId[resId];
-        //this.AttachedModels[resId].model.Nodes[0].Parent = this.model.Nodes[0];
         if (!(this.model.Nodes[0].Parent is null))
             this.AttachedModels[resId].model.Nodes[0].Parent = this.model.Nodes[0].Parent;
-        //this.AttachedModels[resId].BasePosition = position;
-        //this.AttachedModels[resId].BaseRotation = rotation;
         this.AttachedModels[resId].SetPosition(position, rotation);
         this.AttachedModels[resId].BaseAnimationPack = attachedModel.AnimationPack;
         this.AttachedModels[resId].AddAnimationPack = attachedModel.AnimationPack;
         if (this.NodesByResId[resId].Node.Properties.ContainsKey("fldLayoutOfModel_animNo"))
             this.AttachedModels[resId].LoadBaseAnimation(false, (int)this.NodesByResId[resId].Node.Properties["fldLayoutOfModel_animNo"].GetValue());
-        //this.AttachedModels[resId].SetPosition(new float[3], new float[3]);
         lock (this.model.AttachedModels) { this.model.AttachedModels[resId] = this.AttachedModels[resId].model; }
     }
 
