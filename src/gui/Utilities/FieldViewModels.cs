@@ -74,7 +74,7 @@ public class NumEntryField : FieldBase
         }
     }
 
-    public decimal  Increment  { get; set; }
+    public decimal Increment { get; set; }
 }
 
 // TODO: enable inline non-string elements...?
@@ -478,7 +478,7 @@ public class Position3D : ViewModelBase
 public class DegreeField : NumRangeField { public DegreeField(string name, bool editable, float val) : base(name, editable, val, -180, 180, 1) {} }
 public class RotationWidget : ViewModelBase
 {
-    public RotationWidget(DataManager config, float[] rotation, BitfieldBase bitfield, int pitchInd = 0, int yawInd = 1, int rollInd = 2, int? enabledInd = null, int? pitchEnabledInd = null, int? yawEnabledInd = null, int? rollEnabledInd = null, bool enabledFlip = false, bool pitchEnabledFlip = false, bool yawEnabledFlip = false, bool rollEnabledFlip = false, string name = "Rotation (Degrees)")
+    public RotationWidget(DataManager config, float[] rotation, BitfieldBase bitfield, int pitchInd = 0, int yawInd = 1, int rollInd = 2, int? enabledInd = null, int? pitchEnabledInd = null, int? yawEnabledInd = null, int? rollEnabledInd = null, bool enabledFlip = false, bool pitchEnabledFlip = false, bool yawEnabledFlip = false, bool rollEnabledFlip = false, bool constPitchEnabled = true, bool constYawEnabled = true, bool constRollEnabled = true, string name = "Rotation (Degrees)")
     {
         this.Name = name;
         this.Editable = !config.ReadOnly;
@@ -492,7 +492,7 @@ public class RotationWidget : ViewModelBase
         }
 
         if (pitchEnabledInd is null)
-            this.PitchEnabled = new BoolChoiceField("", false, true);
+            this.PitchEnabled = new BoolChoiceField("", false, constPitchEnabled);
         else
         {
             this.PitchEnabled = new BoolChoiceField("Pitch Enabled?", this.Editable, pitchEnabledFlip ? !bitfield[(int)pitchEnabledInd] : bitfield[(int)pitchEnabledInd]);
@@ -500,7 +500,7 @@ public class RotationWidget : ViewModelBase
         }
 
         if (yawEnabledInd is null)
-            this.YawEnabled = new BoolChoiceField("", false, true);
+            this.YawEnabled = new BoolChoiceField("", false, constYawEnabled);
         else
         {
             this.YawEnabled = new BoolChoiceField("Yaw Enabled?", this.Editable, yawEnabledFlip ? !bitfield[(int)yawEnabledInd] : bitfield[(int)yawEnabledInd]);
@@ -508,7 +508,7 @@ public class RotationWidget : ViewModelBase
         }
 
         if (rollEnabledInd is null)
-            this.RollEnabled = new BoolChoiceField("", false, true);
+            this.RollEnabled = new BoolChoiceField("", false, constRollEnabled);
         else
         {
             this.RollEnabled = new BoolChoiceField("Roll Enabled?", this.Editable, rollEnabledFlip ? !bitfield[(int)rollEnabledInd] : bitfield[(int)rollEnabledInd]);
@@ -536,4 +536,90 @@ public class RotationWidget : ViewModelBase
     public DegreeField PitchDegrees { get; set; }
     public DegreeField YawDegrees   { get; set; }
     public DegreeField RollDegrees  { get; set; }
+}
+
+public class BitflagEntryField : FieldBase
+{
+    public BitflagEntryField(string name, bool editable, uint field, string info = "") : base(name, editable, info)
+    {
+        this.Field = field;
+
+        _section = BitflagEntryField.FlagSections.Backward[(this.Field >> 24)];
+        _index = this.Field & 0xFFFFFF;
+        _upperLimit = 511;
+
+        this.WhenAnyValue(_ => _.Section).Subscribe(_ => 
+        {
+            switch (this.Section)
+            {
+                case "Section 0 (Event Flags)":
+                case "Section 1 (Community Flags)":
+                    this.UpperLimit = 3071;
+                    break;
+                case "Section 2 (Field Flags)":
+                    this.UpperLimit = 5119;
+                    break;
+                case "Section 3 (Battle Flags)":
+                case "Section 4 (System Flags)":
+                case "Section 5 (Program Flags)":
+                default:
+                    this.UpperLimit = 511;
+                    break;
+            }
+        });
+    }
+
+    private uint Field;
+
+    private string _section;
+    public string Section
+    {
+        get => _section;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _section, value);
+            OnPropertyChanged(nameof(Section));
+        }
+    }
+
+    private uint _index;
+    public uint Index
+    {
+        get => _index;
+        set => this.RaiseAndSetIfChanged(ref _index, value);
+    }
+
+    private uint _upperLimit;
+    public uint UpperLimit
+    {
+        get => _upperLimit;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _upperLimit, value);
+            OnPropertyChanged(nameof(UpperLimit));
+        }
+    }
+
+    public uint Compose()
+    {
+        this.Field = 0;
+        this.Field |= (BitflagEntryField.FlagSections.Forward[this.Section] << 24);
+        this.Field |= this.Index;
+        return this.Field;
+    }
+
+    public static BiDict<string, uint> FlagSections = new BiDict<string, uint>
+    (
+        new Dictionary<string, uint>
+        {
+            {"Section 0 (Event Flags)",     0},
+            {"Section 1 (Community Flags)", 1},
+            {"Section 2 (Field Flags)",     2},
+            {"Section 3 (Battle Flags)",    3},
+            {"Section 4 (System Flags)",    4},
+            {"Section 5 (Program Flags)" ,  5},
+        }
+    );
+
+    public static ObservableCollection<string> SectionChoices = new ObservableCollection<string>(BitflagEntryField.FlagSections.Keys);
 }

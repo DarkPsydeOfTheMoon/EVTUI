@@ -154,9 +154,11 @@ public class GFDRenderingPanelViewModel : ViewModelBase
             if (!(asset.ActiveMap is null))
                 Parallel.For(0, asset.ActiveMap.Entries.Length, subId =>
                 {
-                    float[] position = new float[] { (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
-                    float[] rotation = new float[] { 0f, (float)(asset.ActiveMap.Entries[subId].Direction*90), 0f };
-                    this.sceneManager.fieldModels[objectID][subId].SetPosition(position, rotation);
+                    //float[] position = new float[] { (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
+                    this.sceneManager.fieldModels[objectID][subId].BasePosition = new float[] { (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
+                    //float[] rotation = new float[] { 0f, (float)(asset.ActiveMap.Entries[subId].Direction*90), 0f };
+                    this.sceneManager.fieldModels[objectID][subId].BaseRotation = new float[] { 0f, (float)(asset.ActiveMap.Entries[subId].Direction*90), 0f };
+                    //this.sceneManager.fieldModels[objectID][subId].SetPosition(position, rotation);
                 });
         }
         else
@@ -186,36 +188,43 @@ public class GFDRenderingPanelViewModel : ViewModelBase
 
         if (asset.ObjectType.Choice == "Field")
         {
-            float[] positionBase = new float[] { 0f, 0f, 0f };
-            float[] rotationBase = new float[] { 0f, 0f, 0f };
+            float[] position = new float[] { 0f, 0f, 0f };
+            float[] rotation = new float[] { 0f, 0f, 0f };
+            int subResMax = (asset.ActiveMap is null) ? 200 : 1600;
             foreach (CommandPointer cmd in timeline.Categories[1].Commands)
-                if (cmd.Command.ObjectId == objectID && cmd.Code == "FS__")
+                if (cmd.Command.ObjectId == objectID)
                 {
-                    for (int i=0; i<3; i++)
-                        positionBase[i] += cmd.CommandData.Position[i];
-                    rotationBase[0] += cmd.CommandData.Rotation[1];
-                    rotationBase[1] += cmd.CommandData.Rotation[0];
-                    rotationBase[2] += cmd.CommandData.Rotation[2];
-                    break;
-                }
-
-            if (!(asset.ActiveMap is null))
-                Parallel.For(0, asset.ActiveMap.Entries.Length, subId =>
-                {
-                    float[] position = new float[] { (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].X - 60)), (float)(300*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Y)), (float)(400*(asset.ActiveMap.Spacing+1)*(asset.ActiveMap.Entries[subId].Z - 60)) };
-                    float[] rotation = new float[] { 0f, (float)(asset.ActiveMap.Entries[subId].Direction*90), 0f };
-                    for (int i=0; i<3; i++)
+                    if (cmd.Code == "FS__")
                     {
-                        position[i] += positionBase[i];
-                        rotation[i] += rotationBase[i];
+                        for (int i=0; i<3; i++)
+                            position[i] -= cmd.CommandData.Position[i];
+                        rotation[1] -= cmd.CommandData.Rotation[0];
+                        //break;
                     }
-                    this.sceneManager.fieldModels[objectID][subId].SetPosition(position, rotation);
-                });
-            else
-                Parallel.ForEach(this.sceneManager.fieldModels[objectID].Keys, subId =>
-                {
-                    this.sceneManager.fieldModels[objectID][subId].SetPosition(positionBase, rotationBase);
-                });
+                    else if (cmd.Code == "FOD_" && cmd.CommandData.ObjectIndex < 64000)
+                    {
+                        int subId = (int)(cmd.CommandData.ObjectIndex / subResMax);
+                        if (this.sceneManager.fieldModels[objectID].ContainsKey(subId))
+                        {
+                            int resId = (int)(cmd.CommandData.ObjectIndex % subResMax);
+                            this.sceneManager.fieldModels[objectID][subId].ToggleAttachment(resId, (cmd.CommandData.EnableFieldObject == 0));
+                        }
+                    }
+                    else if (cmd.Code == "FAB_" || cmd.Code == "FAA_")
+                    {
+                        int subId = (int)(cmd.CommandData.ObjectIndex / subResMax);
+                        if (this.sceneManager.fieldModels[objectID].ContainsKey(subId))
+                        {
+                            int resId = (int)(cmd.CommandData.ObjectIndex % subResMax);
+                            this.sceneManager.fieldModels[objectID][subId].AnimateAttachment(resId, (int)((cmd.CommandData.Flags[0]) ? cmd.CommandData.FirstAnimation.Index : cmd.CommandData.SecondAnimation.Index), (cmd.Code == "FAA_"));
+                        }
+                    }
+                }
+            this.sceneManager.SetFieldPosition(objectID, position, rotation);
+            Parallel.ForEach(this.sceneManager.fieldModels[objectID].Keys, subId =>
+            {
+                this.sceneManager.fieldModels[objectID][subId].SetPosition(new float[3], new float[3]);
+            });
         }
         else
         {
