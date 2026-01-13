@@ -115,7 +115,7 @@ index d535d24..4347d4f 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLModel.cs b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-index daee18f..e2a1d9e 100644
+index daee18f..d38742e 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLModel.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLModel.cs
 @@ -6,7 +6,7 @@ using System.Numerics;
@@ -371,9 +371,9 @@ index daee18f..e2a1d9e 100644
                      }
                  }
 +
-+                if (glNode.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
++                if (glNode.Node.Properties.ContainsKey("fldLayoutOfModel_major") && glNode.Node.Properties.ContainsKey("fldLayoutOfModel_minor"))
 +                {
-+                    int resId = (int)glNode.Node.Properties["fldLayoutOfModel_resId"].GetValue();
++                    int resId = (glNode.Node.Properties.ContainsKey("fldLayoutOfModel_resId")) ? (int)glNode.Node.Properties["fldLayoutOfModel_resId"].GetValue() : 0;
 +                    if (this.AttachedModels.ContainsKey(resId))
 +                        this.AttachedModels[resId].Draw(context);
 +                }

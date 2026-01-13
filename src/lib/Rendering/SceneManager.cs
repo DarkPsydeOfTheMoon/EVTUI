@@ -163,6 +163,8 @@ public class SceneModel
             foreach (GLNode node in this.model.Nodes)
                 if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
                     this.NodesByResId[(int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue()] = node;
+                else if (node.Node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Node.Properties.ContainsKey("fldLayoutOfModel_minor"))
+                    this.NodesByResId[0] = node;
         }
     }
 

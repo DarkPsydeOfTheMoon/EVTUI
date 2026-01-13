@@ -561,11 +561,12 @@ public class AssetViewModel : ViewModelBase
             this.ActiveAttachmentPaths[subId] = new Dictionary<int, string>();
             Parallel.ForEach(this.ActiveModels[this.ActiveSubModelPaths[subId]].Model.Nodes, node =>
             {
-                if (node.Properties.ContainsKey("fldLayoutOfModel_resId") && node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Properties.ContainsKey("fldLayoutOfModel_minor"))
+                if (node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Properties.ContainsKey("fldLayoutOfModel_minor"))
                 {
                     int majorId = (int)node.Properties["fldLayoutOfModel_major"].GetValue();
                     int minorId = (int)node.Properties["fldLayoutOfModel_minor"].GetValue();
-                    int resId = (int)node.Properties["fldLayoutOfModel_resId"].GetValue();
+                    // TODO: this logic may not be game-accurate... but if i change it, it also needs to be fixed in scenemanager and glmodel code!
+                    int resId = (node.Properties.ContainsKey("fldLayoutOfModel_resId")) ? (int)node.Properties["fldLayoutOfModel_resId"].GetValue() : 0;
                     string[] pattern = new string[] { "model", "field_tex", "object", $"m{majorId:000}_{minorId:000}.gmd" };
                     List<string> matches = this.Config.ExtractExactFiles(pattern);
                     if (matches.Count > 0)
