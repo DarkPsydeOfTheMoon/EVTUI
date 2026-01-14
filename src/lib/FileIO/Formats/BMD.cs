@@ -11,15 +11,13 @@ namespace EVTUI;
 
 public class BMD : ISerializable
 {
-    private static string MAGIC = "GSM";
-
     public byte FileType;
     public byte Format;
     public UInt16 UserId;
-    public UInt32 FileSize;
+    public PositionalInt32 FileSize = new PositionalInt32();
 
-    public string Endianness;
-    public MagicString Magic = new MagicString(BMD.MAGIC);
+    public bool IsLittleEndian;
+    public MagicString Magic;
 
     public UInt32 ExtSize;
     public UInt32 RelocationTableOffset;
@@ -51,15 +49,30 @@ public class BMD : ISerializable
         else if (rw.IsParselike())
             Trace.TraceInformation("Writing BMD object");
 
+        if (rw.IsConstructlike())
+        {
+            rw.RelativeSeek(8, 0);
+            string versionPeek = "";
+            rw.RwString(ref versionPeek, 4, Encoding.ASCII);
+            if (versionPeek.StartsWith("MSG"))
+                this.IsLittleEndian = true;
+            else
+                this.IsLittleEndian = false;
+            this.Magic = new MagicString(versionPeek);
+            rw.RelativeSeek(0, 0);
+        }
+        else if (this.Magic is null)
+        {
+            this.Magic = new MagicString("1GSM");
+            this.IsLittleEndian = false;
+        }
+
+        rw.SetLittleEndian(this.IsLittleEndian);
+
         rw.RwUInt8(ref this.FileType);
         rw.RwUInt8(ref this.Format);
         rw.RwUInt16(ref this.UserId);
-        rw.RwUInt32(ref this.FileSize);
-
-        rw.SetLittleEndian(false);
-        rw.RwString(ref this.Endianness, 1, Encoding.ASCII);
-        if (this.Endianness == "0")
-            rw.SetLittleEndian(true);
+        rw.RwObj(ref this.FileSize);
 
         rw.RwObj(ref this.Magic);
 
@@ -134,6 +147,8 @@ public class BMD : ISerializable
             rw.RwBytestring(ref this.ExtData, (int)this.ExtSize);
         }
 
+        this.FileSize.Validate((int)rw.RelativeTell(), rw.IsParselike());
+        rw.ResetEndianness();
         rw.AssertEOF();
     }
 
