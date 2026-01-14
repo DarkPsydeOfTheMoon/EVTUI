@@ -79,6 +79,7 @@ public static class CPKExtract
         string filePatternString = String.Join(delim, prefix);
         if (!(suffix is null))
             filePatternString += delim + suffix;
+        filePatternString += "$";
         Regex filePattern = new Regex(filePatternString, RegexOptions.IgnoreCase);
         if (!String.IsNullOrEmpty(ExistingFolder))
             foreach (var ModPath in Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories))
