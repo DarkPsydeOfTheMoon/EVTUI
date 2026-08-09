@@ -218,7 +218,6 @@ public class SceneModel
         // 1. from rotation
         Matrix4x4.Decompose(this.NodesByName["Bip01 Head"].WorldTransform, out var baseScale, out var baseRotation, out var baseTranslation);
         Matrix4x4.Decompose(this.NodesByName["Bip01 Head"].Node.WorldTransform, out var baseBaseScale, out var baseBaseRotation, out var baseBaseTranslation);
-        //Vector3 baseRotat
         //Vector3 fromRotation = GLModel.QuatToEuler(baseRotation);
         // 2. to rotation
         Vector3 targetTranslation = new Vector3(target[0], target[1], target[2]);

@@ -253,14 +253,13 @@ public class GFDRenderingPanelViewModel : ViewModelBase
                     this.sceneManager.sceneModels[objectID].SetPosition(null, cmd.CommandData.Rotation);
                 }*/
             this.sceneManager.sceneModels[objectID].UpdateState();
-            foreach (CommandPointer cmd in timeline.Categories[2].Commands)
+            // TODO............... :(
+            /*foreach (CommandPointer cmd in timeline.Categories[2].Commands)
                 if (cmd.Command.ObjectId == objectID && cmd.Code == "MLa_")
                 {
-                    // here for when i continue to debug lol
-                    Console.WriteLine($"####################### {objectID}");
                     this.sceneManager.sceneModels[objectID].SetLookAt(cmd.CommandData.Target);
                     break;
-                }
+                }*/
         }
     }
 
