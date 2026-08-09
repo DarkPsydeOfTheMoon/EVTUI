@@ -120,7 +120,7 @@ public class ScriptPanelViewModel : ViewModelBase
         this.EmbedBMD = new BoolChoiceField("Use custom BMD path?", this.Editable, evt.Flags[12]);
         this.BMDPath = new StringEntryField("Custom BMD path", this.Editable, (evt.EventBmdPath is null) ? $"event_data/message/e{(100*(evt.MajorId/100)):000}/e{evt.MajorId:000}_{evt.MinorId:000}.bmd" : evt.EventBmdPath.Replace("\0", ""), 48);
         this.EmbedBF = new BoolChoiceField("Use custom BF path?", this.Editable, evt.Flags[14]);
-        this.BFPath = new StringEntryField("Custom BF path", this.Editable, (evt.EventBfPath is null) ? $"event_data/message/e{(100*(evt.MajorId/100)):000}/e{evt.MajorId:000}_{evt.MinorId:000}.bf" : evt.EventBfPath.Replace("\0", ""), 48);
+        this.BFPath = new StringEntryField("Custom BF path", this.Editable, (evt.EventBfPath is null) ? $"event_data/script/e{(100*(evt.MajorId/100)):000}/e{evt.MajorId:000}_{evt.MinorId:000}.bf" : evt.EventBfPath.Replace("\0", ""), 48);
         this.InitScriptEnabled = new BoolChoiceField("Enable Init Script", this.Editable, evt.Flags[1]);
         this.InitScriptIndex = new NumEntryField("Init Script Index", this.Editable, (int)evt.InitScriptIndex, 0, 255, 1);
 
