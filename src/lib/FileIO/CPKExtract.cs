@@ -85,7 +85,10 @@ public static class CPKExtract
             foreach (var ModPath in Directory.GetFiles(ExistingFolder, "*.*", SearchOption.AllDirectories))
             {
                 if (filePattern.IsMatch(ModPath) && new FileInfo(ModPath).Length > 0)
+                {
+                    Trace.TraceInformation(ModPath);
                     yield return await Task.FromResult(ModPath);
+                }
             }
     }
 
@@ -105,6 +108,7 @@ public static class CPKExtract
                 Directory.CreateDirectory(dirPath);
                 string inCpkPath = Path.Combine(file.Directory ?? "", file.FileName);
                 string outputPath = Path.GetFullPath(Path.Combine(OutputFolder, Path.GetFileName(CpkPath), inCpkPath));
+                Trace.TraceInformation(outputPath);
                 if (rwLock.TryEnterWriteLock(2000))
                 {
                     try

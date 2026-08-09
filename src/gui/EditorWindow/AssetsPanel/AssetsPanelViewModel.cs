@@ -29,7 +29,8 @@ public class AssetsPanelViewModel : ViewModelBase
     ////////////////////////////
     public DataManager Config { get; private set; }
 
-    public ObservableCollection<AssetViewModel> Assets { get; set; }
+    private CommonViewModels CommonVMs;
+    public ObservableCollection<AssetViewModel> Assets { get => this.CommonVMs.Assets; set => this.CommonVMs.Assets = value; }
 
     public List<string> AddableTypes { get => AssetViewModel.ObjectTypes.Keys.ToList(); }
 
@@ -39,13 +40,13 @@ public class AssetsPanelViewModel : ViewModelBase
     public AssetsPanelViewModel(DataManager dataManager, CommonViewModels commonVMs)
     {
         this.Config = dataManager;
-        this.Assets = commonVMs.Assets;
+        this.CommonVMs = commonVMs;
         this.SortAssets();
     }
 
     public void Dispose()
     {
-        this.Assets.Clear();
+        this.CommonVMs = null;
         this.Config = null;
     }
 
@@ -67,14 +68,21 @@ public class AssetsPanelViewModel : ViewModelBase
     public void AddAsset(string type)
     {
         SerialObject newObj = this.Config.EventManager.SerialEvent.NewObject(AssetViewModel.ObjectTypes.Forward[type]);
-        this.Assets.Add(new AssetViewModel(this.Config, newObj));
+        AssetViewModel newAsset = new AssetViewModel(this.Config, newObj);
+        newAsset.UpdateActiveModelCache();
+        this.Assets.Add(newAsset);
+        this.CommonVMs.AssetsByID[newObj.Id] = newAsset;
         this.SortAssets();
     }
 
     public void DuplicateAsset(AssetViewModel asset)
     {
         SerialObject newObj = this.Config.EventManager.SerialEvent.DuplicateObject(asset.Obj);
-        this.Assets.Add(new AssetViewModel(this.Config, newObj));
+        AssetViewModel newAsset = new AssetViewModel(this.Config, newObj);
+        // hmm, surely there's a better way not to have to redo this if it's a dupe
+        newAsset.UpdateActiveModelCache();
+        this.Assets.Add(newAsset);
+        this.CommonVMs.AssetsByID[newObj.Id] = newAsset;
         this.SortAssets();
     }
 
