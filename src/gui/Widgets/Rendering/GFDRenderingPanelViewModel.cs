@@ -174,7 +174,11 @@ public class GFDRenderingPanelViewModel : ViewModelBase
         if (!String.IsNullOrEmpty(asset.ActiveExtBaseAnimPath))
             this.sceneManager.sceneModels[objectID].ExtBaseAnimationPack = asset.ActiveModels[asset.ActiveExtBaseAnimPath].AnimationPack;
         if (!String.IsNullOrEmpty(asset.ActiveAddAnimPath))
+        {
             this.sceneManager.sceneModels[objectID].AddAnimationPack = asset.ActiveModels[asset.ActiveAddAnimPath].AnimationPack;
+            // blinking animation or whatever, usually
+            this.sceneManager.sceneModels[objectID].LoadAddAnimationTrack(false, 0, 1);
+        }
         if (!String.IsNullOrEmpty(asset.ActiveExtAddAnimPath))
             this.sceneManager.sceneModels[objectID].ExtAddAnimationPack = asset.ActiveModels[asset.ActiveExtAddAnimPath].AnimationPack;
     }
@@ -247,6 +251,14 @@ public class GFDRenderingPanelViewModel : ViewModelBase
                 else if (cmd.Command.ObjectId == objectID && cmd.Code == "MRot")
                 {
                     this.sceneManager.sceneModels[objectID].SetPosition(null, cmd.CommandData.Rotation);
+                }*/
+            this.sceneManager.sceneModels[objectID].UpdateState();
+            // TODO............... :(
+            /*foreach (CommandPointer cmd in timeline.Categories[2].Commands)
+                if (cmd.Command.ObjectId == objectID && cmd.Code == "MLa_")
+                {
+                    this.sceneManager.sceneModels[objectID].SetLookAt(cmd.CommandData.Target);
+                    break;
                 }*/
         }
     }

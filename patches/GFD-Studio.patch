@@ -115,7 +115,7 @@ index d535d24..4347d4f 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary.Rendering.OpenGL/GLModel.cs b/GFDLibrary.Rendering.OpenGL/GLModel.cs
-index daee18f..d38742e 100644
+index daee18f..876299b 100644
 --- a/GFDLibrary.Rendering.OpenGL/GLModel.cs
 +++ b/GFDLibrary.Rendering.OpenGL/GLModel.cs
 @@ -6,7 +6,7 @@ using System.Numerics;
@@ -330,8 +330,19 @@ index daee18f..d38742e 100644
          private GLShaderProgram GetTargetShader(ShaderRegistry shaderRegistry, GLMesh glMesh, Matrix4 view, Matrix4 projection, HashSet<ResourceType> shaderPrograms )
          {
              if ( typeof( GLMetaphorMaterial ).IsInstanceOfType( glMesh.Material )
-@@ -117,8 +285,9 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -115,10 +283,20 @@ namespace GFDLibrary.Rendering.OpenGL
+             return context.SelectedMesh == glMesh.Mesh || context.SelectedMaterial?.Name == glMesh.Mesh.MaterialName;
+         }
  
++        public void UpdateState(float animationTime)
++        {
++            if (!NoActiveAnimations())
++                AnimateNodes(animationTime);
++
++            foreach (int resId in this.AttachedModels.Keys)
++                this.AttachedModels[resId].UpdateState(animationTime);
++        }
++
          public void Draw( DrawContext context )
          {
 -            if ( Animation != null )
@@ -341,7 +352,7 @@ index daee18f..d38742e 100644
              context.ShaderRegistry.mDefaultShader.Use();
              context.ShaderRegistry.mDefaultShader.SetUniform( "uView", context.Camera.View );
              context.ShaderRegistry.mDefaultShader.SetUniform( "uProjection", context.Camera.Projection );
-@@ -137,14 +306,23 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -137,14 +315,23 @@ namespace GFDLibrary.Rendering.OpenGL
                  for ( var i = 0; i < glNode.Meshes.Count; i++ )
                  {
                      var glMesh = glNode.Meshes[i];
@@ -366,7 +377,7 @@ index daee18f..d38742e 100644
                      if ( !glMesh.Material.IsMaterialTransparent() ) // If opaque
                      {
                          if ( glMesh.Mesh != null )
-@@ -156,13 +334,20 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -156,13 +343,20 @@ namespace GFDLibrary.Rendering.OpenGL
                          transparentMeshes.Add( Tuple.Create( glMesh, glNode.WorldTransform.ToOpenTK(), targetShader ) );
                      }
                  }
@@ -388,7 +399,7 @@ index daee18f..d38742e 100644
  
              // Disable depth mask
              GL.DepthMask( false );
-@@ -196,66 +381,136 @@ namespace GFDLibrary.Rendering.OpenGL
+@@ -196,73 +390,145 @@ namespace GFDLibrary.Rendering.OpenGL
              GL.Disable( EnableCap.Blend );
          }
  
@@ -409,12 +420,13 @@ index daee18f..d38742e 100644
 -                    foreach ( var layer in controller.Layers )
 +                    Key curKey = null;
 +                    Key nextKey = null;
++                    double controllerTime = (animationTime > controller.Duration && controller.Duration > 0) ? animationTime % controller.Duration : animationTime;
 +
 +                    if ( controller != null )
                      {
 -                        Key curKey = null;
 -                        Key nextKey = null;
-+                        (curKey, nextKey) = GetCurrentAndNextKeys( layer, animationTime );
++                        (curKey, nextKey) = GetCurrentAndNextKeys( layer, controllerTime );
 +                    }
  
 -                        if ( controller != null )
@@ -450,7 +462,7 @@ index daee18f..d38742e 100644
 -                                    if ( prsKey.HasScale )
 -                                        scale = prsKey.Scale * layer.ScaleScale;
 -                                }
-+                                InterpolateKeys( animationTime, layer, ref rotation, ref translation, ref scale, prsKey, nextPrsKey );
++                                InterpolateKeys( controllerTime, layer, ref rotation, ref translation, ref scale, prsKey, nextPrsKey, controller.Duration );
                              }
                              else
                              {
@@ -482,10 +494,11 @@ index daee18f..d38742e 100644
 +                {
 +                    Key curKey = null;
 +                    Key nextKey = null;
++                    double controllerTime = (animationTime > controller.Duration && controller.Duration > 0) ? animationTime % controller.Duration : animationTime;
 +
 +                    if ( controller != null )
 +                    {
-+                        (curKey, nextKey) = GetCurrentAndNextKeys( layer, animationTime );
++                        (curKey, nextKey) = GetCurrentAndNextKeys( layer, controllerTime );
 +                    }
 +
 +                    if ( controller != null && curKey != null )
@@ -562,7 +575,16 @@ index daee18f..d38742e 100644
              }
          }
  
-@@ -339,6 +594,12 @@ namespace GFDLibrary.Rendering.OpenGL
+-        private void InterpolateKeys( double animationTime, AnimationLayer layer, ref Quaternion rotation, ref Vector3 translation, ref Vector3 scale, PRSKey prsKey, PRSKey nextPrsKey )
++        private void InterpolateKeys( double animationTime, AnimationLayer layer, ref Quaternion rotation, ref Vector3 translation, ref Vector3 scale, PRSKey prsKey, PRSKey nextPrsKey, float duration )
+         {
+             var nextTime = ( nextPrsKey.Time < prsKey.Time
+-                ? ( nextPrsKey.Time + Animation.Duration )
++                ? ( nextPrsKey.Time + duration )
+                 : nextPrsKey.Time );
+ 
+             var blend = ( float ) ( animationTime / nextTime );
+@@ -339,6 +605,12 @@ namespace GFDLibrary.Rendering.OpenGL
                          foreach ( var geometry in glNode.Meshes )
                              geometry.Dispose();
                      }
@@ -668,11 +690,40 @@ index 49345f0..0a279af 100644
 \ No newline at end of file
 +}
 diff --git a/GFDLibrary/Animations/Animation.cs b/GFDLibrary/Animations/Animation.cs
-index 6d77b67..7856af1 100644
+index 6d77b67..e4cb690 100644
 --- a/GFDLibrary/Animations/Animation.cs
 +++ b/GFDLibrary/Animations/Animation.cs
-@@ -313,4 +313,4 @@ namespace GFDLibrary.Animations
+@@ -144,6 +144,7 @@ namespace GFDLibrary.Animations
+             {
+                 Logger.Debug( $"Animation: Reading animation controller #{i}" );
+                 var controller = reader.ReadResource<AnimationController>( Version );
++                controller.Duration = Duration;
+                 Controllers.Add( controller );
+             }
+ 
+@@ -313,4 +314,4 @@ namespace GFDLibrary.Animations
              return obj == null ? value & ~flag : value | flag;
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/GFDLibrary/Animations/AnimationController.cs b/GFDLibrary/Animations/AnimationController.cs
+index 6ab80f7..a95f0a7 100644
+--- a/GFDLibrary/Animations/AnimationController.cs
++++ b/GFDLibrary/Animations/AnimationController.cs
+@@ -21,6 +21,9 @@ namespace GFDLibrary.Animations
+ 
+         public override ResourceType ResourceType => ResourceType.AnimationController;
+ 
++        // reference to animation's duration to make looping easier :)
++        public float Duration { get; set; }
++
+         // 00
+         public TargetKind TargetKind { get; set; }
+ 
+@@ -212,4 +215,4 @@ namespace GFDLibrary.Animations
+             return prsLayer;
          }
      }
 -}

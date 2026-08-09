@@ -583,11 +583,9 @@ public class AssetViewModel : ViewModelBase
             this.ActiveTextureBinPaths[subId] = (this.TextureBinPaths[subId] is null || this.TextureBinPaths[subId].Count == 0) ? null : this.TextureBinPaths[subId][0];
     }
 
-    //public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims)
     public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims, int forceAnimId=-1)
     {
         string animType = (isExtAnims) ? "A" : "B";
-        //int animId = (isExtAnims) ? (int)this.ExtBaseAnimID.Value : (int)this.BaseAnimID.Value;
         int animId = (forceAnimId > -1) ? forceAnimId : (isExtAnims) ? (int)this.ExtBaseAnimID.Value : (int)this.BaseAnimID.Value;
         string[] prefix = null;
         string suffix = null;
@@ -734,7 +732,7 @@ public class AssetViewModel : ViewModelBase
         }
     }
 
-    private void UpdateActiveModelCache()
+    public void UpdateActiveModelCache()
     {
         Parallel.ForEach(this.ActiveModels.Keys, path =>
         {

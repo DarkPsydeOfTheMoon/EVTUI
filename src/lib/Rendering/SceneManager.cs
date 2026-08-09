@@ -5,6 +5,8 @@ using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
 
+using DeepCopy;
+
 using GFDLibrary;
 
 using GFDLibrary.Animations;
@@ -18,6 +20,8 @@ using GFDLibrary.Models;
 using GFDLibrary.Utilities;
 
 using OpenTK.Graphics.OpenGL;
+
+using static EVTUI.Utils;
 
 namespace EVTUI;
 
@@ -35,6 +39,8 @@ public class SceneModel
     protected (bool IsExt, int Idx)? BaseAnimInfo;
     protected (bool IsExt, int Idx)?[] AddAnimInfo = new (bool IsExt, int Idx)?[8];
 
+    protected Dictionary<string, GLNode> NodesByName;
+    protected Dictionary<int, GLNode> NodesByHelperId;
     protected Dictionary<int, GLNode> NodesByResId;
     protected Dictionary<int, SceneModel> AttachedModels;
 
@@ -45,6 +51,8 @@ public class SceneModel
     {
         if (isField)
         {
+            this.NodesByName = new Dictionary<string, GLNode>();
+            this.NodesByHelperId = new Dictionary<int, GLNode>();
             this.NodesByResId = new Dictionary<int, GLNode>();
             this.AttachedModels = new Dictionary<int, SceneModel>();
         }
@@ -67,6 +75,8 @@ public class SceneModel
                     this.AttachedModels[resId].Dispose();
                 this.AttachedModels.Clear();
                 this.model.AttachedModels.Clear();
+                this.NodesByName.Clear();
+                this.NodesByHelperId.Clear();
                 this.NodesByResId.Clear();
             }
         }
@@ -107,31 +117,24 @@ public class SceneModel
             this.model.UnloadBlendAnimation(index);
     }
 
+    public void UpdateState()
+    {
+        if (this.model is null)
+            return;
+
+        this.model.UpdateState((float)(this.animationStopwatch.ElapsedMilliseconds)/1000.0f);
+    }
+
     public void Draw(ShaderRegistry mShaderRegistry, GLCamera camera, double animationTime)
     {
         if (this.model is null)
             return;
 
-        // There needs to be some kind of rewrite to support looping for multiple anim tracks independently.
-        bool isAnimActive = false;
-        double duration   = 0;
-        if (this.model.Animation is not null)
-        {
-            isAnimActive = this.model.Animation.Duration >= 1;
-            duration = this.model.Animation.Duration;
-        }
-        foreach (var (index, blendAnimation) in this.model.BlendAnimations)
-        {
-            isAnimActive |= blendAnimation.Duration >= 1;
-            duration = (blendAnimation.Duration > duration) ? blendAnimation.Duration : duration;
-        }
-
-        double useAnimationTime = isAnimActive ? (animationTime % duration) : 0;
         this.model.Draw( new DrawContext()
         {
             ShaderRegistry = mShaderRegistry,
             Camera = camera,
-            AnimationTime = useAnimationTime,
+            AnimationTime = (this.model.Animation is null && this.model.BlendAnimations.Count == 0) ? 0 : animationTime,
         } );
     }
 
@@ -157,17 +160,23 @@ public class SceneModel
             }
         } );
 
-        if (isField)
+        this.NodesByName = new Dictionary<string, GLNode>();
+        this.NodesByHelperId = new Dictionary<int, GLNode>();
+        this.NodesByResId = new Dictionary<int, GLNode>();
+        foreach (GLNode node in this.model.Nodes)
         {
-            this.NodesByResId = new Dictionary<int, GLNode>();
-            foreach (GLNode node in this.model.Nodes)
-                if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
-                    this.NodesByResId[(int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue()] = node;
-                else if (node.Node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Node.Properties.ContainsKey("fldLayoutOfModel_minor"))
-                    this.NodesByResId[0] = node;
+            this.NodesByName[node.Node.Name] = node;
+            if (node.Node.Properties.ContainsKey("gfdHelperID"))
+                this.NodesByHelperId[(int)node.Node.Properties["gfdHelperID"].GetValue()] = node;
+            if (node.Node.Properties.ContainsKey("fldLayoutOfModel_resId"))
+                this.NodesByResId[(int)node.Node.Properties["fldLayoutOfModel_resId"].GetValue()] = node;
+            else if (node.Node.Properties.ContainsKey("fldLayoutOfModel_major") && node.Node.Properties.ContainsKey("fldLayoutOfModel_minor"))
+                this.NodesByResId[0] = node;
         }
     }
 
+    private float[] CurrentPosition = new float[3];
+    private float[] CurrentRotation = new float[3];
     public void SetPosition(float[] position, float[] rotation)
     {
         Animation pos = new Animation();
@@ -181,13 +190,196 @@ public class SceneModel
         PRSKey key = new PRSKey(KeyType.NodePRS);
         // TODO: this should probably be more properly split out if we only want to set position or only want to set rotation
         if (!(position is null))
-            key.Position = new Vector3(this.BasePosition[0] + position[0], this.BasePosition[1] + position[1], this.BasePosition[2] + position[2]);
+        {
+            this.CurrentPosition = new float[] {this.BasePosition[0] + position[0], this.BasePosition[1] + position[1], this.BasePosition[2] + position[2]};
+            key.Position = new Vector3(this.CurrentPosition[0], this.CurrentPosition[1], this.CurrentPosition[2]);
+        }
         if (!(rotation is null))
-            key.Rotation = GLModel.EulerToQuat(new Vector3(MathHelper.DegreesToRadians(this.BaseRotation[0] + rotation[0]), MathHelper.DegreesToRadians(this.BaseRotation[1] + rotation[1]), MathHelper.DegreesToRadians(this.BaseRotation[2] + rotation[2])));
+        {
+            this.CurrentRotation = new float[] { MathHelper.DegreesToRadians(this.BaseRotation[0] + rotation[0]), MathHelper.DegreesToRadians(this.BaseRotation[1] + rotation[1]), MathHelper.DegreesToRadians(this.BaseRotation[2] + rotation[2])};
+            key.Rotation = GLModel.EulerToQuat(new Vector3(this.CurrentRotation[0], this.CurrentRotation[1], this.CurrentRotation[2]));
+        }
         pos.Controllers[0].Layers[0].Keys.Add(key);
 
         this.UnloadBlendAnimation(0);
         this.LoadBlendAnimation(pos, 0);
+    }
+
+    // TODO: get this actually working correctly, rifp
+    public void SetLookAt(float[] target)
+    {
+        // we need lookat anims and a standard head node. probably...
+        if (!this.BaseAnimationPack.Flags.HasFlag(AnimationPackFlags.Bit2) || !this.NodesByName.ContainsKey("Bip01 Head"))
+            return;
+
+        //float[] headPos = new float[] { 0f, 0f, 0f };
+        //float[] headRot = new float[] { 0f, 0f, 0f };
+
+        // 1. from rotation
+        Matrix4x4.Decompose(this.NodesByName["Bip01 Head"].WorldTransform, out var baseScale, out var baseRotation, out var baseTranslation);
+        Matrix4x4.Decompose(this.NodesByName["Bip01 Head"].Node.WorldTransform, out var baseBaseScale, out var baseBaseRotation, out var baseBaseTranslation);
+        //Vector3 fromRotation = GLModel.QuatToEuler(baseRotation);
+        // 2. to rotation
+        Vector3 targetTranslation = new Vector3(target[0], target[1], target[2]);
+        // 2a. cast ray from head to target
+        Vector3 zDir = Vector3.Normalize(targetTranslation - baseTranslation);
+        // 2b. create upward vector
+        Vector3 up = new Vector3(0f, 1f, 0f);
+        // 2c. get transformation??
+        Vector3 yDir = Vector3.Normalize(Vector3.Cross(zDir, up));
+        Vector3 xDir = Vector3.Cross(yDir, zDir);
+        Matrix4x4 transMat = Matrix4x4.Identity;
+        transMat.M11 = xDir.X;
+        transMat.M12 = xDir.Y;
+        transMat.M13 = xDir.Z;
+        transMat.M21 = yDir.X;
+        transMat.M22 = yDir.Y;
+        transMat.M23 = yDir.Z;
+        transMat.M31 = zDir.X;
+        transMat.M32 = zDir.Y;
+        transMat.M33 = zDir.Z;
+        // 2d. determine what the fuck we just did lol
+        Matrix4x4.Decompose(transMat, out var transScale, out var transRotation, out var transTranslation);
+        Quaternion fromRotation = baseRotation * Quaternion.Inverse(baseBaseRotation);
+        //Vector3 fromRotation = GLModel.QuatToEuler(baseRotation) - GLModel.QuatToEuler(baseBaseRotation);
+        //Vector3 toRotation = GLModel.QuatToEuler(transRotation);
+        //Console.WriteLine($"FROM: {fromRotation.X}, {fromRotation.Y}, {fromRotation.Z}");
+        //Console.WriteLine($"TO: {toRotation.X}, {toRotation.Y}, {toRotation.Z}");
+        var dot = Quaternion.Dot(fromRotation, transRotation);
+        Console.WriteLine(dot);
+        // 3. slerp
+        // 4. profit???
+
+        // 1a. get current head direction
+        Matrix4x4.Decompose(this.NodesByName["Bip01 Head"].WorldTransform, out var currentWorldScale, out var currentWorldRotation, out var currentWorldTranslation);
+        Vector3 currentHeadWorldRot = GLModel.QuatToEuler(currentWorldRotation);
+        // 1b. get base head direction
+        Matrix4x4.Decompose(this.NodesByName["Bip01 Head"].Node.WorldTransform, out var baseWorldScale, out var baseWorldRotation, out var baseWorldTranslation);
+        Vector3 baseHeadWorldRot = GLModel.QuatToEuler(baseWorldRotation);
+        // 1c. get effective head direction (seems like y is reversed in general)
+        Vector3 effectiveBaseRot = currentHeadWorldRot - baseHeadWorldRot;
+        //float baseAzimuth = (float)NormalizeAngle(effectiveBaseRot.X, radians: true);
+        //float baseAltitude = (float)NormalizeAngle(effectiveBaseRot.Y, radians: true);
+        Console.WriteLine($"TRUE ROTATION: {NormalizeAngle(effectiveBaseRot.X, radians: true)}, {NormalizeAngle(effectiveBaseRot.Y, radians: true)}, {NormalizeAngle(effectiveBaseRot.Z, radians: true)}");
+        float baseAzimuth = effectiveBaseRot.X;
+        //if (baseAzimuth >= Math.PI/36f)
+        //    baseAzimuth -= (float)Math.PI/36f;
+        //else if (baseAzimuth <= -Math.PI/36f)
+        //    baseAzimuth += (float)Math.PI/36f;
+        float baseAltitude = effectiveBaseRot.Z;
+        if (NormalizeAngle(baseAzimuth, radians: true) > 0)
+            //baseAltitude *= -1;
+            baseAltitude = effectiveBaseRot.Y;
+        //if (baseAltitude >= Math.PI/36f)
+        //    baseAltitude -= (float)Math.PI/36f;
+        //else if (baseAltitude <= -Math.PI/36f)
+        //    baseAltitude += (float)Math.PI/36f;
+        // 2. get azimuth/altitude of ray connecting head and target (goal direction)
+        Vector3 ray = new Vector3(target[0]-currentWorldTranslation.X, target[1]-currentWorldTranslation.Y, target[2]-currentWorldTranslation.Z);
+        Vector3 norm = Vector3.Normalize(ray);
+        //if (norm.X > 0)
+        //    baseAltitude *= -1;
+        //float goalAzimuth = (float)Math.Atan2(norm.X, norm.Z);
+        //float goalAltitude = (float)-Math.Asin(norm.Y);
+        //float goalAzimuth = (float)Math.Atan2(ray.X, ray.Z);
+        //float goalAltitude = (float)(Math.Asin(-ray.Y / Math.Sqrt(Math.Pow(ray.X, 2) + Math.Pow(ray.Y, 2) + Math.Pow(ray.Z, 2))));
+        //if (ray.Y < 0) goalAltitude *= -1;
+        //goalAzimuth -= (float)Math.PI/36f;
+        //goalAltitude -= (float)Math.PI/36f;
+        float goalAzimuth = (float)VectorToAzimuth(ray);
+        float goalAltitude = (float)-VectorToElevation(ray);
+        // 2.5. debug printing
+        Console.WriteLine($"WORLD ROTATION: {currentHeadWorldRot.X}, {currentHeadWorldRot.Y}, {currentHeadWorldRot.Z}");
+        Console.WriteLine($"BASE ROTATION: {baseHeadWorldRot.X}, {baseHeadWorldRot.Y}, {baseHeadWorldRot.Z}");
+        Console.WriteLine($"HEAD POSITION: {currentWorldTranslation.X}, {currentWorldTranslation.Y}, {currentWorldTranslation.Z}");
+        Console.WriteLine($"TARG POSITION: {target[0]}, {target[1]}, {target[2]}");
+        Console.WriteLine($"NORM DIRECTION: {norm.X}, {norm.Y}, {norm.Z}");
+        Console.WriteLine($"GOAL DIRECTION: {goalAzimuth}, {goalAltitude}");
+        Console.WriteLine($"BASE DIRECTION: {baseAzimuth}, {baseAltitude}");
+        //Matrix4x4.Decompose(this.NodesByName["Bip01 Head"].CurrentTransform, out var currentLocalScale, out var currentLocalRotation, out var currentLocalTranslation);
+        //Console.WriteLine($"LOCAL DIRECTION: {currentLocalRotation.X}, {currentLocalRotation.Y}, {currentLocalRotation.Z}");
+        // 3. determine delta between effective direction and goal direction
+        float azimuthDiff = 0f;
+        float altitudeDiff = 0f;
+        //if (Math.Sqrt(Math.Pow(ray.X, 2) + Math.Pow(ray.Y, 2) + Math.Pow(ray.Z, 2)) > 10)
+        //{
+            azimuthDiff = (float)NormalizeAngle(goalAzimuth - baseAzimuth, radians: true);
+            altitudeDiff = (float)NormalizeAngle(goalAltitude - baseAltitude, radians: true);
+            //altitudeDiff = (float)NormalizeAngle(goalAltitude, radians: true);
+        //}
+        Console.WriteLine($"DELT DIRECTION: {azimuthDiff}, {altitudeDiff}");
+        // 4. determine left/right lookat based on which, if either, gets closer to goal
+        // left
+        if (azimuthDiff > 0)
+            this.LoadBlendAnimation(this.InterpolatedAnim(this.BaseAnimationPack.Bit29Data.Field04, this.BaseAnimationPack.Bit29Data.Field14, azimuthDiff), 2);
+        // right
+        else if (azimuthDiff < 0)
+            this.LoadBlendAnimation(this.InterpolatedAnim(this.BaseAnimationPack.Bit29Data.Field00, -this.BaseAnimationPack.Bit29Data.Field10, azimuthDiff), 2);
+        // 5. ditto up/down rotation
+        this.UpdateState();
+        // down
+        if (altitudeDiff > 0)
+            this.LoadBlendAnimation(this.InterpolatedAnim(this.BaseAnimationPack.Bit29Data.Field0C, this.BaseAnimationPack.Bit29Data.Field1C, altitudeDiff), 3);
+        // up
+        else if (altitudeDiff < 0)
+            this.LoadBlendAnimation(this.InterpolatedAnim(this.BaseAnimationPack.Bit29Data.Field08, -this.BaseAnimationPack.Bit29Data.Field18, altitudeDiff), 3);
+
+        // right
+        //this.LoadBlendAnimation(this.BaseAnimationPack.Bit29Data.Field00, 1);
+        // left
+        //this.LoadBlendAnimation(this.BaseAnimationPack.Bit29Data.Field04, 1);
+        // up
+        //this.LoadBlendAnimation(this.BaseAnimationPack.Bit29Data.Field08, 1);
+        // down
+        //this.LoadBlendAnimation(this.BaseAnimationPack.Bit29Data.Field0C, 1);
+    }
+
+    // keeping prints commented because i still need to fully debug this
+    private Animation InterpolatedAnim(Animation baseAnim, float denominator, float numerator)
+    {
+        float blend = numerator / denominator;
+        Console.WriteLine($"BLEND: {blend} ({numerator} / {denominator})");
+
+        Matrix4x4.Decompose(this.NodesByName["Bip01 Head"].CurrentTransform, out var currentScale, out var currentRotation, out var currentTranslation);
+        //Matrix4x4.Decompose(this.NodesByName["Bip01 Head"].WorldTransform, out var currentScale, out var currentRotation, out var currentTranslation);
+        Vector3 currentHeadRot = GLModel.QuatToEuler(currentRotation);
+        Console.WriteLine($"LOCAL ROTATION: {currentHeadRot.X} {currentHeadRot.Y} {currentHeadRot.Z}");
+
+        Animation interpAnim = DeepCopier.Copy(baseAnim);
+        if (blend < 1f)
+            foreach (AnimationController controller in interpAnim.Controllers)
+            {
+                //if (controller.TargetName == "Bip01 Head")
+                //    Console.WriteLine($"{controller.TargetKind}: {controller.TargetName} ({controller.TargetId})");
+                foreach (AnimationLayer layer in controller.Layers)
+                {
+                    //Console.WriteLine($"\t{layer.KeyType}");
+                    if (layer.HasPRSKeyFrames)
+                    {
+                        foreach (Key key in layer.Keys)
+                        {
+                            PRSKey prsKey = (PRSKey)key;
+                            /*if (controller.TargetName == "Bip01 Head")
+                            {
+                                Vector3 rotVec = GLModel.QuatToEuler(prsKey.Rotation);
+                                Console.WriteLine($"{rotVec.X}, {rotVec.Y}, {rotVec.Z} -- {key.Time}");
+                            }*/
+                            if (prsKey.HasRotation)
+                                prsKey.Rotation = Quaternion.Slerp(Quaternion.Identity, prsKey.Rotation, blend);
+                            if (prsKey.HasPosition)
+                                prsKey.Position = Vector3.Lerp(Vector3.Zero * layer.PositionScale, prsKey.Position * layer.PositionScale, blend);
+                            if (prsKey.HasScale)
+                                prsKey.Scale = Vector3.Lerp(Vector3.Zero * layer.ScaleScale, prsKey.Scale * layer.ScaleScale, blend);
+                            /*if (controller.TargetName == "Bip01 Head")
+                            {
+                                Vector3 rotVec = GLModel.QuatToEuler(prsKey.Rotation);
+                                Console.WriteLine($"{rotVec.X}, {rotVec.Y}, {rotVec.Z} -- {key.Time}");
+                            }*/
+                        }
+                    }
+                }
+            }
+        return interpAnim;
     }
 
     public void LoadBaseAnimation(bool isExt, int idx)
