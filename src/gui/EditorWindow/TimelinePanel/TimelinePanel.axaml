@@ -1733,6 +1733,7 @@
                       <ContentControl Content="{Binding MinorID}"/>
                       <ContentControl Content="{Binding Rank}"/>
                       <ContentControl Content="{Binding Level}"/>
+                      <ContentControl Content="{Binding Endianness}"/>
                     </StackPanel>
                   </Expander>
                   <Expander Header="Environment">

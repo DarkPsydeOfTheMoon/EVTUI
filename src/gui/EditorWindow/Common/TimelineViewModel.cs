@@ -19,6 +19,7 @@ public class TimelineViewModel : ReactiveObject
     public NumEntryField        MinorID { get; set; }
     public StringSelectionField Rank    { get; set; }
     public NumEntryField        Level   { get; set; }
+    public StringSelectionField Endianness { get; set; }
     // flags
     public BoolChoiceField StartingFrameEnabled        { get; set; }
     public BoolChoiceField UnkFlag1                    { get; set; }
@@ -44,6 +45,12 @@ public class TimelineViewModel : ReactiveObject
         D    = 5
     }
 
+    public enum Endiannesses : byte
+    {
+        Little = 0,
+        Big    = 1
+    }
+
     public TimelineViewModel(DataManager dataManager)
     {
         this.subscriptions = new List<IDisposable>();
@@ -56,11 +63,13 @@ public class TimelineViewModel : ReactiveObject
         this.MinorID = new NumEntryField("Minor ID", !dataManager.ReadOnly, evt.MinorId, 0, 999, 1);
         this.Rank = new StringSelectionField("Rank", !dataManager.ReadOnly, Enum.GetName(typeof(Ranks), evt.Rank), new List<string>(Enum.GetNames(typeof(Ranks))));
         this.Level = new NumEntryField("Level", !dataManager.ReadOnly, evt.Level, 0, 3, 1);
+        this.Endianness = new StringSelectionField("Endianness", !dataManager.ReadOnly, Enum.GetName(typeof(Endiannesses), evt.Endianness), new List<string>(Enum.GetNames(typeof(Endiannesses))));
 
         this.subscriptions.Add(this.WhenAnyValue(x => x.MajorID.Value).Subscribe(x => evt.MajorId = (short)x));
         this.subscriptions.Add(this.WhenAnyValue(x => x.MinorID.Value).Subscribe(x => evt.MinorId = (short)x));
         this.subscriptions.Add(this.WhenAnyValue(x => x.Rank.Choice).Subscribe(x => evt.Rank = (byte)Enum.Parse(typeof(Ranks), x)));
         this.subscriptions.Add(this.WhenAnyValue(x => x.Level.Value).Subscribe(x => evt.Level = (byte)x));
+        this.subscriptions.Add(this.WhenAnyValue(x => x.Endianness.Choice).Subscribe(x => evt.Endianness = (byte)Enum.Parse(typeof(Endiannesses), x)));
 
         // cinemascope
         this.CinemascopeEnabled = new BoolChoiceField("Enable Cinemascope", !dataManager.ReadOnly, evt.Flags[8]);

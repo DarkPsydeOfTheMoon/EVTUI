@@ -104,6 +104,22 @@ public class BiDict<TKey, TValue>
         this.Backward[value] = key;
     }
 
+    public TValue? ForwardGet(TKey key, TValue fallback = default(TValue))
+    {
+        if (this.Forward.ContainsKey(key))
+            return this.Forward[key];
+        else
+            return fallback;
+    }
+
+    public TKey? BackwardGet(TValue key, TKey fallback = default(TKey))
+    {
+        if (this.Backward.ContainsKey(key))
+            return this.Backward[key];
+        else
+            return fallback;
+    }
+
     public List<TKey> Keys { get => this.Forward.Keys.ToList(); }
 
     public List<TValue> Values { get => this.Backward.Keys.ToList(); }

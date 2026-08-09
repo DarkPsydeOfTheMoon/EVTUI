@@ -133,6 +133,8 @@ public class ScriptManager
                     locale = eventCues.JpCues;
                 else
                     locale = eventCues.EnCues;
+                try
+                {
                 foreach (Turn turn in this.BMDFiles[key].Turns)
                     for (int indWithinTurn=0; indWithinTurn<turn.Elems.Length; indWithinTurn++)
                         foreach (Node node in this.Parse(turn.Elems[indWithinTurn], isJP))
@@ -172,6 +174,8 @@ public class ScriptManager
                                 }
                             } catch (Exception ex) { Trace.TraceError(ex.ToString()); }
                         }
+                // seems like sometimes the BMDFile can be null... or the Turns can be null? unclear
+                } catch (Exception ex) { Trace.TraceError(ex.ToString()); }
             }
             return eventCues;
         }
