@@ -7,7 +7,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using Avalonia.ReactiveUI;
+using ReactiveUI.Avalonia;
 
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
@@ -36,7 +36,8 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
     public ScriptPanel()
     {
         InitializeComponent();
-        this.WhenActivated(d =>
+        this.Loaded += hello;
+        /*this.WhenActivated(d =>
         {
             var tl = TopLevel.GetTopLevel(this);
             if (tl is null) throw new NullReferenceException();
@@ -47,7 +48,20 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
                 this.InitializeTextEditor();
                 this.UpdateTextEditor();
             }
-        });
+        });*/
+    }
+
+    public void hello(object sender, RoutedEventArgs e)
+    {
+        var tl = TopLevel.GetTopLevel(this);
+        if (tl is null) throw new NullReferenceException();
+        this.topLevel = (Window)tl;
+
+        if (_msgTextEditor is null || _flowTextEditor is null)
+        {
+            this.InitializeTextEditor();
+            this.UpdateTextEditor();
+        }
     }
 
     public async void NameSelectionChanged(object source, SelectionChangedEventArgs e)

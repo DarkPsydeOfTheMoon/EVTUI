@@ -1,5 +1,5 @@
 ﻿using Avalonia;
-using Avalonia.ReactiveUI;
+using ReactiveUI.Avalonia;
 
 using System;
 using System.Collections.ObjectModel;
@@ -40,7 +40,8 @@ sealed class Program
             .With(new Win32PlatformOptions { RenderingMode = new Collection<Win32RenderingMode> { Win32RenderingMode.Wgl } })
 #endif
             .LogToTrace()
-            .UseReactiveUI()
+            .UseReactiveUI(rxui => {})
+            .RegisterReactiveUIViewsFromEntryAssembly()
             .With(new X11PlatformOptions
             {
                 UseDBusFilePicker = false // to disable FreeDesktop file picker

@@ -1,12 +1,13 @@
 using System;
 using System.Diagnostics;
 
+using ReactiveUI.Avalonia;
+
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.OpenGL;
 using Avalonia.OpenGL.Controls;
-using Avalonia.ReactiveUI;
 using Avalonia.Threading;
 using static Avalonia.OpenGL.GlConsts;
 

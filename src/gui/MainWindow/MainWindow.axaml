@@ -8,7 +8,7 @@
         x:Class="EVTUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/thumbnail.png"
-        SizeToContent="WidthAndHeight" SystemDecorations="None" WindowStartupLocation="CenterScreen"
+        SizeToContent="WidthAndHeight" WindowDecorations="None" WindowStartupLocation="CenterScreen"
         Title="EVTUI">
 
   <Panel>
