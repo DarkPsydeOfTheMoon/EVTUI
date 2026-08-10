@@ -5,7 +5,7 @@ using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
 
-using DeepCopy;
+using static FastCloner.FastCloner;
 
 using GFDLibrary;
 
@@ -345,7 +345,7 @@ public class SceneModel
         Vector3 currentHeadRot = GLModel.QuatToEuler(currentRotation);
         Console.WriteLine($"LOCAL ROTATION: {currentHeadRot.X} {currentHeadRot.Y} {currentHeadRot.Z}");
 
-        Animation interpAnim = DeepCopier.Copy(baseAnim);
+        Animation interpAnim = DeepClone(baseAnim);
         if (blend < 1f)
             foreach (AnimationController controller in interpAnim.Controllers)
             {

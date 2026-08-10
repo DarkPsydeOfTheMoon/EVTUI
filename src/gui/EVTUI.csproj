@@ -20,11 +20,19 @@
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
 	<DefineConstants>OS_WINDOWS</DefineConstants>
   </PropertyGroup>
-	
+
   <!-- Avalonia files -->
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
     <AvaloniaXamlCompile Include="**\*.axaml" />
+  </ItemGroup>
+
+  <!-- AtlusScriptLibrary files -->
+  <ItemGroup>
+    <Compile Include="..\..\external\CalcBindingAva\**\*.cs">
+      <Link>CalcBindingAva\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
 
   <!-- Avalonia packages -->

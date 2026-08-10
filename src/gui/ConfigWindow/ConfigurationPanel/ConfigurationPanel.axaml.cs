@@ -23,29 +23,6 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
     {
         InitializeComponent();
         this.Loaded += hello;
-
-        /*this.WhenActivated(d =>
-        {
-            var tl = TopLevel.GetTopLevel(this);
-            if (tl is null) throw new NullReferenceException();
-            this.topLevel = (Window)tl;
-
-            switch (ViewModel!.ConfigType)
-            {
-                case "new-proj":
-                    pages.SelectedIndex = 1;
-                    break;
-                case "open-proj":
-                    pages.SelectedIndex = 2;
-                    break;
-                case "read-only":
-                    pages.SelectedIndex = 3;
-                    break;
-                default:
-                    pages.SelectedIndex = 0;
-                    break;
-            }
-        });*/
     }
 
     public void hello(object sender, RoutedEventArgs e)

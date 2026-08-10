@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-using DeepCopy;
+using static FastCloner.FastCloner;
 
 using Serialization;
 
@@ -256,7 +256,7 @@ public class EVT : ISerializable
     // TODO: consolidate code between this method and prev
     public SerialObject DuplicateObject(SerialObject oldObj)
     {
-        SerialObject newObj = DeepCopier.Copy(oldObj);
+        SerialObject newObj = DeepClone(oldObj);
 
         // TODO: surely there's a better place to create this
         HashSet<int> ids = new HashSet<int>();
@@ -292,13 +292,13 @@ public class EVT : ISerializable
 
     public int CopyCommandToNewFrame(SerialCommand cmd, dynamic cmdData, int frame)
     {
-        SerialCommand newCmd = DeepCopier.Copy(cmd);
+        SerialCommand newCmd = DeepClone(cmd);
         newCmd.FrameStart = frame;
 
         List<SerialCommand> cmdList = new List<SerialCommand>(this.Commands);
         cmdList.Add(newCmd);
         this.Commands = cmdList.ToArray();
-        this.CommandData.Add(DeepCopier.Copy(cmdData));
+        this.CommandData.Add(DeepClone(cmdData));
 
         this.CommandCount.Validate(this.Commands.Length, true);
         return this.CommandCount.Value-1;

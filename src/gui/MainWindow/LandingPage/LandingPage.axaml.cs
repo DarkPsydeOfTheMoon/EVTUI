@@ -41,19 +41,6 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
     {
         InitializeComponent();
         this.Loaded += hello;
-
-        /*this.WhenActivated(d =>
-        {
-            var tl = TopLevel.GetTopLevel(this);
-            if (tl is null) throw new NullReferenceException();
-            this.topLevel = (Window)tl;
-            this.topLevel.Closing += CloseAll;
-
-            this.editorWindows = new Dictionary<EditorWindow, (string GamePath, string? ModPath, int MajorId, int MinorId)>();
-            this.openStuff = new HashSet<(string GamePath, string? ModPath, int MajorId, int MinorId)>();
-
-            this.SharedClipboard = new Clipboard();
-        });*/
     }
 
     public void hello(object sender, RoutedEventArgs e)

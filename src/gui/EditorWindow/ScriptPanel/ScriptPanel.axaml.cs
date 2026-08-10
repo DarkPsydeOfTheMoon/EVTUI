@@ -37,18 +37,6 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
     {
         InitializeComponent();
         this.Loaded += hello;
-        /*this.WhenActivated(d =>
-        {
-            var tl = TopLevel.GetTopLevel(this);
-            if (tl is null) throw new NullReferenceException();
-            this.topLevel = (Window)tl;
-
-            if (_msgTextEditor is null || _flowTextEditor is null)
-            {
-                this.InitializeTextEditor();
-                this.UpdateTextEditor();
-            }
-        });*/
     }
 
     public void hello(object sender, RoutedEventArgs e)

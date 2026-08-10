@@ -12,7 +12,6 @@
              x:DataType="vm:TimelinePanelViewModel"
              x:Class="EVTUI.Views.TimelinePanel"
              x:TypeArguments="vm:TimelinePanelViewModel">
-             <!--xmlns:c="clr-namespace:CalcBinding;assembly=CalcBindingAva"-->
 
   <UserControl.Styles>
     <Style Selector="Button.selected">
