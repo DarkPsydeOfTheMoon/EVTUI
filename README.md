@@ -27,7 +27,7 @@ The command prompt and similar interfaces should work with this syntax:
 ./scripts/bootstrap_win.bat
 ```
 
-### Debian Linux
+### Debian-based Linux
 
 ```
 ./scripts/bootstrap_debian.sh
@@ -41,9 +41,13 @@ The command prompt and similar interfaces should work with this syntax:
 
 (Credit to [theloneraven](https://github.com/theloneraven) for getting this setup working.)
 
-### Other Linux
+### Arch-based Linux
 
-TBD.
+```
+./scripts/bootstrap_arch.sh
+```
+
+(Credit to [theloneraven](https://github.com/theloneraven) for getting this setup working.)
 
 ## Building
 
