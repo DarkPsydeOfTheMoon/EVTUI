@@ -56,7 +56,7 @@ public partial class ScriptPanel : ReactiveUserControl<ScriptPanelViewModel>
     {
         try
         {
-            if (!(EditorContainer.Content is null))
+            if (!(EditorContainer.Content is null || CompiledName.SelectedItem is null))
             {
                 ViewModel!.SelectedCompiledScriptName = (string)(CompiledName.SelectedItem);
                 ViewModel!.UpdateSubfiles();
