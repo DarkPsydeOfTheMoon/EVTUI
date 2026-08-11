@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 
 using Avalonia;
 using Avalonia.Controls;
@@ -13,7 +14,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using Avalonia.ReactiveUI;
 using Avalonia.VisualTree;
 
 using EVTUI.ViewModels;
@@ -87,26 +87,24 @@ public partial class TimelinePanel : ReactiveUserControl<TimelinePanelViewModel>
         // goofy but it does seem to help a bit with memory pressure...
         this.Loaded += hello;
         this.Unloaded += goodbye;
-        this.WhenActivated(d =>
-        {
-            var tl = TopLevel.GetTopLevel(this);
-            if (tl is null) throw new NullReferenceException();
-            this.topLevel = (Window)tl;
-
-            // TODO: move this to a method that can be run upon update
-            // like if a frame is added or deleted
-            this.FramePositions = new List<double>();
-            foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
-                this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
-
-        });
     }
 
     public void hello(object sender, RoutedEventArgs e)
     {
         GC.Collect();
         GC.WaitForPendingFinalizers();
+
+        var tl = TopLevel.GetTopLevel(this);
+        if (tl is null) throw new NullReferenceException();
+        this.topLevel = (Window)tl;
+
+        // TODO: move this to a method that can be run upon update
+        // like if a frame is added or deleted
+        this.FramePositions = new List<double>();
+        foreach (var child in LogicalExtensions.GetLogicalChildren(this.FindControl<ItemsControl>("FramesHaver")))
+            this.FramePositions.Add(((ContentPresenter)child).Bounds.X);
     }
+    private void HandleActivation() { }
 
     public void goodbye(object sender, RoutedEventArgs e)
     {

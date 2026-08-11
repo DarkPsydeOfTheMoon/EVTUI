@@ -29,11 +29,11 @@
         <Button.Flyout>
           <Flyout>
             <StackPanel>
-              <RadioButton GroupName="sort" Content="Sort by ID (Ascending)" Checked="Resort" IsChecked="true"/>
-              <RadioButton GroupName="sort" Content="Sort by ID (Descending)" Checked="Resort"/>
+              <RadioButton GroupName="sort" Content="Sort by ID (Ascending)" Click="Resort" IsChecked="true"/>
+              <RadioButton GroupName="sort" Content="Sort by ID (Descending)" Click="Resort"/>
               <Separator Margin="10"/>
-              <RadioButton GroupName="sort" Content="Sort by Type (Ascending)" Checked="Resort"/>
-              <RadioButton GroupName="sort" Content="Sort by Type (Descending)" Checked="Resort"/>
+              <RadioButton GroupName="sort" Content="Sort by Type (Ascending)" Click="Resort"/>
+              <RadioButton GroupName="sort" Content="Sort by Type (Descending)" Click="Resort"/>
             </StackPanel>
           </Flyout>
         </Button.Flyout>

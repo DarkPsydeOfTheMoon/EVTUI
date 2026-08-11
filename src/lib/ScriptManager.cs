@@ -143,8 +143,13 @@ public class ScriptManager
                             {
                                 string turnName = this.Parse(turn.Name, isJP)[0].Text;
                                 string speakerName = "";
-                                if (turn.SpeakerId == 0xFFFF && turnName.StartsWith("MND_"))
-                                    speakerName = "Joker";
+                                if (turn.SpeakerId == 0xFFFF)
+                                {
+                                    if (turnName.StartsWith("MND_"))
+                                        speakerName = "(JOKER)";
+                                    else
+                                        speakerName = "(SYSTEM)";
+                                }
                                 else
                                     speakerName = this.Parse(this.BMDFiles[key].Speakers[turn.SpeakerId], isJP)[0].Text;
                                 if (node.FunctionTableIndex == 3 && node.FunctionIndex == 1 && node.FunctionArguments[3] != 0)

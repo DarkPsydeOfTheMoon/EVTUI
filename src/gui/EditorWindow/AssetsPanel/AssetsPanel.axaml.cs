@@ -5,7 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Presenters;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using Avalonia.ReactiveUI;
+using ReactiveUI.Avalonia;
 
 using EVTUI.ViewModels;
 

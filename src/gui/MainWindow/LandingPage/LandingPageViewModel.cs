@@ -1,5 +1,5 @@
 using System;
-using DeepCopy;
+using static FastCloner.FastCloner;
 
 namespace EVTUI.ViewModels;
 
@@ -14,17 +14,17 @@ public class Clipboard
 
     public void CopyCommand(CommandPointer cmd)
     {
-        this.CopiedCommand = DeepCopier.Copy(cmd);
+        this.CopiedCommand = DeepClone(cmd);
     }
 
     public void CopyPosition(Position3D pos)
     {
-        this.CopiedPosition = DeepCopier.Copy(pos);
+        this.CopiedPosition = DeepClone(pos);
     }
 
     public void CopyRotation(RotationWidget rot)
     {
-        this.CopiedRotation = DeepCopier.Copy(rot);
+        this.CopiedRotation = DeepClone(rot);
     }
 }
 

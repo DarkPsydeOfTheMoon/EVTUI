@@ -27,7 +27,7 @@ The command prompt and similar interfaces should work with this syntax:
 ./scripts/bootstrap_win.bat
 ```
 
-### Debian Linux
+### Debian-based Linux
 
 ```
 ./scripts/bootstrap_debian.sh
@@ -41,9 +41,13 @@ The command prompt and similar interfaces should work with this syntax:
 
 (Credit to [theloneraven](https://github.com/theloneraven) for getting this setup working.)
 
-### Other Linux
+### Arch-based Linux
 
-TBD.
+```
+./scripts/bootstrap_arch.sh
+```
+
+(Credit to [theloneraven](https://github.com/theloneraven) for getting this setup working.)
 
 ## Building
 
@@ -73,11 +77,15 @@ dotnet publish --runtime linux-x64
 - [TGE](https://github.com/tge-was-taken)'s [GFD-Studio](https://github.com/tge-was-taken/GFD-Studio)
 - [VideoLAN](https://github.com/videolan)'s [LibVLCSharp](https://github.com/videolan/libvlcsharp) (License: LGPL-2.1)
 
+### Dependencies-Turned-Acknowledgments
+
+- [LazyBone152](https://github.com/LazyBone152)'s [XV2-Tools](https://github.com/LazyBone152/XV2-Tools) (License: MIT) — The ACB parsing code was originally included as a patched module, but this dependency has since been deprecated. Even so, the current ACB code was heavily based on it.
+- [Thealexbarney](https://github.com/Thealexbarney)'s [VGAudio](https://github.com/Thealexbarney/VGAudio) (License: MIT) — The ADX parsing/decrypting code was originally included as a module, but this dependency has since been deprecated.
+- [netwww1](https://github.com/netwww1)'s [CalcBindingAva](https://github.com/netwww1/CalcBindingAva) (License: Apache-2.0) — This package was also a dependency, and in some sense still is; the code has since been included in its entirety, patched for compatibility.
+
 ### Acknowledgments
 
 The `Serialization` library is a port of the excellent [exbip](https://github.com/Pherakki/exbip-python) (License: MIT) Python library — both original and port by [Pherakki](https://github.com/Pherakki).
-
-The ACB parsing code from [LazyBone152](https://github.com/LazyBone152)'s [XV2-Tools](https://github.com/LazyBone152/XV2-Tools) (License: MIT) was originally included as a patched module, but this dependency has since been deprecated. Even so, the current ACB code was heavily based on it. The same is true of the ADX parsing/decrypting from [Thealexbarney](https://github.com/Thealexbarney)'s [VGAudio](https://github.com/Thealexbarney/VGAudio) (License: MIT).
 
 Although [TGE](https://github.com/tge-was-taken)'s [EvtTool](https://github.com/tge-was-taken/EvtTool) (especially the contributions by [Secre-C](https://github.com/Secre-C)) is not explicitly used in this project, it was *heavily* referenced for the EVT-parsing functionality.
 

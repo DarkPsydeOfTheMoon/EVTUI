@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 
 using ReactiveUI;
+using ReactiveUI.Avalonia;
 
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.ReactiveUI;
 
 using EVTUI.ViewModels;
 
@@ -40,19 +40,20 @@ public partial class LandingPage : ReactiveUserControl<LandingPageViewModel>
     public LandingPage()
     {
         InitializeComponent();
+        this.Loaded += hello;
+    }
 
-        this.WhenActivated(d =>
-        {
-            var tl = TopLevel.GetTopLevel(this);
-            if (tl is null) throw new NullReferenceException();
-            this.topLevel = (Window)tl;
-            this.topLevel.Closing += CloseAll;
+    public void hello(object sender, RoutedEventArgs e)
+    {
+        var tl = TopLevel.GetTopLevel(this);
+        if (tl is null) throw new NullReferenceException();
+        this.topLevel = (Window)tl;
+        this.topLevel.Closing += CloseAll;
 
-            this.editorWindows = new Dictionary<EditorWindow, (string GamePath, string? ModPath, int MajorId, int MinorId)>();
-            this.openStuff = new HashSet<(string GamePath, string? ModPath, int MajorId, int MinorId)>();
+        this.editorWindows = new Dictionary<EditorWindow, (string GamePath, string? ModPath, int MajorId, int MinorId)>();
+        this.openStuff = new HashSet<(string GamePath, string? ModPath, int MajorId, int MinorId)>();
 
-            this.SharedClipboard = new Clipboard();
-        });
+        this.SharedClipboard = new Clipboard();
     }
 
     // If we need to pop boxes like this from multiple places, we should add this to

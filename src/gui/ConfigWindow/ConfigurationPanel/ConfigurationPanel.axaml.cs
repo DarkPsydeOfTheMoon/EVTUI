@@ -9,7 +9,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.LogicalTree;
-using Avalonia.ReactiveUI;
+using ReactiveUI.Avalonia;
 
 using EVTUI.ViewModels;
 
@@ -22,29 +22,30 @@ public partial class ConfigurationPanel : ReactiveUserControl<ConfigurationPanel
     public ConfigurationPanel()
     {
         InitializeComponent();
+        this.Loaded += hello;
+    }
 
-        this.WhenActivated(d =>
+    public void hello(object sender, RoutedEventArgs e)
+    {
+        var tl = TopLevel.GetTopLevel(this);
+        if (tl is null) throw new NullReferenceException();
+        this.topLevel = (Window)tl;
+
+        switch (ViewModel!.ConfigType)
         {
-            var tl = TopLevel.GetTopLevel(this);
-            if (tl is null) throw new NullReferenceException();
-            this.topLevel = (Window)tl;
-
-            switch (ViewModel!.ConfigType)
-            {
-                case "new-proj":
-                    pages.SelectedIndex = 1;
-                    break;
-                case "open-proj":
-                    pages.SelectedIndex = 2;
-                    break;
-                case "read-only":
-                    pages.SelectedIndex = 3;
-                    break;
-                default:
-                    pages.SelectedIndex = 0;
-                    break;
-            }
-        });
+            case "new-proj":
+                pages.SelectedIndex = 1;
+                break;
+            case "open-proj":
+                pages.SelectedIndex = 2;
+                break;
+            case "read-only":
+                pages.SelectedIndex = 3;
+                break;
+            default:
+                pages.SelectedIndex = 0;
+                break;
+        }
     }
 
     private void GoToEventPage()

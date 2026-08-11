@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <PublishSingleFile>true</PublishSingleFile>
     <SelfContained>true</SelfContained>
     <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
@@ -20,29 +20,45 @@
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
 	<DefineConstants>OS_WINDOWS</DefineConstants>
   </PropertyGroup>
-	
+
   <!-- Avalonia files -->
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
+    <AvaloniaXamlCompile Include="**\*.axaml" />
+  </ItemGroup>
+
+  <!-- AtlusScriptLibrary files -->
+  <ItemGroup>
+    <Compile Include="..\..\external\CalcBindingAva\**\*.cs">
+      <Link>CalcBindingAva\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
   </ItemGroup>
 
   <!-- Avalonia packages -->
   <ItemGroup>
-    <PackageReference Include="Avalonia.AvaloniaEdit" Version="11.3.0" />
-    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.8" />
+    <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Controls.ColorPicker" Version="12.1.1" />
     <PackageReference Include="Avalonia.Xaml.Interactions" Version="11.3.0.6" />
     <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0" />
-    <PackageReference Include="CalcBindingAva" Version="2.5.3" />
-    <PackageReference Include="Magick.NET.AvaloniaMediaImaging" Version="1.1.7" />
+    <!--PackageReference Include="CalcBindingAva" Version="2.5.3" /-->
+    <PackageReference Include="DynamicExpresso.Core" Version="2.16.1" />
+    <PackageReference Include="Magick.NET.AvaloniaMediaImaging" Version="1.1.14" />
     <PackageReference Include="OpenTK.Graphics" Version="4.1" />
-    <PackageReference Include="Avalonia" Version="11.3.8" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.8" />
-    <PackageReference Include="Avalonia.Desktop" Version="11.3.8" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.8" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.8" />
+    <PackageReference Include="Avalonia" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="12.0.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.8" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.8" />
+    <!--PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.3.19" /-->
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="ReactiveUI" Version="24.1.0" />
+    <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.1" />
+    <PackageReference Include="System.Reactive" Version="7.0.0" />
     <PackageReference Include="TextMateSharp.Grammars" Version="1.0.70" />
     <!--PackageReference Include="ReactiveUI.Fody" Version="19.5.41" /-->
   </ItemGroup>
