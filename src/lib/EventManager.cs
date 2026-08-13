@@ -17,7 +17,7 @@ public class EventManager
     ///////////////./////////////
     private DataManager config;
     //private EVT? SerialEvent = null;
-    private ECS? SerialEventSounds = null;
+    //private ECS? SerialEventSounds = null;
 
     ////////////////////////////
     // *** PUBLIC MEMBERS *** //
@@ -31,6 +31,7 @@ public class EventManager
     // TODO: re-privatize this...? the Basics and Assets tabs use it...
     // is there a nicer way than having it just be public?
     public EVT? SerialEvent = null;
+    public ECS? SerialEventSounds = null;
 
     ////////////////////////////
     // *** PUBLIC METHODS *** //
