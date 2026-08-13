@@ -1733,13 +1733,18 @@
                       <ContentControl Content="{Binding MinorID}"/>
                       <ContentControl Content="{Binding Rank}"/>
                       <ContentControl Content="{Binding Level}"/>
-                      <ContentControl Content="{Binding Endianness}"/>
                     </StackPanel>
                   </Expander>
                   <Expander Header="Environment">
                     <StackPanel Classes="form">
                       <ContentControl Content="{Binding InitEnvAssetID}"/>
                       <ContentControl Content="{Binding DebugEnvAssetID}"/>
+                    </StackPanel>
+                  </Expander>
+                  <Expander Header="Endianness">
+                    <StackPanel Classes="form">
+                      <ContentControl Content="{Binding EVTEndianness}"/>
+                      <ContentControl Content="{Binding ECSEndianness}"/>
                     </StackPanel>
                   </Expander>
                   <Expander Header="Other Flags">
