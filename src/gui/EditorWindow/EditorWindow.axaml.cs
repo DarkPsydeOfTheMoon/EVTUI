@@ -6,6 +6,7 @@ using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 
 using EVTUI.ViewModels;
@@ -23,8 +24,11 @@ public partial class EditorWindow : Window
     {
         try
         {
-            await ((EditorWindowViewModel)DataContext).SaveMod(((MenuItem)sender).Name);
-            await Utils.RaiseModal(this, "Saved successfully!");
+            var failed = await ((EditorWindowViewModel)DataContext).SaveMod(((MenuItem)sender).Name);
+            if (failed.Count == 0)
+                await Utils.RaiseModal(this, "Saved successfully!");
+            else
+                await Utils.RaiseModal(this, "Trouble exporting the following:\n\t" + string.Join("\n\t", failed));
         }
         catch (IOException ex)
         {
@@ -35,6 +39,24 @@ public partial class EditorWindow : Window
         {
             Trace.TraceError(ex.ToString());
             await Utils.RaiseModal(this, $"Failed to save due to unhandled exception:\n{ex.ToString()}");
+        }
+    }
+
+    public async void OpenModFolder(object? sender, RoutedEventArgs args)
+    {
+        try
+        {
+            var config = ((EditorWindowViewModel)DataContext).Config;
+            if (config.ReadOnly)
+                return;
+            var modFolder = config.ProjectManager.ActiveProject.Mod.Path;
+            await this.Launcher.LaunchDirectoryInfoAsync(new DirectoryInfo(modFolder));
+
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError(ex.ToString());
+            await Utils.RaiseModal(this, $"Failed to open folder due to unhandled exception:\n{ex.ToString()}");
         }
     }
 
@@ -70,5 +92,15 @@ public partial class EditorWindow : Window
             Trace.TraceError(ex.ToString());
             await Utils.RaiseModal(this, $"Failed to normalize degree value due to unhandled exception:\n{ex.ToString()}");
         }
+    }
+
+    public async void LangSelectionChanged(object source, SelectionChangedEventArgs e)
+    {
+        DataManager config = ((EditorWindowViewModel)DataContext).Config;
+        config.Language = ((ComboBox)source).SelectedItem.ToString();
+        config.ScriptManager.ChangeActiveScripts();
+
+        if (config.ScriptManager.ModdedScripts.Count > 0)
+            ((EditorWindowViewModel)DataContext).scriptPanelVM.UpdateLog();
     }
 }

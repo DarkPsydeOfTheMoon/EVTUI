@@ -583,7 +583,7 @@ public class AssetViewModel : ViewModelBase
             this.ActiveTextureBinPaths[subId] = (this.TextureBinPaths[subId] is null || this.TextureBinPaths[subId].Count == 0) ? null : this.TextureBinPaths[subId][0];
     }
 
-    public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims, int forceAnimId=-1)
+    public List<string> UpdateAnimPaths(bool isBlendAnims, bool isExtAnims, int forceAnimId = -1)
     {
         string animType = (isExtAnims) ? "A" : "B";
         int animId = (forceAnimId > -1) ? forceAnimId : (isExtAnims) ? (int)this.ExtBaseAnimID.Value : (int)this.BaseAnimID.Value;
@@ -593,6 +593,7 @@ public class AssetViewModel : ViewModelBase
         string backoffSuffix = null;
         List<string> ret = new List<string>();
 
+        var allowRecurse = false;
         switch (this.ObjectType.Choice)
         {
             case "Character":
@@ -603,6 +604,7 @@ public class AssetViewModel : ViewModelBase
                     if (animId == -1)
                         return ret;
                     prefix = new string[] { "model", "character", "common_anim", $"{animType}CMN{animId:0000}.gap" };
+                    allowRecurse = true;
                 }
                 else if (isBlendAnims)
                 {
@@ -616,17 +618,20 @@ public class AssetViewModel : ViewModelBase
                     prefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", subtype, $"{animType}{subtype.Substring(0, 1)}{this.MajorID.Value:0000}_{animId:000}.gap" };
                     if (forceAnimId == -1)
                         backoffPrefix = new string[] { "model", "character", $"{this.MajorID.Value:0000}", subtype, $"{animType}{subtype.Substring(0, 1)}{this.MajorID.Value:0000}_{(animId+30):000}.gap" };
+                    allowRecurse = true;
                 }
                 break;
             case "Enemy":
                 if (animId == -1)
                     return ret;
                 prefix = new string[] { "model", "character", "enemy", $"{this.MajorID.Value:0000}", $"{animType}em{this.MajorID.Value:0000}_{animId:000}.gap" };
+                allowRecurse = true;
                 break;
             case "Persona":
                 if (animId == -1)
                     return ret;
                 prefix = new string[] { "model", "character", "persona", $"{this.MajorID.Value:0000}", $"{animType}ps{this.MajorID.Value:0000}_{animId:000}.gap" };
+                allowRecurse = true;
                 break;
             case "Item":
                 // yes, it's the GMD itself. for items, that's where animations are also stored
@@ -650,7 +655,7 @@ public class AssetViewModel : ViewModelBase
             List<string> candidates = this.Config.ExtractExactFiles(prefix, suffix);
             if (candidates.Count == 0 && backoffPrefix != null)
                 candidates = this.Config.ExtractExactFiles(backoffPrefix, backoffSuffix);
-            if (candidates.Count == 0)
+            if (candidates.Count == 0 && allowRecurse)
             {
                 if (forceAnimId == -1 && animId > 0)
                     candidates = this.UpdateAnimPaths(isBlendAnims, isExtAnims, forceAnimId:animId-1);

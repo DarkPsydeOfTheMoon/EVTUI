@@ -1,44 +1,46 @@
-From 84c2d590ff3794e0daa3e6de87bffd2039fd4dab Mon Sep 17 00:00:00 2001
-From: DarkPsydeOfTheMoon <avalanchebreakdown@gmail.com>
-Date: Wed, 23 Oct 2024 00:43:17 -0700
-Subject: [PATCH] Fixes for non-building master + inelegant Linux
- compatibility.
+From e96a626a677d2468ca7e364ac82509ef020ea1a4 Mon Sep 17 00:00:00 2001
+From: oceanstuck <msamiclassified@gmail.com>
+Date: Wed, 7 Oct 2026 16:54:51 -0700
+Subject: [PATCH 1/2] linux stuff for batch script
 
 ---
- .../AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs  | 8 +++++++-
- .../Libraries/Serialization/ExternalJsonPathConverter.cs  | 5 ++++-
- .../FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs | 2 +-
- .../Compiler/MessageScriptCompiler.cs                     | 2 +-
- .../Compiler/Parser/MessageScriptParserHelper.cs          | 2 ++
- 5 files changed, 15 insertions(+), 4 deletions(-)
+ .../Common/Libraries/LibraryLookup.cs                 | 11 ++++++++++-
+ .../Serialization/ExternalJsonPathConverter.cs        |  5 ++++-
+ .../Decompiler/FlowScriptDecompiler.cs                |  2 +-
+ .../Compiler/Parser/MessageScriptParserHelper.cs      |  2 ++
+ 4 files changed, 17 insertions(+), 3 deletions(-)
 
 diff --git a/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs b/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs
-index f903d2b..57d6ef9 100644
+index 7169393..ae1664c 100644
 --- a/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs
 +++ b/Source/AtlusScriptLibrary/Common/Libraries/LibraryLookup.cs
-@@ -2,6 +2,7 @@
- using System.Collections.Generic;
+@@ -3,6 +3,7 @@ using System.Collections.Generic;
+ using System.ComponentModel;
  using System.IO;
  using System.Linq;
 +using System.Runtime.InteropServices;
  using System.Text.Json;
  
  namespace AtlusScriptLibrary.Common.Libraries;
-@@ -62,6 +63,11 @@ public static class LibraryLookup
+@@ -138,7 +139,15 @@ public static class LibraryLookup
      {
          EnsureInitialized();
          string jsonText = File.ReadAllText(path);
--        return JsonSerializer.Deserialize<Library>(jsonText);
+-        var lib = JsonSerializer.Deserialize<Library>(jsonText);
++        Library lib;
 +        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-+            return JsonSerializer.Deserialize<Library>(jsonText);
-+        else {
++            lib = JsonSerializer.Deserialize<Library>(jsonText);
++        else
++        {
 +            var _path = Path.Combine(jsonText.Split(new Char[] { '/', '\\' }));
-+            return JsonSerializer.Deserialize<Library>(_path);
++            lib = JsonSerializer.Deserialize<Library>(_path);
 +        }
-     }
- }
++
+         if (!ValidateLibrary(lib, out var errors))
+             throw new Exception($"Failed to load library {path}:\n{string.Join("\n", errors)}");
+         return lib;
 diff --git a/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs b/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs
-index f8c3e43..fe7377b 100644
+index 9b5e38a..cbaf4e2 100644
 --- a/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs
 +++ b/Source/AtlusScriptLibrary/Common/Libraries/Serialization/ExternalJsonPathConverter.cs
 @@ -3,6 +3,7 @@ using System.Collections.Generic;
@@ -54,7 +56,7 @@ index f8c3e43..fe7377b 100644
              var fullPath = Path.Combine(LibraryLookup.LibraryBaseDirectoryPath, path);
              var jsonString = File.ReadAllText(fullPath);
 +            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-+                jsonString = Path.Combine(jsonString.Split("\\"));
++                jsonString = Path.Combine(jsonString.Split('\\'));
              var obj = JsonSerializer.Deserialize<List<T>>(jsonString, _options);
  
              return obj;
@@ -66,10 +68,10 @@ index f8c3e43..fe7377b 100644
 \ No newline at end of file
 +}
 diff --git a/Source/AtlusScriptLibrary/FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs b/Source/AtlusScriptLibrary/FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs
-index 6a9dba1..eec2b3d 100644
+index b1f4344..9a29201 100644
 --- a/Source/AtlusScriptLibrary/FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs
 +++ b/Source/AtlusScriptLibrary/FlowScriptLanguage/Decompiler/FlowScriptDecompiler.cs
-@@ -179,7 +179,7 @@ public class FlowScriptDecompiler
+@@ -201,7 +201,7 @@ public class FlowScriptDecompiler
                  return false;
              }
  
@@ -78,19 +80,6 @@ index 6a9dba1..eec2b3d 100644
              mCompilationUnit.Imports.Add(new Import(importPath));
          }
  
-diff --git a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/MessageScriptCompiler.cs b/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/MessageScriptCompiler.cs
-index b035b84..a27a74a 100644
---- a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/MessageScriptCompiler.cs
-+++ b/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/MessageScriptCompiler.cs
-@@ -9,7 +9,7 @@ using System.Globalization;
- using System.IO;
- using System.Linq;
- using System.Text;
--using MessageScriptParser = AtlusScriptLibrary.MessageScriptLanguage.Compiler.Parser.MessageScriptParser;
-+using MessageScriptParser = AtlusScriptLibrary.FlowScriptLanguage.Compiler.Parser.MessageScriptParser;
- using MessageScriptParserHelper = AtlusScriptLibrary.MessageScriptLanguage.Compiler.Parser.MessageScriptParserHelper;
- 
- namespace AtlusScriptLibrary.MessageScriptLanguage.Compiler;
 diff --git a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs b/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs
 index 1d4b2b1..d5379cf 100644
 --- a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs
@@ -105,5 +94,31 @@ index 1d4b2b1..d5379cf 100644
  
  public static class MessageScriptParserHelper
 -- 
-2.34.1
+2.56.0.windows.2
+
+
+From b62bddbf9fa10f8ebe4c57043638212c8d0af086 Mon Sep 17 00:00:00 2001
+From: oceanstuck <msamiclassified@gmail.com>
+Date: Wed, 7 Oct 2026 17:35:42 -0700
+Subject: [PATCH 2/2] remove using statement
+
+---
+ .../Compiler/Parser/MessageScriptParserHelper.cs                | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs b/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs
+index d5379cf..1d4b2b1 100644
+--- a/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs
++++ b/Source/AtlusScriptLibrary/MessageScriptLanguage/Compiler/Parser/MessageScriptParserHelper.cs
+@@ -1,8 +1,6 @@
+ ﻿using Antlr4.Runtime;
+ using System.IO;
+ 
+-using AtlusScriptLibrary.FlowScriptLanguage.Compiler.Parser;
+-
+ namespace AtlusScriptLibrary.MessageScriptLanguage.Compiler.Parser;
+ 
+ public static class MessageScriptParserHelper
+-- 
+2.56.0.windows.2
 

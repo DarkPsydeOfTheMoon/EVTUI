@@ -1,6 +1,6 @@
 [submodule "external/Atlus-Script-Tools"]
 	path = external/Atlus-Script-Tools
-	url = https://github.com/tge-was-taken/Atlus-Script-Tools.git
+	url = https://github.com/Persona-Modding/Atlus-Script-Tools.git
 	ignore = all
 [submodule "external/GFD-Studio"]
 	path = external/GFD-Studio

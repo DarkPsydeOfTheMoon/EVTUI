@@ -27,6 +27,10 @@ public class EventManager
     public List<(string ACB, string? AWB)> AcwbPaths;
     public List<string> BfPaths;
     public List<string> BmdPaths;
+    public List<string> EmulatedBfPaths;
+    public List <string> EmulatedBmdPaths;
+    public List<string> VanillaBfPaths;
+    public List<string> VanillaBmdPaths;
 
     // TODO: re-privatize this...? the Basics and Assets tabs use it...
     // is there a nicer way than having it just be public?
@@ -123,23 +127,33 @@ public class EventManager
 
     public async Task AddBmd(int majorHundred, int majorId, int minorId)
     {
+        string[] prefix;
         if (this.SerialEvent.Flags[12])
-            this.BmdPaths = this.config.ExtractExactFiles(this.SerialEvent.EventBmdPath.Replace("\0", ""));
+            prefix = this.SerialEvent.EventBmdPath.Replace("\0", "").ToLower().Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries);
         else
-            this.BmdPaths = this.config.ExtractExactFiles(new string[] { "event_data", "message", $"e{majorHundred:000}", $"e{majorId:000}_{minorId:000}.bmd" });
-        this.BmdPaths.Sort();
-        this.BmdPaths.Reverse();
+            prefix = new string[] { "event_data", "message", $"e{majorHundred:000}", $"e{majorId:000}_{minorId:000}.bmd" };
+
+        this.BmdPaths = await this.config.GetModFiles(prefix);
+        this.EmulatedBmdPaths = this.config.GetEmulatedFileDummies(prefix, config.ProjectManager.ModdedFileDir);
+        this.VanillaBmdPaths = this.config.GetGameFiles(prefix);
+        //this.BmdPaths.Sort();
+        //this.BmdPaths.Reverse();
         await Task.Yield();
     }
 
     public async Task AddBf(int majorHundred, int majorId, int minorId)
     {
+        string[] prefix;
         if (this.SerialEvent.Flags[14])
-            this.BfPaths = this.config.ExtractExactFiles(this.SerialEvent.EventBfPath.Replace("\0", ""));
+            prefix = this.SerialEvent.EventBfPath.Replace("\0", "").ToLower().Split(['\\', '/'], StringSplitOptions.RemoveEmptyEntries);
         else
-            this.BfPaths = this.config.ExtractExactFiles(new string[] { "event_data", "script", $"e{majorHundred:000}", $"e{majorId:000}_{minorId:000}.bf" });
-        this.BfPaths.Sort();
-        this.BfPaths.Reverse();
+            prefix = new string[] { "event_data", "script", $"e{majorHundred:000}", $"e{majorId:000}_{minorId:000}.bf" };
+
+        this.BfPaths = await this.config.GetModFiles(prefix);
+        this.EmulatedBfPaths = this.config.GetEmulatedFileDummies(prefix, config.ProjectManager.ModdedFileDir);
+        this.VanillaBfPaths = this.config.GetGameFiles(prefix);
+        //this.BfPaths.Sort();
+        //this.BfPaths.Reverse();
         await Task.Yield();
     }
 

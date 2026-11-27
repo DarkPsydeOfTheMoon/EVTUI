@@ -19,6 +19,7 @@ public class NewProjectConfig
         this.Frameworks.Add(new Framework("BFEmulator", false));
         this.Frameworks.Add(new Framework("BMDEmulator", false));
         this.Frameworks.Add(new Framework("Ryo", false));
+        this.Frameworks.Add(new Framework("LocalisationFramework", false)); // TODO actually implement loc framework behavior
         this.LoadOrder = new List<string>(["<PRIMARY_MOD_PLACEHOLDER>"]);
     }
 
@@ -73,6 +74,10 @@ public class ProjectManager
     public SimpleEvent?  ActiveEvent;
     public string        ModdedFileDir;
     public string        EmulatedFileDir;
+    // TODO this shit wont work on console...
+    public string EmulatedBfDir;
+    public string EmulatedBmdDir;
+    public string LocalizedFileDir;
 
     public ulong AdxKey { get => (this.ActiveGame is null) ? 0 : ProjectManager.KeyCodes[this.ActiveGame.Type]; }
     public string CpkDecryptionFunctionName { get => (this.ActiveGame is null || !this.ActiveGame.Type.StartsWith("P5R")) ? null : "P5R"; }
@@ -98,9 +103,9 @@ public class ProjectManager
         }
     }
 
-    private bool _hasFramework(string name)
+    public bool _hasFramework(string name)
     {
-        return this.ActiveProject.Frameworks.ContainsKey(name) && this.ActiveProject.Frameworks[name];
+        return ActiveProject is not null && this.ActiveProject.Frameworks.ContainsKey(name) && this.ActiveProject.Frameworks[name];
     }
     public async Task<bool> HasFramework(string name)
     {
@@ -222,15 +227,21 @@ public class ProjectManager
             if (!Directory.Exists(this.ModdedFileDir))
                 Directory.CreateDirectory(this.ModdedFileDir);
 
-            if (this._hasFramework("BFEmulator") || this._hasFramework("BMDEmulator"))
+            if (this._hasFramework("BFEmulator") || this._hasFramework("BMDEmulator") || this._hasFramework("LocalisationFramework"))
             {
                 this.EmulatedFileDir = Path.Combine(this.ActiveProject.Mod.Path, "FEmulator");
                 if (!Directory.Exists(this.EmulatedFileDir))
                     Directory.CreateDirectory(this.EmulatedFileDir);
-                if (this._hasFramework("BFEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BF")))
-                    Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BF"));
-                if (this._hasFramework("BMDEmulator") && !Directory.Exists(Path.Combine(this.EmulatedFileDir, "BMD")))
-                    Directory.CreateDirectory(Path.Combine(this.EmulatedFileDir, "BMD"));
+                EmulatedBfDir = Path.Combine(EmulatedFileDir, "BF");
+                EmulatedBmdDir = Path.Combine(EmulatedFileDir, "BMD");
+                LocalizedFileDir = Path.Combine(EmulatedFileDir, "L10N");
+
+                if (this._hasFramework("BFEmulator") && !Directory.Exists(EmulatedBfDir))
+                    Directory.CreateDirectory(EmulatedBfDir);
+                if (this._hasFramework("BMDEmulator") && !Directory.Exists(EmulatedBmdDir))
+                    Directory.CreateDirectory(EmulatedBmdDir);
+                if (this._hasFramework("LocalisationFramework") && !Directory.Exists(LocalizedFileDir))
+                    Directory.CreateDirectory(this.LocalizedFileDir);
             }
             else
                 this.EmulatedFileDir = null;

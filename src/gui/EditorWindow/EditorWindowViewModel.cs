@@ -114,6 +114,8 @@ public class EditorWindowViewModel : ViewModelBase
     public ScriptPanelViewModel   scriptPanelVM   { get; private set; }
     public AudioPanelViewModel    audioPanelVM    { get; private set; }
 
+    public ObservableCollection<string> Languages { get; } = new() { "English", "Japanese", "French", "Italian", "German", "Spanish", "Korean", "Simplified Chinese", "Traditional Chinese" };
+
     ////////////////////////////
     // *** PUBLIC METHODS *** //
     ////////////////////////////
@@ -142,28 +144,30 @@ public class EditorWindowViewModel : ViewModelBase
         this.Config = null;
     }
 
-    public async Task SaveMod(string which)
+    public async Task<List<string>> SaveMod(string which)
     {
+        var failed = new List<string>();
         switch (which)
         {
             case "EVT":
-                await this.Config.SaveModdedFiles(true, false, false, false);
+                failed = await this.Config.SaveModdedFiles(true, false, false, false);
                 break;
             case "ECS":
-                await this.Config.SaveModdedFiles(false, true, false, false);
+                failed = await this.Config.SaveModdedFiles(false, true, false, false);
                 break;
             case "BMD":
-                await this.Config.SaveModdedFiles(false, false, true, false);
+                failed = await this.Config.SaveModdedFiles(false, false, true, false);
                 break;
             case "BF":
-                await this.Config.SaveModdedFiles(false, false, false, true);
+                failed = await this.Config.SaveModdedFiles(false, false, false, true);
                 break;
             case null:
-                await this.Config.SaveModdedFiles(true, true, true, true);
+                failed = await this.Config.SaveModdedFiles(true, true, true, true);
                 break;
             default:
                 break;
         }
+        scriptPanelVM.UpdateLog();
+        return failed;
     }
-
 }

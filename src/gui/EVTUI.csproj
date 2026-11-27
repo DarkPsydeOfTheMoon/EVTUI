@@ -43,6 +43,7 @@
     <PackageReference Include="AvaloniaEdit.TextMate" Version="11.3.0" />
     <!--PackageReference Include="CalcBindingAva" Version="2.5.3" /-->
     <PackageReference Include="DynamicExpresso.Core" Version="2.16.1" />
+    <PackageReference Include="LibVLCSharp" Version="3.10.1" />
     <PackageReference Include="Magick.NET.AvaloniaMediaImaging" Version="1.1.14" />
     <PackageReference Include="OpenTK.Graphics" Version="4.1" />
     <PackageReference Include="Avalonia" Version="12.1.1" />
@@ -60,6 +61,7 @@
     <PackageReference Include="ReactiveUI.Avalonia" Version="12.1.1" />
     <PackageReference Include="System.Reactive" Version="7.0.0" />
     <PackageReference Include="TextMateSharp.Grammars" Version="1.0.70" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" Condition="$([MSBuild]::IsOsPlatform('Windows'))" />
     <!--PackageReference Include="ReactiveUI.Fody" Version="19.5.41" /-->
   </ItemGroup>
 

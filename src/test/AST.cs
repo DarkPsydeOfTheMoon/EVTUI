@@ -28,8 +28,7 @@ public class ASTTests
         string oldWorkingDir = Directory.GetCurrentDirectory();
         Directory.SetCurrentDirectory("Assets");
         string bfPath = "E767_001.BF";
-        FlowScriptBinary binary = FlowScriptBinary.FromStream(new FileStream(bfPath, FileMode.Open));
-        FlowScript flowScript = FlowScript.FromBinary(binary, AtlusEncoding.GetByName("p5r"));
+        FlowScript flowScript = FlowScript.FromFile(bfPath, AtlusEncoding.Create("p5r"));
         var decompiler = new FlowScriptDecompiler();
         decompiler.Library = LibraryLookup.GetLibrary("p5r");
         Trace.Assert(decompiler.TryDecompile(flowScript, bfPath+".flow"), $"Failed to decompile {bfPath}");
@@ -43,7 +42,7 @@ public class ASTTests
         string flowPath = "E767_001.BF.flow";
         string flowText = File.ReadAllText(flowPath);
         FlowScriptCompiler compiler = new FlowScriptCompiler(FlowFormatVersion.Unknown);
-        compiler.Encoding = AtlusEncoding.GetByName("p5r");
+        compiler.Encoding = AtlusEncoding.Create("p5r");
         compiler.Library = LibraryLookup.GetLibrary("p5r");
         FlowScript flowScript = new FlowScript(FlowFormatVersion.Unknown);
         Trace.Assert(compiler.TryCompile(flowText, out flowScript), $"Failed to compile {flowPath}");
@@ -56,8 +55,7 @@ public class ASTTests
         string oldWorkingDir = Directory.GetCurrentDirectory();
         Directory.SetCurrentDirectory("Assets");
         string bmdPath = "E764_001.BMD";
-        MessageScriptBinary binary = MessageScriptBinary.FromStream(new FileStream(bmdPath, FileMode.Open));
-        MessageScript msgScript = MessageScript.FromBinary(binary, MsgFormatVersion.Detect, AtlusEncoding.GetByName("p5r"));
+        MessageScript msgScript = MessageScript.FromFile(bmdPath, MsgFormatVersion.Detect, AtlusEncoding.Create("p5r"));
         var decompiler = new MessageScriptDecompiler(new FileTextWriter(bmdPath+".msg"));
         decompiler.Library = LibraryLookup.GetLibrary("p5r");
         // do or do not... there is no TryDecompile
@@ -71,9 +69,9 @@ public class ASTTests
         Directory.SetCurrentDirectory("Assets");
         string msgPath = "E764_001.BMD.msg";
         string msgText = File.ReadAllText(msgPath);
-        MessageScriptCompiler compiler = new MessageScriptCompiler(MsgFormatVersion.Version1BigEndian, AtlusEncoding.GetByName("p5r"));
+        MessageScriptCompiler compiler = new MessageScriptCompiler(MsgFormatVersion.Version1BigEndian, AtlusEncoding.Create("p5r"));
         compiler.Library = LibraryLookup.GetLibrary("p5r");
-        MessageScript msgScript = new MessageScript(MsgFormatVersion.Version1BigEndian, AtlusEncoding.GetByName("p5r"));
+        MessageScript msgScript = new MessageScript(MsgFormatVersion.Version1BigEndian, AtlusEncoding.Create("p5r"));
         Trace.Assert(compiler.TryCompile(msgText, out msgScript), $"Failed to compile {msgPath}");
         Directory.SetCurrentDirectory(oldWorkingDir);
     }

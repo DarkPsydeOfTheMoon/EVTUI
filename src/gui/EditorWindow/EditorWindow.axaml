@@ -234,6 +234,10 @@
 
   <DockPanel>
     <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" HorizontalAlignment="Right">
+      <ComboBox Name="LanguageDropdown"
+        ItemsSource="{Binding Languages}"
+        SelectedItem="English"
+        SelectionChanged="LangSelectionChanged" />
       <Menu>
         <MenuItem Header="Save" IsEnabled="{Binding !Config.ReadOnly}">
           <MenuItem Header="Save all" Click="SaveMod" />
@@ -248,6 +252,9 @@
           <MenuItem Header="Reload ECS" IsEnabled="false"/>
         </MenuItem>
       </Menu>
+      <Button Click="OpenModFolder" IsEnabled="{Binding !Config.ReadOnly}" ToolTip.Tip="Open Mod Folder">
+        <PathIcon Data="{StaticResource folder_open_regular}" />
+      </Button>
       <Button Click="ToggleTheme">
         <PathIcon Data="{StaticResource dark_theme_regular}" />
       </Button>

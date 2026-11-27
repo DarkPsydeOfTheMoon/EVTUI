@@ -185,13 +185,14 @@ public class TimelineViewModel : ReactiveObject
                     _cmd.IsInPlayRange = (_cmd.Frame >= _startingFrame && _cmd.Frame < _frameCount);
         }));
 
+        var temp = new List<CommandPointer>();
         Parallel.For(0, dataManager.EventManager.EventSoundCommands.Length, j =>
         {
             string code = dataManager.EventManager.EventSoundCommands[j].CommandCode;
             int i = dataManager.EventManager.EventSoundCommands[j].FrameStart;
             int len = dataManager.EventManager.EventSoundCommands[j].FrameDuration;
             CommandPointer newCmd = new CommandPointer(dataManager, code, true, j, i, len, (i >= _startingFrame && i < _frameCount));
-            this.AddCommand(newCmd, sort: false);
+            temp.Add(newCmd);
         });
         Parallel.For(0, dataManager.EventManager.EventCommands.Length, j =>
         {
@@ -199,10 +200,12 @@ public class TimelineViewModel : ReactiveObject
             int i = dataManager.EventManager.EventCommands[j].FrameStart;
             int len = dataManager.EventManager.EventCommands[j].FrameDuration;
             CommandPointer newCmd = new CommandPointer(dataManager, code, false, j, i, len, (i >= _startingFrame && i < _frameCount));
-            this.AddCommand(newCmd, sort: false);
+            temp.Add(newCmd);
         });
-        foreach (Category _cat in this.Categories)
-            _cat.SortCommands();
+
+        temp.Sort();
+        foreach (var cmd in temp)
+            AddCommand(cmd, sort: false);
     }
 
     public static int CodeToCategory(string code, bool isAudio)
@@ -588,7 +591,7 @@ public class Category : ViewModelBase
     }
 }
 
-public class CommandPointer : ViewModelBase
+public class CommandPointer : ViewModelBase, IComparable<CommandPointer>
 {
     public CommandPointer(in DataManager config, string code, bool isAudioCmd, int cmdIndex, int frame, int duration, bool isInPlayRange)
     {
@@ -666,6 +669,15 @@ public class CommandPointer : ViewModelBase
             this.RaiseAndSetIfChanged(ref _isInPlayRange, value);
             OnPropertyChanged(nameof(IsInPlayRange));
         }
+    }
+
+    public int CompareTo(CommandPointer? other)
+    {
+        if (this.Frame != other.Frame)
+            return this.Frame - other.Frame;
+        if (this.Code != other.Code)
+            return this.Code.CompareTo(other.Code);
+        return this.CmdIndex - other.CmdIndex;
     }
 }
 

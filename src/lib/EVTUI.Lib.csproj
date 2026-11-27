@@ -12,24 +12,9 @@
 	<DefineConstants>OS_WINDOWS</DefineConstants>
   </PropertyGroup>
 
-  <!-- AtlusScriptLibrary files -->
-  <ItemGroup>
-    <Compile Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.cs">
-      <Link>AtlusScriptLibrary\%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Compile>
-    <Content Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.json">
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\**\*.tsv">
-      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
   <!-- AtlusScriptLibrary packages -->
   <ItemGroup>
+    <ProjectReference Include="..\..\external\Atlus-Script-Tools\Source\AtlusScriptLibrary\AtlusScriptLibrary.csproj" />
     <PackageReference Include="Antlr4.Runtime" Version="4.6.6" />
     <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.16.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

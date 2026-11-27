@@ -41,27 +41,49 @@
               <ContentControl Content="{Binding BFPath}" IsVisible="{Binding EmbedBF.Value}"/>
               <ContentControl Content="{Binding InitScriptEnabled}"/>
               <ContentControl Content="{Binding InitScriptIndex}" IsVisible="{Binding InitScriptEnabled.Value}"/>
+              <Button Click="Compile"
+               IsEnabled="{c:Binding HasDecompiledFiles and Editable}"
+               IsVisible="{Binding Editable}"
+               Margin="10"
+               ToolTip.Tip="Attempts to compile this file in order to reveal errors, but does not export to mod folder. This will also refresh message preview in the timeline view.">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <PathIcon Data="{StaticResource wrench_regular}"/>
+                  <TextBlock>Test Compilation</TextBlock>
+                </StackPanel>
+              </Button>
             </StackPanel>
           </Flyout>
         </Button.Flyout>
         <PathIcon Data="{StaticResource settings_regular}" />
       </Button>
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-        <Button Click="Compile"
-         IsEnabled="{c:Binding HasDecompiledFiles and Editable}"
+        <ComboBox Name="VanillaFileName"
+         ItemsSource="{Binding VanillaScriptNames}"
+         SelectedItem="{Binding SelectedVanillaScriptName}"
+         SelectionChanged="VanillaNameSelectionChanged"
          Margin="10"
-         ToolTip.Tip="Compile Script">
-          <PathIcon Data="{StaticResource wrench_regular}"/>
-        </Button>
+         MaxDropDownHeight="300"
+         MaxWidth="450"/>
+        <ComboBox Name="VanillaDecompiledExt"
+         IsEnabled="{Binding HasVanillaFiles}"
+         ItemsSource="{Binding VanillaScriptExtNames}"
+         SelectedItem="{Binding SelectedVanillaDecompiledScriptName}"
+         SelectionChanged="VanillaExtSelectionChanged"
+         Margin="10"
+         MaxDropDownHeight="300"
+         Width="NaN"/>
         <ComboBox Name="CompiledName"
+         IsEnabled="{Binding Editable}"
+         IsVisible="{Binding Editable}"
          ItemsSource="{Binding ScriptNames}"
          SelectedItem="{Binding SelectedCompiledScriptName}"
          SelectionChanged="NameSelectionChanged"
          Margin="10"
          MaxDropDownHeight="300"
-         Width="NaN"/>
+         MaxWidth="450"/>
         <ComboBox Name="DecompiledExt"
-         IsEnabled="{Binding HasDecompiledFiles}"
+         IsEnabled="{c:Binding HasDecompiledFiles and Editable}"
+         IsVisible="{Binding Editable}"
          ItemsSource="{Binding ScriptExtNames}"
          SelectedItem="{Binding SelectedDecompiledScriptName}"
          SelectionChanged="ExtSelectionChanged"
@@ -71,12 +93,15 @@
       </StackPanel>
     </DockPanel>
     <TextBox DockPanel.Dock="Bottom"
-     Height="200"
-     IsReadOnly="True"
-     TextWrapping="Wrap"
-     Text="{Binding CompilationLogs}"
-     CaretIndex="{Binding CompilationLogs.Length}"/>
-    <ContentControl Name="EditorContainer"/>
+       Height="200"
+       IsReadOnly="True"
+       TextWrapping="Wrap"
+       Text="{Binding CompilationLogs}"
+       CaretIndex="{Binding CompilationLogs.Length}"/>
+    <UniformGrid Rows="1" ColumnSpacing="10">
+      <ContentControl Name="ReadOnlyContainer"/>
+      <ContentControl Name="EditorContainer" IsEnabled="{Binding Editable}" IsVisible="{Binding Editable}"/>
+    </UniformGrid>
   </DockPanel>
 
 </rxui:ReactiveUserControl>

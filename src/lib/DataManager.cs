@@ -31,6 +31,8 @@ public class DataManager
     public bool ProjectLoaded;
     public bool EventLoaded;
 
+    public string Language;
+
     private List<string> CpkList { get; set; }
     private Dictionary<string, Trie> CpkTries { get; set; }
 
@@ -56,6 +58,7 @@ public class DataManager
             Directory.CreateDirectory(this.VanillaExtractionPath);
 
         this.OpenStuff = openStuff;
+        Language = "English";
 
         this.ProjectManager = new ProjectManager(userData);
         this.EventManager   = new EventManager(this);
@@ -143,7 +146,7 @@ public class DataManager
             await this.ProjectManager.LoadEvent(majorId, minorId);
         this.EventLoaded = success;
 
-        this.ScriptManager.PopulateWorkingDir(this.WorkingPath, this.VanillaExtractionPath, this.ProjectManager.ModdedFileDir, this.ProjectManager.EmulatedFileDir, this.EventManager.BmdPaths, this.EventManager.BfPaths, this.ProjectManager.ActiveGame.Type);
+        this.ScriptManager.FetchScripts();
 
         // TODO: load common files! system sounds, common voice lines, models, bustups, cutins
         // so far, VOICE_SINGLEWORD gets loaded, but the rest will have to wait for full EVT/ECS parsing
@@ -154,12 +157,16 @@ public class DataManager
 
     public string CompileMessage(string fileBase)
     {
-        return this.ScriptManager.CompileMessage(this.WorkingPath, fileBase);
+        var bmd = ScriptManager.ModdedScripts.First(s => s.path == fileBase);
+        ScriptManager.TryCompileBMD(bmd, out _, out var log);
+        return log.ToString();
     }
 
     public string CompileScript(string fileBase)
     {
-        return this.ScriptManager.CompileScript(this.WorkingPath, fileBase);
+        var bf = ScriptManager.ModdedScripts.First(s => s.path == fileBase);
+        ScriptManager.TryCompileBF(bf, out _, out var log);
+        return log.ToString();
     }
 
     public List<string> GetCPKsFromPath(string? directoryPath)
@@ -191,18 +198,49 @@ public class DataManager
         CPKExtract.ClearDirectory(this.WorkingPathBase);
     }
 
-    private async Task<List<string>> GetModFiles(string[] prefix, string suffix = null)
+    public async Task<List<string>> GetModFiles(string[] prefix, string suffix = null)
     {
         return await CPKExtract.FindModFiles(prefix, suffix, this.ProjectManager.ModdedFileDir).ToListAsync();
     }
 
-    private async Task<List<string>> GetGameFiles(string CpkPath, string[] prefix, string suffix = null)
+    public List<string> GetEmulatedFileDummies(string[] prefix, string folder, string suffix = null)
+    {
+        if (ReadOnly)
+            return new List<string>();
+
+        var inCpkPath = Path.Join(prefix);
+        var files = new List<string>();
+        foreach (var file in Directory.GetFiles(folder, "*.*", SearchOption.AllDirectories))
+            if (file.Contains(inCpkPath, StringComparison.InvariantCultureIgnoreCase) && new FileInfo(file).Length == 0) files.Add(file); // there should never be more than one of a given filekind for event but eh
+        return files;
+    }
+
+    public async Task<List<string>> GetGameFiles(string CpkPath, string[] prefix, string suffix = null)
     {
         List<CpkFile> matchingFiles = this.CpkTries[CpkPath].TryGetFile(prefix, suffix: suffix);
         if (matchingFiles.Count > 0)
             return await CPKExtract.ExtractFiles(matchingFiles, CpkPath, this.VanillaExtractionPath, this.ProjectManager.CpkDecryptionFunctionName).ToListAsync();
         else
             return new List<string>();
+    }
+
+    public List<string> GetGameFiles(string[] prefix, string[] cpkPaths = null, string suffix = null)
+    {
+        cpkPaths ??= this.CpkTries.Keys.ToArray();
+
+        List<Task<List<string>>> tasks = new List<Task<List<string>>>();
+        foreach (string cpkPath in cpkPaths)
+            tasks.Add(this.GetGameFiles(cpkPath, prefix, suffix));
+        Task.WhenAll(tasks).Wait();
+
+        List<string> ret = new List<string>();
+        foreach(var task in tasks)
+        {
+            ret.AddRange(task.Result);
+            task.Dispose();
+        }
+        tasks.Clear();
+        return ret;
     }
 
     public List<string> ExtractExactFiles(string[] prefix, string suffix = null)
@@ -228,21 +266,26 @@ public class DataManager
         return this.ExtractExactFiles(prefix);
     }
 
-    public async Task SaveBF()
+    public async Task<List<string>> SaveBF()
     {
-        this.ScriptManager.SaveScript("BF", this.WorkingPath, this.ProjectManager.ModdedFileDir, (await this.ProjectManager.HasFramework("BFEmulator")) ? this.ProjectManager.EmulatedFileDir : null);
+        ScriptManager.ExportScripts(s => s.scriptKind == "BF", out var failed);
+        return failed;
+        //this.ScriptManager.SaveScript("BF", this.WorkingPath, this.ProjectManager.ModdedFileDir, (await this.ProjectManager.HasFramework("BFEmulator")) ? this.ProjectManager.EmulatedFileDir : null);
     }
 
-    public async Task SaveBMD()
+    public async Task<List<string>> SaveBMD()
     {
-        this.ScriptManager.SaveScript("BMD", this.WorkingPath, this.ProjectManager.ModdedFileDir, (await this.ProjectManager.HasFramework("BMDEmulator")) ? this.ProjectManager.EmulatedFileDir : null);
+        ScriptManager.ExportScripts(s => s.scriptKind == "BMD", out var failed);
+        return failed;
+        //this.ScriptManager.SaveScript("BMD", this.WorkingPath, this.ProjectManager.ModdedFileDir, (await this.ProjectManager.HasFramework("BMDEmulator")) ? this.ProjectManager.EmulatedFileDir : null);
     }
 
-    public async Task SaveModdedFiles(bool evt, bool ecs, bool bmd, bool bf)
+    public async Task<List<string>> SaveModdedFiles(bool evt, bool ecs, bool bmd, bool bf)
     {
         if (this.ReadOnly)
-            return;
+            return null;
 
+        var failed = new List<string>();
         if (evt)
         {
             if (!this.EventManager.EvtPath.StartsWith(this.ProjectManager.ModdedFileDir))
@@ -266,10 +309,12 @@ public class DataManager
         }
 
         if (bmd)
-            await this.SaveBMD();
+            failed.AddRange(await this.SaveBMD());
 
         if (bf)
-            await this.SaveBF();
+            failed.AddRange(await this.SaveBF());
+
+        return failed;
     }
 
 }

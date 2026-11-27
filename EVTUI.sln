@@ -1,0 +1,70 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37411.7
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EVTUI", "src\gui\EVTUI.csproj", "{507DBD92-2092-6654-2765-A2569148ACA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GFDLibrary", "external\GFD-Studio\GFDLibrary\GFDLibrary.csproj", "{395F5093-DA14-5AC3-1582-309F3C08CDB1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GFDLibrary.Rendering.OpenGL", "external\GFD-Studio\GFDLibrary.Rendering.OpenGL\GFDLibrary.Rendering.OpenGL.csproj", "{0C54F565-AAC4-7DF0-CD56-9C8372FD4D05}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AtlusScriptLibrary", "external\Atlus-Script-Tools\Source\AtlusScriptLibrary\AtlusScriptLibrary.csproj", "{466C27C7-B50A-6438-2D1D-89ECD529E737}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EVTUI.Lib", "src\lib\EVTUI.Lib.csproj", "{9575E950-56F1-FF1A-3E16-3CBE6C11F1F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EVTUI.Test", "src\test\EVTUI.Test.csproj", "{B7C6B00D-0E99-0BF4-407D-67CA43A89D17}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		.gitmodules = .gitmodules
+		scripts\apply_patches.sh = scripts\apply_patches.sh
+		patches\Atlus-Script-Tools.patch = patches\Atlus-Script-Tools.patch
+		scripts\bootstrap_debian.sh = scripts\bootstrap_debian.sh
+		scripts\bootstrap_fedora.sh = scripts\bootstrap_fedora.sh
+		scripts\bootstrap_win.bat = scripts\bootstrap_win.bat
+		scripts\create_patches.sh = scripts\create_patches.sh
+		patches\GFD-Studio.patch = patches\GFD-Studio.patch
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{507DBD92-2092-6654-2765-A2569148ACA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{507DBD92-2092-6654-2765-A2569148ACA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{507DBD92-2092-6654-2765-A2569148ACA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{507DBD92-2092-6654-2765-A2569148ACA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{395F5093-DA14-5AC3-1582-309F3C08CDB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{395F5093-DA14-5AC3-1582-309F3C08CDB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{395F5093-DA14-5AC3-1582-309F3C08CDB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{395F5093-DA14-5AC3-1582-309F3C08CDB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C54F565-AAC4-7DF0-CD56-9C8372FD4D05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C54F565-AAC4-7DF0-CD56-9C8372FD4D05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C54F565-AAC4-7DF0-CD56-9C8372FD4D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C54F565-AAC4-7DF0-CD56-9C8372FD4D05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{466C27C7-B50A-6438-2D1D-89ECD529E737}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{466C27C7-B50A-6438-2D1D-89ECD529E737}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{466C27C7-B50A-6438-2D1D-89ECD529E737}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{466C27C7-B50A-6438-2D1D-89ECD529E737}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9575E950-56F1-FF1A-3E16-3CBE6C11F1F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9575E950-56F1-FF1A-3E16-3CBE6C11F1F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9575E950-56F1-FF1A-3E16-3CBE6C11F1F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9575E950-56F1-FF1A-3E16-3CBE6C11F1F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7C6B00D-0E99-0BF4-407D-67CA43A89D17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7C6B00D-0E99-0BF4-407D-67CA43A89D17}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7C6B00D-0E99-0BF4-407D-67CA43A89D17}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7C6B00D-0E99-0BF4-407D-67CA43A89D17}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A60A9FE5-47DA-4366-B68D-B61E763490F6}
+	EndGlobalSection
+EndGlobal

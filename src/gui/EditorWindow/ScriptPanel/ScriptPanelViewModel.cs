@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using ReactiveUI;
 
 namespace EVTUI.ViewModels;
@@ -34,6 +36,13 @@ public class ScriptPanelViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _scriptNames, value);
     }
 
+    private ObservableCollection<string> _vanillaScriptNames;
+    public ObservableCollection<string> VanillaScriptNames
+    {
+        get => _vanillaScriptNames;
+        set => this.RaiseAndSetIfChanged(ref _vanillaScriptNames, value);
+    }
+
     private bool _hasCompiledFiles;
     public bool HasDecompiledFiles
     {
@@ -42,6 +51,17 @@ public class ScriptPanelViewModel : ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _hasCompiledFiles, value);
             OnPropertyChanged(nameof(HasDecompiledFiles));
+        }
+    }
+
+    private bool _hasVanillaFiles;
+    public bool HasVanillaFiles
+    {
+        get => _hasVanillaFiles;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _hasVanillaFiles, value);
+            OnPropertyChanged(nameof(HasVanillaFiles));
         }
     }
 
@@ -56,6 +76,17 @@ public class ScriptPanelViewModel : ViewModelBase
         }
     }
 
+    private string _selectedVanillaScriptName;
+    public string SelectedVanillaScriptName
+    {
+        get => _selectedVanillaScriptName;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedVanillaScriptName, value);
+            OnPropertyChanged(nameof(_selectedVanillaScriptName));
+        }
+    }
+
     private ObservableCollection<string> _scriptExtNames;
     public ObservableCollection<string> ScriptExtNames
     {
@@ -64,6 +95,17 @@ public class ScriptPanelViewModel : ViewModelBase
         {
             this.RaiseAndSetIfChanged(ref _scriptExtNames, value);
             OnPropertyChanged(nameof(ScriptExtNames));
+        }
+    }
+
+    private ObservableCollection<string> _vanillaScriptExtNames;
+    public ObservableCollection<string> VanillaScriptExtNames
+    {
+        get => _vanillaScriptExtNames;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _vanillaScriptExtNames, value);
+            OnPropertyChanged(nameof(VanillaScriptExtNames));
         }
     }
 
@@ -78,19 +120,67 @@ public class ScriptPanelViewModel : ViewModelBase
         }
     }
 
+    private string _selectedVanillaDecompiledScriptName;
+    public string SelectedVanillaDecompiledScriptName
+    {
+        get => _selectedVanillaDecompiledScriptName;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref _selectedVanillaDecompiledScriptName, value);
+            OnPropertyChanged(nameof(SelectedVanillaDecompiledScriptName));
+        }
+    }
+
+
     public string SelectedScriptContent
     {
         get
         {
-            if (this.HasDecompiledFiles)
-                return this.Config.ScriptManager.ScriptTexts[(this.IsMsg[this.SelectedCompiledScriptName]) ? "BMD" : "BF"][this.SelectedCompiledScriptName][this.SelectedDecompiledScriptName];
-            else
-                return "";
+            if (!this.HasDecompiledFiles)
+                return string.Empty;
+            var scriptInfo = Config.ScriptManager.ModdedScripts.FirstOrDefault(s => s.path == this.SelectedCompiledScriptName, null);
+            if (scriptInfo is null)
+                return string.Empty;
+
+            var path = Path.GetExtension(SelectedDecompiledScriptName) == ".flow" ? scriptInfo.flowPath : scriptInfo.msgPath;
+            string localizedPath = Config.ScriptManager.GetLocalizedFilePath(path, Config.Language);
+            return Config.ScriptManager.fileTexts[localizedPath];
         }
         set
         {
-            if (this.HasDecompiledFiles)
-                this.Config.ScriptManager.ScriptTexts[(this.IsMsg[this.SelectedCompiledScriptName]) ? "BMD" : "BF"][this.SelectedCompiledScriptName][this.SelectedDecompiledScriptName] = value;
+            if (!this.HasDecompiledFiles)
+                return;
+            var scriptInfo = Config.ScriptManager.ModdedScripts.FirstOrDefault(s => s.path == this.SelectedCompiledScriptName, null);
+            if (scriptInfo is null)
+                return;
+
+            var path = Path.GetExtension(SelectedDecompiledScriptName) == ".flow" ? scriptInfo.flowPath : scriptInfo.msgPath;
+            string localizedPath = Config.ScriptManager.GetLocalizedFilePath(path, Config.Language);
+            Config.ScriptManager.fileTexts[localizedPath] = value;
+        }
+    }
+
+    public string SelectedVanillaScriptContent
+    {
+        get
+        {
+            if (!this.HasVanillaFiles)
+                return string.Empty;
+            var scriptInfo = Config.ScriptManager.VanillaScripts.FirstOrDefault(s => s.path == SelectedVanillaScriptName, null);
+            if (scriptInfo is null)
+                return string.Empty;
+            var filePath = Path.GetExtension(SelectedVanillaDecompiledScriptName) == ".flow" ? scriptInfo.flowPath : scriptInfo.msgPath;
+            return Config.ScriptManager.fileTexts[filePath];
+        }
+        set
+        {
+            if (!this.HasVanillaFiles)
+                return;
+            var scriptInfo = Config.ScriptManager.VanillaScripts.FirstOrDefault(s => s.path == SelectedVanillaScriptName, null);
+            if (scriptInfo is null)
+                return;
+            var filePath = Path.GetExtension(SelectedVanillaDecompiledScriptName) == ".flow" ? scriptInfo.flowPath : scriptInfo.msgPath;
+            Config.ScriptManager.fileTexts[filePath] = value;
         }
     }
 
@@ -133,18 +223,31 @@ public class ScriptPanelViewModel : ViewModelBase
 
         this._scriptNames = new ObservableCollection<string>();
         this._scriptExtNames = new ObservableCollection<string>();
+        _vanillaScriptNames = new ObservableCollection<string>();
+        _vanillaScriptExtNames = new ObservableCollection<string>();
         this.IsMsg = new Dictionary<string, bool>();
-        foreach (string scriptType in this.Config.ScriptManager.ScriptList.Keys)
-            foreach (string script in this.Config.ScriptManager.ScriptList[scriptType])
-            {
-                this._scriptNames.Add(script);
-                this.IsMsg[script] = (scriptType == "BMD");
-            }
+
+        foreach (var vanillaScript in this.Config.ScriptManager.VanillaScripts)
+        {
+            _vanillaScriptNames.Add(vanillaScript.path);
+            IsMsg[vanillaScript.path] = vanillaScript.scriptKind == "BMD"; // it's proooooooobably fine for vanilla and modded to share this? since if two files have same name and path then they should have same script kind anyway -ocean
+        }
+        foreach (var moddedScript in this.Config.ScriptManager.ModdedScripts)
+        {
+            _scriptNames.Add(moddedScript.path);
+            IsMsg[moddedScript.path] = moddedScript.scriptKind == "BMD";
+        }
         if (this.ScriptNames.Count > 0)
         {
             this.SelectedCompiledScriptName = this.ScriptNames[0];
             this.UpdateSubfiles();
         }
+        if (VanillaScriptNames.Count > 0)
+        {
+            SelectedVanillaScriptName = VanillaScriptNames[0];
+            UpdateVanillaSubfiles();
+        }
+
     }
 
     public void Dispose()
@@ -155,19 +258,39 @@ public class ScriptPanelViewModel : ViewModelBase
 
         this.ScriptNames.Clear();
         this.ScriptExtNames.Clear();
+        VanillaScriptNames.Clear();
+        VanillaScriptExtNames.Clear();
         this.IsMsg.Clear();
         this.Config = null;
     }
 
     public void UpdateSubfiles()
     {
-        this.HasDecompiledFiles = (this.Config.ScriptManager.ScriptTexts[(this.IsMsg[this.SelectedCompiledScriptName]) ? "BMD" : "BF"][this.SelectedCompiledScriptName].Count > 0);
+        var moddedScript = Config.ScriptManager.ModdedScripts.First(s => s.path == this.SelectedCompiledScriptName);
+        if (!moddedScript.isEmulated)
+        {
+            if (moddedScript.scriptKind == "BF" && !File.Exists(moddedScript.flowPath))
+            {
+                Config.ScriptManager.TryDecompileBF(Path.Combine(Config.VanillaExtractionPath, moddedScript.path), moddedScript.flowPath, out var log);
+                Config.ScriptManager.ScriptErrors[moddedScript.path][ScriptManager.GetLangCodeFromLang(Config.Language)] = log;
+            }
+            else if (moddedScript.scriptKind == "BMD" && !File.Exists(moddedScript.msgPath))
+            {
+                Config.ScriptManager.TryDecompileBMD(Path.Combine(Config.VanillaExtractionPath, moddedScript.path), moddedScript.msgPath, out var log);
+                Config.ScriptManager.ScriptErrors[moddedScript.path][ScriptManager.GetLangCodeFromLang(Config.Language)] = log;
+            }
+        }
+        bool moddedMsgExists = File.Exists(moddedScript.msgPath);
+        bool moddedFlowExists = File.Exists(moddedScript.flowPath);
+        this.HasDecompiledFiles = moddedMsgExists || moddedFlowExists;
 
         this.ScriptExtNames.Clear();
         if (this.HasDecompiledFiles)
         {
-            foreach (string key in this.Config.ScriptManager.ScriptTexts[(this.IsMsg[this.SelectedCompiledScriptName]) ? "BMD" : "BF"][this.SelectedCompiledScriptName].Keys)
-                this.ScriptExtNames.Add(key);
+            if (moddedFlowExists)
+                this.ScriptExtNames.Add(".flow");
+            if (moddedMsgExists)
+                this.ScriptExtNames.Add(".msg");
             this.SelectedDecompiledScriptName = this.ScriptExtNames[0];
         }
         else
@@ -175,15 +298,60 @@ public class ScriptPanelViewModel : ViewModelBase
             this.SelectedDecompiledScriptName = null;
         }
 
-        this.CompilationLogs = this.Config.ScriptManager.ScriptErrors[(this.IsMsg[this.SelectedCompiledScriptName]) ? "BMD" : "BF"][this.SelectedCompiledScriptName];
+        this.CompilationLogs = Config.ScriptManager.ScriptErrors[moddedScript.path][ScriptManager.GetLangCodeFromLang(Config.Language)];
+    }
+
+    public void UpdateLog()
+    {
+        var moddedScript = Config.ScriptManager.ModdedScripts.First(s => s.path == this.SelectedCompiledScriptName);
+        this.CompilationLogs = Config.ScriptManager.ScriptErrors[moddedScript.path][ScriptManager.GetLangCodeFromLang(Config.Language)];
+    }
+
+    // there might be a cleaner option than having this as a separate function but this seems less annoying than refreshing both textboxes every time
+    public void UpdateVanillaSubfiles()
+    {
+        var vanillaScript = Config.ScriptManager.VanillaScripts.First(s => s.path == this.SelectedVanillaScriptName);
+        string log = string.Empty;
+        if (vanillaScript.scriptKind == "BF" && !File.Exists(vanillaScript.flowPath))
+        {
+            Config.ScriptManager.TryDecompileBF(Path.Combine(Config.VanillaExtractionPath, vanillaScript.path), Config.ScriptManager.GetEncodingFromLang(vanillaScript.language), vanillaScript.flowPath, out log);
+        }
+        else if (vanillaScript.scriptKind == "BMD" && !File.Exists(vanillaScript.msgPath))
+        {
+            Config.ScriptManager.TryDecompileBMD(Path.Combine(Config.VanillaExtractionPath, vanillaScript.path), Config.ScriptManager.GetEncodingFromLang(vanillaScript.language), vanillaScript.msgPath, out log);
+        }
+
+        bool vanillaMsgExists = File.Exists(vanillaScript.msgPath);
+        bool vanillaFlowExists = File.Exists(vanillaScript.flowPath);
+        this.HasVanillaFiles = vanillaMsgExists || vanillaFlowExists;
+
+        this.VanillaScriptExtNames.Clear();
+        if (this.HasVanillaFiles)
+        {
+            if (vanillaFlowExists)
+                this.VanillaScriptExtNames.Add(".flow");
+            if (vanillaMsgExists)
+                this.VanillaScriptExtNames.Add(".msg");
+            this.SelectedVanillaDecompiledScriptName = this.VanillaScriptExtNames[0];
+        }
+        else
+        {
+            this.SelectedVanillaDecompiledScriptName = null;
+        }
+
+        //this.CompilationLogs = log;
     }
 
     public void Compile()
     {
         if (this.IsMsg[this.SelectedCompiledScriptName])
+        {
             this.CompilationLogs = this.Config.CompileMessage(this.SelectedCompiledScriptName);
+        }
         else
+        {
             this.CompilationLogs = this.Config.CompileScript(this.SelectedCompiledScriptName);
+        }
     }
 
 }
